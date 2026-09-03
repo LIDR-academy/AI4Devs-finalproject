@@ -10,10 +10,11 @@ Epic 3 add.
 
 - [A `max:` rule on an array does not gate that array's `.*` rules](#a-max-rule-on-an-array-does-not-gate-that-arrays--rules)
 - [No array-level rule gates them — `list` does not either](#no-array-level-rule-gates-them--list-does-not-either)
-- [The two call sites in this repo today](#the-two-call-sites-in-this-repo-today)
+- [The call sites in this repo today](#the-call-sites-in-this-repo-today)
 - [Confirmed: neither `bail` form helps](#confirmed-neither-bail-form-helps)
 - [The shapes that do bound it](#the-shapes-that-do-bound-it)
 - [Status in story 0026: bounded by a written hand-off, not by code](#status-in-story-0026-bounded-by-a-written-hand-off-not-by-code)
+- [Status in story 0028: the rule's first real, shipped, closed call site](#status-in-story-0028-the-rules-first-real-shipped-closed-call-site)
 
 ## A `max:` rule on an array does not gate that array's `.*` rules
 
@@ -96,9 +97,9 @@ The mitigation is the same and needs no second mechanism: in the two-pass shape 
 `max:254` both live in pass 1, so either one failing throws before pass 2 is ever composed. Measured
 at **0 queries** for a 2,000-id submission in both the oversized-list and the associative case.
 
-## The two call sites in this repo today
+## The call sites in this repo today
 
-Both are **unreachable in production as of 2026-09-03**, because neither has a Livewire component or
+Two are **unreachable in production as of 2026-09-03**, because neither has a Livewire component or
 route in front of it yet (the products editor is story 0027). Recorded so the next audit treats them
 as known rather than new, and so 0027 does not wire either one as-is:
 
@@ -112,8 +113,16 @@ as known rather than new, and so 0027 does not wire either one as-is:
   `productRules()` and validated by both `CreateProduct` and `UpdateProduct`. Measured on the same
   worktree: 1,000 submitted ids issue **1,000 queries** in 1.16 s despite `max:20`.
 
-The gallery case is the more instructive of the two, because its bound is `20` — two orders of
-magnitude below the array a client may send, and still no protection at all.
+The gallery case is the more instructive of the two unreachable sites, because its bound is `20` —
+two orders of magnitude below the array a client may send, and still no protection at all.
+
+A **third** site is real, shipped and **closed** rather than unreachable:
+
+- `ProductAttributeValidationRules::attributeValueListRules()` / `attributeValueRules()` (story
+  0028) — `max:100` on the `values` array, `distinct:ignore_case` on `values.*.value`. Unlike both
+  sites above, `App\Livewire\Products\AttributeTypes\Index::save()` is a real, mounted, permission-
+  gated Livewire method that calls it today. See
+  [Status in story 0028](#status-in-story-0028-the-rules-first-real-shipped-closed-call-site) below.
 
 ## Confirmed: neither `bail` form helps
 
@@ -236,7 +245,81 @@ both rule sets, this hazard is live in production with nothing behind it. The co
 the docblock and hand-off item 5 — writing, not enforcement — and the check that closes this is a
 review of 0027's save path, not a test in this story.
 
-_Last updated: 2026-09-03 — Story 0026 (Product ↔ Sales Region assignment and tax resolution
+## Status in story 0028: the rule's first real, shipped, closed call site
+
+Unlike both sites above, this one had a real Livewire caller from day one, so the fix is code — the
+✅ two-pass shape from this page, extended by one pass this domain specifically needs.
+
+**The finding.** `App\Livewire\Products\AttributeTypes\Index::save()`'s Phase 4 audit reproduced the
+identical mechanism this page already documents: `values.*.value`'s `distinct:ignore_case` rule is
+O(n²) in the number of submitted values, and the parent `values` array's own `max:100` rule does not
+gate it. A single forged submission ignoring the `max:100` bound was measured burning **51 s of CPU
+at 20,000 rows** in this story's own Phase 4 audit — past PHP's default 30 s `max_execution_time` —
+while still ultimately returning only the `max:100` message.
+
+**Why three passes, not the two-pass shape verbatim.** `$values` is the component's own client-
+writable form input (deliberately not `#[Locked]`, per [database/schema.md](../database/schema.md#product_attribute_values)),
+so a forged payload can carry a scalar where a row object is expected, or a non-string where a
+row's `id`/`value` is expected — reaching `SyncProductAttributeValues`' `array_key_exists()` lookup
+directly and raising an unhandled `TypeError` (a 500) rather than a validation error, a **second**,
+independent Phase 4 finding this story closed in the same pass (see `attributeValueRowRules()` /
+`attributeValueIdRules()` in [database/schema.md](../database/schema.md#product_attribute_values)).
+Establishing each row's *shape* has to run before `Str::squish()` normalises the text, so it cannot
+share pass 1 (which validates `name`, an O(1) uniqueness query, and the array's own size) or pass 3
+(the O(n²) per-value text rule) — it needs its own pass in between:
+
+```php
+// app/Livewire/Products/AttributeTypes/Index.php — save()
+// Pass 1 -- shape only (size + name). Throws before anything per-element runs.
+$sizePass = ['name' => $this->attributeTypeNameRules($this->editingTypeId)];
+if ($this->values !== []) {
+    $sizePass['values'] = $this->attributeValueListRules();
+}
+$validated = $this->validate($sizePass);
+
+// Pass 2 -- each row's SHAPE, before normalisation. O(n), and can only ever see
+// the <=100 rows pass 1 allowed.
+$this->validate([
+    'values.*' => $this->attributeValueRowRules(),
+    'values.*.id' => $this->attributeValueIdRules(),
+    'values.*.value' => ['required', 'string'],
+]);
+
+// (squish every value's text here)
+
+// Pass 3 -- the O(n^2) per-value domain rule, on the now-bounded, now-shaped,
+// now-normalised set.
+$this->validate(['values.*.value' => $this->attributeValueRules()]);
+```
+
+**Verified**: with the three-pass structure in place, an oversized or malformed submission is
+refused by pass 1 or pass 2 before `distinct:ignore_case` ever runs against it — the identical "0
+queries/0 cost before the bound" property this page's own two-pass ✅ demonstrates for
+`salesRegionIdsRules()`, confirmed here by the story's own Phase 4 re-verification rather than
+assumed from the shape alone.
+
+**What this closes, and what it does not.** This is the rule's first instance closed with *code*
+rather than a written hand-off, because — unlike story 0026's two sites — a real, mounted, gated
+caller exists today. It does not retire the rule itself: `salesRegionIdRules()` and
+`productGalleryMediaIdsRules()` remain exactly as open as [Status in story 0026](#status-in-story-0026-bounded-by-a-written-hand-off-not-by-code)
+records, and a future rule set with a `.*` wildcard and a database-hitting per-element rule still
+needs the same review question asked of it: *what does one element cost, and who chose the element
+count?*
+
+_Last updated: 2026-09-03 — Story 0028 (Product variant attribute types & values — backend), Phase 4.
+Added [Status in story 0028](#status-in-story-0028-the-rules-first-real-shipped-closed-call-site) and
+a third bullet under [The call sites in this repo today](#the-call-sites-in-this-repo-today):
+`App\Livewire\Products\AttributeTypes\Index::save()` is this page's first real, mounted, permission-
+gated caller of the pattern — a Phase 4 finding this time, reproducing the identical O(n²) cost this
+page already documents against `values.*.value`'s `distinct:ignore_case` rule, measured at 51 s of
+CPU at 20,000 submitted rows. Closed with code, not a hand-off: a **three**-pass sequential
+`validate()` structure, the existing two-pass ✅ shape plus one extra pass this domain specifically
+needs (a row-shape check, closing a related but distinct `TypeError` finding on the same submission)
+between the size pass and the O(n²) text-comparison pass. Story 0026's two sites are unchanged and
+remain exactly as open as [Status in story 0026](#status-in-story-0026-bounded-by-a-written-hand-off-not-by-code)
+already records._
+
+_Previously: 2026-09-03 — Story 0026 (Product ↔ Sales Region assignment and tax resolution
 backend), Phase 4 **second re-audit**. Written in the previous round as a ❌/✅ pair with the ❌ marked
 **as found and open**, per [errors-log.md](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)'s
 rule that an audit-authored page must leave a slot for the fix rather than need its framing

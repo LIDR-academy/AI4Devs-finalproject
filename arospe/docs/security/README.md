@@ -321,8 +321,17 @@ repo must follow — always with a real code example pulled from this repository
   per-element rule bounds nothing, so adopting it means deleting D12's validated preserved-vs-
   assignable per-element rule outright, hand-rolling `required`/`string`/`distinct` and the
   per-element error keys in PHP, and resting the bound on an `array_slice()` line nothing enforces.
+  **Story 0028 is the rule's first real, shipped, closed call site.** `App\Livewire\Products\AttributeTypes\Index::save()`
+  reproduced the identical O(n²) cost against `values.*.value`'s `distinct:ignore_case` rule — a
+  Phase 4 finding this time, not a re-audit — and closed it with code rather than a written hand-off,
+  since unlike story 0026's two call sites this one is real and shipped: a **three**-pass sequential
+  `validate()` structure (array size + `name`; each row's shape; the now-bounded, now-squished
+  per-value text), the two-pass shape above with one extra pass for a row-shape check this domain
+  needs that the sales-region case did not. See [database/schema.md](../database/schema.md#product_attribute_values).
 
-_Last updated: 2026-09-03 — Story 0026, **Phase 4 second re-audit**: no new page. Updated the
+_Last updated: 2026-09-03 — Story 0028 (Product variant attribute types & values — backend), **Phase 4**: no new page. Updated the [array-validation-bounds.md](array-validation-bounds.md) entry above: story 0028 is that page's first real, shipped call site — `App\Livewire\Products\AttributeTypes\Index::save()` reproduced the identical O(n²) hazard against `distinct:ignore_case` and closed it directly with a three-pass sequential `validate()` structure, unlike story 0026's two call sites, both still unreachable and closed only by a written Definition-of-Done hand-off. Two other Phase 4 findings from this story (an unhandled `TypeError` from an unvalidated row shape; silent data loss from a duplicate submitted owned-id) are mechanical fixes with their own real regression tests, recorded on [database/schema.md](../database/schema.md#product_attribute_values) rather than given a new security page._
+
+_Previously: 2026-09-03 — Story 0026, **Phase 4 second re-audit**: no new page. Updated the
 [array-validation-bounds.md](array-validation-bounds.md) entry above for finding **R-1's**
 resolution — the ❌ it marked "open" is now recorded as a **decision** rather than left standing,
 since the hazard is a property of a `validate()` call site this story structurally does not contain,

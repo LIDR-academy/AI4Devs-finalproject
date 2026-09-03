@@ -89,7 +89,8 @@ resources/
     livewire/            Views for Livewire components
     partials/
 routes/                  web.php plus one file per area it requires (settings.php, roles.php,
-                         users.php, sales-regions.php, product-categories.php)
+                         users.php, sales-regions.php, product-categories.php,
+                         product-attribute-types.php)
 tests/
   Feature/
   Unit/
