@@ -12,7 +12,35 @@ interface ModalFooterActionsProps {
   onConfirm?: () => void;
   isSubmitting?: boolean;
   noMarginTop?: boolean;
+  /** US-007 v1.1.0 / TK-111-FE: deshabilita el confirmar por una razón distinta de "enviando" (ej. falta stock en la vista previa). Se combina con `isSubmitting`, no lo reemplaza. */
+  disabled?: boolean;
 }
+
+type ConfirmButtonProps = Required<
+  Pick<ModalFooterActionsProps, 'confirmLabel' | 'submittingLabel' | 'confirmVariant' | 'confirmType' | 'isSubmitting' | 'disabled'>
+> &
+  Pick<ModalFooterActionsProps, 'confirmIcon' | 'onConfirm'>;
+
+const ConfirmButton: React.FC<ConfirmButtonProps> = ({
+  confirmLabel,
+  submittingLabel,
+  confirmIcon,
+  confirmVariant,
+  confirmType,
+  onConfirm,
+  isSubmitting,
+  disabled,
+}) => (
+  <button
+    type={confirmType}
+    onClick={confirmType === 'button' ? onConfirm : undefined}
+    className={`btn-touch btn-${confirmVariant} ${styles['flex-double']} flex-center flex-gap-xs`}
+    disabled={isSubmitting || disabled}
+  >
+    {confirmIcon}
+    {isSubmitting ? submittingLabel : confirmLabel}
+  </button>
+);
 
 /**
  * Footer compartido Cancelar/Confirmar de DiscardModal/RecipeSelectorModal/WarehouseExtractionModal.
@@ -34,21 +62,23 @@ export const ModalFooterActions: React.FC<ModalFooterActionsProps> = ({
   onConfirm,
   isSubmitting = false,
   noMarginTop = false,
+  disabled = false,
 }) => {
   return (
     <div className={`modal-footer-actions${noMarginTop ? ' no-margin-top' : ''}`}>
       <button type="button" className="btn-touch btn-secondary flex-1" onClick={onCancel}>
         {cancelLabel}
       </button>
-      <button
-        type={confirmType}
-        onClick={confirmType === 'button' ? onConfirm : undefined}
-        className={`btn-touch btn-${confirmVariant} ${styles['flex-double']} flex-center flex-gap-xs`}
-        disabled={isSubmitting}
-      >
-        {confirmIcon}
-        {isSubmitting ? submittingLabel : confirmLabel}
-      </button>
+      <ConfirmButton
+        confirmLabel={confirmLabel}
+        submittingLabel={submittingLabel}
+        confirmIcon={confirmIcon}
+        confirmVariant={confirmVariant}
+        confirmType={confirmType}
+        onConfirm={onConfirm}
+        isSubmitting={isSubmitting}
+        disabled={disabled}
+      />
     </div>
   );
 };

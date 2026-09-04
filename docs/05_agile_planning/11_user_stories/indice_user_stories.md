@@ -52,8 +52,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Permite el egreso total del sistema de insumos abiertos inservibles (vencidos, contaminados o dañados) documentando detalladamente la causa de la pérdida.
 *   **[US-006: Consulta de Alertas y Notificaciones Críticas en Cocina](kitchen/US-006.md)**
     *   *Descripción:* Provee un panel táctil interactivo en cocina con alertas semafóricas para vencimientos FEFO inminentes, rotura de stock en línea y pérdidas de conexión (offline).
-*   **[US-007: Consumo Rápido de Stock por Recetas](kitchen/US-007.md)** (v1.1.0)
-    *   *Descripción:* Permite el registro de consumo en lote de múltiples ingredientes a partir de una receta maestra, aplicando descuento en cascada FEFO sobre los remanentes. Desde v1.1.0: vista previa de disponibilidad por ingrediente antes de confirmar.
+*   **[US-007: Consumo Rápido de Stock por Recetas](kitchen/US-007.md)** (v1.1.0) ✅
+    *   *Descripción:* Permite el registro de consumo en lote de múltiples ingredientes a partir de una receta maestra, aplicando descuento en cascada FEFO sobre los remanentes. Desde v1.1.0: vista previa de disponibilidad por ingrediente antes de confirmar (`TK-111`/`TK-111-FE`).
 *   **[US-008: Cierre de Turno y Conciliación de Cocina](kitchen/US-008.md)** (v1.1.0)
     *   *Descripción:* Provee un flujo guiado de fin de jornada para reportar conteo físico real, auto-descartar insumos vencidos de forma masiva y registrar variaciones de stock. Desde `ADR-004`, la varianza negativa exige motivo por línea; se corrige el bug de superávit no sincronizado.
 *   **[US-027: Apertura Automática de Preparación de Receta al Extraer](kitchen/US-027.md)** ✅

@@ -30,6 +30,19 @@ describe('TK-061: RecipeSelectorModal conectado al catálogo real', () => {
           json: async () => [{ id: 'ins-carne-1', name: 'Carne Molida', unitOfMeasure: 'KG', warehouseStock: '5.000' }],
         };
       }
+      if (url.includes('/availability')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            recipeId: 'rec-lasagna',
+            recipeName: 'Lasagna Boloñesa',
+            portions: 1,
+            ingredients: [{ insumoId: 'ins-carne-1', insumoName: 'Carne Molida', unitOfMeasure: 'KG', requiredQuantity: '0.200', availableQuantity: '5.000', isSufficient: true }],
+            isFullyAvailable: true,
+          }),
+        };
+      }
       return { ok: true, status: 200, json: async () => [] };
     });
     vi.stubGlobal('fetch', fetchMock);

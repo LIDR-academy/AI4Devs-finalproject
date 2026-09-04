@@ -32,3 +32,16 @@
   border: 2px solid var(--rule);
 }
 .recipe-body-message { color: var(--text-secondary); padding: 24px 0; text-align: center; }
+
+.availability-status { padding: var(--space-2) 0; }
+.availability-list { margin-top: var(--space-3); }
+.availability-row {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  background-color: var(--overlay-white-faint);
+}
+.availability-row--insufficient {
+  border-color: var(--color-danger);
+  background-color: color-mix(in srgb, var(--color-danger) 8%, transparent);
+}

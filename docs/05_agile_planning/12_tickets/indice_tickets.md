@@ -99,7 +99,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-109-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-109`, `TK-107-FE`. `US-008`: selector de motivo por línea con varianza negativa en el wizard de cierre de turno. ✅ Done. | 🟡 P1 - Alta |
 | **TK-110** | `kitchen` | **Bajo** | **Baja** | 2 SP | `US-017`: umbral de alerta crítica FEFO leía un `24` hardcodeado en vez de `SystemSettings.criticalAlertHours` — remediación técnica (C-DEV-006-4). ✅ Done. | 🟢 P2 - Media |
 | **TK-111** | `kitchen` | **Medio** | **Alta** | 3 SP | `US-007`: vista previa de disponibilidad por ingrediente (`GET /kitchen/recipes/:id/availability`), reutiliza el cálculo de `ConsumeRecipeUseCase` sin mutar. ✅ Done. | 🟡 P1 - Alta |
-| **TK-111-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-111`. `US-007`: `RecipeSelectorModal` muestra requerido/disponible por ingrediente y bloquea confirmar si falta stock. 📝 Draft. | 🟡 P1 - Alta |
+| **TK-111-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-111`. `US-007`: `RecipeSelectorModal` muestra requerido/disponible por ingrediente y bloquea confirmar si falta stock. ✅ Done. | 🟡 P1 - Alta |
 
 ---
 

@@ -10,6 +10,24 @@ export interface RecipeItem {
   ingredientsSummary: string;
 }
 
+// US-007 v1.1.0 / TK-111-FE
+interface RecipeIngredientAvailability {
+  insumoId: string;
+  insumoName: string;
+  unitOfMeasure: string;
+  requiredQuantity: string;
+  availableQuantity: string;
+  isSufficient: boolean;
+}
+
+export interface RecipeAvailability {
+  recipeId: string;
+  recipeName: string;
+  portions: number;
+  ingredients: RecipeIngredientAvailability[];
+  isFullyAvailable: boolean;
+}
+
 export interface RemanenteFEFOItem {
   id: string;
   insumoId: string;
@@ -207,5 +225,12 @@ export class KitchenService {
       console.error('[KitchenService] Error en fetchAvailableRecipes, cayendo a modo offline:', err);
       return FALLBACK_RECIPES;
     }
+  }
+
+  // US-007 v1.1.0 / TK-111-FE: a diferencia de los demás métodos de esta clase, NO cae a
+  // datos mock en modo offline — mostrar una disponibilidad inventada sería peor que no
+  // mostrar ninguna. El modal decide qué hacer si esta llamada falla (no bloquea el envío).
+  public static async fetchRecipeAvailability(recipeId: string, portions: number): Promise<RecipeAvailability> {
+    return apiRequest<RecipeAvailability>(`/kitchen/recipes/${recipeId}/availability?portions=${portions}`);
   }
 }

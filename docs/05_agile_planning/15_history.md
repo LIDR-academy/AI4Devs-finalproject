@@ -366,3 +366,16 @@ inputs:
   - Backend 353 tests / build / lint verdes (0 warnings nuevos). Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`) verdes; `check_contract_drift.sh` completo en verde; mutation ≥ 70 % en el único archivo domain/application tocado.
   - **Pendiente:** `TK-111-FE` (consumir el endpoint desde `RecipeSelectorModal`, mostrar requerido/disponible por ingrediente, bloquear "Confirmar" si falta algo).
   - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).
+
+### 2026-09-04 (cont.) - TK-111-FE: Vista Previa de Disponibilidad en "Preparar Receta" — US-007 v1.1.0 completa
+- **Hito:** `RecipeSelectorModal` consulta `GET .../availability` al elegir receta o cambiar porciones y muestra, por ingrediente, requerido/disponible con marca visual; "Confirmar Preparación" se deshabilita si falta algo. **Con esto se completa el segundo punto priorizado del análisis de flujo de receta**, junto con `TK-110` (bugfix del umbral de alerta crítica).
+- **Acciones Realizadas:**
+  - ✅ `KitchenService.fetchRecipeAvailability` — a diferencia del resto del archivo, **sin fallback mock offline** (mostrar disponibilidad inventada sería peor que no mostrar nada); si falla, la vista previa se omite y el envío NO se bloquea (falla-abierto, `consumeRecipe` sigue siendo la autoridad final).
+  - ✅ `ModalFooterActions` gana `disabled?: boolean` (compartido con `DiscardModal`/`WarehouseExtractionModal`, se combina con `isSubmitting` sin romper a esos dos consumidores) — enhebrarlo subió la complejidad del componente sobre el límite de ESLint, se extrajo `ConfirmButton` como subcomponente.
+  - ✅ `disabled={availability?.isFullyAvailable === false}` — deliberadamente defensivo, solo un `false` explícito bloquea, nunca `null`/forma inesperada.
+  - ✅ Un test preexistente (`RecipeSelectorModal.test.tsx`) tenía un mock de `fetch` genérico que devolvía `[]` para cualquier URL no reconocida, incluida la nueva `/availability` — sin guard, `.map` sobre `undefined` tumbaba el modal completo. Corregido con guard defensivo en `IngredientAvailabilityList` + mock del test actualizado a una forma realista.
+  - ✅ 3 tests nuevos (`RecipeAvailabilityPreview.test.tsx`): ingrediente insuficiente bloquea, todos suficientes habilita, cambiar porciones re-consulta y puede pasar de habilitado a deshabilitado.
+- **Estado:**
+  - Frontend 171 tests / build / lint limpios (0 warnings nuevos tras extraer `ConfirmButton`). Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`, `check_inline_styles`, `check_native_alerts`) verdes.
+  - **US-007 v1.1.0 completa, backend + frontend.**
+  - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).
