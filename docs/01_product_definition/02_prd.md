@@ -328,7 +328,32 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
         *   **Given** El sub-sector `"Heladera de Carnes"` con `12` KG de `"Lomo Vacuno"`.
         *   **When** El Administrador intenta eliminar o desactivar ese sector.
         *   **Then** El sistema responde `HTTP 409 Conflict` indicando que existen existencias asociadas.
-*   **Estado:** 📋 Spec aprobada — pendiente de implementación (`TK-096` / `TK-096-FE`).
+*   **Estado:** ✅ Done — Backend (`TK-096`) y Frontend (`TK-096-FE`) implementados.
+
+
+### US-026: Áreas de Cocina como Ubicaciones de Catálogo y Destino Dinámico en Extracción
+*   **Historia:** Como Administrador (catálogo) y Operario (extracción), quiero administrar las áreas físicas de la cocina como ubicaciones del mismo catálogo `StorageLocation` que usa la bodega, y elegir el área de cocina de destino desde una lista real al extraer, para que cada `Remanente` quede vinculado por FK a un área concreta y no a un literal fijo.
+*   **Complejidad:** L · **INVEST:** depende de `US-016`; prerrequisito de `US-027`/`US-028`.
+*   **Decisiones de negocio (Guard 28, ver [ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md) #2/#3):** áreas de cocina = `StorageLocation type=KITCHEN`; `Remanente.location` literal → FK vía migración Prisma; un área KITCHEN con remanentes activos no se borra/desactiva (`HTTP 409`).
+*   **Estado:** 📝 Draft — `TK-102` / `TK-102-FE`. Cierra la deuda pendiente de `TK-074-FE`.
+
+### US-027: Apertura Automática de Preparación de Receta al Extraer
+*   **Historia:** Como Operario de Cocina, quiero que al extraer insumos de bodega para una receta concreta el sistema abra automáticamente una "preparación de receta" que agrupe los remanentes de esa tanda, para después declarar en un paso qué se consumió, qué sobró y qué se descartó, y para que la trazabilidad conecte la extracción con la preparación real.
+*   **Complejidad:** L · **INVEST:** depende de `US-014`, `US-026`.
+*   **Decisiones de negocio (Guard 28, [ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md) #1/#4/#11):** modelo de conciliación (no reserva) — la extracción debita como hoy y solo etiqueta los remanentes; la preparación se abre sola con `purpose=RECIPE`; `recipeId` pasa a obligatorio en ese modo; un solo actor por ahora.
+*   **Estado:** 📝 Draft — `TK-103` / `TK-103-FE`.
+
+### US-028: Cierre de Preparación de Receta — Sobrante con Ubicación y Merma con Motivo
+*   **Historia:** Como Operario de Cocina o Administrador, quiero cerrar una preparación declarando las porciones reales y, por cada ingrediente, cuánto sobró y **dónde lo guardé** y cuánto se descartó y por qué, para que quede constancia trazable de qué pasó con cada insumo — quién lo preparó, dónde quedó físicamente el sobrante y el motivo de cada merma.
+*   **Complejidad:** XL · **INVEST:** depende de `US-027`, `US-026`.
+*   **Decisiones de negocio (Guard 28, [ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md) #5–#10):** consumo asumido = teórico (se declara solo sobrante y merma); cuadre exacto `extraído = consumido + sobrante + merma`; el sobrante queda en un área de cocina (o vuelve a bodega **solo si el remanente está intacto**: cero consumo Y "envase sin abrir"); el reloj FEFO del sobrante se conserva; cierre opcional (la conciliación de turno absorbe las abiertas); cualquier `KITCHEN_STAFF` puede cerrar; todo el cierre en una transacción.
+*   **Estado:** 📝 Draft — `TK-104` / `TK-104-FE`.
+
+### US-029: Reporte de Mermas de Preparación y Auditoría del Consumo Ad-hoc
+*   **Historia:** Como Administrador, quiero ver la merma generada al preparar recetas (por receta, ingrediente y motivo, valorizada en `$`) y el consumo real vs. teórico por receta, y quiero que el consumo ad-hoc de recetas también deje rastro de auditoría.
+*   **Complejidad:** M · **Diferible.** **INVEST:** depende de `US-028`; extiende `US-009`/`US-011`.
+*   **Decisiones de negocio (Guard 28, [ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md) #12, decisión B):** sin notificación push en v1 (solo reporte); el endpoint legacy `POST /kitchen/recipes/:id/consume` se conserva para consumo ad-hoc pero pasa a emitir `CONSUMPTION_RECIPE`.
+*   **Estado:** 📝 Draft — `TK-105` / `TK-105-FE`.
 
 
 ### US-017: Configuración General del Restaurante y Parámetros FEFO

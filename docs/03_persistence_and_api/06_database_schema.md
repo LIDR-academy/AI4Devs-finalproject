@@ -151,6 +151,22 @@ erDiagram
 
 ---
 
+## 🔮 1-bis. Cambios de Esquema Planificados — ADR-003 (Trazabilidad de Preparación de Recetas)
+
+> **Estado:** 📝 Draft — se materializan al implementar `TK-102` → `TK-104` (`US-026`/`US-027`/`US-028`). El §4 (código `schema.prisma`) se actualiza en cada ticket, no aquí. Cada migración requiere aprobación humana del archivo (AGENTS §3).
+
+| Cambio | Ticket | Migración |
+| :--- | :--- | :--- |
+| `remanentes.location` (`String` literal) → `storage_location_id UUID` FK a `storage_locations` (`onDelete: Restrict`); filas semilla `type = KITCHEN` para los literales `KITCHEN_FRIDGE/PREP/LINE` | `TK-102` | `remanente_location_fk` |
+| `remanentes.recipe_preparation_id UUID?` FK a `recipe_preparations` (`onDelete: SetNull`) | `TK-103` | `recipe_preparation` |
+| `remanentes.is_pristine BOOLEAN DEFAULT true` (→ `false` en el primer consumo) | `TK-104` | `remanente_pristine` |
+| **`recipe_preparations`** (nueva): `id`, `recipe_id` FK, `planned_portions INT`, `actual_portions INT?`, `status` (`OPEN\|CLOSED\|ABANDONED`), `opened_by_operator_id` FK, `opened_at`, `closed_by_operator_id FK?`, `closed_at?`, `notes?` | `TK-103` | `recipe_preparation` |
+| **`recipe_preparation_items`** (nueva): `id`, `preparation_id` FK, `insumo_id` FK, `extracted_qty Decimal(12,4)`, `consumed_qty Decimal(12,4)`, `leftover_qty Decimal(12,4)`, `leftover_location_id UUID?` FK, `leftover_remanente_id UUID?` FK, `wasted_qty Decimal(12,4)`, `waste_reason?` | `TK-104` | `recipe_preparation_items` |
+| `system_settings.preparation_waste_alert_percent INT DEFAULT 5` | `TK-105` | `settings_prep_waste_pct` |
+| Nuevos valores de `stock_movements.type` (columna `String`, sin enum): `CONSUMPTION_RECIPE`, `DISCARD_RECIPE_PREP`, `RETURN_TO_WAREHOUSE`, `TRANSFER_KITCHEN` | `TK-103`/`TK-104`/`TK-105` | — (dato, no DDL) |
+
+---
+
 ## 📚 2. Diccionario Físico de Entidades & Gobernanza PII
 
 | Tabla | Campo | Tipo Físico | Restricción / Index | Sensibilidad PII / Cifrado | Descripción |

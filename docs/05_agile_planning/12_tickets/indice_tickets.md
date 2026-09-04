@@ -82,6 +82,14 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-099** | `stock` | **Medio** | **Baja** | 5 SP | Depende de `TK-098`. Cierra `AUDIT-DEV-006` F-3/F-4/F-7/F-8/F-9: `Date.now()`/ids no-UUID en la capa de aplicación (colisión de PK de movimiento), `throw new Error` crudo en descarte, `operatorId` aceptado del body. Puertos `Clock`/`IdGenerator`, excepción de dominio, autoría solo-token. ✅ Done (commit `c2fdf24`). **F-7 diferido a `TK-101`** (requiere migración Prisma). | 🟢 P2 - Media |
 | **TK-101** | `stock` | **Medio** | **Baja** | 3 SP | Depende de `TK-099`. `AUDIT-DEV-006` F-7 (diferido de `TK-099`): `StockMovement` guarda el nombre del sub-sector de origen, no su id — renombrar un `StorageLocation` desincroniza el histórico. Columna nueva + migración Prisma; de paso, barrido `IdGenerator` en `RestockInsumoUseCase`/`CreateLocationUseCase`. 📝 Draft. | 🟢 P2 - Media |
 | **TK-100-FE** | `stock` | **Medio** | **Baja** | 3 SP | Depende de `TK-072-FE`, `TK-096-FE`. Cierra `AUDIT-DEV-006` F-5/F-6: el `catch` de `StockService.recordExtraction` devuelve un **éxito falso** (modo demo) ocultando `422`/`500` del backend (Guard 38); stepper de cantidad con aritmética float (Guard 17). Elimina el fallback demo y migra a `DecimalQuantity`. ✅ Done (commit `8edc4b4`). | 🟡 P1 - Alta |
+| **TK-102** | `stock` | **Alto** | **Media** | 8 SP | Depende de `TK-074`, `TK-096`. `US-026` / ADR-003: áreas de cocina como `StorageLocation` type=KITCHEN; `Remanente.location` String → FK; destino de cocina del catálogo en la extracción; migración Prisma. Prerrequisito de la trazabilidad de preparación. 📝 Draft. | 🟢 P2 - Media |
+| **TK-102-FE** | `stock` | **Medio** | **Media** | 5 SP | Depende de `TK-102`, `TK-074-FE`. `US-026`: desplegable de destino de cocina dinámico + gestión de áreas KITCHEN. Cierra deuda de `TK-074-FE`. 📝 Draft. | 🟢 P2 - Media |
+| **TK-103** | `kitchen` | **Alto** | **Media** | 8 SP | Depende de `TK-102`, `TK-072`, `TK-069`. `US-027` / ADR-003: agregado `RecipePreparation`, apertura automática al extraer con `purpose=RECIPE`, `recipeId` obligatorio, tablero de preparaciones abiertas. 📝 Draft. | 🟢 P2 - Media |
+| **TK-103-FE** | `kitchen` | **Medio** | **Media** | 5 SP | Depende de `TK-103`, `TK-102-FE`. `US-027`: receta obligatoria + porciones planificadas en el modal de extracción; tablero "Preparaciones en curso". 📝 Draft. | 🟢 P2 - Media |
+| **TK-104** | `kitchen` | **Muy Alto** | **Media** | 13 SP | Depende de `TK-103`, `TK-102`, `TK-101`. `US-028` / ADR-003: cierre y abandono de preparación — consumo por cuadre, sobrante con ubicación (área de cocina o bodega si "intacto"), merma con motivo, todo en una transacción (C-DEV-006-1). 📝 Draft. | 🟢 P2 - Media |
+| **TK-104-FE** | `kitchen` | **Alto** | **Media** | 8 SP | Depende de `TK-104`, `TK-103-FE`. `US-028`: pantalla "Cerrar preparación" (sobrante + dónde + merma + motivo, cuadre visible, "envase sin abrir"). 📝 Draft. | 🟢 P2 - Media |
+| **TK-105** | `reports` | **Medio** | **Baja** | 5 SP | Depende de `TK-104`, `TK-078`. `US-029` (diferible): reporte de mermas de preparación + consumo real vs teórico; `ConsumeRecipeUseCase` legacy pasa a emitir `CONSUMPTION_RECIPE`. 📝 Draft. | 🟢 P2 - Media |
+| **TK-105-FE** | `reports` | **Bajo** | **Baja** | 3 SP | Depende de `TK-105`, `TK-078-FE`. `US-029` (diferible): panel de reporte de mermas de preparación + ajuste de umbral. 📝 Draft. | 🟢 P2 - Media |
 
 ---
 
@@ -126,6 +134,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-098** | [US-014](../11_user_stories/stock/US-014.md) · [US-025](../11_user_stories/stock/US-025.md) | Integridad Transaccional y Decremento Atómico en Extracción (AUDIT-DEV-006 F-1/F-2) | `stock` | 8 | Must Have | [stock/backend/TK-098.md](stock/backend/TK-098.md) |
 | **TK-099** | [US-014](../11_user_stories/stock/US-014.md) | Reloj/ID Inyectados, Excepción de Dominio y Auditoría en Extracción (AUDIT-DEV-006 F-3/F-4/F-7/F-8/F-9) | `stock` | 5 | Should Have | [stock/backend/TK-099.md](stock/backend/TK-099.md) |
 | **TK-101** | [US-011](../11_user_stories/stock/US-011.md) · [US-014](../11_user_stories/stock/US-014.md) | Trazabilidad del Sub-Sector de Origen por ID en `StockMovement` (AUDIT-DEV-006 F-7) | `stock` | 3 | Should Have | [stock/backend/TK-101.md](stock/backend/TK-101.md) |
+| **TK-102** | [US-026](../11_user_stories/stock/US-026.md) | Áreas de Cocina como `StorageLocation` y `Remanente.location` → FK | `stock` | 8 | Should Have | [stock/backend/TK-102.md](stock/backend/TK-102.md) |
+| **TK-103** | [US-027](../11_user_stories/kitchen/US-027.md) | Agregado `RecipePreparation` y Apertura Automática al Extraer para Receta | `kitchen` | 8 | Should Have | [kitchen/backend/TK-103.md](kitchen/backend/TK-103.md) |
+| **TK-104** | [US-028](../11_user_stories/kitchen/US-028.md) | Cierre y Abandono de Preparación de Receta | `kitchen` | 13 | Should Have | [kitchen/backend/TK-104.md](kitchen/backend/TK-104.md) |
+| **TK-105** | [US-029](../11_user_stories/reports/US-029.md) | Reporte de Mermas de Preparación + Auditoría del Consumo Ad-hoc | `reports` | 5 | Should Have | [reports/backend/TK-105.md](reports/backend/TK-105.md) |
 
 
 ### 🖥️ Tickets de Frontend
@@ -153,6 +165,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-074-FE** | [US-016](../11_user_stories/stock/US-016.md) | Frontend Storage Locations UI | `stock` | 3 | Should Have | [stock/frontend/TK-074-FE.md](stock/frontend/TK-074-FE.md) |
 | **TK-096-FE** | [US-025](../11_user_stories/stock/US-025.md) | Selector de Sub-Sector de Bodega y Desglose de Stock (Frontend) | `stock` | 5 | Should Have | [stock/frontend/TK-096-FE.md](stock/frontend/TK-096-FE.md) |
 | **TK-100-FE** | [US-014](../11_user_stories/stock/US-014.md) | Propagación Real de Errores y Aritmética Decimal en la Pantalla de Extracción (AUDIT-DEV-006 F-5/F-6) | `stock` | 3 | Should Have | [stock/frontend/TK-100-FE.md](stock/frontend/TK-100-FE.md) |
+| **TK-102-FE** | [US-026](../11_user_stories/stock/US-026.md) | Destino de Cocina Dinámico y Gestión de Áreas de Cocina | `stock` | 5 | Should Have | [stock/frontend/TK-102-FE.md](stock/frontend/TK-102-FE.md) |
+| **TK-103-FE** | [US-027](../11_user_stories/kitchen/US-027.md) | Extracción para Receta con Preparación + Tablero "Preparaciones en Curso" | `kitchen` | 5 | Should Have | [kitchen/frontend/TK-103-FE.md](kitchen/frontend/TK-103-FE.md) |
+| **TK-104-FE** | [US-028](../11_user_stories/kitchen/US-028.md) | Pantalla "Cerrar Preparación de Receta" | `kitchen` | 8 | Should Have | [kitchen/frontend/TK-104-FE.md](kitchen/frontend/TK-104-FE.md) |
+| **TK-105-FE** | [US-029](../11_user_stories/reports/US-029.md) | Panel de Reporte de Mermas de Preparación | `reports` | 3 | Should Have | [reports/frontend/TK-105-FE.md](reports/frontend/TK-105-FE.md) |
 | **TK-075-FE** | [US-017](../11_user_stories/settings/US-017.md) | Frontend System Settings & Branding UI | `settings` | 3 | Should Have | [settings/frontend/TK-075-FE.md](settings/frontend/TK-075-FE.md) |
 | **TK-077-FE** | [US-018](../11_user_stories/auth/US-018.md) | Modal Táctil y Pantalla de Recuperación de PIN de Administrador | `auth` | 3 | Should Have | [auth/frontend/TK-077-FE.md](auth/frontend/TK-077-FE.md) |
 | **TK-078-FE** | [US-019](../11_user_stories/reports/US-019.md) | Costo de Insumo y Valorización Monetaria en Dashboard | `reports` | 2 | Should Have | [reports/frontend/TK-078-FE.md](reports/frontend/TK-078-FE.md) |
@@ -200,6 +216,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-099: Reloj/ID Inyectados y Auditoría en Extracción](stock/backend/TK-099.md)** (Backend) — ✅ Done. Cierra `AUDIT-DEV-006` F-3/F-4/F-8/F-9: puertos `Clock`/`IdGenerator`, excepción de dominio para descarte, autoría solo-token. **F-7 → `TK-101`**.
 *   **[TK-100-FE: Propagación Real de Errores y Aritmética Decimal en Extracción](stock/frontend/TK-100-FE.md)** (Frontend) — ✅ Done. Cierra `AUDIT-DEV-006` F-5/F-6: elimina el fallback "modo demo" que fingía éxitos ante `422`/`500` (Guard 38); `DecimalQuantity` en el stepper (Guard 17).
 *   **[TK-101: Trazabilidad del Sub-Sector de Origen por ID en `StockMovement`](stock/backend/TK-101.md)** (Backend) — 📝 Draft. `AUDIT-DEV-006` F-7 diferido de `TK-099`: necesita columna `StockMovement.fromStorageLocationId` + migración Prisma (aprobación humana).
+*   **[TK-102: Áreas de Cocina como `StorageLocation` + `Remanente.location` → FK](stock/backend/TK-102.md)** (Backend) — 📝 Draft. `US-026` / `ADR-003`: activa las filas `StorageLocation` type=KITCHEN; migración de `Remanente.location` literal → FK; destino de cocina del catálogo en la extracción. Prerrequisito de la trazabilidad de preparación de recetas.
+*   **[TK-102-FE: Destino de Cocina Dinámico y Gestión de Áreas](stock/frontend/TK-102-FE.md)** (Frontend) — 📝 Draft. `US-026`: cierra la deuda de `TK-074-FE` (desplegable dinámico) + administración de áreas KITCHEN.
 *   **[TK-080: Filtro `insumoId` para Detección de Apertura Duplicada](stock/backend/TK-080.md)** (Backend) — cierra el gap del KPI #3 del PRD (duplicidad de aperturas), hoy sin ningún mecanismo activo.
 *   **[TK-080-FE: Advertencia de Apertura Duplicada en Extracción](stock/frontend/TK-080-FE.md)** (Frontend)
 
@@ -216,6 +234,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-007: Alertas y Notificaciones](kitchen/frontend/TK-007.md)** (Frontend)
 *   **[TK-007-C: Consumo de Recetas](kitchen/frontend/TK-007-C.md)** (Frontend)
 *   **[TK-007-D: Formulario Conciliación](kitchen/frontend/TK-007-D.md)** (Frontend)
+*   **[TK-103: Agregado `RecipePreparation` + Apertura al Extraer para Receta](kitchen/backend/TK-103.md)** (Backend) — 📝 Draft. `US-027` / `ADR-003`: cierra el lazo abierto entre extracción para receta y preparación real; `recipeId` obligatorio en modo RECIPE.
+*   **[TK-103-FE: Extracción para Receta + Tablero de Preparaciones en Curso](kitchen/frontend/TK-103-FE.md)** (Frontend) — 📝 Draft. `US-027`.
+*   **[TK-104: Cierre y Abandono de Preparación de Receta](kitchen/backend/TK-104.md)** (Backend) — 📝 Draft. `US-028` / `ADR-003`: consumo por cuadre, sobrante con ubicación (área de cocina o bodega si "intacto"), merma con motivo, todo en una transacción (C-DEV-006-1). Responde a "¿qué pasó con lo que sobró, dónde se guardó?".
+*   **[TK-104-FE: Pantalla "Cerrar Preparación de Receta"](kitchen/frontend/TK-104-FE.md)** (Frontend) — 📝 Draft. `US-028`.
 
 ### 📊 Reportes (`reports/`)
 *   **[TK-010: Módulo de Reportes](reports/backend/TK-010.md)** (Backend)
@@ -224,6 +246,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-078-FE: Costo de Insumo y Valorización Monetaria en Dashboard](reports/frontend/TK-078-FE.md)** (Frontend)
 *   **[TK-079: Indicador TRR Real (Rotation Metrics)](reports/backend/TK-079.md)** (Backend) — cierra el gap del KPI #2 del PRD (TRR < 72h), hoy forzado pero nunca reportado.
 *   **[TK-079-FE: Card de KPI de TRR Real en el Dashboard](reports/frontend/TK-079-FE.md)** (Frontend)
+*   **[TK-105: Reporte de Mermas de Preparación + Auditoría del Consumo Ad-hoc](reports/backend/TK-105.md)** (Backend) — 📝 Draft, **diferible**. `US-029` / `ADR-003`: explota los datos de cierre de preparación; de paso `ConsumeRecipeUseCase` legacy pasa a emitir `CONSUMPTION_RECIPE` (hoy invisible en la auditoría).
+*   **[TK-105-FE: Panel de Reporte de Mermas de Preparación](reports/frontend/TK-105-FE.md)** (Frontend) — 📝 Draft, diferible. `US-029`.
 
 ### 🔐 Autenticación (`auth/`)
 *   **[TK-002: Autenticación por PIN](auth/backend/TK-002.md)** (Backend)

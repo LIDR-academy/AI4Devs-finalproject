@@ -37,6 +37,18 @@ inputs:
 | **PUT** | `/api/v1/locations/{id}` | `UpdateStorageLocationRequest` | `StorageLocationResponse` | Edita o activa/desactiva un sector (`US-016`). Rol `ADMIN`. `409` si se desactiva un sector con existencias (`US-025`). |
 | **DELETE** | `/api/v1/locations/{id}` | *Ninguno* | `204 No Content` | Elimina un sector (`US-016`). Rol `ADMIN`. `409` si tiene existencias asociadas (`US-025`). |
 | **GET** | `/api/v1/reports/rotation-metrics` | *Ninguno (Query Params)* | `RotationMetricsResponse` | Retorna la TRR promedio real (`US-020`), el único endpoint que mide directamente el KPI de rotación del PRD. |
+| **GET** | `/api/v1/kitchen/recipe-preparations` 📝 | `?status=` | `ListRecipePreparationsResponse` | 📝 Draft ([ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md) / `TK-103`). Tablero de preparaciones de receta (`OPEN`/`CLOSED`/`ABANDONED`). |
+| **GET** | `/api/v1/kitchen/recipe-preparations/{id}` 📝 | *Ninguno* | `RecipePreparationDetailResponse` | 📝 Draft (`TK-103`). Detalle de una preparación con sus remanentes vinculados. |
+| **POST** | `/api/v1/kitchen/recipe-preparations/{id}/close` 📝 | `CloseRecipePreparationRequest` | `RecipePreparationDetailResponse` | 📝 Draft (`TK-104`). Concilia la preparación: consumo por cuadre, sobrante con ubicación, merma con motivo. Transaccional. |
+| **POST** | `/api/v1/kitchen/recipe-preparations/{id}/abandon` 📝 | *Ninguno* | `RecipePreparationDetailResponse` | 📝 Draft (`TK-104`). Cierra sin conciliar; los remanentes quedan `ACTIVE` sin etiqueta de preparación. |
+| **GET** | `/api/v1/reports/preparation-waste` 📝 | *Query Params* | `PreparationWasteReportResponse` | 📝 Draft, diferible (`TK-105`). Merma de preparación por receta/ingrediente/motivo + consumo real vs. teórico. |
+
+> **Nota — cambios en endpoints existentes (📝 Draft, [ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md)):**
+> - `POST /api/v1/stock/extraction`: `toLocation` (literal) → `toStorageLocationId` (FK a `StorageLocation type=KITCHEN`, `TK-102`); `+ plannedPortions`, `+ recipePreparationId` y `recipeId` obligatorio cuando `purpose=RECIPE` (`TK-103`); `RecordExtractionResponse + recipePreparationId`.
+> - `GET /api/v1/kitchen/remanentes` / `remanentes-activos`: `+ storageLocationName` (`TK-102`).
+> - `POST /api/v1/kitchen/recipes/:id/consume`: se conserva (consumo ad-hoc) pero pasa a emitir `CONSUMPTION_RECIPE` y a ser transaccional (`TK-105`).
+> - `DELETE`/`PUT /api/v1/locations/{id}`: `409` también si un área `type=KITCHEN` tiene remanentes `ACTIVE` (`TK-102`).
+> - `GET`/`PUT /api/v1/settings`: `+ preparationWasteAlertPercent` (`TK-105`).
 
 ---
 

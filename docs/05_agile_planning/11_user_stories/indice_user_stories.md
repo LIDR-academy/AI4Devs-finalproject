@@ -32,6 +32,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Al dar de alta o reabastecer un insumo se indica el sub-sector físico de bodega donde queda depositado; el stock se rastrea por par `(insumo, sub-sector)` y la extracción exige elegir el sector de origen validando su saldo. 📋 Spec aprobada — pendiente `TK-096` / `TK-096-FE`.
 *   **[US-021: Advertencia de Apertura Duplicada al Extraer Insumo](stock/US-021.md)**
     *   *Descripción:* Advierte de forma no bloqueante al operario si ya existe un remanente activo del mismo insumo en cualquier ubicación de cocina, para reducir aperturas duplicadas (KPI #3 del PRD). ✅ Backend (`TK-080`) y Frontend (`TK-080-FE`) implementados.
+*   **[US-026: Áreas de Cocina como Ubicaciones de Catálogo y Destino Dinámico en Extracción](stock/US-026.md)**
+    *   *Descripción:* Las áreas de cocina (heladera, mesa de prep, línea) pasan a ser filas de `StorageLocation` (`type = KITCHEN`); el destino de cocina en la extracción se elige del catálogo y `Remanente.location` pasa a FK. Prerrequisito de ADR-003, cierra deuda de `TK-074-FE`. 📝 Draft.
 
 ### ⚙️ Configuración (`/settings/`)
 *   **[US-017: Configuración General del Restaurante y Parámetros FEFO](settings/US-017.md)**
@@ -54,6 +56,10 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Permite el registro de consumo en lote de múltiples ingredientes a partir de una receta maestra, aplicando descuento en cascada FEFO sobre los remanentes.
 *   **[US-008: Cierre de Turno y Conciliación de Cocina](kitchen/US-008.md)**
     *   *Descripción:* Provee un flujo guiado de fin de jornada para reportar conteo físico real, auto-descartar insumos vencidos de forma masiva y registrar variaciones de stock.
+*   **[US-027: Apertura Automática de Preparación de Receta al Extraer](kitchen/US-027.md)**
+    *   *Descripción:* Extraer de bodega con `purpose = RECIPE` (con `recipeId` ahora obligatorio) abre una `RecipePreparation` que agrupa los remanentes de esa tanda. 📝 Draft (ADR-003).
+*   **[US-028: Cierre de Preparación de Receta — Sobrante con Ubicación y Merma con Motivo](kitchen/US-028.md)**
+    *   *Descripción:* Al cerrar una preparación, el operario declara porciones reales y, por ingrediente, cuánto sobró y **en qué área lo guardó** y cuánto se descartó y por qué; el consumo se calcula por cuadre. El sobrante intacto puede volver a bodega. 📝 Draft (ADR-003).
 
 ### 📊 Reportes (`/reports/`)
 *   **[US-009: Dashboard y Reporte de Mermas Visibles](reports/US-009.md)**
@@ -62,6 +68,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Registra el costo unitario de cada insumo y valoriza en `$` el reporte de mermas, cerrando el gap del KPI #1 del PRD (hoy solo medible en cantidades físicas). ✅ Backend (`TK-078`) y Frontend (`TK-078-FE`) implementados.
 *   **[US-020: Indicador TRR Real en el Dashboard de Reportes](reports/US-020.md)**
     *   *Descripción:* Calcula y muestra el tiempo real promedio de rotación de remanentes, el único indicador que valida en la práctica el KPI #2 del PRD (TRR < 72h). ✅ Backend (`TK-079`) y Frontend (`TK-079-FE`) implementados.
+*   **[US-029: Reporte de Mermas de Preparación y Auditoría del Consumo Ad-hoc de Recetas](reports/US-029.md)**
+    *   *Descripción:* Reporte de merma generada al preparar recetas (por receta / ingrediente / motivo) + consumo real vs teórico; de paso, el consumo ad-hoc de receta legacy pasa a registrar `CONSUMPTION_RECIPE`. 📝 Draft — diferible (ADR-003).
 
 ### 🛠️ Shared / Transversal (`/shared/`)
 *   **[US-022: Sistema de Diseño FEFO — Turno Día/Noche](shared/US-022.md)**
