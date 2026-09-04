@@ -77,7 +77,9 @@ describe('ClosePreparationModal (US-028 / TK-104-FE)', () => {
     const onReconciled = vi.fn();
     render(<ClosePreparationModal preparationId="prep-1" recipeName="Pizza Margarita" onClose={() => {}} onReconciled={onReconciled} />);
 
-    fireEvent.change(await screen.findByLabelText(/Sobrante:/i), { target: { value: '1.8' } });
+    const leftoverInput = await screen.findByLabelText(/Sobrante:/i);
+    await waitFor(() => expect(leftoverInput).toHaveValue(0));
+    fireEvent.change(leftoverInput, { target: { value: '1.8' } });
     fireEvent.change(screen.getByLabelText(/^Merma:/i), { target: { value: '0.5' } });
     expect(await screen.findByText(/no cuadra con lo extraído/i)).toBeInTheDocument();
 

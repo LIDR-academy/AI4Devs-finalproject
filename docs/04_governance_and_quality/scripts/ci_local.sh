@@ -202,7 +202,7 @@ echo ""
 echo "── JOB 3/3: Unit/Integration Tests & Production Build ─────────────"
 
 run_step "Validate DB Schema" \
-  npx prisma validate --schema=apps/backend/prisma/schema.prisma
+  pnpm --filter @restostock/backend exec prisma validate --schema=prisma/schema.prisma
 
 run_step "Run Test Suite (Vitest)" \
   pnpm run test
