@@ -90,3 +90,50 @@ describe('TK-007-FE: Tactile PIN Login Screen TDD Suite', () => {
     expect(localStorage.getItem('restostock_jwt_token')).toBe('jwt_token_sample_123456');
   });
 });
+
+describe('TK-113-FE: chips de operario reciente (device-local)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.restoreAllMocks();
+  });
+
+  it('un dispositivo sin historial no muestra chips', () => {
+    render(<App />);
+    expect(screen.queryByLabelText(/Operarios recientes en este dispositivo/i)).not.toBeInTheDocument();
+  });
+
+  it('tras un login exitoso, el operario aparece como chip en la siguiente carga', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        accessToken: 'jwt_token_sample_123456',
+        user: { id: 'usr-carlos-1', name: 'Carlos Gomez (Cocina)', role: 'KITCHEN_STAFF' },
+      }),
+    } as Response);
+
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText(/ID de Operario/i), { target: { value: 'usr-carlos-1' } });
+    fireEvent.click(screen.getByRole('button', { name: '1' }));
+    fireEvent.click(screen.getByRole('button', { name: '2' }));
+    fireEvent.click(screen.getByRole('button', { name: '3' }));
+    fireEvent.click(screen.getByRole('button', { name: '4' }));
+    fireEvent.click(screen.getByRole('button', { name: /Ingresar a Cocina/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Tablero FEFO de Cocina/i)).toBeInTheDocument();
+    });
+
+    expect(localStorage.getItem('fefo-recent-operators')).toContain('usr-carlos-1');
+  });
+
+  it('un tap en un chip rellena el campo de ID sin loguear', () => {
+    localStorage.setItem('fefo-recent-operators', JSON.stringify(['usr-carlos-1']));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'usr-carlos-1' }));
+
+    expect(screen.getByLabelText(/ID de Operario/i)).toHaveValue('usr-carlos-1');
+    expect(screen.getByRole('button', { name: /Ingresar a Cocina/i })).toBeDisabled();
+  });
+});

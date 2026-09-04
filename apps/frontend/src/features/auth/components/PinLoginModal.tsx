@@ -4,6 +4,7 @@ import { AuthService, LoginPinResponse } from '../services/auth.service.js';
 import { Lock, UserCheck, AlertCircle } from 'lucide-react';
 import { AuthScreen } from '../../../shared/components/AuthScreen.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import { getRecentOperatorIds, rememberOperatorId } from '../recentOperators.js';
 import styles from './PinLoginModal.module.css';
 
 interface PinLoginModalProps {
@@ -47,6 +48,30 @@ const UserSelector: React.FC<UserSelectorProps> = ({ selectedUserId, onChange, d
     />
   </div>
 );
+
+/**
+ * Chips de operario reciente (TK-113-FE, US-031): atajo device-local, no una
+ * lista de usuarios del sistema (ver recentOperators.ts).
+ */
+const RecentOperatorChips: React.FC<{ onSelect: (id: string) => void }> = ({ onSelect }) => {
+  const recentIds = getRecentOperatorIds();
+  if (recentIds.length === 0) return null;
+
+  return (
+    <div className={styles['recent-operator-chips']} aria-label="Operarios recientes en este dispositivo">
+      {recentIds.map((id) => (
+        <button
+          key={id}
+          type="button"
+          className={styles['recent-operator-chip']}
+          onClick={() => onSelect(id)}
+        >
+          {id}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 const PinDotsDisplay: React.FC<{ pinLength: number }> = ({ pinLength }) => (
   <div className="pin-dots-bar">
@@ -116,6 +141,7 @@ function usePinLoginForm(onSuccess: (authData: LoginPinResponse) => void) {
 
     try {
       const response = await AuthService.loginWithPin(selectedUserId, pin);
+      rememberOperatorId(selectedUserId);
       onSuccess(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'PIN incorrecto. Intente de nuevo.');
@@ -140,6 +166,7 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({ onSuccess, initial
         <PinLoginHeader />
 
         <UserSelector selectedUserId={form.selectedUserId} onChange={form.setSelectedUserId} disabled={form.isLoading} />
+        <RecentOperatorChips onSelect={form.setSelectedUserId} />
         <PinDotsDisplay pinLength={form.pin.length} />
 
         {(form.error || initialNotice) && (

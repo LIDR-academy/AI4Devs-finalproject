@@ -4,7 +4,7 @@ id: TK-113-FE
 related_story: US-031
 points: 2
 type: frontend
-status: draft
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/shared/US-031.md
   - docs/02_architecture_design/05_ui_ux_design_system.md
@@ -32,4 +32,7 @@ Fusión selectiva del mockup `01_login_pinpad.html` (Stitch) — `US-031` Escena
 3. **Commit:** `feat(auth): recent-operator chips on PIN login, device-local (TK-113-FE)`.
 
 ## 📌 Notas de implementación
-*   Pendiente de implementación.
+*   `recentOperators.ts` nuevo (`features/auth/`): `getRecentOperatorIds()`/`rememberOperatorId(id)`, misma convención de `useFefoTheme.ts` (clave kebab-case dedicada `fefo-recent-operators`, try/catch alrededor de `localStorage`, `console.error` con prefijo `[PinLoginModal]`). Máx. 3 ids, más reciente primero, sin duplicados (relogear mueve al frente en vez de repetir).
+*   `PinLoginModal.tsx`: `rememberOperatorId(selectedUserId)` se llama solo tras un login exitoso (nunca el PIN se toca); `RecentOperatorChips` se oculta por completo (`return null`) si no hay historial — no hay estado vacío visible.
+*   7 tests unitarios de `recentOperators.ts` + 3 tests de integración en `PinLogin.test.tsx` (sin chips en dispositivo nuevo, chip aparece tras login exitoso, tap en chip rellena sin loguear).
+*   Sin regresiones: 184 tests frontend (174→184), build/lint verdes (0 warnings nuevos).

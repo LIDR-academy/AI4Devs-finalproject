@@ -17,3 +17,28 @@
 .btn-link:hover {
   opacity: 0.85;
 }
+
+/* TK-113-FE (US-031): chips de operario reciente, atajo device-local. */
+.recent-operator-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.recent-operator-chip {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--rule, var(--color-secondary));
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-family-mono, monospace);
+  font-size: 0.8rem;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.recent-operator-chip:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
