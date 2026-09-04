@@ -26,6 +26,7 @@ return [
         'roles' => 'Roles y permisos',
         'sales_regions' => 'Regiones de venta',
         'product_categories' => 'Categorías de productos',
+        'products' => 'Productos',
     ],
 
 ];

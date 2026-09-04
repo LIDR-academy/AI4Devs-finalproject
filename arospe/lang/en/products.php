@@ -39,5 +39,42 @@ return [
     'sales_regions' => [
         'not_in_catalog' => 'One of the selected sales regions is not in the catalog.',
         'not_assignable' => 'One of the selected sales regions cannot be assigned -- it may be disabled, or it may be a heading over fiscal territories rather than an assignable entry.',
+        'unresolvable' => 'One of the selected sales regions could not be verified. Please review your selection and try again.',
+    ],
+
+    // Story 0027 -- the products list screen.
+    'index' => [
+        'title' => 'Products',
+        'new_product' => 'New product',
+        'empty' => 'No products found.',
+        'thumbnail_alt' => 'Product thumbnail',
+        'action_not_allowed' => 'Action not allowed',
+        'delete_confirm_title' => 'Delete product',
+        'delete_confirm_text' => 'Are you sure you want to delete ":name"? This cannot be undone.',
+    ],
+
+    // Story 0027 -- the routed product editor.
+    'editor' => [
+        'title_create' => 'New product',
+        'title_edit' => 'Edit product',
+        'name_label' => 'Name',
+        'sku_label' => 'SKU',
+        'category_label' => 'Category',
+        'category_placeholder' => 'Select a category',
+        'type_label' => 'Type',
+        'type_placeholder' => 'Select a type',
+        'status_label' => 'Status',
+        'price_label' => 'Price',
+        'stock_label' => 'Stock',
+        'description_label' => 'Description',
+        'description_sanitization_notice' => "Formatting is limited to the toolbar's options; anything else is removed when the product is saved.",
+        'featured_image_label' => 'Featured image',
+        'featured_image_choose' => 'Choose from gallery',
+        'featured_image_clear' => 'Clear',
+        'gallery_label' => 'Gallery',
+        'gallery_add' => 'Add images',
+        'regions_label' => 'Sales regions',
+        'save' => 'Save',
+        'cancel' => 'Cancel',
     ],
 ];

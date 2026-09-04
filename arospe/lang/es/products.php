@@ -33,5 +33,42 @@ return [
     'sales_regions' => [
         'not_in_catalog' => 'Una de las zonas de venta seleccionadas no está en el catálogo.',
         'not_assignable' => 'Una de las zonas de venta seleccionadas no se puede asignar -- puede estar desactivada, o puede ser una cabecera sobre territorios fiscales en lugar de una entrada asignable.',
+        'unresolvable' => 'No se pudo verificar una de las zonas de venta seleccionadas. Revisa tu selección e inténtalo de nuevo.',
+    ],
+
+    // Historia 0027 -- clave por clave idéntico a lang/en/products.php.
+    'index' => [
+        'title' => 'Productos',
+        'new_product' => 'Nuevo producto',
+        'empty' => 'No se encontraron productos.',
+        'thumbnail_alt' => 'Miniatura del producto',
+        'action_not_allowed' => 'Acción no permitida',
+        'delete_confirm_title' => 'Eliminar producto',
+        'delete_confirm_text' => '¿Seguro que quieres eliminar ":name"? Esta acción no se puede deshacer.',
+    ],
+
+    // Historia 0027 -- clave por clave idéntico a lang/en/products.php.
+    'editor' => [
+        'title_create' => 'Nuevo producto',
+        'title_edit' => 'Editar producto',
+        'name_label' => 'Nombre',
+        'sku_label' => 'SKU',
+        'category_label' => 'Categoría',
+        'category_placeholder' => 'Selecciona una categoría',
+        'type_label' => 'Tipo',
+        'type_placeholder' => 'Selecciona un tipo',
+        'status_label' => 'Estado',
+        'price_label' => 'Precio',
+        'stock_label' => 'Stock',
+        'description_label' => 'Descripción',
+        'description_sanitization_notice' => 'El formato se limita a las opciones de la barra de herramientas; cualquier otro se elimina al guardar el producto.',
+        'featured_image_label' => 'Imagen destacada',
+        'featured_image_choose' => 'Elegir de la galería',
+        'featured_image_clear' => 'Quitar',
+        'gallery_label' => 'Galería',
+        'gallery_add' => 'Añadir imágenes',
+        'regions_label' => 'Zonas de venta',
+        'save' => 'Guardar',
+        'cancel' => 'Cancelar',
     ],
 ];

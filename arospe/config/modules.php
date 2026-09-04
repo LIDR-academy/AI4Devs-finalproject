@@ -86,5 +86,17 @@ return [
             'current_when' => 'product-categories.*',
             'permissions' => ['products.view'],
         ],
+        // Story 0027 -- 'current_when' is 'products.*', not 'products.index', so the item stays
+        // highlighted on products.create and products.edit too. 'permissions' is EXACTLY the
+        // ability routes/products.php's own `can:` middleware enforces on all three routes --
+        // never a broader set (see this file's own header note).
+        'products' => [
+            'group' => 'platform',
+            'label' => 'navigation.items.products',
+            'icon' => 'cube',
+            'route' => 'products.index',
+            'current_when' => 'products.*',
+            'permissions' => ['products.view'],
+        ],
     ],
 ];
