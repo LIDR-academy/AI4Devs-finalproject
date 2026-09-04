@@ -31,8 +31,10 @@ class FakeQueryRepo implements IRemanenteQueryRepository {
       currentQuantity: it.currentQuantity ?? '1.000',
       initialQuantity: it.initialQuantity ?? '1.000',
       location: it.location ?? 'KITCHEN_FRIDGE',
+      storageLocationId: it.storageLocationId,
       storageLocationName: it.storageLocationName,
       recipePreparationId: it.recipePreparationId,
+      isPristine: it.isPristine,
       expirationDate: NOW,
       status: it.status ?? 'ACTIVE',
       createdAt: NOW,
@@ -125,5 +127,25 @@ describe('GetRecipePreparationsUseCase', () => {
     const uc = new GetRecipePreparationsUseCase(prepRepo, query);
     const detail = await uc.detail('p1');
     expect(detail.remanentes[0].storageLocationName).toBe('KITCHEN_LINE');
+  });
+
+  it('detail(): expone isPristine y storageLocationId del remanente (US-028)', async () => {
+    prepRepo.byId.set('p1', openPrep('p1'));
+    const query = new FakeQueryRepo([
+      { id: 'rem-a', recipePreparationId: 'p1', storageLocationId: 'loc-9', isPristine: true },
+      { id: 'rem-b', recipePreparationId: 'p1', storageLocationId: undefined, isPristine: false },
+    ]);
+    const uc = new GetRecipePreparationsUseCase(prepRepo, query);
+    const detail = await uc.detail('p1');
+    expect(detail.remanentes[0]).toMatchObject({ storageLocationId: 'loc-9', isPristine: true });
+    expect(detail.remanentes[1]).toMatchObject({ storageLocationId: null, isPristine: false });
+  });
+
+  it('detail(): isPristine indefinido en la fuente se expone como false (conservador)', async () => {
+    prepRepo.byId.set('p1', openPrep('p1'));
+    const query = new FakeQueryRepo([{ id: 'rem-a', recipePreparationId: 'p1', isPristine: undefined }]);
+    const uc = new GetRecipePreparationsUseCase(prepRepo, query);
+    const detail = await uc.detail('p1');
+    expect(detail.remanentes[0].isPristine).toBe(false);
   });
 });

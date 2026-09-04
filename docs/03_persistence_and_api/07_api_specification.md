@@ -37,10 +37,10 @@ inputs:
 | **PUT** | `/api/v1/locations/{id}` | `UpdateStorageLocationRequest` | `StorageLocationResponse` | Edita o activa/desactiva un sector (`US-016`). Rol `ADMIN`. `409` si se desactiva un sector con existencias (`US-025`). |
 | **DELETE** | `/api/v1/locations/{id}` | *Ninguno* | `204 No Content` | Elimina un sector (`US-016`). Rol `ADMIN`. `409` si tiene existencias asociadas (`US-025`). |
 | **GET** | `/api/v1/reports/rotation-metrics` | *Ninguno (Query Params)* | `RotationMetricsResponse` | Retorna la TRR promedio real (`US-020`), el único endpoint que mide directamente el KPI de rotación del PRD. |
-| **GET** | `/api/v1/kitchen/recipe-preparations` 📝 | `?status=` | `ListRecipePreparationsResponse` | 📝 Draft ([ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md) / `TK-103`). Tablero de preparaciones de receta (`OPEN`/`CLOSED`/`ABANDONED`). |
-| **GET** | `/api/v1/kitchen/recipe-preparations/{id}` 📝 | *Ninguno* | `RecipePreparationDetailResponse` | 📝 Draft (`TK-103`). Detalle de una preparación con sus remanentes vinculados. |
-| **POST** | `/api/v1/kitchen/recipe-preparations/{id}/close` 📝 | `CloseRecipePreparationRequest` | `RecipePreparationDetailResponse` | 📝 Draft (`TK-104`). Concilia la preparación: consumo por cuadre, sobrante con ubicación, merma con motivo. Transaccional. |
-| **POST** | `/api/v1/kitchen/recipe-preparations/{id}/abandon` 📝 | *Ninguno* | `RecipePreparationDetailResponse` | 📝 Draft (`TK-104`). Cierra sin conciliar; los remanentes quedan `ACTIVE` sin etiqueta de preparación. |
+| **GET** | `/api/v1/kitchen/recipe-preparations` | `?status=` | `RecipePreparationSummary[]` | ✅ Done ([ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md) / `TK-103`). Tablero de preparaciones de receta (`OPEN`/`CLOSED`/`ABANDONED`). |
+| **GET** | `/api/v1/kitchen/recipe-preparations/{id}` | *Ninguno* | `RecipePreparationDetail` | ✅ Done (`TK-103`). Detalle de una preparación con sus remanentes vinculados (incluye `isPristine` por remanente, `TK-104`). |
+| **POST** | `/api/v1/kitchen/recipe-preparations/{id}/close` | `CloseRecipePreparationRequest` | `CloseRecipePreparationResponse` | ✅ Done (`TK-104`/`TK-104-FE`). Concilia la preparación: consumo por cuadre, sobrante con ubicación, merma con motivo. Transaccional. |
+| **POST** | `/api/v1/kitchen/recipe-preparations/{id}/abandon` | *Ninguno* | `AbandonRecipePreparationResponse` | ✅ Done (`TK-104`/`TK-104-FE`). Cierra sin conciliar; los remanentes quedan `ACTIVE` sin etiqueta de preparación. |
 | **GET** | `/api/v1/reports/preparation-waste` 📝 | *Query Params* | `PreparationWasteReportResponse` | 📝 Draft, diferible (`TK-105`). Merma de preparación por receta/ingrediente/motivo + consumo real vs. teórico. |
 
 > **Nota — cambios en endpoints existentes (📝 Draft, [ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md)):**

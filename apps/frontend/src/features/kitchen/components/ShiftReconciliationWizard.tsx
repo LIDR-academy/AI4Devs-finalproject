@@ -154,7 +154,7 @@ const ReconciliationItemRow: React.FC<ReconciliationItemRowProps> = ({ item, phy
   const { diff, isCritical } = getVarianceInfo(theo, physicalQuantity);
 
   return (
-    <div className={`flex-between gap-3 ${styles['reconciliation-row']}${isCritical ? ` ${styles['reconciliation-row--critical']}` : ''}`}>
+    <div className={`flex-between gap-3 reconciliation-item-row${isCritical ? ` ${styles['reconciliation-row--critical']}` : ''}`}>
       <ReconciliationItemInfo item={item} diff={diff} isCritical={isCritical} />
       <ReconciliationQuantityControls itemId={item.id} physicalQuantity={physicalQuantity} onQuantityChange={onQuantityChange} />
     </div>

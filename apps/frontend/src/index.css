@@ -236,6 +236,15 @@ h3 {
   box-shadow: none;
 }
 
+/* Fila de conciliación reutilizable (ShiftReconciliationWizard, ClosePreparationModal —
+   ambas listan un ítem con posible variante de alerta; TK-104-FE). */
+.reconciliation-item-row {
+  border: 2px solid var(--rule);
+  background-color: var(--bg-card);
+  padding: var(--space-3) var(--space-4);
+  border-radius: 0;
+}
+
 .card-header {
   display: flex;
   align-items: center;

@@ -177,8 +177,8 @@ export const InventarioRoute: React.FC = () => {
         onExtract={() => modals.setIsExtractionOpen(true)}
         onPrepareRecipe={() => modals.setIsRecipeOpen(true)}
       />
-      {/* US-027: preparaciones de receta abiertas — el panel se auto-oculta si no hay ninguna. */}
-      <OpenPreparationsPanel reloadKey={remanentes.length} />
+      {/* US-027/US-028: preparaciones de receta abiertas — el panel se auto-oculta si no hay ninguna. */}
+      <OpenPreparationsPanel reloadKey={remanentes.length} onReconciled={loadRemanentes} />
       <KitchenBoardTitle />
       <LocationFilterTabs activeLocation={activeLocation} onLocationSelect={setActiveLocation} counts={counts} />
       <main>

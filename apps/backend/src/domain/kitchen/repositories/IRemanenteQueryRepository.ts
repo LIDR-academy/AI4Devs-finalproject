@@ -13,6 +13,8 @@ export interface ActiveRemanenteDTO {
   storageLocationName?: string;
   /** US-027: preparación de receta que originó el remanente. */
   recipePreparationId?: string;
+  /** US-028: `true` mientras no se haya consumido nada — habilita "devolver a bodega". */
+  isPristine?: boolean;
   expirationDate: Date;
   status: string;
   createdAt: Date;

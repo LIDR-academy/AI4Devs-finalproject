@@ -22,7 +22,10 @@ interface RecipePreparationLinkedRemanenteDTO {
   insumoName: string;
   currentQuantity: string;
   initialQuantity: string;
+  storageLocationId: string | null;
   storageLocationName: string;
+  /** US-028: `true` mientras no se haya consumido nada — habilita "devolver a bodega" en el cierre. */
+  isPristine: boolean;
   status: string;
 }
 
@@ -75,7 +78,9 @@ export class GetRecipePreparationsUseCase {
         insumoName: r.insumoName,
         currentQuantity: r.currentQuantity,
         initialQuantity: r.initialQuantity,
+        storageLocationId: r.storageLocationId ?? null,
         storageLocationName: r.storageLocationName ?? r.location,
+        isPristine: r.isPristine ?? false,
         status: r.status,
       }));
 

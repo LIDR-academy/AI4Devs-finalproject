@@ -58,7 +58,7 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Provee un flujo guiado de fin de jornada para reportar conteo físico real, auto-descartar insumos vencidos de forma masiva y registrar variaciones de stock.
 *   **[US-027: Apertura Automática de Preparación de Receta al Extraer](kitchen/US-027.md)** ✅
     *   *Descripción:* Extraer de bodega con `purpose = RECIPE` (con `recipeId` ahora obligatorio) abre una `RecipePreparation` que agrupa los remanentes de esa tanda. 📝 Draft (ADR-003).
-*   **[US-028: Cierre de Preparación de Receta — Sobrante con Ubicación y Merma con Motivo](kitchen/US-028.md)**
+*   **[US-028: Cierre de Preparación de Receta — Sobrante con Ubicación y Merma con Motivo](kitchen/US-028.md)** ✅
     *   *Descripción:* Al cerrar una preparación, el operario declara porciones reales y, por ingrediente, cuánto sobró y **en qué área lo guardó** y cuánto se descartó y por qué; el consumo se calcula por cuadre. El sobrante intacto puede volver a bodega. 📝 Draft (ADR-003).
 
 ### 📊 Reportes (`/reports/`)

@@ -1274,7 +1274,13 @@ components:
                   insumoName: { type: string }
                   currentQuantity: { $ref: '#/components/schemas/DecimalString' }
                   initialQuantity: { $ref: '#/components/schemas/DecimalString' }
+                  storageLocationId: { type: string, nullable: true }
                   storageLocationName: { type: string }
+                  isPristine:
+                    type: boolean
+                    description: >-
+                      US-028 — true mientras no se haya consumido nada de este remanente.
+                      Habilita "devolver a bodega" al cerrar la preparación.
                   status: { type: string }
 
     CloseRecipePreparationRequest:

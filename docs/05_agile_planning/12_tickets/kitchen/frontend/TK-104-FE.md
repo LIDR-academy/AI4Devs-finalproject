@@ -4,7 +4,7 @@ id: TK-104-FE
 related_story: US-028
 points: 8
 type: frontend
-status: draft
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/kitchen/US-028.md
   - docs/02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md
@@ -34,3 +34,10 @@ Modal/pantalla de cierre: porciones reales + por ingrediente extraído `[sobrant
 2. Accesibilidad: objetivos táctiles ≥ 48px; `ErrorBanner` `role="alert"`.
 3. Sin regresiones frontend; sin código muerto / estilos inline nuevos.
 4. **Commit:** `feat(kitchen): close-recipe-preparation screen with leftover and waste declaration (TK-104-FE)`.
+
+## 📌 Notas de implementación
+*   El desplegable `[destino ▾]` ofrece solo ubicaciones reales (áreas de cocina siempre; sub-sectores de bodega solo si `isPristine`) — el descarte se declara aparte en el campo `Merma`, no como una opción de destino (el contrato del backend ya lo modela así).
+*   `OpenPreparationsPanel` (TK-103-FE) pasa a auto-gestionar el cierre/abandono: el prop `onClosePreparation` se retira (dead prop) y el panel monta `ClosePreparationModal` + `ConfirmModal` (Guard 38) internamente. Nuevo prop opcional `onReconciled` para que `InventarioRoute` refresque el tablero FEFO tras un cierre/abandono.
+*   Backend: `GetRecipePreparationsUseCase.detail()` gana `isPristine` y `storageLocationId` por remanente vinculado (`IRemanenteQueryRepository.ActiveRemanenteDTO` + ambos repos).
+*   `.reconciliation-item-row` extraída a `index.css` (compartida con `ShiftReconciliationWizard`) para evitar un clon de CSS entre ambos módulos.
+*   `DecimalQuantity` (frontend) gana `isGreaterThan` para el cuadre `sobrante + merma vs. extraído` sin flotantes (Guard 17).

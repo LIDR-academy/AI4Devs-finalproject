@@ -51,6 +51,11 @@ export class DecimalQuantity {
     return this.value.isZero();
   }
 
+  /** US-028: cuadre de conciliación (sobrante + merma vs. lo extraído) — sin flotantes. */
+  public isGreaterThan(amount: string | number | Decimal): boolean {
+    return this.value.greaterThan(new Decimal(amount));
+  }
+
   public toFixed(decimals: number): string {
     return this.value.toFixed(decimals);
   }

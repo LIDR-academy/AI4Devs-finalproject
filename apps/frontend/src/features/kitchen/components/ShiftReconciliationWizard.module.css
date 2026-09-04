@@ -1,9 +1,4 @@
-.reconciliation-row {
-  border: 2px solid var(--rule);
-  background-color: var(--bg-card);
-  padding: var(--space-3) var(--space-4);
-  border-radius: 0;
-}
+/* Estructura base compartida: `.reconciliation-item-row` en index.css (TK-104-FE). */
 .reconciliation-row--critical {
   border-color: var(--color-danger);
   background-color: color-mix(in srgb, var(--color-danger) 8%, transparent);

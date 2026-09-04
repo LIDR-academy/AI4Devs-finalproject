@@ -41,6 +41,7 @@ export class PrismaRemanenteQueryRepository implements IRemanenteQueryRepository
       storageLocationId: r.storageLocationId ?? undefined,
       storageLocationName: r.storageLocation?.name ?? r.location,
       recipePreparationId: r.recipePreparationId ?? undefined,
+      isPristine: r.isPristine,
       expirationDate: r.expirationDate,
       status: r.status,
       createdAt: r.createdAt,
