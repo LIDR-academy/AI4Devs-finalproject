@@ -285,7 +285,7 @@ sequenceDiagram
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
     *   `Authorization: Bearer <token_jwt>` (Rol mínimo: `OPERATOR`)
-*   **Request Payload (`DiscardRemanenteRequest`):**
+*   **Request Payload (`DiscardRemanenteRequest`):** `reason` es un catálogo fijo (no administrable, a diferencia de `ConsumptionReason`/ADR-004), validado por el backend desde `TK-118`: `EXPIRATION`, `DAMAGED` o `QUALITY_FAIL`.
     ```json
     {
       "reason": "EXPIRATION"

@@ -960,7 +960,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DiscardRemanenteResponse'
         '400':
-          description: Missing discard reason
+          description: Missing or invalid discard reason (must be EXPIRATION, DAMAGED or QUALITY_FAIL — TK-118)
           content:
             application/json:
               schema:
@@ -1870,6 +1870,10 @@ components:
       properties:
         reason:
           type: string
+          # TK-118: antes solo `type: string` sin enum — el backend aceptaba cualquier
+          # texto no vacío. El catálogo de motivos de descarte es fijo (no administrable,
+          # a diferencia de ConsumptionReason/ADR-004); se documenta y valida ahora.
+          enum: [EXPIRATION, DAMAGED, QUALITY_FAIL]
           example: "EXPIRATION"
 
     DiscardRemanenteResponse:

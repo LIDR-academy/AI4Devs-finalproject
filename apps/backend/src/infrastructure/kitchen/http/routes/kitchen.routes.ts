@@ -117,7 +117,7 @@ function buildKitchenController(
   return new KitchenController(
     new GetActiveRemanentesUseCase(remanenteQueryRepository, settingsRepo),
     reasonDependent.consume,
-    remanenteRepository ? new DiscardRemanenteUseCase(remanenteRepository) : undefined,
+    remanenteRepository ? new DiscardRemanenteUseCase(remanenteRepository, cryptoIdGenerator) : undefined,
     // US-029: consumo ad-hoc dentro de runAdhocConsumption (C-DEV-006-1) — necesita el
     // IStockUnitOfWork, no solo IRemanenteRepository (que ya no basta desde TK-105).
     recipeRepository && closeDeps.stockUnitOfWork

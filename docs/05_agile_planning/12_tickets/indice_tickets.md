@@ -106,6 +106,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-114-FE** | `kitchen` | **Bajo** | **Baja** | 2 SP | `US-031`: botón circular de acción rápida junto a la barra de Salud FEFO. ⚪ No aplica — ya implementado (`ActionButton` de `US-023`/`TK-086-FE` en `AccionesEstadoGrid`), cerrado sin código. | 🟢 P2 - Media |
 | **TK-115-FE** | `kitchen` | **Bajo** | **Baja** | 1 SP | `US-031`: resaltado full-bleed de fila con varianza negativa pendiente de motivo en `ShiftReconciliationWizard`. ✅ Done. | 🟢 P3 - Baja |
 | **TK-116-FE** | `stock` | **Medio** | **Baja** | 3 SP | `US-031`: barra de herramientas acoplada (búsqueda + vista grid/lista, persistida por dispositivo) en el catálogo de bodega. ✅ Done. | 🟢 P2 - Media |
+| **TK-118** | `kitchen` | **Bajo** | **Alta** | 2 SP | Remediación técnica: `DiscardRemanenteUseCase` seguía con `Date.now()` como id (mismo patrón que `AUDIT-DEV-006` F-3, caso no cubierto por `TK-099`/`TK-101`) + motivo de descarte sin validar en backend. ✅ Done. | 🟡 P1 - Alta |
 
 ---
 
@@ -179,6 +180,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-072-FE** | [US-014](../11_user_stories/stock/US-014.md) | Interfaz Táctil para Extracciones con Responsable y Motivo | `stock` | 3 | Must Have | [stock/frontend/TK-072-FE.md](stock/frontend/TK-072-FE.md) |
 | **TK-073-FE** | [US-015](../11_user_stories/security/US-015.md) | Frontend Dynamic RBAC UI & Autoredirection | `security` | 3 | Should Have | [security/frontend/TK-073-FE.md](security/frontend/TK-073-FE.md) |
 | **TK-117** | [US-015](../11_user_stories/security/US-015.md) | Conectar authorizePermissions a Rutas Reales + Cerrar /roles Sin Guard | `security` | 5 | Must Have | [security/backend/TK-117.md](security/backend/TK-117.md) |
+| **TK-118** | [US-005](../11_user_stories/kitchen/US-005.md) | Id Determinista + Motivo de Descarte Validado en DiscardRemanenteUseCase | `kitchen` | 2 | Should Have | [kitchen/backend/TK-118.md](kitchen/backend/TK-118.md) |
 | **TK-074-FE** | [US-016](../11_user_stories/stock/US-016.md) | Frontend Storage Locations UI | `stock` | 3 | Should Have | [stock/frontend/TK-074-FE.md](stock/frontend/TK-074-FE.md) |
 | **TK-096-FE** | [US-025](../11_user_stories/stock/US-025.md) | Selector de Sub-Sector de Bodega y Desglose de Stock (Frontend) | `stock` | 5 | Should Have | [stock/frontend/TK-096-FE.md](stock/frontend/TK-096-FE.md) |
 | **TK-100-FE** | [US-014](../11_user_stories/stock/US-014.md) | Propagación Real de Errores y Aritmética Decimal en la Pantalla de Extracción (AUDIT-DEV-006 F-5/F-6) | `stock` | 3 | Should Have | [stock/frontend/TK-100-FE.md](stock/frontend/TK-100-FE.md) |
@@ -231,6 +233,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-073: Backend Dynamic RBAC](security/backend/TK-073.md)** (Backend)
 *   **[TK-073-FE: Frontend Dynamic RBAC UI](security/frontend/TK-073-FE.md)** (Frontend)
 *   **[TK-117: Conectar authorizePermissions a Rutas Reales](security/backend/TK-117.md)** (Backend) — cierra `AUDIT-SEC-002` F-1 (crítico) y `US-015` Escenario 3.
+*   **[TK-118: Id Determinista + Motivo de Descarte Validado](kitchen/backend/TK-118.md)** (Backend) — mismo patrón de `AUDIT-DEV-006` F-3 en un caso que `TK-099`/`TK-101` no cubrieron; motivo de descarte pasa a enum fijo validado en backend.
 *   **[TK-077: Backend Admin PIN Recovery via Email Token & Magic Link](auth/backend/TK-077.md)** (Backend)
 *   **[TK-092: Resolución Fail-Safe de Rol de Usuario (AUDIT-SEC-001 F-1/F-2)](shared/backend/TK-092.md)** (Backend) — cierra la escalada de privilegios Crítica: usuarios creados por API dejan de autenticar como ADMIN.
 *   **[TK-093: Declaración Explícita de Rol por Ruta en Mutaciones Cocina/Stock (AUDIT-SEC-001 F-3)](shared/backend/TK-093.md)** (Backend)

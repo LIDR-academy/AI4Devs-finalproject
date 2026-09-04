@@ -23,8 +23,14 @@ const consumeRemanenteSchema = z.object({
   notes: z.string().optional(),
 });
 
+// TK-118: antes `z.string().min(1)` — aceptaba cualquier texto no vacío, que terminaba
+// concatenado sin validar en `StockMovement.type` (`DISCARD_${reason}`). El frontend
+// (`DiscardModal.tsx`) ya solo ofrece estos 3 valores fijos; se cierra la brecha en el
+// backend para que no dependa únicamente del `<select>` del cliente.
 const discardRemanenteSchema = z.object({
-  reason: z.string().min(1, 'El motivo de descarte es obligatorio.'),
+  reason: z.enum(['EXPIRATION', 'DAMAGED', 'QUALITY_FAIL'], {
+    errorMap: () => ({ message: 'El motivo de descarte debe ser EXPIRATION, DAMAGED o QUALITY_FAIL.' }),
+  }),
 });
 
 const consumeRecipeSchema = z.object({

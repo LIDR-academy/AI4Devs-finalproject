@@ -464,3 +464,13 @@ inputs:
 - **Estado:**
   - Verificado con la suite existente, sin cambios: `WarehouseExtractionModal.test.tsx` 13/13 verde.
   - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).
+
+### 2026-09-04 (cont.) - TK-118: id determinista + motivo de descarte validado en DiscardRemanenteUseCase
+- **Hito:** siguiendo con la deuda menor que quedaba pendiente ("continue" del humano), se analizaron los 3 puntos restantes: rol hardcodeado en frontend (~20 archivos estimados originalmente, en realidad solo 4 usos, todos atados al gap ya documentado de `US-015` Escenario 2 — no se trató como deuda aparte), unidad de medida hardcodeada (`KG`/`L`/`UNITS`, validada igual en frontend y backend, decisión de dominio deliberada y coherente con las reglas de formateo del design system — no es un gap) y motivo de descarte hardcodeado (sí era un gap real). El humano decidió el alcance del tercero: solo el bug del id + validación del enum fijo, sin extender el catálogo de ADR-004 a descartes.
+- **Acciones Realizadas:**
+  - ✅ `DiscardRemanenteUseCase` seguía con `` `mov-discard-${Date.now()}` `` — mismo patrón de colisión de PK que `AUDIT-DEV-006` F-3 ya corrigió en otros use cases (`TK-099`/`TK-101`), que no cubrieron este caso. Ahora usa `idGenerator.next('mov-discard')`.
+  - ✅ `discardRemanenteSchema.reason` pasa de `z.string().min(1)` (aceptaba cualquier texto) a `z.enum(['EXPIRATION', 'DAMAGED', 'QUALITY_FAIL'])` — el frontend (`DiscardModal.tsx`) ya solo ofrecía esos 3 valores; el backend no lo exigía.
+  - ✅ `openapi.yaml`/`07_api_specification.md` documentan el enum fijo. **Breaking change deliberado**, confirmado con `oasdiff breaking` (`request-property-became-enum`) — aceptado y documentado, mismo criterio que `TK-108`/ADR-004.
+- **Estado:**
+  - Backend 369→371 tests, build/lint verdes. Mutation score en `DiscardRemanenteUseCase.ts`: 72.73% (ya sobre el umbral de 70%) reforzado a **100%** antes de cerrar.
+  - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).

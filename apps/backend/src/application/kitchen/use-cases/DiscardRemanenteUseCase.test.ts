@@ -49,6 +49,8 @@ describe('TK-006: Waste and Discard Recording TDD Suite', () => {
     expect(stockRepo.movements.length).toBe(1);
     expect(stockRepo.movements[0].type).toBe('DISCARD_EXPIRATION');
     expect(stockRepo.movements[0].quantity).toBe('1.500');
+    expect(stockRepo.movements[0].toLoc).toBe('WASTE_BIN');
+    expect(stockRepo.movements[0].id).toMatch(/^mov-discard-/);
   });
 
   it('debe rechazar con 422 Unprocessable Entity si se intenta descartar un remanente ya inactivo', async () => {
@@ -73,5 +75,41 @@ describe('TK-006: Waste and Discard Recording TDD Suite', () => {
 
     expect(response.status).toBe(404);
     expect(response.body).toHaveProperty('error', 'EntityNotFoundException');
+    expect(response.body.message).toMatch(/^Remanente con ID/);
+  });
+
+  it('TK-118: rechaza un motivo fuera del catálogo fijo (EXPIRATION/DAMAGED/QUALITY_FAIL) con 400', async () => {
+    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo, requireAuth: false });
+    const response = await request(app)
+      .post('/api/v1/kitchen/remanentes/rem-mozzarella-discard/discard')
+      .send({ reason: 'PORQUE_SI' });
+
+    expect(response.status).toBe(400);
+
+    const updated = await stockRepo.findRemanenteById('rem-mozzarella-discard');
+    expect(updated?.status).toBe('ACTIVE');
+  });
+
+  it('TK-118: dos descartes en el mismo milisegundo generan movimientos con ids distintos (AUDIT-DEV-006 F-3, caso no cubierto por TK-099/TK-101)', async () => {
+    const secondRemanente = new Remanente({
+      id: 'rem-provolone-discard',
+      insumoId: 'ins-provolone',
+      currentQuantity: new DecimalQuantity('1.000'),
+      initialQuantity: new DecimalQuantity('1.000'),
+      location: 'KITCHEN_FRIDGE',
+      status: 'ACTIVE',
+      expirationDate: new Date(Date.now() - 60 * 60 * 1000),
+    });
+    stockRepo.seedRemanente(secondRemanente);
+
+    const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo, requireAuth: false });
+    await Promise.all([
+      request(app).post('/api/v1/kitchen/remanentes/rem-mozzarella-discard/discard').send({ reason: 'EXPIRATION' }),
+      request(app).post('/api/v1/kitchen/remanentes/rem-provolone-discard/discard').send({ reason: 'DAMAGED' }),
+    ]);
+
+    expect(stockRepo.movements).toHaveLength(2);
+    const ids = stockRepo.movements.map((m) => m.id);
+    expect(new Set(ids).size).toBe(2);
   });
 });

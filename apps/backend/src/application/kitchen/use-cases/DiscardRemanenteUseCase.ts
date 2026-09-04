@@ -1,5 +1,6 @@
 import { IRemanenteRepository } from '../../../domain/stock/repositories/IRemanenteRepository.js';
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
+import { IdGenerator } from '../../../domain/shared/IdGenerator.js';
 
 export interface DiscardRemanenteDTO {
   remanenteId: string;
@@ -14,7 +15,10 @@ export interface DiscardResponseDTO {
 }
 
 export class DiscardRemanenteUseCase {
-  constructor(private readonly remanenteRepository: IRemanenteRepository) {}
+  constructor(
+    private readonly remanenteRepository: IRemanenteRepository,
+    private readonly idGenerator: IdGenerator
+  ) {}
 
   public async execute(dto: DiscardRemanenteDTO): Promise<DiscardResponseDTO> {
     const remanente = await this.remanenteRepository.findRemanenteById(dto.remanenteId);
@@ -28,9 +32,11 @@ export class DiscardRemanenteUseCase {
     // Persistir remanente actualizado
     await this.remanenteRepository.saveRemanente(remanente);
 
-    // Registrar movimiento de auditoria por merma
+    // Registrar movimiento de auditoria por merma. Antes `` `mov-discard-${Date.now()}` `` —
+    // mismo riesgo de colisión de PK que AUDIT-DEV-006 F-3 ya corrigió en otros use cases
+    // (TK-099/TK-101), que no cubrieron este caso.
     await this.remanenteRepository.recordMovement({
-      id: `mov-discard-${Date.now()}`,
+      id: this.idGenerator.next('mov-discard'),
       insumoId: remanente.insumoId,
       type: `DISCARD_${dto.reason}`,
       quantity: discardedQty.toString(),
