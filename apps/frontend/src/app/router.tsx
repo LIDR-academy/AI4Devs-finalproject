@@ -6,7 +6,7 @@ import { BodegaRoute } from './routes/BodegaRoute.js';
 import { RecetasRoute } from './routes/RecetasRoute.js';
 import { ReportesRoute } from './routes/ReportesRoute.js';
 import { AjustesLayout } from './routes/ajustes/AjustesLayout.js';
-import { ConfiguracionRoute, PersonalRoute, RolesRoute, MovimientosRoute } from './routes/ajustes/index.js';
+import { ConfiguracionRoute, PersonalRoute, RolesRoute, MovimientosRoute, MotivosRoute } from './routes/ajustes/index.js';
 
 /**
  * Shell de rutas del Sistema FEFO (US-023/TK-085-FE). Data router de
@@ -14,8 +14,9 @@ import { ConfiguracionRoute, PersonalRoute, RolesRoute, MovimientosRoute } from 
  * conciliación, descarte, formularios de alta/edición) NO son rutas — siguen
  * como modales lanzados desde su ruta padre. Reportes y Ajustes van tras
  * `<ProtectedRoute requiredRole="ADMIN">`; `/ajustes` es un layout route con
- * 4 sub-rutas inline deep-linkables (US-024; la sub-ruta `catalogo` se retiró
- * en TK-095-FE WS-3 por duplicar `/bodega` + `/recetas`).
+ * 5 sub-rutas inline deep-linkables (US-024; la sub-ruta `catalogo` se retiró
+ * en TK-095-FE WS-3 por duplicar `/bodega` + `/recetas`; `motivos` se sumó en
+ * TK-107-FE / ADR-004).
  */
 export const router = createBrowserRouter([
   {
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
           { path: 'personal', element: <PersonalRoute /> },
           { path: 'roles', element: <RolesRoute /> },
           { path: 'movimientos', element: <MovimientosRoute /> },
+          { path: 'motivos', element: <MotivosRoute /> },
         ],
       },
       { path: '*', element: <Navigate to="/" replace /> },

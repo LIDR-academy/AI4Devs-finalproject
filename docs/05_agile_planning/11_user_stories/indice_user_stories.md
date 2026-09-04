@@ -60,8 +60,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Extraer de bodega con `purpose = RECIPE` (con `recipeId` ahora obligatorio) abre una `RecipePreparation` que agrupa los remanentes de esa tanda. 📝 Draft (ADR-003).
 *   **[US-028: Cierre de Preparación de Receta — Sobrante con Ubicación y Merma con Motivo](kitchen/US-028.md)** ✅
     *   *Descripción:* Al cerrar una preparación, el operario declara porciones reales y, por ingrediente, cuánto sobró y **en qué área lo guardó** y cuánto se descartó y por qué; el consumo se calcula por cuadre. El sobrante intacto puede volver a bodega. 📝 Draft (ADR-003).
-*   **[US-030: Catálogo de Motivos de Consumo (Administrable)](kitchen/US-030.md)**
-    *   *Descripción:* El Administrador mantiene un catálogo de motivos (crear, editar, activar/desactivar) que el equipo de cocina elige al consumir un remanente o al declarar una varianza negativa de conciliación de turno. Backend ✅ (`TK-107`); panel de administración 📝 Draft (`TK-107-FE`, ADR-004).
+*   **[US-030: Catálogo de Motivos de Consumo (Administrable)](kitchen/US-030.md)** ✅
+    *   *Descripción:* El Administrador mantiene un catálogo de motivos (crear, editar, activar/desactivar) que el equipo de cocina elige al consumir un remanente o al declarar una varianza negativa de conciliación de turno. Backend (`TK-107`) + panel de administración en `/ajustes/motivos` (`TK-107-FE`, ADR-004).
 
 ### 📊 Reportes (`/reports/`)
 *   **[US-009: Dashboard y Reporte de Mermas Visibles](reports/US-009.md)**

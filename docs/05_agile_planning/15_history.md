@@ -274,3 +274,15 @@ inputs:
   - Backend 319 tests / build / lint verdes. Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`) verdes; mutation ≥ 70 % en los 5 archivos domain/application tocados (Guard 11), ninguno compensa a otro. `check_contract_drift.sh` completo en verde (incluido `oasdiff`).
   - **Pendiente:** `TK-107-FE` (panel de administración del catálogo en `/ajustes`), luego `TK-108`/`TK-108-FE` (motivo obligatorio al consumir remanente) y `TK-109`/`TK-109-FE` (motivo obligatorio en varianza negativa de conciliación + fix del bug de superávit).
   - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).
+
+### 2026-09-04 (cont.) - TK-107-FE: Panel de Administración de Motivos de Consumo — US-030 completa
+- **Hito:** nueva quinta sub-pestaña "Motivos" en `/ajustes` (`/ajustes/motivos`), mismo patrón que `RolesManagementPanel` (US-015): alta inline, edición de etiqueta inline (patrón de `UserStatusForm`), toggle activar/desactivar. Sin botón de eliminar — ADR-004 §3.1 es explícito en "desactivar, nunca borrar". Con esto **se completa US-030 de punta a punta backend + frontend**.
+- **Acciones Realizadas:**
+  - ✅ `consumptionReasons.service.ts` (`list`/`create`/`update`) + `ConsumptionReasonsManagementPanel.tsx` — el panel siempre pide `includeInactive=true` (necesita ver y reactivar los inactivos); no choca con el guard de rol del backend porque `/ajustes` entero ya es ADMIN-only.
+  - ✅ `router.tsx` / `AjustesLayout.tsx` / `routes/ajustes/index.tsx`: sub-ruta `motivos` añadida junto a `configuracion`/`personal`/`roles`/`movimientos`; `AppShellRouting.test.tsx` actualizado a las 5 sub-rutas.
+  - ✅ `autoFocus` evitado (`jsx-a11y/no-autofocus`) — el foco del input de edición inline se dispara vía `useRef`/`useEffect`.
+  - ✅ 4 tests de componente: listar, alta agrega a la lista, desactivar marca visualmente inactivo sin quitarlo de la lista ni mostrar botón de borrado, renombrar vía el formulario inline.
+- **Estado:**
+  - Frontend 162 tests / build / lint limpios (0 errores nuevos). Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`, `check_inline_styles`, `check_native_alerts`) verdes.
+  - **Épica US-030 cerrada.** Sigue: `TK-108`/`TK-108-FE` (motivo obligatorio al consumir remanente), luego `TK-109`/`TK-109-FE` (motivo obligatorio en varianza negativa de conciliación + fix del bug de superávit).
+  - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).
