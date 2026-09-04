@@ -264,6 +264,50 @@ function wysiwygUiTestTypeIntoCodeBlockScript(string $regionSelector, string $te
     JS;
 }
 
+/**
+ * JS (D-16bis bug fix): places a collapsed caret at the given PLAIN-TEXT character `$offset`
+ * inside the region's FIRST `pre code` block, walking its text nodes exactly the way
+ * resources/js/app.js's own `setCaretOffset()` does -- required because a code block already
+ * highlighted at mount time (init()'s own highlightAllCodeBlocks() call) has no single flat text
+ * node at all: every character sits inside its own `<span class="hljs-*">`, so a naive
+ * `code.firstChild` is a `<span>` element, not text, and offsetting into it means something
+ * completely different from offsetting into the block's own source string.
+ */
+function wysiwygUiTestCaretInCodeBlockScript(string $regionSelector, int $offset): string
+{
+    return <<<JS
+        (function() {
+            const region = document.querySelector('{$regionSelector}');
+            const code = region.querySelector('pre code');
+            region.focus();
+
+            const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+            let remaining = {$offset};
+            let node = walker.nextNode();
+            let target = code;
+            let targetOffset = 0;
+
+            while (node) {
+                if (remaining <= node.textContent.length) {
+                    target = node;
+                    targetOffset = remaining;
+                    break;
+                }
+                remaining -= node.textContent.length;
+                node = walker.nextNode();
+            }
+
+            const range = document.createRange();
+            range.setStart(target, targetOffset);
+            range.collapse(true);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.dispatchEvent(new Event('selectionchange'));
+        })()
+    JS;
+}
+
 // =====================================================================
 // Applying an inline text format wraps the selection, and re-applying it removes the wrap --
 // Gherkin's two "inline_format" Scenario Outlines (bold/italic/underline), collapsed into one
@@ -1043,4 +1087,99 @@ test('switching directly from Preview to HTML source, and back to Preview, shows
         ->assertVisible($preview)
         ->assertMissing($source)
         ->assertSourceInHas($preview, '<p>REPLACED</p>');
+});
+
+// =====================================================================
+// Two real bugs reported after this feature shipped, both against a code block that already
+// EXISTED when the editor mounted (i.e. reopening a product, not inserting a fresh block) --
+// D-16bis's own regression coverage never exercised that path, since every prior test either
+// inserted a block through the toolbar or typed into one immediately after inserting it.
+// =====================================================================
+
+// Bug 1: moving the caret into an existing code block left the language <select> showing
+// whatever it last showed (the "plaintext" default, if the administrator never touched it),
+// silently disagreeing with the block the caret was actually inside.
+test('the code-language select updates to match the language of the code block the caret moves into', function () {
+    $actor = wysiwygUiTestActor();
+    $this->actingAs($actor);
+    $product = wysiwygUiTestProduct('<p>BEFORE AFTER</p><pre><code class="language-json">{"a":1}</code></pre>');
+
+    $region = wysiwygUiTestRegion();
+    $languageSelect = wysiwygUiTestControl('wysiwyg-code-language');
+
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
+
+    // The select's own initial value is the Alpine component's `plaintext` default -- moving the
+    // caret into the JSON block, below, is what this test asserts changes it.
+    $page->assertValue($languageSelect, 'plaintext');
+
+    $page->script(wysiwygUiTestCaretInCodeBlockScript($region, 1));
+
+    // A `selectionchange`-driven Alpine reactive update is not guaranteed to have flushed to the
+    // DOM the instant script() returns -- this file's own established `->wait()` carve-out
+    // (docs/testing/frontend/playwright-setup.md), mirroring the toolbar active-state test above.
+    $page->wait(1)
+        ->assertNoJavaScriptErrors()
+        ->assertValue($languageSelect, 'json');
+});
+
+// Bug 2: pressing Enter inside a code block appeared to do nothing at all -- the browser's own
+// native line-break insertion was silently destroyed the moment the very next keystroke's
+// re-highlight read the block's `.textContent` (which counts a `<br>` as zero characters) and
+// rewrote the block from that shorter, newline-free string.
+test('pressing Enter inside a code block inserts a real line break, live and after a save/reload round trip', function () {
+    $actor = wysiwygUiTestActor();
+    $this->actingAs($actor);
+    // Deliberately no quotes/angle brackets in the seeded code -- symfony/html-sanitizer's own
+    // DOMDocument-based re-serialization entity-encodes a literal `"` in text content on save
+    // (e.g. `&#34;`), which is pre-existing, expected sanitizer behaviour unrelated to this
+    // fix and would only make the assertion below harder to read for no benefit.
+    $product = wysiwygUiTestProduct('<pre><code class="language-php">abcd</code></pre>');
+
+    $region = wysiwygUiTestRegion();
+
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
+
+    // Caret between "ab" and "cd" -- inside the block's existing, already-coloured content
+    // (init()'s own mount-time highlightAllCodeBlocks() call already ran, though "abcd" itself
+    // matches no PHP keyword and stays a single plain text node either way), so the fix must
+    // survive interacting with hljs's own re-highlight pass on both sides of the insertion point.
+    $page->script(wysiwygUiTestCaretInCodeBlockScript($region, 2));
+
+    // A real Enter keypress in Chromium's own contenteditable handling is
+    // execCommand('insertParagraph', ...) -- reproduced directly here, mirroring
+    // wysiwygUiTestTypeIntoCodeBlockScript()'s own established D-16bis technique of driving
+    // execCommand rather than Playwright's keyboard input (see that helper's docblock above).
+    $page->script(<<<'JS'
+        (function() {
+            document.execCommand('insertParagraph', false, null);
+            document.execCommand('insertText', false, 'X');
+        })()
+    JS);
+
+    $page->assertNoJavaScriptErrors();
+
+    // The live DOM: the newline survived the very next re-highlight, and "X" landed exactly
+    // where it was typed -- immediately AFTER the newline (the caret-offset off-by-one this fix
+    // also closes: a `<br>`, like a bare `.textContent` read, counts as zero characters unless
+    // both getCaretOffset() and the text this block re-highlights from agree it counts as one),
+    // never merging into the untouched "cd" that followed the caret.
+    $page->assertScript(
+        "document.querySelector('{$region} pre code').textContent === ".json_encode("ab\nXcd")
+    );
+
+    // scheduleSync()'s own 400ms debounce (D9) has not necessarily flushed $wire.set('value', ...)
+    // the instant the last script() call returns -- this file's own established `->wait()`
+    // carve-out before Save, exactly as the live-highlighting test above already does.
+    $page->wait(1);
+
+    $page->click('Save')
+        ->assertNoJavaScriptErrors()
+        ->assertUrlIs(route('products.index'));
+
+    // The PERSISTED value carries the real line break too -- proving buildCleanValue()'s own fix
+    // (it reads a code block's plain text through the same `<br>`-aware helper), not only the
+    // live editor's.
+    expect($product->fresh()->description)
+        ->toContain("<pre><code class=\"language-php\">ab\nXcd</code></pre>");
 });
