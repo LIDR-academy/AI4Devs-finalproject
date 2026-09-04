@@ -14,13 +14,19 @@ use Livewire\Component;
 /**
  * Story 0021 -- a reusable, content-agnostic rich-text editor whose toolbar
  * carries Bold, Italic, Underline, H2, bullet list, numbered list, link,
- * "Insert image", "Insert code" and an HTML-source toggle (the last two
- * added later, alongside config('html-sanitizer.allowed_code_languages')
+ * "Insert image", "Insert code", an HTML-source toggle and a Preview toggle
+ * (the last three added later, alongside config('html-sanitizer.allowed_code_languages')
  * and its class-value-constrained `<code>` allow-list entry). Its output is
  * HTML that 0024's server-side sanitizer accepts on write; this component
  * performs no client-side sanitization of its own -- see D2 in
  * ai-spec/tasks/in-progress/0021-wysiwyg-rich-text-editor-component.md for
  * the exact tag set every toolbar action may emit.
+ *
+ * D-16bis: code blocks are coloured LIVE, per keystroke, inside the editor itself
+ * (resources/js/app.js, `highlight.js`) and again in the Preview toggle's read-only
+ * snapshot -- purely a client-side rendering affordance. What is ever synced to this
+ * component's `$value` (and therefore ever persisted) stays plain, uncoloured code text;
+ * see resources/js/app.js's `buildCleanValue()` for the mechanism.
  *
  * "Insert image" embeds App\Livewire\Media\Gallery itself, single-select
  * (D4) -- this component is the gallery's consumer, and the product/blog

@@ -10,6 +10,32 @@
 // from <b>/<i>/<u> to <span style="...">, and BOTH <span> and `style` are stripped by 0024's
 // sanitizer, silently discarding every bit of formatting an administrator applied. Never enable it.
 
+// Live code-block syntax colouring (revises this story's earlier "display-only" decision --
+// D-16bis, per an explicit user request to colour code AS IT IS TYPED, not only when shown
+// elsewhere). `highlight.js/lib/core` + one `import` per allowed language, rather than the
+// `highlight.js` index -- the index registers ~190 languages and would bloat the admin bundle for
+// the 8 this project's own allow-list (config('html-sanitizer.allowed_code_languages')) will ever
+// ask for. 'html' is never separately imported: highlight.js's own `xml` grammar declares 'html' as
+// one of its built-in aliases (verified directly -- `hljs.getLanguage('html')` resolves once `xml`
+// is registered), so registering `xml` alone covers both. 'plaintext' has no grammar at all and is
+// never passed to hljs -- see `isHighlightable()` below.
+import hljs from 'highlight.js/lib/core';
+import bashLang from 'highlight.js/lib/languages/bash';
+import cssLang from 'highlight.js/lib/languages/css';
+import javascriptLang from 'highlight.js/lib/languages/javascript';
+import jsonLang from 'highlight.js/lib/languages/json';
+import phpLang from 'highlight.js/lib/languages/php';
+import sqlLang from 'highlight.js/lib/languages/sql';
+import xmlLang from 'highlight.js/lib/languages/xml';
+
+hljs.registerLanguage('bash', bashLang);
+hljs.registerLanguage('css', cssLang);
+hljs.registerLanguage('javascript', javascriptLang);
+hljs.registerLanguage('json', jsonLang);
+hljs.registerLanguage('php', phpLang);
+hljs.registerLanguage('sql', sqlLang);
+hljs.registerLanguage('xml', xmlLang);
+
 document.addEventListener('alpine:init', () => {
     // `config` is supplied from Blade as `x-data="wysiwygEditor({ linkInvalidScheme: @js(...) })"`
     // -- this file is a plain .js asset, never compiled by Blade, so a translated string can only
@@ -47,6 +73,13 @@ document.addEventListener('alpine:init', () => {
         htmlSourceMode: false,
         htmlSource: '',
 
+        // Preview mode's own state (D-16bis): a third, read-only view alongside Edit/HTML source
+        // in the same toolbar panel. `previewHtml` is a plain snapshot string, written only at the
+        // moment Preview is opened (togglePreview() below) -- never live-bound to the editor, the
+        // same "sync at defined points only" shape `htmlSource` above already uses.
+        previewMode: false,
+        previewHtml: '',
+
         // The code-block insert control's own state: the toolbar <select> this is bound to lists
         // exactly config('html-sanitizer.allowed_code_languages') (passed in from Blade, D-16 --
         // the two lists cannot drift because one is the source of the other).
@@ -61,6 +94,11 @@ document.addEventListener('alpine:init', () => {
 
             this.selectionChangeHandler = () => this.refreshActiveStates();
             document.addEventListener('selectionchange', this.selectionChangeHandler);
+
+            // Colour any code blocks already present in the server-seeded `{!! $value !!}` markup
+            // (D9) -- without this, reopening a product with existing code shows it as plain text
+            // until the administrator edits it.
+            this.highlightAllCodeBlocks();
         },
 
         destroy() {
@@ -156,8 +194,152 @@ document.addEventListener('alpine:init', () => {
             this.saveCaret();
         },
 
+        // Live per-keystroke code colouring (D-16bis): if the caret is currently inside a
+        // `<code class="language-x">` block, re-highlight ONLY that block on every input event --
+        // never the whole editor, which would also fight the caret inside any prose being typed
+        // elsewhere. `closest()` is resolved from the input event's own selection rather than from
+        // `event.target`, because a native `input` event on a contenteditable region always targets
+        // the region itself, not the specific descendant the caret is in.
         onEditorInput() {
+            const selection = window.getSelection();
+
+            if (selection && selection.rangeCount > 0) {
+                const anchor = selection.anchorNode;
+                const anchorElement = anchor && anchor.nodeType === Node.TEXT_NODE ? anchor.parentElement : anchor;
+                const codeEl = anchorElement && anchorElement.closest
+                    ? anchorElement.closest('code[class*="language-"]')
+                    : null;
+
+                if (codeEl && this.$refs.editor.contains(codeEl)) {
+                    this.highlightCodeElement(codeEl);
+                }
+            }
+
             this.scheduleSync();
+        },
+
+        // 'plaintext' (and any language hljs has no grammar registered for) is never passed to
+        // hljs -- there is nothing to colour, and hljs.highlight() would throw on an unregistered
+        // language name rather than silently no-op.
+        isHighlightable(language) {
+            return language !== 'plaintext' && Boolean(hljs.getLanguage(language));
+        },
+
+        // Re-colours ONE code block in place, preserving the caret across the innerHTML rewrite a
+        // fresh highlight pass requires. The offset is a plain character count from the start of
+        // the block's OWN text (getCaretOffset/setCaretOffset below), not a DOM node/index pair --
+        // the set of text nodes changes shape on every re-highlight (that is the whole point of
+        // re-highlighting), so a node reference captured before the rewrite would already be
+        // detached by the time it needs restoring.
+        highlightCodeElement(codeEl) {
+            const language = (codeEl.className.match(/language-(\S+)/) || [])[1] || 'plaintext';
+
+            if (! this.isHighlightable(language)) {
+                return;
+            }
+
+            const offset = this.getCaretOffset(codeEl);
+            codeEl.innerHTML = hljs.highlight(codeEl.textContent, { language }).value;
+
+            if (offset !== null) {
+                this.setCaretOffset(codeEl, offset);
+            }
+        },
+
+        // Re-colours every code block currently in the editor -- used at mount (init() above), when
+        // leaving HTML-source mode (toggleHtmlSource() below, since the administrator may have
+        // typed/pasted a fresh `<pre><code class="language-x">` block there), and right after
+        // insertCodeBlock() inserts a new one. No caret to preserve in any of these three callers
+        // (the caret is not inside a code block yet, or the region is about to be hidden), unlike
+        // highlightCodeElement() above.
+        highlightAllCodeBlocks() {
+            this.$refs.editor.querySelectorAll('pre code[class*="language-"]').forEach((codeEl) => {
+                const language = (codeEl.className.match(/language-(\S+)/) || [])[1] || 'plaintext';
+
+                if (this.isHighlightable(language)) {
+                    codeEl.innerHTML = hljs.highlight(codeEl.textContent, { language }).value;
+                }
+            });
+        },
+
+        // Character offset of the caret from the start of `container`'s own text, or `null` if the
+        // selection is not inside it at all. Built on a Range spanning [start of container, caret]
+        // and its own `.toString()` rather than walking text nodes by hand -- the Range's string
+        // form already collapses exactly the way `.textContent` does, which is what
+        // highlightCodeElement() above re-highlights FROM, so the two stay in the same coordinate
+        // space.
+        getCaretOffset(container) {
+            const selection = window.getSelection();
+
+            if (!selection || selection.rangeCount === 0) {
+                return null;
+            }
+
+            const range = selection.getRangeAt(0);
+
+            if (!container.contains(range.startContainer)) {
+                return null;
+            }
+
+            const preCaretRange = document.createRange();
+            preCaretRange.selectNodeContents(container);
+            preCaretRange.setEnd(range.startContainer, range.startOffset);
+
+            return preCaretRange.toString().length;
+        },
+
+        // The inverse of getCaretOffset() above: walks `container`'s text nodes in document order,
+        // finds the one the offset falls inside, and collapses the selection there. Falls back to
+        // the end of the container if `offset` runs past the end of its text (defensive only -- the
+        // offset this is always called with was captured from the SAME text a moment earlier).
+        setCaretOffset(container, offset) {
+            const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+            let remaining = offset;
+            let node = walker.nextNode();
+
+            while (node) {
+                if (remaining <= node.textContent.length) {
+                    const range = document.createRange();
+                    range.setStart(node, remaining);
+                    range.collapse(true);
+
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+
+                    return;
+                }
+
+                remaining -= node.textContent.length;
+                node = walker.nextNode();
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(container);
+            range.collapse(false);
+
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        },
+
+        // The value this component ever hands to the server: a CLONE of the live editor with every
+        // `<code>` element's children collapsed back to a single plain-text node, discarding the
+        // `hljs-*` colouring spans highlightCodeElement()/highlightAllCodeBlocks() above insert.
+        // Reading `.textContent` off a `<code>` element already returns its plain text regardless of
+        // how many colouring spans are inside it, so re-assigning that same string as `.textContent`
+        // is enough to strip them -- this keeps config('html-sanitizer.allowed_elements') free of
+        // `<span class="hljs-*">` entirely: colouring is purely a live-editor/preview affordance,
+        // never part of what is persisted. The LIVE editor DOM itself is never touched here (this
+        // clones first), so the administrator's own colour view is undisturbed by every sync.
+        buildCleanValue() {
+            const clone = this.$refs.editor.cloneNode(true);
+
+            clone.querySelectorAll('code').forEach((codeEl) => {
+                codeEl.textContent = codeEl.textContent;
+            });
+
+            return clone.innerHTML;
         },
 
         // D9: the editable region is wire:ignore'd, so it syncs at defined points only -- a 400ms
@@ -172,7 +354,7 @@ document.addEventListener('alpine:init', () => {
             clearTimeout(this.syncTimeoutId);
 
             this.syncTimeoutId = setTimeout(() => {
-                this.$wire.set('value', this.$refs.editor.innerHTML);
+                this.$wire.set('value', this.buildCleanValue());
             }, 400);
         },
 
@@ -238,14 +420,49 @@ document.addEventListener('alpine:init', () => {
             if (this.htmlSourceMode) {
                 this.$refs.editor.innerHTML = this.htmlSource;
                 this.htmlSourceMode = false;
+                this.highlightAllCodeBlocks();
                 this.refreshActiveStates();
-                this.$wire.set('value', this.$refs.editor.innerHTML);
+                this.$wire.set('value', this.buildCleanValue());
 
                 return;
             }
 
-            this.htmlSource = this.$refs.editor.innerHTML;
+            // Mutual exclusivity with Preview (D-16bis): only one of the three modes is ever open
+            // at once. `htmlSource` is seeded from the CLEAN value, not the live colour-highlighted
+            // DOM -- source mode shows the markup that will actually be persisted, matching this
+            // toggle's own pre-existing contract (a save/reload round trip already proves this in
+            // tests/Browser/Components/WysiwygEditorTest.php).
+            this.previewMode = false;
+            this.htmlSource = this.buildCleanValue();
             this.htmlSourceMode = true;
+        },
+
+        // Preview mode (D-16bis): a third, read-only view showing exactly how the description will
+        // render, alongside Edit/HTML source in the same toolbar panel. Toggling it OFF is a plain
+        // flip back to Edit -- `previewHtml` is left as-is (stale) until the next time Preview is
+        // opened, since nothing reads it while `previewMode` is false.
+        togglePreview() {
+            if (this.previewMode) {
+                this.previewMode = false;
+
+                return;
+            }
+
+            // If HTML-source mode was open, commit its content back into the editor first (the
+            // same transition toggleHtmlSource()'s own OUT branch performs) so Preview reflects the
+            // administrator's latest edit rather than markup from before the source-mode edit.
+            if (this.htmlSourceMode) {
+                this.$refs.editor.innerHTML = this.htmlSource;
+                this.htmlSourceMode = false;
+                this.highlightAllCodeBlocks();
+                this.refreshActiveStates();
+            }
+
+            // A plain snapshot of the editor's own current (already colour-highlighted) markup --
+            // Preview is meant to show the SAME colouring the editor already displays live, not a
+            // second independent render of it.
+            this.previewHtml = this.$refs.editor.innerHTML;
+            this.previewMode = true;
         },
 
         // Inserts an empty `<pre><code class="language-{codeLanguage}">` block at the caret (or
@@ -274,6 +491,10 @@ document.addEventListener('alpine:init', () => {
 
             document.execCommand('insertHTML', false, pre.outerHTML + '<p><br></p>');
 
+            // Colour the freshly-inserted block immediately, rather than waiting for the next
+            // keystroke inside it -- otherwise a block inserted from a non-empty selection would
+            // show as plain text until the administrator typed something.
+            this.highlightAllCodeBlocks();
             this.scheduleSync();
         },
 
@@ -315,7 +536,7 @@ document.addEventListener('alpine:init', () => {
 
             // D6 step 6: sync explicitly rather than trusting insertHTML to fire a native `input`
             // event on every path -- see scheduleSync()'s comment on the deferred-flush behaviour.
-            this.$wire.set('value', this.$refs.editor.innerHTML);
+            this.$wire.set('value', this.buildCleanValue());
         },
     }));
 });

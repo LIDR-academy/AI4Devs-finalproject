@@ -49,6 +49,9 @@ return [
 
         'toggle_html_source' => 'Edit HTML source',
         'html_source_label' => 'HTML source',
+
+        'toggle_preview' => 'Preview',
+        'preview_label' => 'Description preview',
     ],
 
     /*

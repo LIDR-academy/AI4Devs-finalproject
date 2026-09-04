@@ -49,6 +49,9 @@ return [
 
         'toggle_html_source' => 'Editar código HTML',
         'html_source_label' => 'Código HTML',
+
+        'toggle_preview' => 'Vista previa',
+        'preview_label' => 'Vista previa de la descripción',
     ],
 
     /*

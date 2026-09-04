@@ -65,7 +65,7 @@
         holds focus instead. `class="contents"` rather than a plain wrapper `<div>` so this toggle
         adds no extra flex item to the parent toolbar's own `flex flex-wrap` layout -- every child
         below still participates in that layout directly. --}}
-        <div class="contents" x-show="!htmlSourceMode">
+        <div class="contents" x-show="!htmlSourceMode && !previewMode">
         @if ($disabled)
             <flux:button
                 variant="ghost"
@@ -315,10 +315,12 @@
         config('html-sanitizer.allowed_code_languages') -- the exact same list the sanitizer
         constrains `class` against, so the editor can never offer a language the server would then
         strip on save) plus a button that wraps the current selection (or inserts an empty block)
-        in `<pre><code class="language-{lang}">`. Syntax colouring is deliberately NOT applied here
-        -- the code stays plain text in the editor, per this feature's own D-X (display-only
-        highlighting): a highlighting LIBRARY runs only wherever the description is later
-        RENDERED, never inside this admin editor, so this toolbar adds no new script dependency. --}}
+        in `<pre><code class="language-{lang}">`. Syntax colouring IS applied live here, in the
+        editor itself (D-16bis, resources/js/app.js's onEditorInput()/highlightAllCodeBlocks()) --
+        a `highlight.js` colouring pass runs on every keystroke inside a code block, and again in
+        the Preview pane below, but what is ever PERSISTED stays plain code text
+        (buildCleanValue()): colouring spans never reach the server, so this toolbar's own
+        allow-list contract with the sanitizer is unaffected by adding this. --}}
         @if ($disabled)
             <flux:select disabled data-test="wysiwyg-code-language" class="w-auto">
                 <flux:select.option value="plaintext">{{ __('components.wysiwyg.code_language_plaintext') }}</flux:select.option>
@@ -351,10 +353,11 @@
 
         <flux:separator vertical class="mx-1 h-6" />
 
-        {{-- The HTML-source toggle is deliberately OUTSIDE the `x-show="!htmlSourceMode"` group
-        above -- it is the one control that must stay reachable WHILE source mode is open, or
-        there would be no way back to the normal view. `aria-pressed` mirrors the three inline
-        formatting buttons' own pattern (D10) rather than inventing a new state-reflection shape. --}}
+        {{-- The HTML-source and Preview toggles are deliberately OUTSIDE the
+        `x-show="!htmlSourceMode && !previewMode"` group above -- these are the two controls that
+        must stay reachable WHILE either of those views is open, or there would be no way back to
+        the normal edit view. `aria-pressed` mirrors the three inline formatting buttons' own
+        pattern (D10) rather than inventing a new state-reflection shape. --}}
         @if ($disabled)
             <flux:button
                 variant="ghost"
@@ -362,6 +365,14 @@
                 icon="code-bracket-square"
                 aria-label="{{ __('components.wysiwyg.toggle_html_source') }}"
                 data-test="wysiwyg-html-source-toggle"
+                disabled
+            />
+            <flux:button
+                variant="ghost"
+                size="sm"
+                icon="eye"
+                aria-label="{{ __('components.wysiwyg.toggle_preview') }}"
+                data-test="wysiwyg-preview-toggle"
                 disabled
             />
         @else
@@ -375,6 +386,16 @@
                 x-bind:aria-pressed="htmlSourceMode ? 'true' : 'false'"
                 class="cursor-pointer!"
             />
+            <flux:button
+                variant="ghost"
+                size="sm"
+                icon="eye"
+                aria-label="{{ __('components.wysiwyg.toggle_preview') }}"
+                data-test="wysiwyg-preview-toggle"
+                x-on:mousedown.prevent="togglePreview()"
+                x-bind:aria-pressed="previewMode ? 'true' : 'false'"
+                class="cursor-pointer!"
+            />
         @endif
     </div>
 
@@ -386,7 +407,7 @@
     documented consequence (D9) a consumer must know rather than a bug. --}}
     <div
         x-ref="editor"
-        x-show="!htmlSourceMode"
+        x-show="!htmlSourceMode && !previewMode"
         wire:ignore
         contenteditable="{{ $disabled ? 'false' : 'true' }}"
         role="textbox"
@@ -417,6 +438,26 @@
             spellcheck="false"
             class="min-h-40 w-full rounded-b-lg border border-t-0 border-zinc-200 p-3 font-mono text-xs outline-hidden focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-accent-foreground dark:border-zinc-700"
         ></textarea>
+    </div>
+
+    {{-- The Preview pane (D-16bis): a read-only rendering of `previewHtml` -- a plain snapshot
+    string written once, at the moment togglePreview() opens this view (never live-bound to the
+    editor, mirroring `htmlSource` above). `x-html` sets `.innerHTML` from that string exactly the
+    way `toggleHtmlSource()` already does for the contenteditable region itself -- see that
+    control's own comment on why this never executes any markup it is given; the authoritative
+    check on save remains App\Actions\Products\SanitizeProductDescription regardless. `wire:ignore`
+    for the same reason as the HTML-source `<textarea>`'s own wrapper: nothing here is part of the
+    component's normal server-rendered output once mounted. --}}
+    <div wire:ignore>
+        <div
+            x-show="previewMode"
+            x-cloak
+            x-html="previewHtml"
+            role="region"
+            aria-label="{{ __('components.wysiwyg.preview_label') }}"
+            data-test="wysiwyg-preview"
+            class="wysiwyg-preview-region min-h-40 w-full rounded-b-lg border border-t-0 border-zinc-200 p-3 text-sm dark:border-zinc-700 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_h2]:text-lg [&_h2]:font-semibold [&_a]:underline [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-zinc-100 [&_pre]:p-2 [&_pre]:font-mono [&_pre]:text-xs dark:[&_pre]:bg-zinc-800"
+        ></div>
     </div>
 
     {{-- D4: the editor embeds the gallery itself, single-select, per-instance-unique select-event
