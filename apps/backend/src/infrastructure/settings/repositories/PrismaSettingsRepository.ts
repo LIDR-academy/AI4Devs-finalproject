@@ -18,6 +18,7 @@ export class PrismaSettingsRepository implements ISystemSettingsRepository {
           defaultRemanenteHours: 24,
           varianceTolerancePercent: 5.0,
           idleTimeoutMinutes: 15,
+          preparationWasteAlertPercent: 5,
         },
       });
     }
@@ -31,33 +32,28 @@ export class PrismaSettingsRepository implements ISystemSettingsRepository {
       defaultRemanenteHours: s.defaultRemanenteHours,
       varianceTolerancePercent: Number(s.varianceTolerancePercent),
       idleTimeoutMinutes: s.idleTimeoutMinutes ?? 15,
+      preparationWasteAlertPercent: s.preparationWasteAlertPercent ?? 5,
       updatedAt: s.updatedAt,
     });
   }
 
   async saveSettings(settings: SystemSettings): Promise<void> {
+    const fields = {
+      restaurantName: settings.restaurantName,
+      taxId: settings.taxId,
+      currencySymbol: settings.currencySymbol,
+      criticalAlertHours: settings.criticalAlertHours,
+      defaultRemanenteHours: settings.defaultRemanenteHours,
+      varianceTolerancePercent: settings.varianceTolerancePercent,
+      idleTimeoutMinutes: settings.idleTimeoutMinutes,
+      preparationWasteAlertPercent: settings.preparationWasteAlertPercent,
+    };
+    // Fila única `id: 'default'` — create y update comparten exactamente los mismos
+    // campos (solo create agrega el id), así que se arman a partir del mismo objeto.
     await this.prisma.systemSettings.upsert({
       where: { id: 'default' },
-      create: {
-        id: 'default',
-        restaurantName: settings.restaurantName,
-        taxId: settings.taxId,
-        currencySymbol: settings.currencySymbol,
-        criticalAlertHours: settings.criticalAlertHours,
-        defaultRemanenteHours: settings.defaultRemanenteHours,
-        varianceTolerancePercent: settings.varianceTolerancePercent,
-        idleTimeoutMinutes: settings.idleTimeoutMinutes,
-      },
-      update: {
-        restaurantName: settings.restaurantName,
-        taxId: settings.taxId,
-        currencySymbol: settings.currencySymbol,
-        criticalAlertHours: settings.criticalAlertHours,
-        defaultRemanenteHours: settings.defaultRemanenteHours,
-        varianceTolerancePercent: settings.varianceTolerancePercent,
-        idleTimeoutMinutes: settings.idleTimeoutMinutes,
-      },
+      create: { id: 'default', ...fields },
+      update: fields,
     });
   }
-
 }

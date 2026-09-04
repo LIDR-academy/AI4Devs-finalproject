@@ -247,7 +247,7 @@ function mountApiRoutes(
 
   app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo, isAuthRequired, locationRepo, recipePreparationRepo));
   app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo, isAuthRequired, recipePreparationRepo, stockRepo, locationRepo));
-  app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo));
+  app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo, settingsRepo));
   app.use('/api/v1/recipes', ...guard, createRecipesRouter(recipeRepo, stockRepo));
   app.use('/api/v1/roles', ...guard, createRolesController(roleRepo));
   app.use('/api/v1/locations', ...guard, createLocationsController(locationRepo, isAuthRequired, stockRepo));

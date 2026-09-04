@@ -62,8 +62,10 @@ function buildKitchenController(
     new GetActiveRemanentesUseCase(remanenteQueryRepository),
     remanenteRepository ? new ConsumeRemanenteUseCase(remanenteRepository) : undefined,
     remanenteRepository ? new DiscardRemanenteUseCase(remanenteRepository) : undefined,
-    remanenteRepository && recipeRepository
-      ? new ConsumeRecipeUseCase(recipeRepository, remanenteRepository)
+    // US-029: consumo ad-hoc dentro de runAdhocConsumption (C-DEV-006-1) — necesita el
+    // IStockUnitOfWork, no solo IRemanenteRepository (que ya no basta desde TK-105).
+    recipeRepository && closeDeps.stockUnitOfWork
+      ? new ConsumeRecipeUseCase(recipeRepository, closeDeps.stockUnitOfWork, systemClock, cryptoIdGenerator)
       : undefined,
     remanenteRepository
       ? new PerformShiftReconciliationUseCase(remanenteRepository, remanenteQueryRepository, reconciliationRepo)
@@ -123,7 +125,7 @@ export function createKitchenRouter(
     router.post('/remanentes/:id/discard', ...operators, controller.discardRemanente);
     router.post('/shift-reconciliation', ...operators, controller.performShiftReconciliation);
   }
-  if (remanenteRepository && recipeRepository) {
+  if (recipeRepository && stockUnitOfWork) {
     router.post('/recipes/:id/consume', ...operators, controller.consumeRecipe);
   }
 

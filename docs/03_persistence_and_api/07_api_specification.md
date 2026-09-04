@@ -41,14 +41,14 @@ inputs:
 | **GET** | `/api/v1/kitchen/recipe-preparations/{id}` | *Ninguno* | `RecipePreparationDetail` | ✅ Done (`TK-103`). Detalle de una preparación con sus remanentes vinculados (incluye `isPristine` por remanente, `TK-104`). |
 | **POST** | `/api/v1/kitchen/recipe-preparations/{id}/close` | `CloseRecipePreparationRequest` | `CloseRecipePreparationResponse` | ✅ Done (`TK-104`/`TK-104-FE`). Concilia la preparación: consumo por cuadre, sobrante con ubicación, merma con motivo. Transaccional. |
 | **POST** | `/api/v1/kitchen/recipe-preparations/{id}/abandon` | *Ninguno* | `AbandonRecipePreparationResponse` | ✅ Done (`TK-104`/`TK-104-FE`). Cierra sin conciliar; los remanentes quedan `ACTIVE` sin etiqueta de preparación. |
-| **GET** | `/api/v1/reports/preparation-waste` 📝 | *Query Params* | `PreparationWasteReportResponse` | 📝 Draft, diferible (`TK-105`). Merma de preparación por receta/ingrediente/motivo + consumo real vs. teórico. |
+| **GET** | `/api/v1/reports/preparation-waste` | *Query Params* | `PreparationWasteReportResponse` | ✅ Done (`TK-105`). Merma de preparación por receta/ingrediente/motivo (cantidad + `$` + % + `overThreshold`) + consumo real vs. teórico por receta/ingrediente. Rol `ADMIN`. |
 
-> **Nota — cambios en endpoints existentes (📝 Draft, [ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md)):**
+> **Nota — cambios en endpoints existentes ([ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md)):**
 > - `POST /api/v1/stock/extraction`: `toLocation` (literal) → `toStorageLocationId` (FK a `StorageLocation type=KITCHEN`, `TK-102`); `+ plannedPortions`, `+ recipePreparationId` y `recipeId` obligatorio cuando `purpose=RECIPE` (`TK-103`); `RecordExtractionResponse + recipePreparationId`.
 > - `GET /api/v1/kitchen/remanentes` / `remanentes-activos`: `+ storageLocationName` (`TK-102`).
-> - `POST /api/v1/kitchen/recipes/:id/consume`: se conserva (consumo ad-hoc) pero pasa a emitir `CONSUMPTION_RECIPE` y a ser transaccional (`TK-105`).
+> - `POST /api/v1/kitchen/recipes/:id/consume`: se conserva (consumo ad-hoc) — ✅ Done (`TK-105`): ahora corre dentro de una frontera transaccional (`IStockUnitOfWork.runAdhocConsumption`, revierte por completo ante stock insuficiente de cualquier ingrediente) y emite un `StockMovement` `CONSUMPTION_RECIPE` por cada remanente afectado.
 > - `DELETE`/`PUT /api/v1/locations/{id}`: `409` también si un área `type=KITCHEN` tiene remanentes `ACTIVE` (`TK-102`).
-> - `GET`/`PUT /api/v1/settings`: `+ preparationWasteAlertPercent` (`TK-105`).
+> - `GET`/`PUT /api/v1/settings`: ✅ Done (`TK-105`) — `+ preparationWasteAlertPercent` (int, 0-100, default 5).
 
 ---
 

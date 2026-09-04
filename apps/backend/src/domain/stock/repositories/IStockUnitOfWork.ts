@@ -77,6 +77,18 @@ export interface PreparationCloseUnitOfWork {
 }
 
 /**
+ * Escrituras del consumo *ad-hoc* de receta (`ConsumeRecipeUseCase`, US-029 Escenario 4/5):
+ * descuenta por cascada FEFO sobre remanentes ya abiertos en cocina, sin extracción ni
+ * preparación previa. Un ingrediente sin stock suficiente revierte **todo** lo ya
+ * descontado de ingredientes anteriores (C-DEV-006-1) — ningún remanente queda a medias.
+ */
+export interface AdhocConsumptionUnitOfWork {
+  findActiveRemanentesByInsumoId(insumoId: string): Promise<Remanente[]>;
+  saveRemanente(remanente: Remanente): Promise<void>;
+  recordMovement(movement: StockMovementRecord): Promise<void>;
+}
+
+/**
  * Puerto de frontera transaccional para la extracción de bodega (C-DEV-006-1,
  * AUDIT-DEV-006 F-1/F-2). El caso de uso encadena el débito de stock, la creación
  * del remanente y el registro del movimiento dentro de `runExtraction` — ante
@@ -87,4 +99,7 @@ export interface IStockUnitOfWork {
 
   /** US-028: misma garantía para el cierre / abandono de una preparación de receta. */
   runPreparationClose<T>(work: (uow: PreparationCloseUnitOfWork) => Promise<T>): Promise<T>;
+
+  /** US-029: misma garantía para el consumo ad-hoc de una receta (`POST /kitchen/recipes/:id/consume`). */
+  runAdhocConsumption<T>(work: (uow: AdhocConsumptionUnitOfWork) => Promise<T>): Promise<T>;
 }

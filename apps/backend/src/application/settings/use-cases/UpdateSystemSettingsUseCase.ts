@@ -9,6 +9,7 @@ export interface UpdateSystemSettingsCommand {
   defaultRemanenteHours?: number;
   varianceTolerancePercent?: number;
   idleTimeoutMinutes?: number;
+  preparationWasteAlertPercent?: number;
 }
 
 export class UpdateSystemSettingsUseCase {
@@ -26,6 +27,10 @@ export class UpdateSystemSettingsUseCase {
       defaultRemanenteHours: command.defaultRemanenteHours !== undefined ? command.defaultRemanenteHours : current.defaultRemanenteHours,
       varianceTolerancePercent: command.varianceTolerancePercent !== undefined ? command.varianceTolerancePercent : current.varianceTolerancePercent,
       idleTimeoutMinutes: command.idleTimeoutMinutes !== undefined ? command.idleTimeoutMinutes : current.idleTimeoutMinutes,
+      preparationWasteAlertPercent:
+        command.preparationWasteAlertPercent !== undefined
+          ? command.preparationWasteAlertPercent
+          : current.preparationWasteAlertPercent,
     });
 
     await this.settingsRepository.saveSettings(updated);

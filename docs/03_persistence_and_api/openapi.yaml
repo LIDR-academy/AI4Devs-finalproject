@@ -1063,6 +1063,54 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/reports/preparation-waste:
+    get:
+      summary: Recipe-preparation waste report + real-vs-theoretical consumption (ADMIN role only, US-029)
+      description: >
+        Aggregates RecipePreparationItem from CLOSED preparations closed in the date
+        range: waste grouped by recipe → ingredient → reason (quantity, $ valorization
+        via Insumo.unitCost, % of extracted, and overThreshold vs.
+        SystemSettings.preparationWasteAlertPercent — no notification is sent, #12
+        deferred) and consumption grouped by recipe → ingredient (theoretical vs.
+        actual consumedQty, with the difference).
+      operationId: getPreparationWasteReport
+      tags:
+        - Reports & Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Preparation waste and consumption-vs-theoretical report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreparationWasteReportResponse'
+        '400':
+          description: Missing or invalid startDate/endDate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1789,6 +1837,62 @@ components:
           type: integer
           description: Number of remanentes included in the average. 0 means no remanente reached a terminal state in the range — the frontend must render an empty state, not "0h" (which would misleadingly read as a perfect score).
           example: 134
+
+    PreparationWasteLine:
+      type: object
+      description: US-029 — one recipe → ingredient → wasteReason group.
+      properties:
+        recipeId: { type: string }
+        recipeName: { type: string }
+        insumoId: { type: string }
+        insumoName: { type: string }
+        unitOfMeasure: { type: string }
+        wasteReason: { type: string }
+        totalWastedQty: { $ref: '#/components/schemas/DecimalString' }
+        totalExtractedQty: { $ref: '#/components/schemas/DecimalString' }
+        wastePercent:
+          type: string
+          description: totalWastedQty / totalExtractedQty × 100, 2 decimals.
+          example: '12.00'
+        wastedCost:
+          type: string
+          nullable: true
+          description: totalWastedQty × insumo.unitCost. Null (not "0.00") when the insumo has no unitCost recorded (US-019).
+        overThreshold:
+          type: boolean
+          description: wastePercent > SystemSettings.preparationWasteAlertPercent. No notification is sent for this (#12, deferred) — display-only.
+
+    RecipeConsumptionLine:
+      type: object
+      description: US-029 Escenario 2 — real vs. theoretical consumption for one recipe → ingredient.
+      properties:
+        recipeId: { type: string }
+        recipeName: { type: string }
+        insumoId: { type: string }
+        insumoName: { type: string }
+        unitOfMeasure: { type: string }
+        theoreticalQty:
+          $ref: '#/components/schemas/DecimalString'
+        actualQty:
+          $ref: '#/components/schemas/DecimalString'
+        differenceQty:
+          type: string
+          description: actualQty − theoreticalQty. Positive means the recipe systematically consumes more than specified.
+
+    PreparationWasteReportResponse:
+      type: object
+      properties:
+        wasteByReason:
+          type: array
+          items:
+            $ref: '#/components/schemas/PreparationWasteLine'
+        consumptionVsTheoretical:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeConsumptionLine'
+        wasteAlertThresholdPercent:
+          type: integer
+          description: SystemSettings.preparationWasteAlertPercent at the time of the query.
 
     ErrorResponse:
       description: RFC 7807 Problem Details format (Guard 19)

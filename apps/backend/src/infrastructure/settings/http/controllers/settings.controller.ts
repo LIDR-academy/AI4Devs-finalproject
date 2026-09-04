@@ -12,6 +12,8 @@ const updateSettingsSchema = z.object({
   defaultRemanenteHours: z.number().int().positive().optional(),
   varianceTolerancePercent: z.number().min(0).max(100).optional(),
   idleTimeoutMinutes: z.number().int().min(1).max(1440).optional(),
+  // US-029 / TK-105: umbral (%) de merma de preparación destacado en el reporte.
+  preparationWasteAlertPercent: z.number().int().min(0).max(100).optional(),
 });
 
 export function createSettingsController(settingsRepo: ISystemSettingsRepository): Router {
@@ -31,6 +33,7 @@ export function createSettingsController(settingsRepo: ISystemSettingsRepository
         defaultRemanenteHours: s.defaultRemanenteHours,
         varianceTolerancePercent: s.varianceTolerancePercent,
         idleTimeoutMinutes: s.idleTimeoutMinutes ?? 15,
+        preparationWasteAlertPercent: s.preparationWasteAlertPercent,
       });
     } catch (err) {
       next(err);
@@ -50,6 +53,7 @@ export function createSettingsController(settingsRepo: ISystemSettingsRepository
         defaultRemanenteHours: s.defaultRemanenteHours,
         varianceTolerancePercent: s.varianceTolerancePercent,
         idleTimeoutMinutes: s.idleTimeoutMinutes ?? 15,
+        preparationWasteAlertPercent: s.preparationWasteAlertPercent,
       });
     } catch (err) {
       next(err);

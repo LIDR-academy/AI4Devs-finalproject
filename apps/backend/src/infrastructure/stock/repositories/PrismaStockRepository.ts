@@ -5,6 +5,7 @@ import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuan
 import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
 import { IRemanenteRepository, StockMovementRecord } from '../../../domain/stock/repositories/IRemanenteRepository.js';
 import {
+  AdhocConsumptionUnitOfWork,
   ExtractionUnitOfWork,
   IStockUnitOfWork,
   PreparationCloseUnitOfWork,
@@ -157,13 +158,8 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
   ): Promise<T> {
     return this.prisma.$transaction(async (tx) => {
       const uow: PreparationCloseUnitOfWork = {
-        findRemanentesByPreparation: async (preparationId) => {
-          const list = await tx.remanente.findMany({
-            where: { recipePreparationId: preparationId, status: 'ACTIVE' },
-            orderBy: { expirationDate: 'asc' },
-          });
-          return list.map((raw) => this.toRemanente(raw));
-        },
+        findRemanentesByPreparation: (preparationId) =>
+          this.findActiveRemanentesOn(tx, { recipePreparationId: preparationId }),
         saveRemanente: (remanente) => this.saveRemanenteOn(tx, remanente),
         recordMovement: (movement) => this.recordMovementOn(tx, movement),
         incrementWarehouseStock: (insumoId, storageLocationId, quantity) =>
@@ -173,6 +169,36 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
       };
       return work(uow);
     });
+  }
+
+  /**
+   * US-029 / ADR-003 §4: frontera transaccional del consumo ad-hoc de una receta
+   * (`ConsumeRecipeUseCase`). Cierra la deuda de `TK-008` — antes descontaba remanentes
+   * en escrituras sueltas, sin transacción ni `StockMovement`.
+   */
+  public async runAdhocConsumption<T>(
+    work: (uow: AdhocConsumptionUnitOfWork) => Promise<T>
+  ): Promise<T> {
+    return this.prisma.$transaction(async (tx) => {
+      const uow: AdhocConsumptionUnitOfWork = {
+        findActiveRemanentesByInsumoId: (insumoId) => this.findActiveRemanentesOn(tx, { insumoId }),
+        saveRemanente: (remanente) => this.saveRemanenteOn(tx, remanente),
+        recordMovement: (movement) => this.recordMovementOn(tx, movement),
+      };
+      return work(uow);
+    });
+  }
+
+  /** `ACTIVE` únicamente, orden FEFO — filtro adicional según el llamador (por insumo o por preparación). */
+  private async findActiveRemanentesOn(
+    client: StockDbClient,
+    where: { insumoId: string } | { recipePreparationId: string }
+  ): Promise<Remanente[]> {
+    const list = await client.remanente.findMany({
+      where: { ...where, status: 'ACTIVE' },
+      orderBy: { expirationDate: 'asc' },
+    });
+    return list.map((raw) => this.toRemanente(raw));
   }
 
   private async incrementWarehouseStockOn(

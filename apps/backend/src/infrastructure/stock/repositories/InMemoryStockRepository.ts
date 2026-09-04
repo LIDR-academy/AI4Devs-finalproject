@@ -6,6 +6,7 @@ import {
   StockMovementRecord,
 } from '../../../domain/stock/repositories/IRemanenteRepository.js';
 import {
+  AdhocConsumptionUnitOfWork,
   ExtractionUnitOfWork,
   IStockUnitOfWork,
   PreparationCloseUnitOfWork,
@@ -100,18 +101,56 @@ export class InMemoryStockRepository
     this.movements.push({ ...movement, createdAt: movement.createdAt ?? new Date() });
   }
 
+  // `Insumo` (F-2) y `RecipePreparationItem` son inmutables/reconstruidos enteros en cada
+  // escritura — el Map los referencia sin riesgo. `Remanente` y `RecipePreparation` SÍ mutan
+  // in place (consumeQuantity/close/abandon/relocateLeftover/...): un snapshot que solo
+  // copia el Map (no el contenido) seguiría apuntando al mismo objeto, y una mutación
+  // posterior "se colaría" en el snapshot ya tomado. Por eso el snapshot clona cada valor.
+  private cloneRemanente(r: Remanente): Remanente {
+    return new Remanente({
+      id: r.id,
+      insumoId: r.insumoId,
+      currentQuantity: r.currentQuantity,
+      initialQuantity: r.initialQuantity,
+      location: r.location,
+      storageLocationId: r.storageLocationId,
+      recipePreparationId: r.recipePreparationId,
+      isPristine: r.isPristine,
+      status: r.status,
+      expirationDate: r.expirationDate,
+      createdAt: r.createdAt,
+      terminalAt: r.terminalAt,
+    });
+  }
+
+  private cloneRecipePreparation(p: RecipePreparation): RecipePreparation {
+    return new RecipePreparation({
+      id: p.id,
+      recipeId: p.recipeId,
+      plannedPortions: p.plannedPortions,
+      status: p.status,
+      openedByOperatorId: p.openedByOperatorId,
+      openedAt: p.openedAt,
+      actualPortions: p.actualPortions,
+      closedByOperatorId: p.closedByOperatorId,
+      closedAt: p.closedAt,
+      notes: p.notes,
+    });
+  }
+
   /**
    * AUDIT-DEV-006 F-1: replica el rollback de `$transaction` para los fakes de
-   * `IStockUnitOfWork`. Toma un snapshot shallow de todos los `Map`/array de estado
-   * (cada escritura reemplaza la entrada, nunca la muta in place) y lo restaura ante
-   * cualquier excepción.
+   * `IStockUnitOfWork`. Clona los agregados mutables antes de correr `work` y restaura
+   * el estado previo ante cualquier excepción.
    */
   private async withSnapshot<T>(work: () => Promise<T>): Promise<T> {
     const snapshot = {
       insumos: new Map(this.insumos),
-      remanentes: new Map(this.remanentes),
+      remanentes: new Map(Array.from(this.remanentes, ([id, r]) => [id, this.cloneRemanente(r)] as const)),
       movements: [...this.movements],
-      recipePreparations: new Map(this.recipePreparations),
+      recipePreparations: new Map(
+        Array.from(this.recipePreparations, ([id, p]) => [id, this.cloneRecipePreparation(p)] as const)
+      ),
       recipePreparationItems: new Map(this.recipePreparationItems),
     };
     try {
@@ -136,6 +175,11 @@ export class InMemoryStockRepository
 
   /** US-028: frontera transaccional del cierre / abandono de una preparación. */
   async runPreparationClose<T>(work: (uow: PreparationCloseUnitOfWork) => Promise<T>): Promise<T> {
+    return this.withSnapshot(() => work(this));
+  }
+
+  /** US-029: frontera transaccional del consumo ad-hoc de una receta. */
+  async runAdhocConsumption<T>(work: (uow: AdhocConsumptionUnitOfWork) => Promise<T>): Promise<T> {
     return this.withSnapshot(() => work(this));
   }
 

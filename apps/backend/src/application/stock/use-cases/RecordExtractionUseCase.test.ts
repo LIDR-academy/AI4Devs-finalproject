@@ -94,8 +94,12 @@ class RecordingUnitOfWork implements IStockUnitOfWork {
     return work(uow);
   }
 
-  // RecordExtractionUseCase no usa esta frontera; stub para satisfacer la interfaz.
+  // RecordExtractionUseCase no usa estas fronteras; stubs para satisfacer la interfaz.
   async runPreparationClose<T>(): Promise<T> {
+    throw new Error('no usado por RecordExtractionUseCase');
+  }
+
+  async runAdhocConsumption<T>(): Promise<T> {
     throw new Error('no usado por RecordExtractionUseCase');
   }
 }

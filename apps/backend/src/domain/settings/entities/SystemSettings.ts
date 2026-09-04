@@ -7,6 +7,8 @@ export interface SystemSettingsProps {
   defaultRemanenteHours: number;
   varianceTolerancePercent: number;
   idleTimeoutMinutes: number;
+  /** US-029 / ADR-003: umbral de merma de preparación destacado en el reporte (TK-105). */
+  preparationWasteAlertPercent: number;
   updatedAt?: Date;
 }
 
@@ -43,6 +45,10 @@ export class SystemSettings {
 
   get idleTimeoutMinutes(): number {
     return this.props.idleTimeoutMinutes;
+  }
+
+  get preparationWasteAlertPercent(): number {
+    return this.props.preparationWasteAlertPercent;
   }
 }
 

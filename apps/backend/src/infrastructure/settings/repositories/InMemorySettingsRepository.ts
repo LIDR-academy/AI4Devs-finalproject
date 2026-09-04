@@ -11,6 +11,7 @@ export class InMemorySettingsRepository implements ISystemSettingsRepository {
     defaultRemanenteHours: 24,
     varianceTolerancePercent: 5.0,
     idleTimeoutMinutes: 15,
+    preparationWasteAlertPercent: 5,
   });
 
 

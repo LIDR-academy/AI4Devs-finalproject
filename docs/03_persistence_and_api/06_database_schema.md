@@ -414,6 +414,7 @@ model SystemSettings {
   criticalAlertHours       Int      @default(24)
   defaultRemanenteHours    Int      @default(24)
   varianceTolerancePercent Decimal  @default(5.0) @db.Decimal(5, 2)
+  preparationWasteAlertPercent Int  @default(5) // US-029 / TK-105
   updatedAt                DateTime @updatedAt
 }
 

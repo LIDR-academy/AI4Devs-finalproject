@@ -1,10 +1,8 @@
 import Decimal from 'decimal.js';
 import { IReportRepository } from '../../../domain/reports/repositories/IReportRepository.js';
+import { DateRangeInput, parseDateRange } from '../parseDateRange.js';
 
-export interface GetRotationMetricsInput {
-  startDate: string;
-  endDate: string;
-}
+export type GetRotationMetricsInput = DateRangeInput;
 
 export interface RotationMetricsDTO {
   averageTrrHours: number | null;
@@ -19,17 +17,7 @@ export class GetRotationMetricsUseCase {
   constructor(private readonly reportRepository: IReportRepository) {}
 
   public async execute(input: GetRotationMetricsInput): Promise<RotationMetricsDTO> {
-    const start = new Date(input.startDate);
-    const end = new Date(input.endDate);
-
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      throw new Error('Las fechas deben ser cadenas ISO 8601 validas.');
-    }
-
-    if (start > end) {
-      throw new Error('La fecha de inicio (startDate) no puede ser posterior a la fecha de fin (endDate).');
-    }
-
+    const { start, end } = parseDateRange(input);
     const records = await this.reportRepository.getTerminalRemanentes(start, end);
 
     if (records.length === 0) {

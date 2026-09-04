@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { GetWasteReportUseCase } from '../../../../application/reports/use-cases/GetWasteReportUseCase.js';
 import { GetRotationMetricsUseCase } from '../../../../application/reports/use-cases/GetRotationMetricsUseCase.js';
+import { GetPreparationWasteReportUseCase } from '../../../../application/reports/use-cases/GetPreparationWasteReportUseCase.js';
 import { respondValidationError } from '../../../http/utils/responseUtils.js';
 
 // TK-079: valida formato ISO 8601 y orden de fechas en la frontera Zod (backend_rules.md
@@ -29,8 +30,27 @@ const dateRangeQuerySchema = z
 export class ReportsController {
   constructor(
     private readonly getWasteReportUseCase: GetWasteReportUseCase,
-    private readonly getRotationMetricsUseCase: GetRotationMetricsUseCase
+    private readonly getRotationMetricsUseCase: GetRotationMetricsUseCase,
+    private readonly getPreparationWasteReportUseCase?: GetPreparationWasteReportUseCase
   ) {}
+
+  public getPreparationWasteReport = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!this.getPreparationWasteReportUseCase) throw new Error('GetPreparationWasteReportUseCase no configurado.');
+      const query = dateRangeQuerySchema.parse(req.query);
+      const result = await this.getPreparationWasteReportUseCase.execute({
+        startDate: query.startDate,
+        endDate: query.endDate,
+      });
+      res.status(200).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
+        return;
+      }
+      next(error);
+    }
+  };
 
   public getWasteReport = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

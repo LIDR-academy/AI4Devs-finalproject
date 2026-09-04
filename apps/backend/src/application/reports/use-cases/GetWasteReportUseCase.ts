@@ -1,9 +1,7 @@
 import { IReportRepository } from '../../../domain/reports/repositories/IReportRepository.js';
+import { DateRangeInput, parseDateRange } from '../parseDateRange.js';
 
-export interface GetWasteReportInput {
-  startDate: string;
-  endDate: string;
-}
+export type GetWasteReportInput = DateRangeInput;
 
 export interface WasteSummaryDTO {
   insumoId: string;
@@ -18,17 +16,7 @@ export class GetWasteReportUseCase {
   constructor(private readonly reportRepository: IReportRepository) {}
 
   public async execute(input: GetWasteReportInput): Promise<WasteSummaryDTO[]> {
-    const start = new Date(input.startDate);
-    const end = new Date(input.endDate);
-
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      throw new Error('Las fechas deben ser cadenas ISO 8601 validas.');
-    }
-
-    if (start > end) {
-      throw new Error('La fecha de inicio (startDate) no puede ser posterior a la fecha de fin (endDate).');
-    }
-
+    const { start, end } = parseDateRange(input);
     const summaries = await this.reportRepository.getWasteReport(start, end);
 
     return summaries.map((s) => ({
