@@ -355,6 +355,42 @@ test('a link to an unsupported address scheme is refused before it is applied, l
         ->assertScript("document.querySelector('{$region} a') === null");
 });
 
+// A real user's click is a `mousedown` and a `click` fired as two SEPARATE browser events, with
+// real wall-clock time between them; Playwright's own `->click()` helper reproduces that shape
+// closely enough that this exact bug still slipped past the two tests above for a whole story --
+// they never caught it. The trigger button used to sit OUTSIDE the popover `<div>` that alone
+// carried `x-on:click.outside`, so the button's own `click` (which follows the `mousedown` that
+// opens the popover, per D8's `x-on:mousedown.prevent="openLinkPopover()"`) was itself read by
+// Alpine's `.outside` modifier as a click landing *outside* the popover -- `el.contains(e.target)`
+// is false for a sibling -- closing the popover a moment after it opened. Reported live: the
+// popover visibly flashes open then immediately shuts, before a URL can ever be typed. Dispatching
+// `mousedown` and `click` as two independent `->script()` calls below -- rather than one atomic
+// `->click()` -- forces a real round trip to the browser between them, which is what actually
+// exposes the race (Alpine's own `el._x_isShown` flag needs that same gap to have flushed before
+// the `click` event's outside-check runs, which is also why the atomic `->click()` in the two
+// tests above did not reliably catch this). See `resources/views/livewire/components/wysiwyg-editor.blade.php`'s
+// wrapper `<div>` for the fix: `x-on:click.outside` now lives on the element containing BOTH the
+// trigger button and the popover, so a click on the trigger is a click on a descendant and is
+// correctly excluded rather than misread as outside.
+test('clicking the link button opens the popover and a real click does not immediately close it', function () {
+    $actor = wysiwygUiTestActor();
+    $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
+
+    $region = wysiwygUiTestRegion();
+    $trigger = wysiwygUiTestControl('wysiwyg-link');
+
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
+
+    $page->script(wysiwygUiTestSelectWordScript($region, 'BEFORE'));
+
+    $page->script("document.querySelector('{$trigger}').dispatchEvent(new MouseEvent('mousedown', {bubbles: true}))");
+    $page->script("document.querySelector('{$trigger}').dispatchEvent(new MouseEvent('click', {bubbles: true}))");
+
+    $page->assertNoJavaScriptErrors()
+        ->assertVisible(wysiwygUiTestControl('wysiwyg-link-url'));
+});
+
 // =====================================================================
 // The toolbar reflects the formatting of the text under the cursor -- placing a collapsed caret
 // inside an already-bold word marks the Bold action pressed (V9's queryCommandState mechanism, and
