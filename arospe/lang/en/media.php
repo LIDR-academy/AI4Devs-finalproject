@@ -42,6 +42,7 @@ return [
         'upload_input_label' => 'Choose an image file to upload',
         'dropzone_label' => 'Drag and drop an image here, or use the Upload button',
         'dropzone_label_dragging' => 'Drop to upload',
+        'upload_hint' => 'JPG, JPEG or PNG, up to :size MB, max :dimension×:dimension px',
         'empty_state' => [
             'title' => 'No images found',
             'body' => 'Try a different search term, or upload a new image.',

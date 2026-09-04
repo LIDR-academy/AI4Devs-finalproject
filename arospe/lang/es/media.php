@@ -43,6 +43,7 @@ return [
         'upload_input_label' => 'Elige un archivo de imagen para subir',
         'dropzone_label' => 'Arrastra y suelta una imagen aquí, o usa el botón Subir',
         'dropzone_label_dragging' => 'Suelta para subir',
+        'upload_hint' => 'JPG, JPEG o PNG, hasta :size MB, máximo :dimension×:dimension px',
         'empty_state' => [
             'title' => 'No se encontraron imágenes',
             'body' => 'Prueba con otro término de búsqueda, o sube una imagen nueva.',

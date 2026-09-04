@@ -126,6 +126,17 @@
             </flux:tooltip>
         @endif
 
+        {{-- Purely informational -- states the same bounds imageUploadRules() (App\Concerns\MediaValidationRules)
+        enforces server-side, computed from its constants rather than duplicated as literals, so this
+        text can never drift from what a submission actually gets rejected against. Shown regardless
+        of $this->canCreate: knowing the limits is not privileged information. --}}
+        <flux:text size="sm" class="text-center text-zinc-400 dark:text-zinc-600" data-test="media-upload-hint">
+            {{ __('media.gallery.upload_hint', [
+                'size' => (int) ($this::MAX_UPLOAD_KB / 1024),
+                'dimension' => $this::MAX_DIMENSION,
+            ]) }}
+        </flux:text>
+
         {{-- `<flux:error>` reads its own `name`/`message` PROPS -- not slot
         content, per vendor/livewire/flux/stubs/resources/views/flux/error.blade.php
         -- matching the two existing call sites this project already has
