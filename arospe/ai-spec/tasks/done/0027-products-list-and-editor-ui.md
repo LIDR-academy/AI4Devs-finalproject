@@ -2588,7 +2588,7 @@ in full readings of [0019](../done/0019-media-library-upload-and-conversions-bac
 [0022](../done/0022-searchable-multi-select-component.md), [0023](../done/0023-product-categories-backend.md),
 [0024](../done/0024-products-core-crud-backend.md), [0025](../done/0025-product-categories-ui.md),
 [0026](../done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) and
-[0029](../0029-product-variants-backend.md), with
+[0029](0029-product-variants-backend.md), with
 [0006](../done/0006-users-list-editor-ui.md) / `App\Livewire\Users\Index` as the list+row-action pattern
 and [0025](../done/0025-product-categories-ui.md) as the most recent sibling screen.
 

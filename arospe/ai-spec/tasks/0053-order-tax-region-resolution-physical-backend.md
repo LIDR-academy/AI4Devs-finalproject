@@ -26,7 +26,7 @@ returns. No route, no Livewire component, no Blade markup, no migration and no n
 > **This story is fully specified now, but its Phase 3 implementation cannot start until story
 > [0045](0045-orders-core-crud-backend.md) is `done` — and 0045 is itself blocked** on PRD Epic 2
 > stories [0024](done/0024-products-core-crud-backend.md) (Products),
-> [0029](0029-product-variants-backend.md) (Product Variants),
+> [0029](done/0029-product-variants-backend.md) (Product Variants),
 > [0035](0035-shipping-carriers-backend.md), [0036](0036-shipping-rate-rules-backend.md) and
 > [0038](0038-payment-methods-bank-transfer-backend.md).
 >

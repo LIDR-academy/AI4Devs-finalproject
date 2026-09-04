@@ -286,3 +286,193 @@ re-derive, never the full prose of a finalized story.
 - Full mechanism is documented at
   [docs/api/routes.md#productsindex-productscreate-and-productsedit--the-fifth-permission-gated-route-family](../../../docs/api/routes.md#productsindex-productscreate-and-productsedit--the-fifth-permission-gated-route-family)
   and [docs/architecture/authorization.md#productpolicy--the-sixth-policy-and-the-second-built-entirely-for-a-screen-that-does-not-exist-yet](../../../docs/architecture/authorization.md#productpolicy--the-sixth-policy-and-the-second-built-entirely-for-a-screen-that-does-not-exist-yet).
+
+## Story 0028 — Product variant attribute types & values backend (gap-filled at story 0029's Phase 6 — missing since 0028's own closure)
+
+- Two tables, `product_attribute_types` and `product_attribute_values`, related by a plain FK
+  (`product_attribute_values.product_attribute_type_id`) rather than a pivot — **D1**, rejected a
+  single self-referencing table with a discriminator for two reasons: it makes "a future combination
+  pivot references only values, never types" unenforceable in SQL, and `unique(parent_id, name)` with
+  `parent_id IS NULL` on type rows makes global type-name uniqueness silently unenforced (MySQL allows
+  unlimited `NULL`s in a unique index) — story 0028.
+- `product_attribute_types`: `id` (uuid v7), `name` (`VARCHAR(100)`, globally unique), `position`
+  (`INT UNSIGNED default 0`, ships now but **nothing writes it yet** — deferred drag-to-reorder, D5).
+  `product_attribute_values`: `id`, `product_attribute_type_id` (FK, `cascadeOnDelete()`), `value`
+  (`VARCHAR(100)`, deliberately not `name` — disambiguates `$type->name` from `$value->value`),
+  `position` (**is** written on every save, unlike its parent's homonymous column). Uniqueness is
+  **per-type**: `unique(product_attribute_type_id, value)`, so "Black" is legal as both a Color value
+  and a Material value — story 0028 D2/D3.
+- `App\Actions\Products\SyncProductAttributeValues::__invoke(ProductAttributeType $type, array
+  $values)` is the **single writer** of every `product_attribute_values` row for a type — a
+  **diff, never delete-and-recreate**, against a fresh `$type->values()->pluck('id')` read on every
+  save: a submitted owned id → `UPDATE` in place; an unowned/null/foreign id → new row; an owned id
+  absent from the submission → `DELETE`. **This is what guarantees value-id stability across an
+  edit** — a save that only renames the type does not re-key any value id, which is what makes a
+  variant's stored combination (a set of value ids) survive a taxonomy edit — story 0028 D4, depended
+  on directly by story 0029.
+- `SyncProductAttributeValues` authorizes **nothing** — the codebase's fifth "collaborator invoked
+  only by an already-authorized action needs no gate of its own" instance (after
+  `GenerateImageConversions`, `EnforceGrantorPermissionScope`, `SyncProductGallery`,
+  `SyncProductSalesRegions`), invoked only inside `CreateProductAttributeType`'s/
+  `UpdateProductAttributeType`'s already-authorized transaction — story 0028.
+- `CreateProductAttributeType`/`UpdateProductAttributeType`/`DeleteProductAttributeType` each
+  self-authorize `update`/`create`/`delete` on `App\Models\ProductAttributeType` via the **new**
+  `App\Policies\ProductAttributeTypePolicy` (the app's seventh policy, and the first whose Three
+  Amigos "no policy needed" recommendation was reversed at Phase 2 review) — gating on the existing
+  `products.*` catalog, **no tenth permission slug added**, catalog still 42 — story 0028 D6.
+- **`DeleteProductAttributeType` ships with NO in-use guard** — D7 explicitly deferred it to "0029",
+  written before Phase 2 review split that story into 0029/0029a/0029b. **The guard is now planned for
+  story 0029a** ("attribute in-use delete guards backend" — not yet started as of story 0029's own
+  closure, still sitting at `ai-spec/tasks/0029a-attribute-in-use-delete-guards-backend.md`, not
+  `in-progress/`), not story 0029 itself — 0029 ships no change to
+  `DeleteProductAttributeType`/`DeleteProductVariant`'s in-use behaviour at all. A later reader should
+  not assume "0029 closed D7" — check whether 0029a has shipped. `#[Locked] public int
+  $deletingTypeUsageCount = 0;` is already on `AttributeTypes\Index`'s public surface, always `0`
+  until 0029a wires a real count.
+- D7 also names the analogous hazard 0029a inherits: deleting a **type** whose values are referenced
+  aborts at the database (InnoDB evaluates the RESTRICT while cascading the type→value delete) unless
+  the application-level pre-check counts variants across **all of a type's values**, not one value at
+  a time.
+- Row-targeting contract for any future editor: each value row carries a stable, server-generated
+  `key` (`(string) Str::uuid()`, assigned once — on `addValue()` or on read in `openEditModal()`),
+  and `removeValue()`/`moveValue()` must target by that `key`, **never by array index** — removing by
+  index shifts every later row's DOM identity out from under `wire:key`, leaving the browser showing
+  stale content against a different server row — story 0028.
+- Values are validated in a **three-pass** sequential `Validator::make()->validate()` (not two): pass
+  1 bounds `values` array size (`max:100`) + validates `name`; pass 2 establishes each row's shape
+  (`values.*` is `['array']`, `values.*.id` is `['nullable','string']`) **before any text
+  normalisation runs**; pass 3 applies `distinct:ignore_case` only to the now-bounded, now-shaped set
+  — closing an O(n²) validation-cost hazard on `values.*.value` (the first real, shipped call site of
+  [array-validation-bounds.md](../../../docs/security/array-validation-bounds.md)'s rule) and an
+  unhandled `TypeError` from a forged row/id shape — story 0028 Phase 4.
+- `App\Concerns\ProductAttributeValidationRules` — the sixth `<Noun>ValidationRules` trait:
+  `attributeTypeNameRules()`, `attributeValueListRules()`, `attributeValueRowRules()`,
+  `attributeValueIdRules()`, `attributeValueRules()`. Entity-prefixed, but **not** `ProductValidationRules`'s
+  collision-driven exception applied again — none of the five collide with an existing sibling trait;
+  they follow the plain field-not-model rule, naming the real submitted field — story 0028.
+- Route `GET /products/attribute-types` → `product-attribute-types.index`, `can:products.view`. The
+  Blade view is a **genuine one-line placeholder** (`{{ $this->typesSummary['total'] }}`) — full
+  authorization/validation/action wiring shipped, no real markup, matching `sales-regions.index`'s own
+  precedent between tasks 0017/0018. **No `config/modules.php` sidebar entry** — third time this
+  linkless half-state has occurred (after `roles.index`, `sales-regions.index`) — story 0028.
+- Full mechanism at [docs/database/schema.md#product_attribute_types](../../../docs/database/schema.md#product_attribute_types)
+  / [#product_attribute_values](../../../docs/database/schema.md#product_attribute_values).
+
+## Story 0029 — Product variants core backend (two tables, derived SKU, combination-hash duplicate guard, read-time image inheritance, self-authorizing actions)
+
+- Two new tables: `product_variants` (id uuid v7 PK, `product_id` FK `cascadeOnDelete()`,
+  `combination_hash` `CHAR(64)`, `sku` `VARCHAR(128)` unique, `price` `DECIMAL(10,2)` NOT NULL,
+  `stock` signed INT default 0, `featured_media_id` nullable FK → `media` `restrictOnDelete()`,
+  `position` INT UNSIGNED default 0) and `product_variant_values` (composite PK
+  `(product_variant_id, product_attribute_value_id)`, `product_attribute_value_id`
+  `restrictOnDelete()` — **mandated by story 0028's own D4**, not this story's choice). Table named
+  `product_variant_values`, not `product_variant_attribute_values`/`product_variant_attribute_value`
+  — both alternatives produce a FK constraint name over MySQL's 64-char identifier limit
+  (`ERROR 1059`), verified independently twice — story 0029.
+- `App\Models\ProductVariant`: `#[Fillable(['price', 'stock', 'featured_media_id', 'position'])]` —
+  `product_id`/`sku`/`combination_hash` deliberately excluded (server-derived or fixed-at-creation).
+  `casts()`: `price` → `'decimal:2'` (returns a **string**), `stock`/`position` → `'integer'`.
+  `values(): BelongsToMany` is ordered **inside the relationship**
+  `(product_attribute_types.position, .id, product_attribute_values.position, .id)` — every consumer
+  (`label()` included) sees one canonical order, never re-derived per call site.
+  `displayFeaturedMediaId(): ?string` = `$this->featured_media_id ?? $this->product->featured_media_id`
+  — resolved at **READ time only**, never copied at creation, so a later change to the parent's image
+  keeps propagating to every variant that never chose its own — story 0029.
+- `App\Actions\Products\HashVariantCombination::__invoke(array $productAttributeValueIds): string` —
+  the single definition of `combination_hash`: `sha256` of the ids, **deduplicated, `SORT_STRING`
+  sorted, `|`-joined**. Order-independent, duplicate-insensitive. **The ids passed in MUST already be
+  read back from the database, never taken from a client payload** —
+  `product_attribute_values` sits under `utf8mb4_unicode_ci`, so `Rule::exists()` is case-insensitive
+  and a submitted `V-40` would otherwise hash differently than a stored `v-40` and evade the
+  duplicate-combination guard — story 0029.
+- `App\Actions\Products\DeriveVariantSku` — the SKU formula:
+  `{product.sku}-{segment(value)}...`, values rendered in
+  `(product_attribute_types.position, .id, product_attribute_values.position, .id)` order (never
+  submission order, and a **different** order than the hash sorts by — the hash is a set key, the SKU
+  an ordered rendering). `segment()`: `Str::ascii()` transliterate → space-runs to one hyphen (the
+  PO's one named rule; casing preserved verbatim) → strip outside `[A-Za-z0-9._/-]` → collapse/trim
+  repeated hyphens. `MAX_LENGTH = 128` (not 0024's 64 — the inputs aren't admin-typed, so there's no
+  field to shorten). `checked(string $productSku, array $orderedValues): string` is the validating
+  entry point **every writer must call, not the bare `__invoke()`** — it throws on an empty-segment
+  value (`products.variants.derived_sku_empty_segment`) and on exceeding `MAX_LENGTH`
+  (`products.variants.derived_sku_too_long`); the bare derivation skips both — story 0029.
+- `App\Actions\Products\TranslateProductVariantUniqueViolation::__invoke(UniqueConstraintViolationException
+  $e, string $sku, ?string $overrideMessage = null): ValidationException` — disambiguates which of
+  `product_variants`' **two** unique indexes (`sku` vs `(product_id, combination_hash)`) a caught
+  violation came from, by matching the violated index's own name in `$e->getMessage()`; re-throws the
+  original for an unrecognised index. `$overrideMessage` exists because `UpdateProduct`'s parent-SKU-
+  change cascade needs `products.variants.parent_sku_change_collides` (always under the `sku` key)
+  rather than the two create-path messages for the identical two indexes — story 0029.
+- **SKUs are one namespace across `products` AND `product_variants`.**
+  `ProductValidationRules::productSkuRules()` gained a second `Rule::unique(ProductVariant::class,
+  'sku')` alongside its existing `Rule::unique(Product::class, 'sku')`, with no `->ignore()` on
+  either side (a variant SKU is derived, never typed, so there's no `?string $productVariantId`
+  ignore-parameter needed). Every cross-table SKU-collision check (`CreateProductVariant`,
+  `CreateProduct`, `UpdateProduct`) locks both tables in the **same fixed order** — `products`, then
+  `product_variants` — via `lockForUpdate()`, closing one deadlock class rather than eliminating every
+  possible one — story 0029.
+- **Two re-derivation triggers for `product_variants.sku`, both retrofits to already-shipped 0024/0028
+  actions, both routed through `DeriveVariantSku::checked()`**: (1) `UpdateProduct::reDeriveVariantSkus()`
+  — a change to `products.sku` re-derives every one of that product's variants in the **same
+  transaction** as the product update, all-or-nothing; `UpdateProduct`'s own `DB::transaction()` call
+  deliberately carries **no `attempts: N`** (see the errors-log entry below). (2)
+  `SyncProductAttributeValues::reDeriveVariantSkusForRenamedValues()` — a rename branch retrofit
+  (0028's file), re-derives every variant built on a renamed value **across every product** that uses
+  it; it is a query-builder mass update with no Eloquent events, so this cascade is explicit code, not
+  something a model observer could carry. Both cascades gained a **batch-internal-duplicate
+  pre-check** that excludes the WHOLE batch of variants being re-derived from the per-row database
+  collision check, not just each row's own id — a batch can legitimately rotate SKUs among its own
+  members — story 0029, closing Phase 4 findings F-1/F-2/F-3/R-3/R-4 (full history:
+  [derived-column-invariants.md](../../../docs/security/derived-column-invariants.md)).
+- **`App\Concerns\ProductVariantValidationRules`** — the seventh `<Noun>ValidationRules` trait:
+  `variantCombinationRules()` (pass 1 — shape/bound alone, `['required','array','min:1','max:10']`, no
+  DB-touching rule), `variantCombinationValueRules()` (pass 2 — per-element,
+  `['string','distinct',Rule::exists('product_attribute_values','id')]` — a first pass only, never
+  authoritative; the read-back inside `CreateProductVariant` is what actually decides), plus
+  `variantPriceRules()`/`variantStockRules()`/`variantFeaturedMediaIdRules()` (0024's product rules
+  verbatim). **Deliberately does NOT `use ProductValidationRules`** and declares **no**
+  `skuRules()`/`variantSkuRules()` at all — there is no SKU input to validate — story 0029.
+- **`App\Actions\Products\CreateProductVariant`** — self-authorizes `update` on the **parent
+  `Product`** as its first statement (before validation, before any transaction). Reads attribute-value
+  ids **and** their `value` strings back from the database in one query (never from the payload — see
+  the case-collation note above). Checks the duplicate-combination invariant (V-lock on
+  `(product_id, combination_hash)`) **before** the cross-table SKU collision, so the clearer message
+  wins when both would apply. `DB::transaction($fn, attempts: 3)` — **safe** because the row is built
+  **inside** the closure via `forceCreate()`, so a retried attempt re-does real work — story 0029.
+- **`App\Actions\Products\UpdateProductVariant`/`DeleteProductVariant`** — self-authorize the same way,
+  against the variant's **freshly re-fetched** row: `ProductVariant::query()->with('product')
+  ->whereKey($variant->getKey())->firstOrFail()` as the literal first statement, **not** merely
+  `load('product')` on the caller-supplied instance (Phase 4 finding F-8 — `load('product')` alone
+  re-reads the product but resolves *which* product from the caller's in-memory, mass-assignable-until-
+  this-fix `product_id`). `UpdateProductVariant`'s `$featuredMediaId` parameter carries **NO default**
+  (unlike `CreateProductVariant`'s `= null`, which is correct there) — an update caller must state
+  intent explicitly, matching the `docs/errors-log.md` 2026-09-01 entry's rule applied a second time —
+  story 0029.
+- **No `ProductVariantPolicy` — a genuine Three Amigos plan reversal.** The task file originally
+  planned NO self-authorization inside the actions at all, citing a stale claim about
+  `CreateUser`/`UpdateUser`'s own shape (falsified by task 0008a, which moved authorization *into*
+  those actions specifically). Phase 2 review caught the stale citation and reversed the plan — all
+  three variant actions now self-authorize `update` on `App\Models\Product` via the existing
+  `ProductPolicy`, following the fully-established action-owns-the-rule convention. There is no per-row
+  distinction between two variants of one product for a variant-scoped policy to encode — story 0029.
+- **`DB::transaction($fn, attempts: N)` hazard, found and closed this story**: `attempts: 3` was
+  briefly on `UpdateProduct`'s transaction too, but its closure mutates `$product` — a model **created
+  outside the closure** — so a retried attempt after a genuine deadlock reused the model's own
+  post-mutation dirty-tracking state, issued no SQL, skipped the SKU cascade, and returned success
+  while writing nothing. Fixed by **removing** the retry from `UpdateProduct` entirely (not by
+  key-passing, since that would reshape the action's return contract). The two retained `attempts: 3`
+  sites (`CreateProduct`, `CreateProductVariant`) are safe because both `forceCreate()` their row
+  inside the closure. **`attempts` is silently inert on a nested `DB::transaction()`** — only the
+  outermost transaction's `attempts` ever fires, so story 0031's `Editor::save()` must NOT add its own
+  `attempts:` without first re-deriving this analysis — full history at
+  [derived-column-invariants.md](../../../docs/security/derived-column-invariants.md#what-the-remediation-introduced-a-retried-transaction-is-a-retry-safe-unit-or-it-is-a-lost-update)
+  and [errors-log.md](../../../docs/errors-log.md#dbtransactionfn-attempts-n-retried-a-closure-that-mutated-a-model-created-outside-it-producing-a-silent-lost-update-reported-as-success--2026-09-04).
+- **This story ships NO Livewire component, NO route, NO in-use delete guard change.** Story 0031
+  owns the editor UI; story 0029a is planned to own the attribute-value/type in-use guards (see the
+  0028 section above — D7's "0029" reference actually resolves to 0029a); story 0029b is planned to
+  own a combination generator. Neither 0029a nor 0029b had started as of this story's own closure
+  (both still sit at the top level of `ai-spec/tasks/`, not `in-progress/`) — a later story must not
+  assume either has shipped.
+- Full mechanism at [docs/database/schema.md#product_variants](../../../docs/database/schema.md#product_variants)
+  / [#product_variant_values](../../../docs/database/schema.md#product_variant_values), and
+  [docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy](../../../docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy).
