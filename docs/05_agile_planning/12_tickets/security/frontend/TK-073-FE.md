@@ -3,8 +3,10 @@ ticket: TK-073-FE
 title: Frontend — Roles & Permission Management UI & Role-Based Autoredirection
 epic: Seguridad y Control de Acceso
 user_story: US-015
-status: BACKLOG
+status: MOSTLY_DONE
 ---
+
+> **Estado (2026-09-04, verificado en auditoría de documentación):** parcial — ver la nota detallada en `US-015.md`. Hecho: `RolesService` + panel de administración de roles/matriz de permisos (`RolesManagementPanel.tsx` en `/ajustes/roles`, como panel inline de `US-024`, no el modal que este ticket describía originalmente). Pendiente: autoredirección post-login por permiso y ocultamiento dinámico de acciones — el frontend sigue comparando `role === 'ADMIN'` a mano en vez de leer una lista de permisos real (que tampoco existe en el JWT — ver `TK-073`).
 
 # 🎟️ Ticket Técnico: TK-073-FE — Frontend Dynamic RBAC UI
 

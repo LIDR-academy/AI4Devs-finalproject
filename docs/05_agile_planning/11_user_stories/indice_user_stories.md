@@ -11,8 +11,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Permite el acceso rápido e individualizado de los cocineros y operarios mediante teclado táctil y PIN de 4 dígitos para garantizar la trazabilidad operacional.
 *   **[US-010: Gestión Mínima de Personal (Alta y Bloqueo de Operarios)](auth/US-010.md)**
     *   *Descripción:* Permite a un Administrador dar de alta operarios y bloquear/reactivar cuentas existentes vía API, sin depender de un redeploy de código. ✅ Backend (`TK-049`) y Frontend (`TK-049-FE`) implementados.
-*   **[US-015: Gestión de Permisos y Roles Dinámicos (Dynamic RBAC)](security/US-015.md)**
-    *   *Descripción:* Permite al Administrador crear roles dinámicos, configurar su matriz de permisos y autoredirigir a la pantalla de cocina o bodega al iniciar sesión.
+*   **[US-015: Gestión de Permisos y Roles Dinámicos (Dynamic RBAC)](security/US-015.md)** 🟡 Parcial
+    *   *Descripción:* Permite al Administrador crear roles dinámicos, configurar su matriz de permisos y autoredirigir a la pantalla de cocina o bodega al iniciar sesión. CRUD de roles/permisos implementado (`TK-073`/`TK-073-FE`); el JWT con permisos, la aplicación real de `authorizePermissions` y la autoredirección siguen sin implementar.
 *   **[US-018: Recuperación de Acceso y Reseteo de PIN del Administrador por Email](auth/US-018.md)**
     *   *Descripción:* Permite al Administrador restablecer su PIN mediante un correo verificado y token temporal de 15 minutos en caso de olvido o bloqueo de cuenta.
 
@@ -30,10 +30,10 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Permite configurar y administrar los sectores físicos reales del restaurante (cámaras frías, bodegas secas, mesas de preparación). 🚧 CRUD y pantalla de gestión existentes; pendiente cablear desplegables dinámicos y `requireRole('ADMIN')` (`TK-074` / `TK-074-FE`).
 *   **[US-025: Depósito de Insumos en Sub-Sector de Bodega y Stock Multi-Sector](stock/US-025.md)**
     *   *Descripción:* Al dar de alta o reabastecer un insumo se indica el sub-sector físico de bodega donde queda depositado; el stock se rastrea por par `(insumo, sub-sector)` y la extracción exige elegir el sector de origen validando su saldo. 📋 Spec aprobada — pendiente `TK-096` / `TK-096-FE`.
-*   **[US-021: Advertencia de Apertura Duplicada al Extraer Insumo](stock/US-021.md)**
+*   **[US-021: Advertencia de Apertura Duplicada al Extraer Insumo](stock/US-021.md)** ✅
     *   *Descripción:* Advierte de forma no bloqueante al operario si ya existe un remanente activo del mismo insumo en cualquier ubicación de cocina, para reducir aperturas duplicadas (KPI #3 del PRD). ✅ Backend (`TK-080`) y Frontend (`TK-080-FE`) implementados.
-*   **[US-026: Áreas de Cocina como Ubicaciones de Catálogo y Destino Dinámico en Extracción](stock/US-026.md)**
-    *   *Descripción:* Las áreas de cocina (heladera, mesa de prep, línea) pasan a ser filas de `StorageLocation` (`type = KITCHEN`); el destino de cocina en la extracción se elige del catálogo y `Remanente.location` pasa a FK. Prerrequisito de ADR-003, cierra deuda de `TK-074-FE`. 📝 Draft.
+*   **[US-026: Áreas de Cocina como Ubicaciones de Catálogo y Destino Dinámico en Extracción](stock/US-026.md)** ✅
+    *   *Descripción:* Las áreas de cocina (heladera, mesa de prep, línea) pasan a ser filas de `StorageLocation` (`type = KITCHEN`); el destino de cocina en la extracción se elige del catálogo y `Remanente.location` pasa a FK. Prerrequisito de ADR-003, cierra deuda de `TK-074-FE`. `TK-102`/`TK-102-FE` + `TK-112-FE` (tablero FEFO).
 
 ### ⚙️ Configuración (`/settings/`)
 *   **[US-017: Configuración General del Restaurante y Parámetros FEFO](settings/US-017.md)** ✅
@@ -68,7 +68,7 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Permite visualizar de forma agrupada los desperdicios físicos y mermas por ingrediente y motivo en un periodo de tiempo.
 *   **[US-019: Costeo de Insumos y Valorización Monetaria de Mermas](reports/US-019.md)**
     *   *Descripción:* Registra el costo unitario de cada insumo y valoriza en `$` el reporte de mermas, cerrando el gap del KPI #1 del PRD (hoy solo medible en cantidades físicas). ✅ Backend (`TK-078`) y Frontend (`TK-078-FE`) implementados.
-*   **[US-020: Indicador TRR Real en el Dashboard de Reportes](reports/US-020.md)**
+*   **[US-020: Indicador TRR Real en el Dashboard de Reportes](reports/US-020.md)** ✅
     *   *Descripción:* Calcula y muestra el tiempo real promedio de rotación de remanentes, el único indicador que valida en la práctica el KPI #2 del PRD (TRR < 72h). ✅ Backend (`TK-079`) y Frontend (`TK-079-FE`) implementados.
 *   **[US-029: Reporte de Mermas de Preparación y Auditoría del Consumo Ad-hoc de Recetas](reports/US-029.md)** ✅
     *   *Descripción:* Reporte de merma generada al preparar recetas (por receta / ingrediente / motivo) + consumo real vs teórico; de paso, el consumo ad-hoc de receta legacy pasa a registrar `CONSUMPTION_RECIPE`. 📝 Draft — diferible (ADR-003).
