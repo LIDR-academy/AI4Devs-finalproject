@@ -392,6 +392,152 @@ test('clicking the link button opens the popover and a real click does not immed
 });
 
 // =====================================================================
+// Insert code: wrapping a selection (or nothing, at a collapsed caret) in
+// <pre><code class="language-{lang}">, followed by an empty paragraph so the caret always has
+// somewhere to land after the block. Never syntax-highlighted inside this admin editor -- that is
+// this feature's own deliberate scope (highlighting applies only where the description is later
+// RENDERED, never inside the WYSIWYG itself), so no colouring assertion belongs here.
+// =====================================================================
+
+test('inserting a code block wraps the current selection in pre/code carrying the chosen language class', function () {
+    $actor = wysiwygUiTestActor();
+    $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
+
+    $region = wysiwygUiTestRegion();
+
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
+
+    $page->script(wysiwygUiTestSelectWordScript($region, 'BEFORE'));
+
+    $page->select('@wysiwyg-code-language', 'php')
+        ->click(wysiwygUiTestControl('wysiwyg-insert-code'))
+        ->assertNoJavaScriptErrors()
+        ->assertSourceInHas($region, '<pre><code class="language-php">BEFORE</code></pre>');
+});
+
+test('inserting a code block with nothing selected produces an empty pre/code block, not an error', function () {
+    $actor = wysiwygUiTestActor();
+    $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
+
+    $region = wysiwygUiTestRegion();
+
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
+
+    // A collapsed caret at the very start of the region -- no word selection script run at all.
+    $page->click($region);
+
+    $page->select('@wysiwyg-code-language', 'javascript')
+        ->click(wysiwygUiTestControl('wysiwyg-insert-code'))
+        ->assertNoJavaScriptErrors()
+        ->assertSourceInHas($region, '<pre><code class="language-javascript"></code></pre>');
+});
+
+// A selection containing markup-significant characters must render as literal code text, never be
+// re-parsed as HTML -- the same safe-insertion shape insertImage()'s `alt` already relies on
+// (App\Actions\Products\SanitizeProductDescription is a SEPARATE, server-side authoritative check;
+// this proves the CLIENT-side insertion path itself never lets a `<`/`>` in selected text become a
+// real element).
+test('code inserted from a selection containing angle brackets renders as literal text, not markup', function () {
+    $actor = wysiwygUiTestActor();
+    $this->actingAs($actor);
+    $product = wysiwygUiTestProduct('<p>if (a &lt; b) { c(); }</p>');
+
+    $region = wysiwygUiTestRegion();
+
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
+
+    $page->script(wysiwygUiTestSelectAllScript($region));
+
+    $page->select('@wysiwyg-code-language', 'javascript')
+        ->click(wysiwygUiTestControl('wysiwyg-insert-code'))
+        ->assertNoJavaScriptErrors()
+        ->assertSourceInHas($region, '<pre><code class="language-javascript">if (a &lt; b) { c(); }</code></pre>')
+        // The negative half: if the "&lt;" text had been re-parsed as a real "<" instead of
+        // staying literal, a real (and, per the sanitizer's own allow-list, unsupported) element
+        // boundary would exist here -- assert its absence directly rather than only the positive
+        // shape above, which a partial mis-escape could still satisfy.
+        ->assertSourceInMissing($region, '<b>');
+});
+
+// =====================================================================
+// The HTML-source toggle: switching to source mode shows the region's raw markup in an editable
+// <textarea>; editing it and switching back writes the edited markup into the contenteditable
+// region. No round trip through the server sanitizer happens at this stage -- that is
+// App\Actions\Products\SanitizeProductDescription's job on SAVE, proven separately in
+// tests/Feature/Products/ProductDescriptionSanitizationTest.php; this only proves the CLIENT-side
+// toggle itself moves the right text in the right direction.
+// =====================================================================
+
+test('toggling to HTML source shows the regions raw markup, and toggling back applies an edit made there', function () {
+    $actor = wysiwygUiTestActor();
+    $this->actingAs($actor);
+    $product = wysiwygUiTestProduct('<p>BEFORE AFTER</p>');
+
+    $region = wysiwygUiTestRegion();
+    $toggle = wysiwygUiTestControl('wysiwyg-html-source-toggle');
+    $source = wysiwygUiTestControl('wysiwyg-html-source');
+
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
+
+    $page->assertVisible($region)
+        ->assertMissing($source);
+
+    $page->click($toggle)
+        ->assertNoJavaScriptErrors()
+        ->assertVisible($source)
+        ->assertMissing($region)
+        ->assertValue($source, '<p>BEFORE AFTER</p>');
+
+    $page->fill($source, '<p>REPLACED</p><h2>New heading</h2>');
+
+    $page->click($toggle)
+        ->assertNoJavaScriptErrors()
+        ->assertVisible($region)
+        ->assertMissing($source)
+        ->assertSourceInHas($region, '<p>REPLACED</p>')
+        ->assertSourceInHas($region, '<h2>New heading</h2>');
+});
+
+// A round trip through Save proves the edit made in source mode reaches $wire.set('value', ...) --
+// toggling alone (the test above) only proves the CLIENT-side DOM swap; this proves it was
+// actually synced, not merely displayed. Sanitization is exercised for real here too: the raw
+// markup typed into the textarea includes both an allowed tag (<h2>) and one the toolbar could
+// never produce and the sanitizer's own allow-list rejects (<div>), so this is also the one place
+// in this file where the HTML-source path's full, real save-time behaviour -- not the mid-story
+// client toggle alone -- is proven end to end.
+test('an edit made in HTML source mode survives a save and reload, sanitized like any other edit', function () {
+    $actor = wysiwygUiTestActor();
+    $this->actingAs($actor);
+    $product = wysiwygUiTestProduct('<p>BEFORE AFTER</p>');
+
+    $region = wysiwygUiTestRegion();
+    $toggle = wysiwygUiTestControl('wysiwyg-html-source-toggle');
+    $source = wysiwygUiTestControl('wysiwyg-html-source');
+
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
+
+    $page->click($toggle)
+        ->assertNoJavaScriptErrors()
+        ->fill($source, '<h2>Allowed</h2><div class="evil">Not allowed as a div</div>');
+
+    $page->click($toggle)->assertNoJavaScriptErrors();
+
+    // ->click('Save')->assertNoJavaScriptErrors() alone does not wait for save()'s own
+    // request/transaction/redirect round trip to finish (a real, previously-diagnosed race in this
+    // very screen -- see EditorJourneyTest.php's identical comment); ->assertUrlIs() is the
+    // deterministic, self-polling wait on save()'s actual completion signal
+    // (redirectRoute('products.index')), not a longer ->wait().
+    $page->click('Save')
+        ->assertNoJavaScriptErrors()
+        ->assertUrlIs(route('products.index'));
+
+    expect($product->fresh()->description)
+        ->toBe('<h2>Allowed</h2>Not allowed as a div');
+});
+
+// =====================================================================
 // The toolbar reflects the formatting of the text under the cursor -- placing a collapsed caret
 // inside an already-bold word marks the Bold action pressed (V9's queryCommandState mechanism, and
 // the only proof it is wired at all).

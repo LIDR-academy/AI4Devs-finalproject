@@ -201,6 +201,50 @@ test('all eight toolbar controls render with their data-test hook and aria-label
 });
 
 // =====================================================================
+// The two new controls: the code-block insert button (plus its language <select>) and the
+// HTML-source toggle button. Both carry a real aria-label like every button above.
+// =====================================================================
+
+test('the insert-code button and the html-source toggle button render with their data-test hook and aria-label', function () {
+    $this->actingAs(wysiwygEditorRenderingTestActor());
+
+    $html = Livewire::test(WysiwygEditor::class)->html();
+
+    foreach (['wysiwyg-insert-code', 'wysiwyg-html-source-toggle'] as $hook) {
+        expect($html)->toContain('data-test="'.$hook.'"');
+        expect(wysiwygEditorControlHasAriaLabel($html, $hook))->toBeTrue("Expected [{$hook}] to carry a real aria-label.");
+    }
+});
+
+// =====================================================================
+// The language <select>'s option list is exactly config('html-sanitizer.allowed_code_languages')
+// -- never a hardcoded list here that could drift from what
+// App\Actions\Products\SanitizeProductDescription's attribute sanitizer actually accepts on save.
+// =====================================================================
+
+test('the code-language select offers exactly config allowed_code_languages, each with a translated label', function () {
+    $this->actingAs(wysiwygEditorRenderingTestActor());
+
+    $html = Livewire::test(WysiwygEditor::class)->html();
+
+    $allowedLanguages = config('html-sanitizer.allowed_code_languages');
+
+    expect($allowedLanguages)->not->toBeEmpty();
+
+    foreach ($allowedLanguages as $language) {
+        expect($html)->toContain('value="'.$language.'"');
+        expect($html)->toContain(__('components.wysiwyg.code_language_'.$language));
+    }
+
+    // Negative half: the select renders no MORE options than the config list -- an
+    // `<option value="...">` count that matches exactly, so a future language nobody added a
+    // translation key for (which would otherwise render its own raw key silently) cannot slip in
+    // unnoticed the way conventions/naming.md's composed-label rule already warns against for a
+    // different registry.
+    expect(substr_count($html, 'data-test="wysiwyg-code-language"'))->toBe(1);
+});
+
+// =====================================================================
 // Test 1b (N2) -- the toolbar renders EXACTLY eight controls and no ninth. Test 1 above only
 // checks that each of the eight named hooks is PRESENT, so nothing there would fail if a ninth
 // control were accidentally added to the toolbar -- this is the missing negative half.
@@ -210,10 +254,13 @@ test('all eight toolbar controls render with their data-test hook and aria-label
 // the Link button, itself inside the toolbar element) -- verified empirically, not assumed, via
 // `php artisan tinker` against the real rendered HTML. They are stripped out by name before
 // counting, since they are not toolbar ACTION buttons in D10's sense; what remains is exactly the
-// eight buttons D10 fixes as the toolbar's whole action set.
+// eleven controls the toolbar's whole action set now carries -- D10's original eight (Bold,
+// Italic, Underline, H2, bullet list, numbered list, link, "Insert image"), plus the code-block
+// language <select>, the "Insert code" button and the HTML-source toggle button added alongside
+// config('html-sanitizer.allowed_code_languages').
 // =====================================================================
 
-test('the toolbar region renders exactly eight wysiwyg controls and no others', function () {
+test('the toolbar region renders exactly eleven wysiwyg controls and no others', function () {
     $this->actingAs(wysiwygEditorRenderingTestActor());
 
     $html = Livewire::test(WysiwygEditor::class)->html();
@@ -226,7 +273,7 @@ test('the toolbar region renders exactly eight wysiwyg controls and no others', 
         $toolbarHtml
     );
 
-    expect(substr_count($toolbarHtml, 'data-test="wysiwyg-'))->toBe(8);
+    expect(substr_count($toolbarHtml, 'data-test="wysiwyg-'))->toBe(11);
 });
 
 // =====================================================================
@@ -241,6 +288,25 @@ test('the editable region renders wire:ignore and contenteditable', function () 
 
     expect($html)->toContain('wire:ignore');
     expect(wysiwygEditorElementHasAttributeNamed($html, 'wysiwyg-editor-region', 'contenteditable'))->toBeTrue();
+});
+
+// =====================================================================
+// Test 2b -- the HTML-source <textarea> renders alongside the editable region, hidden by default
+// (x-show="htmlSourceMode" plus x-cloak, so it never flashes visible before Alpine boots). It is
+// NOT itself contenteditable and carries no wire:model of its own (D9's own "sync at defined points
+// only" rule, applied to a second client-managed region) -- only x-model, asserted by absence of
+// wire:model rather than by presence of x-model, since Blade never emits x-model itself.
+// =====================================================================
+
+test('the html-source textarea renders hidden by default, with no wire:model of its own', function () {
+    $this->actingAs(wysiwygEditorRenderingTestActor());
+
+    $html = Livewire::test(WysiwygEditor::class)->html();
+
+    expect($html)->toContain('data-test="wysiwyg-html-source"');
+    expect(wysiwygEditorElementHasAttributeNamed($html, 'wysiwyg-html-source', 'x-cloak'))->toBeTrue();
+    expect(wysiwygEditorElementHasAttributeNamed($html, 'wysiwyg-html-source', 'wire:model'))->toBeFalse();
+    expect(wysiwygEditorElementHasAttributeNamed($html, 'wysiwyg-html-source', 'contenteditable'))->toBeFalse();
 });
 
 // =====================================================================
@@ -292,11 +358,12 @@ test('the insert-image button renders disabled inside a tooltip for a user witho
 });
 
 // =====================================================================
-// Test 5 -- the other seven toolbar buttons render enabled regardless of media permissions (D4's
-// boundary: this story adds no permission of its own and gates nothing else).
+// Test 5 -- the other toolbar buttons render enabled regardless of media permissions (D4's
+// boundary: this story adds no permission of its own and gates nothing else). Extended to include
+// the code-block and HTML-source controls, which are gated on nothing at all.
 // =====================================================================
 
-test('the other seven toolbar buttons render enabled regardless of media permissions', function () {
+test('the other toolbar buttons render enabled regardless of media permissions', function () {
     $this->actingAs(wysiwygEditorRenderingTestActor([]));
 
     $html = Livewire::test(WysiwygEditor::class)->html();
@@ -309,6 +376,8 @@ test('the other seven toolbar buttons render enabled regardless of media permiss
         'wysiwyg-bullet-list',
         'wysiwyg-numbered-list',
         'wysiwyg-link',
+        'wysiwyg-insert-code',
+        'wysiwyg-html-source-toggle',
     ];
 
     foreach ($nonImageHooks as $hook) {

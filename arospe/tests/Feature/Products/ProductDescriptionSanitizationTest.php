@@ -170,7 +170,40 @@ test('each tag the WYSIWYG toolbar can produce survives a round-trip unchanged',
     ],
     'paragraph' => ['<p>Paragraph</p>', '<p>Paragraph</p>'],
     'line break' => ['Line1<br>Line2', 'Line1<br />Line2'],
+    'code block (an allowed language)' => [
+        '<pre><code class="language-php">echo 1;</code></pre>',
+        '<pre><code class="language-php">echo 1;</code></pre>',
+    ],
 ]);
+
+// The `class` attribute on `<code>` is not a free-form pass-through -- it survives only when it is
+// exactly `language-<one of config('html-sanitizer.allowed_code_languages')>`. Anything else is a
+// forged value (the WYSIWYG's own <select> can never produce it), and the attribute is DROPPED --
+// the element and its text content both survive, matching this file's "unwrap, don't destroy
+// legitimate content" rule for every other unrecognised value in this codebase.
+test('an out-of-list code-block class is stripped, but the element and its text survive', function () {
+    $product = createProductWithDescription('<pre><code class="not-a-real-language">x</code></pre>');
+
+    expect($product->fresh()->description)->toBe('<pre><code>x</code></pre>');
+});
+
+// A loop inside the test body, not a ->with() dataset -- Pest/PHPUnit evaluates a dataset
+// provider's closure BEFORE the framework is bootstrapped (verified: `config()` throws
+// "Target class [config] does not exist" when called from one), so a dataset genuinely cannot
+// read application config. Looping inside the test is what keeps this config-driven with no
+// static duplication of the language list to drift from config/html-sanitizer.php.
+test('every allowed_code_languages entry survives as a code-block class, and nothing else does', function () {
+    $allowedLanguages = config('html-sanitizer.allowed_code_languages');
+
+    expect($allowedLanguages)->not->toBeEmpty();
+
+    foreach ($allowedLanguages as $language) {
+        $product = createProductWithDescription('<pre><code class="language-'.$language.'">x</code></pre>');
+
+        expect($product->fresh()->description)
+            ->toBe('<pre><code class="language-'.$language.'">x</code></pre>', "Expected language [{$language}] to survive.");
+    }
+});
 
 // A script block is refused, and the legitimate text around it survives -- a sanitizer that
 // dropped everything (turning the whole description empty) would satisfy only the first half.
