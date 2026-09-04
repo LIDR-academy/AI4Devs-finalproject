@@ -478,17 +478,23 @@ model StockMovement {
   quantity     Decimal        @db.Decimal(12, 4)
   unit         String         @db.VarChar(20)
   reason       DiscardReason?
+  // ADR-004 / TK-108 / TK-109: motivo estructurado del catálogo ConsumptionReason
+  // (CONSUMPTION / SHIFT_RECONCILIATION_VARIANCE). Nullable — histórico previo a la
+  // migración, o si el motivo se borrase manualmente en BD (la app solo desactiva).
+  reasonId     String?        @map("reason_id") @db.Uuid
   createdAt    DateTime       @default(now()) @map("created_at")
 
   // Relaciones
-  insumo    Insumo     @relation(fields: [insumoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  remanente Remanente? @relation(fields: [remanenteId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  user      User       @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  insumo            Insumo             @relation(fields: [insumoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  remanente         Remanente?         @relation(fields: [remanenteId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  user              User               @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  consumptionReason ConsumptionReason? @relation(fields: [reasonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   // Índices
   @@index([createdAt, insumoId])
   @@index([userId])
   @@index([remanenteId])
+  @@index([reasonId])
   @@map("stock_movements")
 }
 
@@ -558,6 +564,8 @@ model ConsumptionReason {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  movements StockMovement[]
 
   @@map("consumption_reasons")
 }

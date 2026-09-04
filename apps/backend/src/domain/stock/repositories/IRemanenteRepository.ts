@@ -10,6 +10,8 @@ export interface StockMovementRecord {
   operatorId?: string;
   purpose?: string;
   reason?: string;
+  /** ADR-004: motivo estructurado del catálogo `ConsumptionReason` (`CONSUMPTION` / `SHIFT_RECONCILIATION_VARIANCE`). */
+  reasonId?: string;
   recipeId?: string;
   // Opcional: Prisma lo genera solo (@default(now())); InMemoryStockRepository lo completa
   // si no viene seteado (TK-050, trazabilidad de movimientos).

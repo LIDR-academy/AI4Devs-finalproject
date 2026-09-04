@@ -13,6 +13,7 @@ import { IStockUnitOfWork } from '../../../../domain/stock/repositories/IStockUn
 import { IStorageLocationRepository } from '../../../../domain/stock/repositories/IStorageLocationRepository.js';
 import { IRecipeRepository } from '../../../../domain/recipes/repositories/IRecipeRepository.js';
 import { IRecipePreparationRepository } from '../../../../domain/kitchen/repositories/IRecipePreparationRepository.js';
+import { IConsumptionReasonRepository } from '../../../../domain/kitchen/repositories/IConsumptionReasonRepository.js';
 import { systemClock } from '../../../shared/systemClock.js';
 import { cryptoIdGenerator } from '../../../shared/cryptoIdGenerator.js';
 
@@ -54,13 +55,18 @@ function buildKitchenController(
   recipeRepository?: IRecipeRepository,
   reconciliationRepository?: IShiftReconciliationRepository,
   recipePreparationRepository?: IRecipePreparationRepository,
-  closeDeps: PreparationCloseDeps = {}
+  closeDeps: PreparationCloseDeps = {},
+  consumptionReasonRepository?: IConsumptionReasonRepository
 ): KitchenController {
   const reconciliationRepo = reconciliationRepository ?? new InMemoryShiftReconciliationRepository();
   const preparationClose = buildPreparationCloseUseCases({ ...closeDeps, recipePreparationRepository });
   return new KitchenController(
     new GetActiveRemanentesUseCase(remanenteQueryRepository),
-    remanenteRepository ? new ConsumeRemanenteUseCase(remanenteRepository) : undefined,
+    // ADR-004 / TK-108: el motivo estructurado es obligatorio, así que sin el catálogo
+    // de motivos tampoco se puede montar el caso de uso (evita un 500 en runtime).
+    remanenteRepository && consumptionReasonRepository
+      ? new ConsumeRemanenteUseCase(remanenteRepository, consumptionReasonRepository)
+      : undefined,
     remanenteRepository ? new DiscardRemanenteUseCase(remanenteRepository) : undefined,
     // US-029: consumo ad-hoc dentro de runAdhocConsumption (C-DEV-006-1) — necesita el
     // IStockUnitOfWork, no solo IRemanenteRepository (que ya no basta desde TK-105).
@@ -86,7 +92,8 @@ export function createKitchenRouter(
   isAuthRequired = true,
   recipePreparationRepository?: IRecipePreparationRepository,
   stockUnitOfWork?: IStockUnitOfWork,
-  locationRepository?: IStorageLocationRepository
+  locationRepository?: IStorageLocationRepository,
+  consumptionReasonRepository?: IConsumptionReasonRepository
 ): Router {
   const router = Router();
 
@@ -104,7 +111,8 @@ export function createKitchenRouter(
     recipeRepository,
     reconciliationRepository,
     recipePreparationRepository,
-    { stockUnitOfWork, locationRepository }
+    { stockUnitOfWork, locationRepository },
+    consumptionReasonRepository
   );
 
   // Lectura de la lista FEFO: abierta a cualquier usuario autenticado (dato operativo,

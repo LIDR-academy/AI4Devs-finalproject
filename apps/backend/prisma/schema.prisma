@@ -86,7 +86,6 @@ model User {
   stockMovements    StockMovement[]
 }
 
-
 model StorageLocation {
   id              String           @id @default(uuid())
   name            String           @unique
@@ -102,19 +101,18 @@ model StorageLocation {
 }
 
 model SystemSettings {
-  id                       String   @id @default("default")
-  restaurantName           String   @default("RestoStock Kitchen")
-  taxId                    String?
-  currencySymbol           String   @default("$")
-  criticalAlertHours       Int      @default(24)
-  defaultRemanenteHours    Int      @default(24)
-  varianceTolerancePercent Decimal  @default(5.0) @db.Decimal(5, 2)
-  idleTimeoutMinutes       Int      @default(15)
+  id                           String   @id @default("default")
+  restaurantName               String   @default("RestoStock Kitchen")
+  taxId                        String?
+  currencySymbol               String   @default("$")
+  criticalAlertHours           Int      @default(24)
+  defaultRemanenteHours        Int      @default(24)
+  varianceTolerancePercent     Decimal  @default(5.0) @db.Decimal(5, 2)
+  idleTimeoutMinutes           Int      @default(15)
   // US-029 / ADR-003 / TK-105: umbral (%) de merma de preparación destacado en el reporte.
-  preparationWasteAlertPercent Int  @default(5)
-  updatedAt                DateTime @updatedAt
+  preparationWasteAlertPercent Int      @default(5)
+  updatedAt                    DateTime @updatedAt
 }
-
 
 model Insumo {
   id              String           @id @default(uuid())
@@ -143,60 +141,66 @@ model WarehouseStock {
 }
 
 model Remanente {
-  id              String          @id @default(uuid())
-  insumoId        String
-  currentQuantity Decimal         @default(0) @db.Decimal(12, 3)
-  initialQuantity Decimal         @default(0) @db.Decimal(12, 3)
+  id                  String             @id @default(uuid())
+  insumoId            String
+  currentQuantity     Decimal            @default(0) @db.Decimal(12, 3)
+  initialQuantity     Decimal            @default(0) @db.Decimal(12, 3)
   // US-026: caché denormalizado de display/movimiento (= name del área). La fuente
   // canónica de la ubicación es storageLocationId cuando está presente.
-  location        String          @default("KITCHEN_FRIDGE")
+  location            String             @default("KITCHEN_FRIDGE")
   // US-026: FK al área de cocina del catálogo (type = KITCHEN). Nullable: los remanentes
   // históricos conservan solo el literal en `location`. RESTRICT: un área con remanentes
   // ACTIVE no puede borrarse (Invariante 5).
-  storageLocationId String?
+  storageLocationId   String?
   // US-027: FK a la preparación de receta que originó este remanente (null = extracción normal).
   recipePreparationId String?
   // US-028 / ADR-003 #6: true mientras no se haya consumido nada de este remanente.
   // Pasa a false en el primer consumeQuantity. Habilita "devolver a bodega" junto con
   // el marcado manual "envase sin abrir" del operario.
-  isPristine      Boolean         @default(true)
-  status          RemanenteStatus @default(ACTIVE)
-  expirationDate  DateTime
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  terminalAt      DateTime?
-  insumo          Insumo          @relation(fields: [insumoId], references: [id], onDelete: Cascade)
-  storageLocation StorageLocation? @relation(fields: [storageLocationId], references: [id], onDelete: Restrict)
-  recipePreparation RecipePreparation? @relation(fields: [recipePreparationId], references: [id], onDelete: SetNull)
+  isPristine          Boolean            @default(true)
+  status              RemanenteStatus    @default(ACTIVE)
+  expirationDate      DateTime
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  terminalAt          DateTime?
+  insumo              Insumo             @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+  storageLocation     StorageLocation?   @relation(fields: [storageLocationId], references: [id], onDelete: Restrict)
+  recipePreparation   RecipePreparation? @relation(fields: [recipePreparationId], references: [id], onDelete: SetNull)
 
   @@index([storageLocationId])
   @@index([recipePreparationId])
 }
 
 model StockMovement {
-  id         String   @id @default(uuid())
-  insumoId   String
-  type       String   // EXTRACTION, DISCARD, RECONCILIATION, RESTOCK, EXTRACTION_RECIPE, DISCARD_DIRECT
-  quantity   Decimal  @db.Decimal(12, 3)
-  fromLoc    String
-  toLoc      String
-  operatorId String?
-  purpose    String?  // KITCHEN_STOCK, RECIPE, DIRECT_DISCARD
-  reason     String?  // Motivo descriptivo de extracción o descarte directo
-  recipeId   String?  // ID de receta asociada si purpose == RECIPE
-  createdAt  DateTime @default(now())
-  insumo     Insumo   @relation(fields: [insumoId], references: [id], onDelete: Cascade)
-  operator   User?    @relation(fields: [operatorId], references: [id], onDelete: SetNull)
+  id                String             @id @default(uuid())
+  insumoId          String
+  type              String // EXTRACTION, DISCARD, RECONCILIATION, RESTOCK, EXTRACTION_RECIPE, DISCARD_DIRECT
+  quantity          Decimal            @db.Decimal(12, 3)
+  fromLoc           String
+  toLoc             String
+  operatorId        String?
+  purpose           String? // KITCHEN_STOCK, RECIPE, DIRECT_DISCARD
+  reason            String? // Motivo descriptivo de extracción o descarte directo / notas libres de consumo (ADR-004)
+  reasonId          String? // ADR-004 / TK-108 / TK-109: motivo estructurado del catálogo ConsumptionReason
+  recipeId          String? // ID de receta asociada si purpose == RECIPE
+  createdAt         DateTime           @default(now())
+  insumo            Insumo             @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+  operator          User?              @relation(fields: [operatorId], references: [id], onDelete: SetNull)
+  // Preserva el histórico si el motivo se desactiva o, en un caso límite, se borra manualmente en BD.
+  consumptionReason ConsumptionReason? @relation(fields: [reasonId], references: [id], onDelete: SetNull)
+
+  @@index([reasonId])
 }
 
 // ADR-004 / US-030: catálogo administrable de motivos de consumo (US-004) y de
 // varianza negativa de conciliación de turno (US-008). Se desactiva, nunca se borra.
 model ConsumptionReason {
-  id        String   @id @default(uuid())
+  id        String          @id @default(uuid())
   label     String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  movements StockMovement[]
 }
 
 model SystemHealth {
@@ -206,13 +210,13 @@ model SystemHealth {
 }
 
 model Recipe {
-  id          String             @id @default(uuid())
-  name        String
-  category    String
-  description String?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-  ingredients RecipeIngredient[]
+  id           String              @id @default(uuid())
+  name         String
+  category     String
+  description  String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  ingredients  RecipeIngredient[]
   preparations RecipePreparation[]
 }
 
@@ -248,18 +252,18 @@ model RecipePreparation {
 
 // US-028 / ADR-003: se materializa al cerrar la preparación (uno por ingrediente extraído).
 model RecipePreparationItem {
-  id                 String            @id @default(uuid())
-  preparationId      String
-  insumoId           String
-  extractedQty       Decimal           @db.Decimal(12, 4)
-  consumedQty        Decimal           @db.Decimal(12, 4)
-  leftoverQty        Decimal           @default(0) @db.Decimal(12, 4)
-  leftoverLocationId String?
+  id                  String            @id @default(uuid())
+  preparationId       String
+  insumoId            String
+  extractedQty        Decimal           @db.Decimal(12, 4)
+  consumedQty         Decimal           @db.Decimal(12, 4)
+  leftoverQty         Decimal           @default(0) @db.Decimal(12, 4)
+  leftoverLocationId  String?
   leftoverRemanenteId String?
-  wastedQty          Decimal           @default(0) @db.Decimal(12, 4)
-  wasteReason        String?
-  createdAt          DateTime          @default(now())
-  preparation        RecipePreparation @relation(fields: [preparationId], references: [id], onDelete: Cascade)
+  wastedQty           Decimal           @default(0) @db.Decimal(12, 4)
+  wasteReason         String?
+  createdAt           DateTime          @default(now())
+  preparation         RecipePreparation @relation(fields: [preparationId], references: [id], onDelete: Cascade)
 
   @@index([preparationId])
 }

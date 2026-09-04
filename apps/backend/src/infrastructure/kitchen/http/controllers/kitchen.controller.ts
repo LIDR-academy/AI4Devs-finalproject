@@ -17,6 +17,9 @@ const getActiveRemanentesQuerySchema = z.object({
 
 const consumeRemanenteSchema = z.object({
   quantity: z.union([z.number().positive('La cantidad a consumir debe ser positiva.'), z.string().min(1)]),
+  // ADR-004 / US-004 / TK-108: motivo estructurado obligatorio; texto libre siempre opcional.
+  reasonId: z.string().min(1, 'Debe indicar el motivo del consumo.'),
+  notes: z.string().optional(),
 });
 
 const discardRemanenteSchema = z.object({
@@ -169,6 +172,8 @@ export class KitchenController {
       const result = await this.consumeRemanenteUseCase.execute({
         remanenteId: id,
         quantityToConsume: parsedBody.quantity,
+        reasonId: parsedBody.reasonId,
+        notes: parsedBody.notes,
       });
 
       res.status(200).json(result);

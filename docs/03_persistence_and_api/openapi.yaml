@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: RestoStock API
   description: REST API specification for RestoStock real-time inventory and FEFO traceability system.
-  version: 4.0.0 # TK-079: RotationMetricsResponse.averageTrrHours marked nullable (correcting the TK-078 draft to match the real, first-ever implementation of this endpoint — oasdiff flags this as breaking against that draft commit, but the endpoint had zero real consumers until this ticket).
+  version: 5.0.0 # TK-108 / ADR-004: POST /kitchen/remanentes/{id}/consume now requires `reasonId` (genuine breaking change — oasdiff confirmed it, major bump per docs/04_governance_and_quality/scripts/check_contract_drift.sh's own instruction). Deliberate business-rule change: every consumption must state a structured reason (US-004 v1.1.0). Single consumer is this monorepo's own frontend, updated next in TK-108-FE — no external API consumers to notify.
 servers:
   - url: http://localhost:3000
     description: Local Development Server
@@ -888,7 +888,7 @@ paths:
 
   /api/v1/kitchen/remanentes/{id}/consume:
     post:
-      summary: Record partial or total consumption of an active remanente
+      summary: Record partial or total consumption of an active remanente (ADR-004 — reasonId required)
       operationId: consumeRemanente
       tags:
         - Kitchen Operations
@@ -914,13 +914,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConsumeRemanenteResponse'
         '400':
-          description: Invalid quantity
+          description: Invalid quantity, missing reasonId, or reasonId references a deactivated ConsumptionReason (ADR-004)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Active remanente not found
+          description: Active remanente not found, or reasonId does not match any ConsumptionReason (ADR-004)
           content:
             application/json:
               schema:
@@ -1792,9 +1792,16 @@ components:
       type: object
       required:
         - quantity
+        - reasonId
       properties:
         quantity:
           $ref: '#/components/schemas/DecimalString'
+        reasonId:
+          type: string
+          description: 'ADR-004 / US-030: id of an active ConsumptionReason. Required — every consumption must state a reason.'
+        notes:
+          type: string
+          description: Free text, always optional — complements but never replaces the structured reason.
 
     ConsumeRemanenteResponse:
       type: object

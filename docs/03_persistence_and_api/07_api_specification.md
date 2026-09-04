@@ -22,7 +22,7 @@ inputs:
 | **POST** | `/api/v1/auth/pin` | `AuthPinRequest` | `AuthPinResponse` | Autenticación de operarios de cocina en la tablet mediante PIN de 4 dígitos. |
 | **POST** | `/api/v1/stock/extraction` | `RecordExtractionRequest` | `RecordExtractionResponse` | Registra el traslado de insumos cerrados desde la bodega principal hacia la cocina. |
 | **GET** | `/api/v1/kitchen/remanentes` | *Ninguno (Query Params)* | `GetRemanentesResponse` | Obtiene la lista de remanentes activos en cocina ordenados bajo el principio FEFO. |
-| **POST** | `/api/v1/kitchen/consumption` | `RecordConsumptionRequest` | `RecordConsumptionResponse` | Registra consumos parciales de insumos abiertos (remanentes) durante el servicio. |
+| **POST** | `/api/v1/kitchen/remanentes/{id}/consume` | `ConsumeRemanenteRequest` | `ConsumeRemanenteResponse` | Registra consumos parciales de insumos abiertos (remanentes) durante el servicio. Desde `ADR-004`/`TK-108`: `reasonId` obligatorio (path/payload corregidos — ver nota en §2.4). |
 | **POST** | `/api/v1/kitchen/remanentes/:id/discard`| `DiscardRemanenteRequest` | `DiscardRemanenteResponse` | Registra el descarte físico total de un remanente activo por merma o expiración. |
 | **POST** | `/api/v1/recipes` | `CreateRecipeRequest` | `CreateRecipeResponse` | Crea una nueva receta con sus ingredientes y proporciones (`TK-057`, ruta actual desde `TK-069` — módulo `recipes` independiente de `catalog`). |
 | **GET** | `/api/v1/recipes` | *Ninguno* | `ListRecipesResponse` | Obtiene la lista de recetas (`TK-057`, ruta actual desde `TK-069`). |
@@ -55,7 +55,7 @@ inputs:
 
 > **Nota — trazabilidad de consumo ([ADR-004](../02_architecture_design/adr/ADR-004-consumption-reason-catalog.md)):**
 > - `/api/v1/consumption-reasons` (`GET`/`POST`/`PUT`): ✅ Done (`TK-107`, `US-030`) — catálogo administrable descrito arriba.
-> - `POST /api/v1/kitchen/consumption` (consumo de remanente): 📝 Pendiente (`TK-108`) — pasará a exigir `reasonId` (FK al catálogo activo) `+ notes?` (texto libre siempre opcional); `StockMovement.reasonId` nullable, `onDelete: SetNull`.
+> - `POST /api/v1/kitchen/remanentes/{id}/consume` (consumo de remanente): ✅ Done (`TK-108`) — exige `reasonId` (FK al catálogo activo; `404` si no existe, `400` si está desactivado) `+ notes?` (texto libre siempre opcional). `StockMovement.reasonId` nullable, `onDelete: SetNull`. Breaking change deliberado (`reasonId` es un campo requerido nuevo) — `openapi.yaml` `version: 5.0.0`.
 > - `POST /api/v1/kitchen/shift-reconciliation`: 📝 Pendiente (`TK-109`) — cada línea de varianza **negativa** exigirá `reasonId` (400 y ninguna línea se aplica si falta alguno); varianza **positiva** no exige motivo y corrige un bug existente (`Remanente.currentQuantity` no se actualizaba con el sobrante).
 
 ---
@@ -240,34 +240,38 @@ sequenceDiagram
 
 ---
 
-### 2.4. `POST /api/v1/kitchen/consumption`
-*   **Descripción:** Registra el consumo parcial (o total) de un remanente activo para la elaboración de platos en cocina. Si el consumo deja la cantidad remanente en `0.0000`, el estado del remanente cambia automáticamente a `CONSUMED`.
+### 2.4. `POST /api/v1/kitchen/remanentes/{id}/consume`
+> **Corrección (`TK-108`):** esta sección documentaba un path (`/kitchen/consumption`), un payload (`remanenteId` en el body) y una respuesta (`RecordConsumptionResponse`) que nunca coincidieron con el controller real (`consumeRemanente` en `kitchen.controller.ts`, `id` en la URL, `ConsumeRemanenteDTO`/`ConsumptionResponseDTO`) — deuda de documentación preexistente, corregida de paso al tocar este endpoint para `ADR-004`.
+
+*   **Descripción:** Registra el consumo parcial (o total) de un remanente activo para la elaboración de platos en cocina. Si el consumo deja la cantidad remanente en `0.000`, el estado del remanente cambia automáticamente a `EXHAUSTED`. Desde `ADR-004`/`TK-108`, exige un motivo estructurado del catálogo (`US-030`).
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
-    *   `Authorization: Bearer <token_jwt>` (Rol mínimo: `OPERATOR`)
-*   **Request Payload (`RecordConsumptionRequest`):**
+    *   `Authorization: Bearer <token_jwt>` (Rol: `ADMIN` o `KITCHEN_STAFF`)
+*   **Request Payload (`ConsumeRemanenteRequest`):**
+    ```json
+    {
+      "quantity": "0.2500",
+      "reasonId": "reason-seed-1",
+      "notes": "Se sirvió de más en la mesa 4"
+    }
+    ```
+*   **Response Success (`200 OK` - `ConsumeRemanenteResponse`):**
     ```json
     {
       "remanenteId": "f8a9e223-92b0-464a-93cd-9bc64e22340b",
-      "quantityConsumed": "0.2500"
+      "consumedQuantity": "0.250",
+      "remainingQuantity": "1.500",
+      "status": "ACTIVE",
+      "isExhausted": false
     }
     ```
-*   **Response Success (`200 OK` - `RecordConsumptionResponse`):**
+*   **Response Error (`400 Bad Request`):** `reasonId` ausente, o referencia un motivo desactivado (`InactiveConsumptionReasonException`).
+*   **Response Error (`404 Not Found`):** el remanente no existe, o `reasonId` no matchea ningún `ConsumptionReason`.
+*   **Response Error (`422 Unprocessable Entity`):** la cantidad a consumir supera las existencias físicas actuales del remanente (`ExcessConsumptionException`).
     ```json
     {
-      "message": "Consumption recorded successfully",
-      "remanenteId": "f8a9e223-92b0-464a-93cd-9bc64e22340b",
-      "remainingQuantity": "1.5000",
-      "status": "ACTIVE"
-    }
-    ```
-*   **Response Error (`422 Unprocessable Entity`):**
-    *   *Causa 1:* Intento de consumir de un remanente ya agotado (`CONSUMED`) o descartado (`DISCARDED`).
-    *   *Causa 2:* La cantidad a consumir supera las existencias físicas actuales del remanente.
-    ```json
-    {
-      "error": "INVALID_CONSUMPTION",
-      "message": "Requested consumption quantity (2.0000) exceeds current remanente stock (1.7500)",
+      "error": "ExcessConsumptionException",
+      "message": "No es posible consumir 5.000. La cantidad disponible en el remanente es de 1.750.",
       "timestamp": "2026-07-03T16:36:12Z"
     }
     ```

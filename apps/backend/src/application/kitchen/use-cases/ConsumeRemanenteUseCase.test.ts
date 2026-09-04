@@ -3,6 +3,7 @@ import request from 'supertest';
 import { createApp } from '../../../infrastructure/http/app.js';
 import { InMemoryStockRepository } from '../../../infrastructure/stock/repositories/InMemoryStockRepository.js';
 import { InMemoryRemanenteQueryRepository } from '../../../infrastructure/kitchen/repositories/InMemoryRemanenteQueryRepository.js';
+import { InMemoryConsumptionReasonRepository } from '../../../infrastructure/kitchen/repositories/InMemoryConsumptionReasonRepository.js';
 import { Remanente } from '../../../domain/stock/entities/Remanente.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 
@@ -36,7 +37,7 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
     // 2. ACT
     const response = await request(app)
       .post('/api/v1/kitchen/remanentes/rem-salsa-1/consume')
-      .send({ quantity: '0.250' });
+      .send({ quantity: '0.250', reasonId: 'reason-seed-1' });
 
     // 3. ASSERT: Verificación con los 3 Oráculos (Guard 20)
     // ORACULO RED / RESPUESTA: Payload de respuesta HTTP 200 OK
@@ -74,7 +75,7 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
     const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo, requireAuth: false }); // test de negocio, no de auth (Guard 15 sigue activo por defecto en createApp)
     const response = await request(app)
       .post('/api/v1/kitchen/remanentes/rem-low-1/consume')
-      .send({ quantity: '0.250' });
+      .send({ quantity: '0.250', reasonId: 'reason-seed-1' });
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('consumedQuantity', '0.250');
@@ -90,7 +91,7 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
     const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo, requireAuth: false }); // test de negocio, no de auth (Guard 15 sigue activo por defecto en createApp)
     const response = await request(app)
       .post('/api/v1/kitchen/remanentes/rem-salsa-1/consume')
-      .send({ quantity: '5.000' });
+      .send({ quantity: '5.000', reasonId: 'reason-seed-1' });
 
     expect(response.status).toBe(422);
     expect(response.body).toHaveProperty('error', 'ExcessConsumptionException');
@@ -99,5 +100,80 @@ describe('TK-005: Partial Remanente Consumption TDD Suite', () => {
     // Garantizar que la cantidad del remanente NO cambio
     const updated = await stockRepo.findRemanenteById('rem-salsa-1');
     expect(updated?.currentQuantity.toString()).toBe('1.750');
+  });
+
+  // ADR-004 / US-004 / TK-108: motivo estructurado obligatorio.
+  describe('TK-108: motivo de consumo obligatorio (ADR-004)', () => {
+    it('sin reasonId -> 400, sin mutar el remanente ni registrar movimiento', async () => {
+      const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo, requireAuth: false });
+      const response = await request(app)
+        .post('/api/v1/kitchen/remanentes/rem-salsa-1/consume')
+        .send({ quantity: '0.250' });
+
+      expect(response.status).toBe(400);
+      const updated = await stockRepo.findRemanenteById('rem-salsa-1');
+      expect(updated?.currentQuantity.toString()).toBe('1.750');
+      expect(stockRepo.movements).toHaveLength(0);
+    });
+
+    it('reasonId inexistente -> 404, sin mutar el remanente', async () => {
+      const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo, requireAuth: false });
+      const response = await request(app)
+        .post('/api/v1/kitchen/remanentes/rem-salsa-1/consume')
+        .send({ quantity: '0.250', reasonId: 'reason-does-not-exist' });
+
+      expect(response.status).toBe(404);
+      const updated = await stockRepo.findRemanenteById('rem-salsa-1');
+      expect(updated?.currentQuantity.toString()).toBe('1.750');
+      expect(stockRepo.movements).toHaveLength(0);
+    });
+
+    it('reasonId de un motivo desactivado -> 400, sin mutar el remanente', async () => {
+      const reasonRepo = new InMemoryConsumptionReasonRepository();
+      const inactiveReason = (await reasonRepo.findById('reason-seed-2'))!;
+      inactiveReason.deactivate();
+      await reasonRepo.save(inactiveReason);
+
+      const app = createApp({
+        stockRepository: stockRepo,
+        remanenteQueryRepository: queryRepo,
+        consumptionReasonRepository: reasonRepo,
+        requireAuth: false,
+      });
+      const response = await request(app)
+        .post('/api/v1/kitchen/remanentes/rem-salsa-1/consume')
+        .send({ quantity: '0.250', reasonId: 'reason-seed-2' });
+
+      expect(response.status).toBe(400);
+      const updated = await stockRepo.findRemanenteById('rem-salsa-1');
+      expect(updated?.currentQuantity.toString()).toBe('1.750');
+      expect(stockRepo.movements).toHaveLength(0);
+    });
+
+    it('consumo exitoso deja reasonId + notes (texto libre opcional) en el movimiento registrado', async () => {
+      const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo, requireAuth: false });
+      const response = await request(app)
+        .post('/api/v1/kitchen/remanentes/rem-salsa-1/consume')
+        .send({ quantity: '0.250', reasonId: 'reason-seed-1', notes: 'Se sirvió de más en la mesa 4' });
+
+      expect(response.status).toBe(200);
+      expect(stockRepo.movements).toHaveLength(1);
+      expect(stockRepo.movements[0]).toMatchObject({
+        type: 'CONSUMPTION',
+        reasonId: 'reason-seed-1',
+        reason: 'Se sirvió de más en la mesa 4',
+      });
+    });
+
+    it('consumo exitoso SIN notes deja el movimiento con reasonId y reason (notes) undefined', async () => {
+      const app = createApp({ stockRepository: stockRepo, remanenteQueryRepository: queryRepo, requireAuth: false });
+      const response = await request(app)
+        .post('/api/v1/kitchen/remanentes/rem-salsa-1/consume')
+        .send({ quantity: '0.250', reasonId: 'reason-seed-1' });
+
+      expect(response.status).toBe(200);
+      expect(stockRepo.movements[0].reasonId).toBe('reason-seed-1');
+      expect(stockRepo.movements[0].reason).toBeUndefined();
+    });
   });
 });
