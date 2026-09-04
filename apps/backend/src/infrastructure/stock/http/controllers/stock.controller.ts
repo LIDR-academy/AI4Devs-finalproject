@@ -21,6 +21,9 @@ const recordExtractionSchema = z
     purpose: z.enum(['KITCHEN_STOCK', 'RECIPE', 'DIRECT_DISCARD']).optional().default('KITCHEN_STOCK'),
     reason: z.string().optional(),
     recipeId: z.string().optional(),
+    // US-027: modo RECIPE — porciones planificadas y preparación en curso opcional.
+    plannedPortions: z.coerce.number().int().positive().optional(),
+    recipePreparationId: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -33,7 +36,12 @@ const recordExtractionSchema = z
       message: 'El motivo es obligatorio para descarte directo desde bodega.',
       path: ['reason'],
     }
-  );
+  )
+  .refine((data) => data.purpose !== 'RECIPE' || (!!data.recipeId && data.recipeId.trim().length > 0), {
+    // US-027: en modo RECIPE la receta es obligatoria.
+    message: 'La receta es obligatoria cuando el propósito de la extracción es RECIPE.',
+    path: ['recipeId'],
+  });
 
 const createInsumoSchema = z.object({
   name: z.string().min(1, 'El nombre del insumo es requerido.'),

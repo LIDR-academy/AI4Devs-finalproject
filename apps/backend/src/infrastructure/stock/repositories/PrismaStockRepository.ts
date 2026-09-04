@@ -9,6 +9,8 @@ import {
   IStockUnitOfWork,
   WarehouseBalancesAfterDeduction,
 } from '../../../domain/stock/repositories/IStockUnitOfWork.js';
+import { RecipePreparation } from '../../../domain/kitchen/entities/RecipePreparation.js';
+import { recipePreparationUpsertArgs } from '../../kitchen/repositories/PrismaRecipePreparationRepository.js';
 import { InsufficientStockException } from '../../../domain/stock/errors/InsufficientStockException.js';
 
 type RawInsumo = {
@@ -136,9 +138,15 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
           this.deductStockAtAtomicallyOn(tx, insumoId, insumoName, storageLocationId, quantity),
         saveRemanente: (remanente) => this.saveRemanenteOn(tx, remanente),
         recordMovement: (movement) => this.recordMovementOn(tx, movement),
+        saveRecipePreparation: (preparation) => this.saveRecipePreparationOn(tx, preparation),
       };
       return work(uow);
     });
+  }
+
+  // US-027: cross-cut stock↔kitchen dentro de la transacción de extracción.
+  private async saveRecipePreparationOn(client: StockDbClient, preparation: RecipePreparation): Promise<void> {
+    await client.recipePreparation.upsert(recipePreparationUpsertArgs(preparation));
   }
 
   private async deductStockAtAtomicallyOn(
@@ -187,6 +195,8 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
         currentQuantity: remanente.currentQuantity.toDecimal(),
         status: remanente.status as RemanenteStatusType,
         terminalAt: remanente.terminalAt ?? null,
+        storageLocationId: remanente.storageLocationId ?? null,
+        recipePreparationId: remanente.recipePreparationId ?? null,
       },
       create: {
         id: remanente.id,
@@ -195,6 +205,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
         initialQuantity: remanente.initialQuantity.toDecimal(),
         location: remanente.location,
         storageLocationId: remanente.storageLocationId ?? null,
+        recipePreparationId: remanente.recipePreparationId ?? null,
         status: remanente.status as RemanenteStatusType,
         expirationDate: remanente.expirationDate,
         terminalAt: remanente.terminalAt ?? null,
@@ -226,6 +237,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
     initialQuantity: { toString(): string };
     location: string;
     storageLocationId: string | null;
+    recipePreparationId: string | null;
     status: string;
     expirationDate: Date;
     createdAt: Date;
@@ -238,6 +250,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
       initialQuantity: new DecimalQuantity(raw.initialQuantity.toString()),
       location: raw.location,
       storageLocationId: raw.storageLocationId ?? undefined,
+      recipePreparationId: raw.recipePreparationId ?? undefined,
       status: raw.status as RemanenteStatusType,
       expirationDate: raw.expirationDate,
       createdAt: raw.createdAt,

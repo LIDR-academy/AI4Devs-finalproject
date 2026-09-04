@@ -11,6 +11,8 @@ export interface ActiveRemanenteDTO {
   storageLocationId?: string;
   /** US-026: nombre resuelto del área (join); cae a `location` si no hay FK. */
   storageLocationName?: string;
+  /** US-027: preparación de receta que originó el remanente. */
+  recipePreparationId?: string;
   expirationDate: Date;
   status: string;
   createdAt: Date;

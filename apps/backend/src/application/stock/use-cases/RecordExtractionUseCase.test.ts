@@ -12,8 +12,11 @@ import { StockMovementRecord } from '../../../domain/stock/repositories/IRemanen
 import { Remanente } from '../../../domain/stock/entities/Remanente.js';
 import { InsufficientStockException } from '../../../domain/stock/errors/InsufficientStockException.js';
 import { DiscardReasonRequiredException } from '../../../domain/stock/errors/DiscardReasonRequiredException.js';
+import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
 import { Clock } from '../../../domain/shared/Clock.js';
 import { IdGenerator } from '../../../domain/shared/IdGenerator.js';
+import { RecipePreparation } from '../../../domain/kitchen/entities/RecipePreparation.js';
+import { IRecipePreparationRepository } from '../../../domain/kitchen/repositories/IRecipePreparationRepository.js';
 
 const FIXED_NOW = new Date('2026-02-01T12:00:00.000Z');
 const fixedClock: Clock = { now: () => FIXED_NOW };
@@ -63,6 +66,9 @@ class RecordingUnitOfWork implements IStockUnitOfWork {
   public deductArgs: { insumoId: string; insumoName: string; storageLocationId: string; quantity: string }[] = [];
   public savedRemanentes: Remanente[] = [];
   public movements: StockMovementRecord[] = [];
+  public savedPreparations: { id: string }[] = [];
+  /** orden en el que se llamaron las escrituras (para verificar prep antes de remanente). */
+  public callOrder: string[] = [];
   public deductBehaviour: () => WarehouseBalancesAfterDeduction = () => SECTOR_BALANCE;
 
   async runExtraction<T>(work: (uow: ExtractionUnitOfWork) => Promise<T>): Promise<T> {
@@ -72,26 +78,52 @@ class RecordingUnitOfWork implements IStockUnitOfWork {
         this.deductArgs.push({ insumoId, insumoName, storageLocationId, quantity: quantity.toString() });
         return this.deductBehaviour();
       },
+      saveRecipePreparation: async (prep) => {
+        this.savedPreparations.push({ id: prep.id });
+        this.callOrder.push('prep');
+      },
       saveRemanente: async (remanente) => {
         this.savedRemanentes.push(remanente);
+        this.callOrder.push('remanente');
       },
       recordMovement: async (movement) => {
         this.movements.push(movement);
+        this.callOrder.push('movement');
       },
     };
     return work(uow);
   }
 }
 
+class FakeRecipePreparationRepository implements IRecipePreparationRepository {
+  public preset = new Map<string, RecipePreparation>();
+  async save(): Promise<void> {}
+  async findById(id: string): Promise<RecipePreparation | null> {
+    return this.preset.get(id) ?? null;
+  }
+  async findByStatus(): Promise<RecipePreparation[]> {
+    return [];
+  }
+}
+
 describe('RecordExtractionUseCase (unitario)', () => {
   let insumoRepo: FakeInsumoRepository;
   let uow: RecordingUnitOfWork;
+  let prepRepo: FakeRecipePreparationRepository;
   let useCase: RecordExtractionUseCase;
 
   beforeEach(() => {
     insumoRepo = new FakeInsumoRepository();
     uow = new RecordingUnitOfWork();
-    useCase = new RecordExtractionUseCase(insumoRepo, uow, fixedClock, new SequentialIdGenerator());
+    prepRepo = new FakeRecipePreparationRepository();
+    useCase = new RecordExtractionUseCase(
+      insumoRepo,
+      uow,
+      fixedClock,
+      new SequentialIdGenerator(),
+      undefined,
+      prepRepo
+    );
     insumoRepo.seed(
       new Insumo({
         id: 'ins-1',
@@ -161,6 +193,63 @@ describe('RecordExtractionUseCase (unitario)', () => {
     expect(uow.movements[0].toLoc).toBe('KITCHEN_PREP');
     expect(uow.movements[0].recipeId).toBe('rec-9');
     expect(uow.movements[0].reason).toBe('Mise en place');
+  });
+
+  describe('US-027: apertura de preparación de receta', () => {
+    it('abre una RecipePreparation nueva, la guarda ANTES del remanente y lo enlaza', async () => {
+      const result = await useCase.execute({
+        insumoId: 'ins-1',
+        fromStorageLocationId: 'loc-1',
+        quantity: '2.000',
+        purpose: 'RECIPE',
+        recipeId: 'rec-pizza',
+        plannedPortions: 8,
+        operatorId: 'usr-op-1',
+      });
+
+      expect(uow.savedPreparations).toHaveLength(1);
+      expect(result.recipePreparationId).toBe(uow.savedPreparations[0].id);
+      expect(result.recipePreparationId).toMatch(/^prep-\d+$/);
+      // la preparación se persiste antes que el remanente (FK)
+      expect(uow.callOrder.indexOf('prep')).toBeLessThan(uow.callOrder.indexOf('remanente'));
+      expect(uow.savedRemanentes[0].recipePreparationId).toBe(result.recipePreparationId);
+    });
+
+    it('reutiliza una preparación abierta de la misma receta cuando se pasa recipePreparationId', async () => {
+      const existing = RecipePreparation.openNew('prep-existente', 'rec-pizza', 8, 'usr-op-1', FIXED_NOW);
+      prepRepo.preset.set('prep-existente', existing);
+
+      const result = await useCase.execute({
+        insumoId: 'ins-1',
+        fromStorageLocationId: 'loc-1',
+        quantity: '1.000',
+        purpose: 'RECIPE',
+        recipeId: 'rec-pizza',
+        recipePreparationId: 'prep-existente',
+      });
+
+      expect(result.recipePreparationId).toBe('prep-existente');
+      expect(uow.savedRemanentes[0].recipePreparationId).toBe('prep-existente');
+    });
+
+    it('rechaza un recipePreparationId inexistente / de otra receta', async () => {
+      await expect(
+        useCase.execute({
+          insumoId: 'ins-1',
+          fromStorageLocationId: 'loc-1',
+          quantity: '1.000',
+          purpose: 'RECIPE',
+          recipeId: 'rec-pizza',
+          recipePreparationId: 'no-existe',
+        })
+      ).rejects.toBeInstanceOf(EntityNotFoundException);
+      expect(uow.runExtractionCalls).toBe(0);
+    });
+
+    it('KITCHEN_STOCK no abre preparación', async () => {
+      await useCase.execute({ insumoId: 'ins-1', fromStorageLocationId: 'loc-1', quantity: '1.000' });
+      expect(uow.savedPreparations).toHaveLength(0);
+    });
   });
 
   it('si deductStockAtAtomically lanza, no se guarda remanente ni movimiento y el error sube', async () => {

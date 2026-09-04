@@ -34,6 +34,13 @@ enum RemanenteStatus {
   DISCARDED
 }
 
+// US-027 / ADR-003
+enum RecipePreparationStatus {
+  OPEN
+  CLOSED
+  ABANDONED
+}
+
 model Role {
   id          String           @id @default(uuid())
   name        String           @unique
@@ -145,6 +152,8 @@ model Remanente {
   // históricos conservan solo el literal en `location`. RESTRICT: un área con remanentes
   // ACTIVE no puede borrarse (Invariante 5).
   storageLocationId String?
+  // US-027: FK a la preparación de receta que originó este remanente (null = extracción normal).
+  recipePreparationId String?
   status          RemanenteStatus @default(ACTIVE)
   expirationDate  DateTime
   createdAt       DateTime        @default(now())
@@ -152,8 +161,10 @@ model Remanente {
   terminalAt      DateTime?
   insumo          Insumo          @relation(fields: [insumoId], references: [id], onDelete: Cascade)
   storageLocation StorageLocation? @relation(fields: [storageLocationId], references: [id], onDelete: Restrict)
+  recipePreparation RecipePreparation? @relation(fields: [recipePreparationId], references: [id], onDelete: SetNull)
 
   @@index([storageLocationId])
+  @@index([recipePreparationId])
 }
 
 model StockMovement {
@@ -186,6 +197,7 @@ model Recipe {
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   ingredients RecipeIngredient[]
+  preparations RecipePreparation[]
 }
 
 model RecipeIngredient {
@@ -194,6 +206,46 @@ model RecipeIngredient {
   insumoId String
   quantity Decimal @db.Decimal(12, 4)
   recipe   Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+}
+
+// US-027 / US-028 / ADR-003: tanda de preparación de una receta.
+model RecipePreparation {
+  id                 String                  @id @default(uuid())
+  recipeId           String
+  plannedPortions    Int
+  status             RecipePreparationStatus @default(OPEN)
+  openedByOperatorId String?
+  openedAt           DateTime                @default(now())
+  actualPortions     Int?
+  closedByOperatorId String?
+  closedAt           DateTime?
+  notes              String?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  recipe             Recipe                  @relation(fields: [recipeId], references: [id], onDelete: Restrict)
+  remanentes         Remanente[]
+  items              RecipePreparationItem[]
+
+  @@index([status])
+  @@index([recipeId])
+}
+
+// US-028 / ADR-003: se materializa al cerrar la preparación (uno por ingrediente extraído).
+model RecipePreparationItem {
+  id                 String            @id @default(uuid())
+  preparationId      String
+  insumoId           String
+  extractedQty       Decimal           @db.Decimal(12, 4)
+  consumedQty        Decimal           @db.Decimal(12, 4)
+  leftoverQty        Decimal           @default(0) @db.Decimal(12, 4)
+  leftoverLocationId String?
+  leftoverRemanenteId String?
+  wastedQty          Decimal           @default(0) @db.Decimal(12, 4)
+  wasteReason        String?
+  createdAt          DateTime          @default(now())
+  preparation        RecipePreparation @relation(fields: [preparationId], references: [id], onDelete: Cascade)
+
+  @@index([preparationId])
 }
 
 model ShiftReconciliation {

@@ -5,6 +5,7 @@ import { PrismaUserRepository } from '../auth/repositories/PrismaUserRepository.
 import { PrismaRemanenteQueryRepository } from '../kitchen/repositories/PrismaRemanenteQueryRepository.js';
 import { PrismaReportRepository } from '../reports/repositories/PrismaReportRepository.js';
 import { PrismaRecipeRepository } from '../recipes/repositories/PrismaRecipeRepository.js';
+import { PrismaRecipePreparationRepository } from '../kitchen/repositories/PrismaRecipePreparationRepository.js';
 import { PrismaShiftReconciliationRepository } from '../kitchen/repositories/PrismaShiftReconciliationRepository.js';
 import { PrismaStockMovementQueryRepository } from '../stock/repositories/PrismaStockMovementQueryRepository.js';
 import { PrismaRoleRepository } from '../security/repositories/PrismaRoleRepository.js';
@@ -32,6 +33,7 @@ export function buildRepositoriesForEnvironment(
     reportRepository: new PrismaReportRepository(prisma),
     recipeRepository: new PrismaRecipeRepository(prisma),
     reconciliationRepository: new PrismaShiftReconciliationRepository(prisma),
+    recipePreparationRepository: new PrismaRecipePreparationRepository(prisma),
     roleRepository: new PrismaRoleRepository(prisma),
     locationRepository: new PrismaLocationRepository(prisma),
     settingsRepository: new PrismaSettingsRepository(prisma),

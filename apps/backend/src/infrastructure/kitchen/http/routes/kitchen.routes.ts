@@ -4,9 +4,11 @@ import { GetActiveRemanentesUseCase } from '../../../../application/kitchen/use-
 import { ConsumeRemanenteUseCase } from '../../../../application/kitchen/use-cases/ConsumeRemanenteUseCase.js';
 import { DiscardRemanenteUseCase } from '../../../../application/kitchen/use-cases/DiscardRemanenteUseCase.js';
 import { ConsumeRecipeUseCase } from '../../../../application/kitchen/use-cases/ConsumeRecipeUseCase.js';
+import { GetRecipePreparationsUseCase } from '../../../../application/kitchen/use-cases/GetRecipePreparationsUseCase.js';
 import { IRemanenteQueryRepository } from '../../../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
 import { IRemanenteRepository } from '../../../../domain/stock/repositories/IRemanenteRepository.js';
 import { IRecipeRepository } from '../../../../domain/recipes/repositories/IRecipeRepository.js';
+import { IRecipePreparationRepository } from '../../../../domain/kitchen/repositories/IRecipePreparationRepository.js';
 
 import { PerformShiftReconciliationUseCase } from '../../../../application/kitchen/use-cases/PerformShiftReconciliationUseCase.js';
 import { InMemoryShiftReconciliationRepository } from '../../repositories/InMemoryShiftReconciliationRepository.js';
@@ -18,7 +20,8 @@ function buildKitchenController(
   remanenteQueryRepository: IRemanenteQueryRepository,
   remanenteRepository?: IRemanenteRepository,
   recipeRepository?: IRecipeRepository,
-  reconciliationRepository?: IShiftReconciliationRepository
+  reconciliationRepository?: IShiftReconciliationRepository,
+  recipePreparationRepository?: IRecipePreparationRepository
 ): KitchenController {
   const reconciliationRepo = reconciliationRepository ?? new InMemoryShiftReconciliationRepository();
   return new KitchenController(
@@ -30,6 +33,9 @@ function buildKitchenController(
       : undefined,
     remanenteRepository
       ? new PerformShiftReconciliationUseCase(remanenteRepository, remanenteQueryRepository, reconciliationRepo)
+      : undefined,
+    recipePreparationRepository
+      ? new GetRecipePreparationsUseCase(recipePreparationRepository, remanenteQueryRepository)
       : undefined
   );
 }
@@ -39,7 +45,8 @@ export function createKitchenRouter(
   remanenteRepository?: IRemanenteRepository,
   recipeRepository?: IRecipeRepository,
   reconciliationRepository?: IShiftReconciliationRepository,
-  isAuthRequired = true
+  isAuthRequired = true,
+  recipePreparationRepository?: IRecipePreparationRepository
 ): Router {
   const router = Router();
 
@@ -55,12 +62,18 @@ export function createKitchenRouter(
     remanenteQueryRepository,
     remanenteRepository,
     recipeRepository,
-    reconciliationRepository
+    reconciliationRepository,
+    recipePreparationRepository
   );
 
   // Lectura de la lista FEFO: abierta a cualquier usuario autenticado (dato operativo,
   // no sensible) — la escritura sí exige rol explícito abajo.
   router.get('/remanentes-activos', controller.getActiveRemanentes);
+  if (recipePreparationRepository) {
+    // US-027: tablero de preparaciones de receta — lectura para cualquier autenticado.
+    router.get('/recipe-preparations', controller.listRecipePreparations);
+    router.get('/recipe-preparations/:id', controller.getRecipePreparation);
+  }
   if (remanenteRepository) {
     router.post('/remanentes/:id/consume', ...operators, controller.consumeRemanente);
     router.post('/remanentes/:id/discard', ...operators, controller.discardRemanente);

@@ -12,6 +12,8 @@ export interface RemanenteProps {
   location: string;
   /** US-026: FK al área de cocina del catálogo (`StorageLocation type = KITCHEN`). */
   storageLocationId?: string;
+  /** US-027: FK a la preparación de receta que originó este remanente. */
+  recipePreparationId?: string;
   status: RemanenteStatusType;
   expirationDate: Date;
   createdAt?: Date;
@@ -75,6 +77,15 @@ export class Remanente {
 
   public get storageLocationId(): string | undefined {
     return this.props.storageLocationId;
+  }
+
+  public get recipePreparationId(): string | undefined {
+    return this.props.recipePreparationId;
+  }
+
+  /** US-027: enlaza el remanente a una preparación de receta abierta. */
+  public linkToRecipePreparation(preparationId: string): void {
+    this.props.recipePreparationId = preparationId;
   }
 
   public get status(): RemanenteStatusType {

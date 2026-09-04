@@ -122,6 +122,48 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
     expect(mov.operatorId).toBe('user-cook-99');
   });
 
+  it('TK-103 (US-027): la extracción RECIPE abre una RecipePreparation y la expone en el tablero', async () => {
+    const app = createApp({ stockRepository: stockRepo, requireAuth: false });
+    const ext = await request(app)
+      .post('/api/v1/stock/extraction')
+      .send({
+        insumoId: 'ins-mozzarella-1',
+        fromStorageLocationId: 'loc-1',
+        quantity: '2.000',
+        purpose: 'RECIPE',
+        recipeId: 'rec-pizza-01',
+        plannedPortions: 6,
+        operatorId: 'usr-op-7',
+      });
+    expect(ext.status).toBe(201);
+    expect(ext.body.recipePreparationId).toBeTruthy();
+
+    const board = await request(app).get('/api/v1/kitchen/recipe-preparations?status=OPEN');
+    expect(board.status).toBe(200);
+    expect(board.body).toHaveLength(1);
+    expect(board.body[0]).toMatchObject({
+      id: ext.body.recipePreparationId,
+      recipeId: 'rec-pizza-01',
+      plannedPortions: 6,
+      status: 'OPEN',
+      openedByOperatorId: 'usr-op-7',
+    });
+
+    const detail = await request(app).get(`/api/v1/kitchen/recipe-preparations/${ext.body.recipePreparationId}`);
+    expect(detail.status).toBe(200);
+    expect(detail.body.remanentes).toHaveLength(1);
+    expect(detail.body.remanentes[0].insumoId).toBe('ins-mozzarella-1');
+  });
+
+  it('TK-103 (US-027): extracción RECIPE sin recipeId → 400', async () => {
+    const app = createApp({ stockRepository: stockRepo, requireAuth: false });
+    const res = await request(app)
+      .post('/api/v1/stock/extraction')
+      .send({ insumoId: 'ins-mozzarella-1', fromStorageLocationId: 'loc-1', quantity: '1.000', purpose: 'RECIPE' });
+    expect(res.status).toBe(400);
+    expect(res.body.detail).toMatch(/receta es obligatoria/i);
+  });
+
   it('TK-072: debe ejecutar descarte directo desde bodega sin crear remanente en cocina (purpose DIRECT_DISCARD)', async () => {
     const app = createApp({ stockRepository: stockRepo, requireAuth: false });
     const response = await request(app)

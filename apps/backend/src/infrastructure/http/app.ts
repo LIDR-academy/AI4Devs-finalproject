@@ -13,6 +13,8 @@ import { InMemoryStockRepository } from '../stock/repositories/InMemoryStockRepo
 import { InMemoryRemanenteQueryRepository } from '../kitchen/repositories/InMemoryRemanenteQueryRepository.js';
 import { InMemoryReportRepository } from '../reports/repositories/InMemoryReportRepository.js';
 import { InMemoryRecipeRepository } from '../recipes/repositories/InMemoryRecipeRepository.js';
+import { InMemoryRecipePreparationRepository } from '../kitchen/repositories/InMemoryRecipePreparationRepository.js';
+import { IRecipePreparationRepository } from '../../domain/kitchen/repositories/IRecipePreparationRepository.js';
 import { IUserRepository } from '../../domain/auth/repositories/IUserRepository.js';
 import { IInsumoRepository } from '../../domain/stock/repositories/IInsumoRepository.js';
 import { IRemanenteRepository } from '../../domain/stock/repositories/IRemanenteRepository.js';
@@ -57,6 +59,7 @@ export interface AppOptions {
   reportRepository?: IReportRepository;
   recipeRepository?: IRecipeRepository;
   reconciliationRepository?: IShiftReconciliationRepository;
+  recipePreparationRepository?: IRecipePreparationRepository;
   roleRepository?: IRoleRepository;
   locationRepository?: IStorageLocationRepository;
   settingsRepository?: ISystemSettingsRepository;
@@ -168,6 +171,7 @@ interface AppRepositories {
   reportRepo: IReportRepository;
   recipeRepo: IRecipeRepository;
   reconciliationRepo: IShiftReconciliationRepository;
+  recipePreparationRepo: IRecipePreparationRepository;
   roleRepo: IRoleRepository;
   locationRepo: IStorageLocationRepository;
   settingsRepo: ISystemSettingsRepository;
@@ -198,6 +202,9 @@ function buildAuxiliaryRepositories(options: AppOptions) {
 function buildDefaultRepositories(options: AppOptions): AppRepositories {
   const stockRepo = options.stockRepository ?? new InMemoryStockRepository();
   const queryRepos = buildQueryRepositories(options, stockRepo);
+  const recipePreparationRepo =
+    options.recipePreparationRepository ??
+    new InMemoryRecipePreparationRepository(stockRepo as InMemoryStockRepository);
   const auxRepos = buildAuxiliaryRepositories(options);
   return {
     userRepo: options.userRepository ?? new InMemoryUserRepository(),
@@ -208,6 +215,7 @@ function buildDefaultRepositories(options: AppOptions): AppRepositories {
     reportRepo: options.reportRepository ?? new InMemoryReportRepository(),
     recipeRepo: options.recipeRepository ?? new InMemoryRecipeRepository(),
     reconciliationRepo: options.reconciliationRepository ?? new InMemoryShiftReconciliationRepository(),
+    recipePreparationRepo,
   };
 }
 
@@ -234,11 +242,11 @@ function mountApiRoutes(
   authMiddleware: ReturnType<typeof createAuthenticateJWTMiddleware>,
   isAuthRequired: boolean
 ): void {
-  const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, reportRepo, roleRepo, locationRepo, settingsRepo } = repos;
+  const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, recipePreparationRepo, reportRepo, roleRepo, locationRepo, settingsRepo } = repos;
   const guard = isAuthRequired ? [authMiddleware] : [];
 
-  app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo, isAuthRequired, locationRepo));
-  app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo, isAuthRequired));
+  app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo, isAuthRequired, locationRepo, recipePreparationRepo));
+  app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo, isAuthRequired, recipePreparationRepo));
   app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo));
   app.use('/api/v1/recipes', ...guard, createRecipesRouter(recipeRepo, stockRepo));
   app.use('/api/v1/roles', ...guard, createRolesController(roleRepo));

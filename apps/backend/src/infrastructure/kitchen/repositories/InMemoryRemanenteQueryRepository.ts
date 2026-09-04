@@ -31,6 +31,7 @@ function toActiveDTO(rem: Remanente, insumo: Insumo | undefined, now: Date): Act
     initialQuantity: rem.initialQuantity.toString(),
     location: rem.location,
     storageLocationId: rem.storageLocationId,
+    recipePreparationId: rem.recipePreparationId,
     storageLocationName: rem.location,
     expirationDate: rem.expirationDate,
     hoursRemaining,

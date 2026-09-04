@@ -12,13 +12,15 @@ import { systemClock } from '../../../shared/systemClock.js';
 import { cryptoIdGenerator } from '../../../shared/cryptoIdGenerator.js';
 import { IStockMovementQueryRepository } from '../../../../domain/stock/repositories/IStockMovementQueryRepository.js';
 import { IStorageLocationRepository } from '../../../../domain/stock/repositories/IStorageLocationRepository.js';
+import { IRecipePreparationRepository } from '../../../../domain/kitchen/repositories/IRecipePreparationRepository.js';
 import { requireRole } from '../../../http/middlewares/requireRole.js';
 
 export function createStockRouter(
   stockRepository: IInsumoRepository & IRemanenteRepository & IStockUnitOfWork,
   stockMovementQueryRepository?: IStockMovementQueryRepository,
   isAuthRequired = true,
-  locationRepository?: IStorageLocationRepository
+  locationRepository?: IStorageLocationRepository,
+  recipePreparationRepository?: IRecipePreparationRepository
 ): Router {
   const router = Router();
 
@@ -34,7 +36,8 @@ export function createStockRouter(
     stockRepository,
     systemClock,
     cryptoIdGenerator,
-    locationRepository
+    locationRepository,
+    recipePreparationRepository
   );
   const getMovementHistoryUseCase = stockMovementQueryRepository
     ? new GetStockMovementHistoryUseCase(stockMovementQueryRepository)

@@ -497,8 +497,54 @@ model Recipe {
   createdAt   DateTime           @default(now()) @map("created_at")
   updatedAt   DateTime           @updatedAt @map("updated_at")
   ingredients RecipeIngredient[]
+  preparations RecipePreparation[]
 
   @@map("recipes")
+}
+
+// US-027 / US-028 / ADR-003: tanda de preparación de una receta (apertura al extraer
+// con purpose=RECIPE; cierre concilia consumo/sobrante/merma).
+enum RecipePreparationStatus {
+  OPEN
+  CLOSED
+  ABANDONED
+}
+
+model RecipePreparation {
+  id                 String                  @id @default(uuid())
+  recipeId           String                  @map("recipe_id")
+  plannedPortions    Int                     @map("planned_portions")
+  status             RecipePreparationStatus @default(OPEN)
+  openedByOperatorId String?                 @map("opened_by_operator_id")
+  openedAt           DateTime                @default(now()) @map("opened_at")
+  actualPortions     Int?                    @map("actual_portions")
+  closedByOperatorId String?                 @map("closed_by_operator_id")
+  closedAt           DateTime?               @map("closed_at")
+  notes              String?
+  recipe             Recipe                  @relation(fields: [recipeId], references: [id], onDelete: Restrict)
+  remanentes         Remanente[]
+  items              RecipePreparationItem[]
+
+  @@index([status])
+  @@index([recipeId])
+  @@map("recipe_preparations")
+}
+
+model RecipePreparationItem {
+  id                  String            @id @default(uuid())
+  preparationId       String            @map("preparation_id")
+  insumoId            String            @map("insumo_id")
+  extractedQty        Decimal           @map("extracted_qty") @db.Decimal(12, 4)
+  consumedQty         Decimal           @map("consumed_qty") @db.Decimal(12, 4)
+  leftoverQty         Decimal           @default(0) @map("leftover_qty") @db.Decimal(12, 4)
+  leftoverLocationId  String?           @map("leftover_location_id")
+  leftoverRemanenteId String?           @map("leftover_remanente_id")
+  wastedQty           Decimal           @default(0) @map("wasted_qty") @db.Decimal(12, 4)
+  wasteReason         String?           @map("waste_reason")
+  preparation         RecipePreparation @relation(fields: [preparationId], references: [id], onDelete: Cascade)
+
+  @@index([preparationId])
+  @@map("recipe_preparation_items")
 }
 
 model RecipeIngredient {

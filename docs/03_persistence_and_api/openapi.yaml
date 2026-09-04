@@ -599,6 +599,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/kitchen/recipe-preparations:
+    get:
+      summary: List recipe preparations (US-027, ADR-003)
+      operationId: listRecipePreparations
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [OPEN, CLOSED, ABANDONED]
+            default: OPEN
+      responses:
+        '200':
+          description: Recipe preparations with the given status (default OPEN)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipePreparationSummary'
+
+  /api/v1/kitchen/recipe-preparations/{id}:
+    get:
+      summary: Recipe preparation detail with its linked remanentes (US-027)
+      operationId: getRecipePreparation
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Recipe preparation detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipePreparationDetail'
+        '404':
+          description: Preparation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/kitchen/remanentes/{id}/consume:
     post:
       summary: Record partial or total consumption of an active remanente
@@ -1072,11 +1126,59 @@ components:
           description: Motivo o justificación descriptiva de la extracción
         recipeId:
           type: string
-          description: ID de la receta destino en caso de purpose == RECIPE
+          description: >-
+            US-027 — obligatorio cuando purpose == RECIPE (400 si falta). ID de la
+            receta que se va a preparar.
+        plannedPortions:
+          type: integer
+          minimum: 1
+          description: US-027 — porciones planificadas (modo RECIPE); default 1.
+        recipePreparationId:
+          type: string
+          description: >-
+            US-027 — id de una RecipePreparation OPEN de la misma receta a la que
+            añadir esta extracción; si se omite se abre una nueva. 404 si no
+            resuelve a una preparación abierta de esa receta.
+
+    RecipePreparationSummary:
+      type: object
+      description: US-027 / ADR-003 — cabecera de una tanda de preparación de receta.
+      properties:
+        id: { type: string }
+        recipeId: { type: string }
+        plannedPortions: { type: integer }
+        actualPortions: { type: integer, nullable: true }
+        status: { type: string, enum: [OPEN, CLOSED, ABANDONED] }
+        openedByOperatorId: { type: string, nullable: true }
+        openedAt: { type: string, format: date-time }
+        closedByOperatorId: { type: string, nullable: true }
+        closedAt: { type: string, format: date-time, nullable: true }
+        notes: { type: string, nullable: true }
+
+    RecipePreparationDetail:
+      allOf:
+        - $ref: '#/components/schemas/RecipePreparationSummary'
+        - type: object
+          properties:
+            remanentes:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string }
+                  insumoId: { type: string }
+                  insumoName: { type: string }
+                  currentQuantity: { $ref: '#/components/schemas/DecimalString' }
+                  initialQuantity: { $ref: '#/components/schemas/DecimalString' }
+                  storageLocationName: { type: string }
+                  status: { type: string }
 
     RecordExtractionResponse:
       type: object
       properties:
+        recipePreparationId:
+          type: string
+          description: US-027 — id de la preparación de receta abierta/reutilizada (solo modo RECIPE).
         remanenteId:
           type: string
           nullable: true

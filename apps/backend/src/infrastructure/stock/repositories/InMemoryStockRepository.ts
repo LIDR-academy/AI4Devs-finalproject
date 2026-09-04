@@ -10,6 +10,7 @@ import {
   IStockUnitOfWork,
   WarehouseBalancesAfterDeduction,
 } from '../../../domain/stock/repositories/IStockUnitOfWork.js';
+import { RecipePreparation } from '../../../domain/kitchen/entities/RecipePreparation.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 import { InsufficientStockException } from '../../../domain/stock/errors/InsufficientStockException.js';
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
@@ -20,6 +21,8 @@ export class InMemoryStockRepository
   public insumos: Map<string, Insumo> = new Map();
   public remanentes: Map<string, Remanente> = new Map();
   public movements: StockMovementRecord[] = [];
+  /** US-027: preparaciones de receta (compartido con `InMemoryRecipePreparationRepository`). */
+  public recipePreparations: Map<string, RecipePreparation> = new Map();
 
   async findById(id: string): Promise<Insumo | null> {
     return this.insumos.get(id) || null;
@@ -103,6 +106,7 @@ export class InMemoryStockRepository
       insumos: new Map(this.insumos),
       remanentes: new Map(this.remanentes),
       movements: [...this.movements],
+      recipePreparations: new Map(this.recipePreparations),
     };
     try {
       return await work(this);
@@ -110,8 +114,13 @@ export class InMemoryStockRepository
       this.insumos = snapshot.insumos;
       this.remanentes = snapshot.remanentes;
       this.movements = snapshot.movements;
+      this.recipePreparations = snapshot.recipePreparations;
       throw error;
     }
+  }
+
+  async saveRecipePreparation(preparation: RecipePreparation): Promise<void> {
+    this.recipePreparations.set(preparation.id, preparation);
   }
 
   /**

@@ -1,6 +1,7 @@
 import { DecimalQuantity } from '../value-objects/DecimalQuantity.js';
 import { Remanente } from '../entities/Remanente.js';
 import { StockMovementRecord } from './IRemanenteRepository.js';
+import { RecipePreparation } from '../../kitchen/entities/RecipePreparation.js';
 
 /**
  * Saldos de bodega tras un débito de línea (US-025): el del sub-sector de origen
@@ -33,6 +34,15 @@ export interface ExtractionUnitOfWork {
   saveRemanente(remanente: Remanente): Promise<void>;
 
   recordMovement(movement: StockMovementRecord): Promise<void>;
+
+  /**
+   * US-027: persiste la `RecipePreparation` abierta al extraer con `purpose = RECIPE`,
+   * dentro de la misma transacción que el remanente que la referencia (la FK
+   * `Remanente.recipePreparationId` exige que la preparación exista antes).
+   * Cross-cut stock↔kitchen deliberado — misma frontera que ya cruza la extracción
+   * al crear un `Remanente` de cocina (ver TK-058).
+   */
+  saveRecipePreparation(preparation: RecipePreparation): Promise<void>;
 }
 
 /**

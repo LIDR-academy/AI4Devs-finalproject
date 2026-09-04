@@ -5,6 +5,7 @@ import { ConsumeRemanenteUseCase } from '../../../../application/kitchen/use-cas
 import { DiscardRemanenteUseCase } from '../../../../application/kitchen/use-cases/DiscardRemanenteUseCase.js';
 import { ConsumeRecipeUseCase } from '../../../../application/kitchen/use-cases/ConsumeRecipeUseCase.js';
 import { PerformShiftReconciliationUseCase } from '../../../../application/kitchen/use-cases/PerformShiftReconciliationUseCase.js';
+import { GetRecipePreparationsUseCase } from '../../../../application/kitchen/use-cases/GetRecipePreparationsUseCase.js';
 import { respondValidationError } from '../../../http/utils/responseUtils.js';
 
 const getActiveRemanentesQuerySchema = z.object({
@@ -41,8 +42,28 @@ export class KitchenController {
     private readonly consumeRemanenteUseCase?: ConsumeRemanenteUseCase,
     private readonly discardRemanenteUseCase?: DiscardRemanenteUseCase,
     private readonly consumeRecipeUseCase?: ConsumeRecipeUseCase,
-    private readonly performShiftReconciliationUseCase?: PerformShiftReconciliationUseCase
+    private readonly performShiftReconciliationUseCase?: PerformShiftReconciliationUseCase,
+    private readonly getRecipePreparationsUseCase?: GetRecipePreparationsUseCase
   ) {}
+
+  public listRecipePreparations = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!this.getRecipePreparationsUseCase) throw new Error('GetRecipePreparationsUseCase no configurado.');
+      const status = typeof req.query.status === 'string' ? req.query.status : undefined;
+      res.status(200).json(await this.getRecipePreparationsUseCase.list(status));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getRecipePreparation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!this.getRecipePreparationsUseCase) throw new Error('GetRecipePreparationsUseCase no configurado.');
+      res.status(200).json(await this.getRecipePreparationsUseCase.detail(req.params.id));
+    } catch (error) {
+      next(error);
+    }
+  };
 
   public getActiveRemanentes = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
