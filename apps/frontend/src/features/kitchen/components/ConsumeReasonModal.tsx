@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { MinusCircle } from 'lucide-react';
 import { KitchenService, RemanenteFEFOItem } from '../services/kitchen.service.js';
-import { ConsumptionReasonsService, ConsumptionReasonDto } from '../services/consumptionReasons.service.js';
+import { ConsumptionReasonDto } from '../services/consumptionReasons.service.js';
 import { formatQuantity, formatUnitLabel } from '../../../utils/formatters.js';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ModalFooterActions } from '../../../shared/components/ModalFooterActions.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 import { mapToUserFriendlyError } from '../../../shared/utils/errorMessageMapper.js';
+import { useActiveConsumptionReasons } from '../../../shared/hooks/useActiveConsumptionReasons.js';
+import { ConsumptionReasonSelect } from '../../../shared/components/ConsumptionReasonSelect.js';
 
 export interface ConsumeTarget {
   remanente: RemanenteFEFOItem;
@@ -18,18 +20,6 @@ interface ConsumeReasonModalProps {
   target: ConsumeTarget | null;
   onClose: () => void;
   onSuccess: () => void;
-}
-
-function useReasonOptions(isOpen: boolean) {
-  const [reasons, setReasons] = useState<ConsumptionReasonDto[]>([]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    // US-030: cualquier autenticado puede listar los motivos activos (sin includeInactive).
-    ConsumptionReasonsService.list().then(setReasons).catch(() => setReasons([]));
-  }, [isOpen]);
-
-  return reasons;
 }
 
 interface ReasonSelectProps {
@@ -47,14 +37,7 @@ const ReasonSelect: React.FC<ReasonSelectProps> = ({ reasons, value, onChange })
         (mismo patrón que el motivo de descarte directo en WarehouseExtractionModal),
         no con `required` nativo, para mostrar el ErrorBanner del modal en vez del
         popup del navegador (Guard 38). */}
-    <select value={value} onChange={(e) => onChange(e.target.value)} className="input-touch" id="select-consume-reason">
-      <option value="">-- Seleccionar Motivo --</option>
-      {reasons.map((r) => (
-        <option key={r.id} value={r.id}>
-          {r.label}
-        </option>
-      ))}
-    </select>
+    <ConsumptionReasonSelect id="select-consume-reason" value={value} reasons={reasons} onChange={onChange} />
   </div>
 );
 
@@ -131,7 +114,7 @@ function useConsumeReasonForm(target: ConsumeTarget | null, onSuccess: () => voi
  * estructurado (catálogo `TK-107-FE`) + texto libre opcional, antes de confirmar.
  */
 export const ConsumeReasonModal: React.FC<ConsumeReasonModalProps> = ({ target, onClose, onSuccess }) => {
-  const reasons = useReasonOptions(target !== null);
+  const reasons = useActiveConsumptionReasons(target !== null);
   const f = useConsumeReasonForm(target, onSuccess, onClose);
 
   if (!target) return null;

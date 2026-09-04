@@ -329,3 +329,16 @@ inputs:
   - Backend 342 tests / build / lint verdes (0 warnings nuevos tras la extracción de `buildReasonDependentUseCases`). Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`) verdes; `check_contract_drift.sh` completo en verde (sin breaking changes). Mutation ≥ 70 % por archivo domain/application tocado (Guard 11).
   - **ADR-004 cerrado en backend** (`TK-107`/`TK-108`/`TK-109`, con sus `-FE` de catálogo y consumo ya hechos). Pendiente: `TK-109-FE` (selector de motivo por línea de varianza negativa en `ShiftReconciliationWizard`) — última pieza de la épica.
   - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).
+
+### 2026-09-04 (cont.) - TK-109-FE: Selector de Motivo por Línea en el Cierre de Turno — épica ADR-004 completa
+- **Hito:** `ShiftReconciliationWizard` — cada línea del conteo físico con varianza negativa muestra un selector de motivo inline debajo de la fila; `canSubmit` pasa a exigirlo (además de la autorización de varianza crítica ya existente). Con esto **se completa ADR-004 de punta a punta: US-030/US-004/US-008, 6 tickets (`TK-107`→`TK-109-FE`), backend + frontend.**
+- **Acciones Realizadas:**
+  - ✅ `useActiveConsumptionReasons` extraído a `shared/hooks/` — generaliza el hook de carga del catálogo de `ConsumeReasonModal` (`TK-108-FE`) para reutilizarlo aquí sin duplicar el `useEffect`/`useState`.
+  - ✅ `ConsumptionReasonSelect` extraído a `shared/components/` — jscpd marcó como clon nuevo el `<select>`+opciones entre `ConsumeReasonModal` y este ticket; se compartió el `<select>` (sin `<label>` propio, cada consumidor pone el suyo) con `className` configurable.
+  - ✅ `canSubmit` gana `&& !hasMissingReason`, independiente de `hasCriticalVariance`/`isCriticalAuthChecked` — autorizar la varianza crítica no basta si además falta el motivo.
+  - ✅ `useShiftReconciliationForm` refactorizado (`initialCounts`/`computeVarianceFlags`/`buildItemsPayload` extraídas) para no superar `max-lines-per-function` (60) tras sumar la lógica de motivo.
+  - ✅ Tests existentes actualizados (el fixture de varianza crítica es también negativa — el test de autorización ahora también elige motivo) + 3 tests nuevos (negativa no crítica también bloquea, positiva no muestra el selector, el payload incluye `reasonId`).
+- **Estado:**
+  - Frontend 168 tests / build / lint limpios (0 warnings nuevos). Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`, `check_inline_styles`, `check_native_alerts`) verdes tras extraer el hook y el componente compartidos.
+  - **Épica ADR-004 cerrada.** El análisis de trazabilidad pedido por el humano ("siempre que hay un consumo debe especificarse el motivo") terminó en: catálogo administrable (`US-030`), motivo obligatorio en consumo manual (`US-004` v1.1.0) y en varianza negativa de conciliación (`US-008` v1.1.0), más el bugfix real de superávit encontrado durante el propio análisis.
+  - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).

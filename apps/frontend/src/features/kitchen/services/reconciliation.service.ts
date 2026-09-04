@@ -1,8 +1,10 @@
 import { apiRequest } from '../../../shared/http/apiClient.js';
 
-export interface PhysicalCountInput {
+interface PhysicalCountInput {
   remanenteId: string;
   physicalQuantity: number;
+  /** ADR-004 / US-008 / TK-109-FE: obligatorio solo cuando la línea da varianza negativa. */
+  reasonId?: string;
 }
 
 export interface PerformReconciliationPayload {
