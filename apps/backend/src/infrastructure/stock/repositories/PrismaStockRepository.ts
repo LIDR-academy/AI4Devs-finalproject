@@ -7,9 +7,11 @@ import { IRemanenteRepository, StockMovementRecord } from '../../../domain/stock
 import {
   ExtractionUnitOfWork,
   IStockUnitOfWork,
+  PreparationCloseUnitOfWork,
   WarehouseBalancesAfterDeduction,
 } from '../../../domain/stock/repositories/IStockUnitOfWork.js';
 import { RecipePreparation } from '../../../domain/kitchen/entities/RecipePreparation.js';
+import { RecipePreparationItem } from '../../../domain/kitchen/entities/RecipePreparationItem.js';
 import { recipePreparationUpsertArgs } from '../../kitchen/repositories/PrismaRecipePreparationRepository.js';
 import { InsufficientStockException } from '../../../domain/stock/errors/InsufficientStockException.js';
 
@@ -144,6 +146,69 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
     });
   }
 
+  /**
+   * US-028 / ADR-003 §3.5: frontera transaccional del cierre / abandono de una
+   * preparación. Todas las escrituras (varios `Remanente`, `RecipePreparation`,
+   * `RecipePreparationItem[]`, `StockMovement[]`, `WarehouseStock`) corren dentro de
+   * una única `$transaction` — cualquier excepción revierte por completo.
+   */
+  public async runPreparationClose<T>(
+    work: (uow: PreparationCloseUnitOfWork) => Promise<T>
+  ): Promise<T> {
+    return this.prisma.$transaction(async (tx) => {
+      const uow: PreparationCloseUnitOfWork = {
+        findRemanentesByPreparation: async (preparationId) => {
+          const list = await tx.remanente.findMany({
+            where: { recipePreparationId: preparationId, status: 'ACTIVE' },
+            orderBy: { expirationDate: 'asc' },
+          });
+          return list.map((raw) => this.toRemanente(raw));
+        },
+        saveRemanente: (remanente) => this.saveRemanenteOn(tx, remanente),
+        recordMovement: (movement) => this.recordMovementOn(tx, movement),
+        incrementWarehouseStock: (insumoId, storageLocationId, quantity) =>
+          this.incrementWarehouseStockOn(tx, insumoId, storageLocationId, quantity),
+        saveRecipePreparation: (preparation) => this.saveRecipePreparationOn(tx, preparation),
+        saveRecipePreparationItem: (item) => this.saveRecipePreparationItemOn(tx, item),
+      };
+      return work(uow);
+    });
+  }
+
+  private async incrementWarehouseStockOn(
+    client: StockDbClient,
+    insumoId: string,
+    storageLocationId: string,
+    quantity: DecimalQuantity
+  ): Promise<void> {
+    const q = quantity.toDecimal();
+    await client.warehouseStock.upsert({
+      where: { insumoId_storageLocationId: { insumoId, storageLocationId } },
+      update: { quantity: { increment: q } },
+      create: { insumoId, storageLocationId, quantity: q },
+    });
+  }
+
+  private async saveRecipePreparationItemOn(
+    client: StockDbClient,
+    item: RecipePreparationItem
+  ): Promise<void> {
+    await client.recipePreparationItem.create({
+      data: {
+        id: item.id,
+        preparationId: item.preparationId,
+        insumoId: item.insumoId,
+        extractedQty: item.extractedQty.toDecimal(),
+        consumedQty: item.consumedQty.toDecimal(),
+        leftoverQty: item.leftoverQty.toDecimal(),
+        leftoverLocationId: item.leftoverLocationId ?? null,
+        leftoverRemanenteId: item.remanenteId,
+        wastedQty: item.wastedQty.toDecimal(),
+        wasteReason: item.wasteReason ?? null,
+      },
+    });
+  }
+
   // US-027: cross-cut stock↔kitchen dentro de la transacción de extracción.
   private async saveRecipePreparationOn(client: StockDbClient, preparation: RecipePreparation): Promise<void> {
     await client.recipePreparation.upsert(recipePreparationUpsertArgs(preparation));
@@ -195,8 +260,10 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
         currentQuantity: remanente.currentQuantity.toDecimal(),
         status: remanente.status as RemanenteStatusType,
         terminalAt: remanente.terminalAt ?? null,
+        location: remanente.location,
         storageLocationId: remanente.storageLocationId ?? null,
         recipePreparationId: remanente.recipePreparationId ?? null,
+        isPristine: remanente.isPristine,
       },
       create: {
         id: remanente.id,
@@ -206,6 +273,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
         location: remanente.location,
         storageLocationId: remanente.storageLocationId ?? null,
         recipePreparationId: remanente.recipePreparationId ?? null,
+        isPristine: remanente.isPristine,
         status: remanente.status as RemanenteStatusType,
         expirationDate: remanente.expirationDate,
         terminalAt: remanente.terminalAt ?? null,
@@ -238,6 +306,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
     location: string;
     storageLocationId: string | null;
     recipePreparationId: string | null;
+    isPristine: boolean;
     status: string;
     expirationDate: Date;
     createdAt: Date;
@@ -251,6 +320,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
       location: raw.location,
       storageLocationId: raw.storageLocationId ?? undefined,
       recipePreparationId: raw.recipePreparationId ?? undefined,
+      isPristine: raw.isPristine,
       status: raw.status as RemanenteStatusType,
       expirationDate: raw.expirationDate,
       createdAt: raw.createdAt,

@@ -1,3 +1,5 @@
+import { PreparationNotOpenException } from '../errors/PreparationNotOpenException.js';
+
 export type RecipePreparationStatus = 'OPEN' | 'CLOSED' | 'ABANDONED';
 
 export interface RecipePreparationProps {
@@ -87,5 +89,38 @@ export class RecipePreparation {
 
   public get isOpen(): boolean {
     return this.props.status === 'OPEN';
+  }
+
+  /**
+   * US-028: concilia y cierra la preparación. Guarda de estado `OPEN → CLOSED`
+   * (un segundo cierre o cerrar una abandonada → 409). El cuadre por ingrediente
+   * vive en `RecipePreparationItem`; aquí solo la transición del agregado.
+   */
+  public close(actualPortions: number, closedByOperatorId: string | undefined, now: Date): void {
+    this.assertOpen();
+    if (actualPortions < 0) {
+      throw new Error('Las porciones reales no pueden ser negativas.');
+    }
+    this.props.status = 'CLOSED';
+    this.props.actualPortions = actualPortions;
+    this.props.closedByOperatorId = closedByOperatorId;
+    this.props.closedAt = now;
+  }
+
+  /**
+   * US-028 Escenario 6: cierra sin conciliar. Los remanentes vinculados quedan
+   * `ACTIVE` (los desvincula el caso de uso); no se asume merma.
+   */
+  public abandon(closedByOperatorId: string | undefined, now: Date): void {
+    this.assertOpen();
+    this.props.status = 'ABANDONED';
+    this.props.closedByOperatorId = closedByOperatorId;
+    this.props.closedAt = now;
+  }
+
+  private assertOpen(): void {
+    if (this.props.status !== 'OPEN') {
+      throw new PreparationNotOpenException(this.props.id, this.props.status);
+    }
   }
 }

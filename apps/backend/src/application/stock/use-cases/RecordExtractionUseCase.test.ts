@@ -93,6 +93,11 @@ class RecordingUnitOfWork implements IStockUnitOfWork {
     };
     return work(uow);
   }
+
+  // RecordExtractionUseCase no usa esta frontera; stub para satisfacer la interfaz.
+  async runPreparationClose<T>(): Promise<T> {
+    throw new Error('no usado por RecordExtractionUseCase');
+  }
 }
 
 class FakeRecipePreparationRepository implements IRecipePreparationRepository {

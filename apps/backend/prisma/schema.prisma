@@ -154,6 +154,10 @@ model Remanente {
   storageLocationId String?
   // US-027: FK a la preparación de receta que originó este remanente (null = extracción normal).
   recipePreparationId String?
+  // US-028 / ADR-003 #6: true mientras no se haya consumido nada de este remanente.
+  // Pasa a false en el primer consumeQuantity. Habilita "devolver a bodega" junto con
+  // el marcado manual "envase sin abrir" del operario.
+  isPristine      Boolean         @default(true)
   status          RemanenteStatus @default(ACTIVE)
   expirationDate  DateTime
   createdAt       DateTime        @default(now())

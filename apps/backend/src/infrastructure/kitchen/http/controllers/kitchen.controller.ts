@@ -6,6 +6,8 @@ import { DiscardRemanenteUseCase } from '../../../../application/kitchen/use-cas
 import { ConsumeRecipeUseCase } from '../../../../application/kitchen/use-cases/ConsumeRecipeUseCase.js';
 import { PerformShiftReconciliationUseCase } from '../../../../application/kitchen/use-cases/PerformShiftReconciliationUseCase.js';
 import { GetRecipePreparationsUseCase } from '../../../../application/kitchen/use-cases/GetRecipePreparationsUseCase.js';
+import { ClosePreparationUseCase } from '../../../../application/kitchen/use-cases/ClosePreparationUseCase.js';
+import { AbandonPreparationUseCase } from '../../../../application/kitchen/use-cases/AbandonPreparationUseCase.js';
 import { respondValidationError } from '../../../http/utils/responseUtils.js';
 
 const getActiveRemanentesQuerySchema = z.object({
@@ -23,6 +25,40 @@ const discardRemanenteSchema = z.object({
 
 const consumeRecipeSchema = z.object({
   portions: z.number().int().positive().optional().default(1),
+});
+
+const qty = z.union([z.number().min(0), z.string().min(1)]).transform((v) => v.toString());
+
+const closePreparationSchema = z.object({
+  actualPortions: z.number().int().min(0),
+  closedByOperatorId: z.string().min(1).optional(),
+  items: z
+    .array(
+      z
+        .object({
+          insumoId: z.string().min(1),
+          leftoverQty: qty.default('0'),
+          leftoverLocationId: z.string().min(1).optional(),
+          markedUnopened: z.boolean().optional(),
+          wastedQty: qty.default('0'),
+          wasteReason: z.string().min(1).optional(),
+        })
+        // US-028: merma con motivo obligatorio (además de la guarda de dominio).
+        .superRefine((item, ctx) => {
+          if (Number(item.wastedQty) > 0 && !item.wasteReason?.trim()) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['wasteReason'],
+              message: `Debe indicar el motivo de la merma del insumo ${item.insumoId}.`,
+            });
+          }
+        })
+    )
+    .default([]),
+});
+
+const abandonPreparationSchema = z.object({
+  closedByOperatorId: z.string().min(1).optional(),
 });
 
 const performShiftReconciliationSchema = z.object({
@@ -43,8 +79,50 @@ export class KitchenController {
     private readonly discardRemanenteUseCase?: DiscardRemanenteUseCase,
     private readonly consumeRecipeUseCase?: ConsumeRecipeUseCase,
     private readonly performShiftReconciliationUseCase?: PerformShiftReconciliationUseCase,
-    private readonly getRecipePreparationsUseCase?: GetRecipePreparationsUseCase
+    private readonly getRecipePreparationsUseCase?: GetRecipePreparationsUseCase,
+    private readonly closePreparationUseCase?: ClosePreparationUseCase,
+    private readonly abandonPreparationUseCase?: AbandonPreparationUseCase
   ) {}
+
+  public closePreparation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!this.closePreparationUseCase) throw new Error('ClosePreparationUseCase no configurado.');
+      const body = closePreparationSchema.parse(req.body ?? {});
+      const operatorId = (req as { user?: { id?: string } }).user?.id ?? body.closedByOperatorId;
+      const result = await this.closePreparationUseCase.execute({
+        preparationId: req.params.id,
+        actualPortions: body.actualPortions,
+        closedByOperatorId: operatorId,
+        items: body.items,
+      });
+      res.status(200).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
+        return;
+      }
+      next(error);
+    }
+  };
+
+  public abandonPreparation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!this.abandonPreparationUseCase) throw new Error('AbandonPreparationUseCase no configurado.');
+      const body = abandonPreparationSchema.parse(req.body ?? {});
+      const operatorId = (req as { user?: { id?: string } }).user?.id ?? body.closedByOperatorId;
+      const result = await this.abandonPreparationUseCase.execute({
+        preparationId: req.params.id,
+        closedByOperatorId: operatorId,
+      });
+      res.status(200).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
+        return;
+      }
+      next(error);
+    }
+  };
 
   public listRecipePreparations = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

@@ -110,4 +110,72 @@ describe('Remanente Domain Entity — Consumo FEFO y Descarte', () => {
     expect(remanente.createdAt?.toISOString()).toBe('2026-01-01T00:00:00.000Z');
     vi.useRealTimers();
   });
+
+  describe('US-028: marca "intacto" y reubicación / devolución del sobrante', () => {
+    it('un remanente nuevo es intacto y deja de serlo con el primer consumo', () => {
+      const r = Remanente.createNew('rem-1', 'ins-1', new DecimalQuantity('5.000'));
+      expect(r.isPristine).toBe(true);
+      // consumir 0 no rompe la marca (guarda `> 0`)
+      r.consumeQuantity(new DecimalQuantity('0'));
+      expect(r.isPristine).toBe(true);
+      r.consumeQuantity(new DecimalQuantity('1.000'));
+      expect(r.isPristine).toBe(false);
+    });
+
+    it('isPristine refleja la fila cuando el remanente viene de persistencia', () => {
+      const notPristine = new Remanente({
+        id: 'rem-2',
+        insumoId: 'ins-1',
+        currentQuantity: new DecimalQuantity('1.000'),
+        initialQuantity: new DecimalQuantity('2.000'),
+        location: 'X',
+        status: 'ACTIVE',
+        expirationDate: new Date(),
+        isPristine: false,
+      });
+      expect(notPristine.isPristine).toBe(false);
+    });
+
+    it('relocateLeftover cambia el área y desvincula la preparación, conservando el vencimiento (#10)', () => {
+      const r = Remanente.createNew('rem-1', 'ins-1', new DecimalQuantity('5.000'), 'Mesa de Preparación', 24);
+      r.linkToRecipePreparation('prep-1');
+      const exp = r.expirationDate.toISOString();
+
+      r.relocateLeftover('loc-fridge', 'Heladera Principal');
+
+      expect(r.storageLocationId).toBe('loc-fridge');
+      expect(r.location).toBe('Heladera Principal');
+      expect(r.recipePreparationId).toBeUndefined();
+      expect(r.expirationDate.toISOString()).toBe(exp);
+      expect(r.status).toBe('ACTIVE');
+    });
+
+    it('returnToWarehouse cierra el remanente y devuelve la cantidad reingresada', () => {
+      const r = Remanente.createNew('rem-1', 'ins-1', new DecimalQuantity('2.000'), 'Mesa', 24);
+      r.linkToRecipePreparation('prep-1');
+      const returned = r.returnToWarehouse();
+      expect(returned.toString()).toBe('2.000');
+      expect(r.currentQuantity.toNumber()).toBe(0);
+      expect(r.status).toBe('EXHAUSTED');
+      expect(r.recipePreparationId).toBeUndefined();
+      expect(r.terminalAt).toBeInstanceOf(Date);
+    });
+
+    it('unlinkFromPreparation solo borra el vínculo, sin tocar cantidad ni estado', () => {
+      const r = Remanente.createNew('rem-1', 'ins-1', new DecimalQuantity('2.000'));
+      r.linkToRecipePreparation('prep-1');
+      expect(r.recipePreparationId).toBe('prep-1');
+      r.unlinkFromPreparation();
+      expect(r.recipePreparationId).toBeUndefined();
+      expect(r.currentQuantity.toString()).toBe('2.000');
+      expect(r.status).toBe('ACTIVE');
+    });
+
+    it('relocateLeftover / returnToWarehouse fallan si el remanente ya no está ACTIVE', () => {
+      const r = Remanente.createNew('rem-1', 'ins-1', new DecimalQuantity('2.000'));
+      r.discard();
+      expect(() => r.relocateLeftover('l', 'L')).toThrow(ExcessConsumptionException);
+      expect(() => r.returnToWarehouse()).toThrow(ExcessConsumptionException);
+    });
+  });
 });

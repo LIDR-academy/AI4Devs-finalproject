@@ -653,6 +653,110 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/kitchen/recipe-preparations/{id}/close:
+    post:
+      summary: Close and reconcile a recipe preparation (US-028)
+      description: >
+        Per linked remanente derives consumed = extracted − leftover − waste and,
+        in a single transaction, records CONSUMPTION_RECIPE / DISCARD_RECIPE_PREP,
+        relocates the leftover (kitchen area → TRANSFER_KITCHEN; pristine → warehouse
+        sub-sector → RETURN_TO_WAREHOUSE + WarehouseStock re-increment), materializes
+        the RecipePreparationItem and marks the preparation CLOSED.
+      operationId: closeRecipePreparation
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloseRecipePreparationRequest'
+      responses:
+        '200':
+          description: Preparation closed and reconciled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CloseRecipePreparationResponse'
+        '400':
+          description: Balance mismatch (leftover + waste exceeds extracted) or waste without reason
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Preparation or destination location not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Preparation is not OPEN (already closed or abandoned)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Return-to-warehouse rejected — remanente is not pristine
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/recipe-preparations/{id}/abandon:
+    post:
+      summary: Abandon a recipe preparation without reconciling (US-028)
+      description: >
+        Marks the preparation ABANDONED; linked remanentes stay ACTIVE and lose their
+        recipePreparationId (back to the FEFO pool). No waste is assumed.
+      operationId: abandonRecipePreparation
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                closedByOperatorId:
+                  type: string
+      responses:
+        '200':
+          description: Preparation abandoned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbandonRecipePreparationResponse'
+        '404':
+          description: Preparation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Preparation is not OPEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/kitchen/remanentes/{id}/consume:
     post:
       summary: Record partial or total consumption of an active remanente
@@ -1172,6 +1276,66 @@ components:
                   initialQuantity: { $ref: '#/components/schemas/DecimalString' }
                   storageLocationName: { type: string }
                   status: { type: string }
+
+    CloseRecipePreparationRequest:
+      type: object
+      description: US-028 / ADR-003 §3.3 — cierre y conciliación de una preparación.
+      required: [actualPortions]
+      properties:
+        actualPortions: { type: integer, minimum: 0 }
+        closedByOperatorId: { type: string }
+        items:
+          type: array
+          description: >
+            Una entrada por ingrediente con sobrante o merma. Un ingrediente omitido
+            se concilia como consumo total (sobrante = 0, merma = 0).
+          items:
+            type: object
+            required: [insumoId]
+            properties:
+              insumoId: { type: string }
+              leftoverQty: { $ref: '#/components/schemas/DecimalString' }
+              leftoverLocationId:
+                type: string
+                description: >
+                  StorageLocation destino del sobrante. Un sub-sector de bodega
+                  (type = WAREHOUSE) solo es admisible si el remanente está intacto
+                  (isPristine) y markedUnopened = true.
+              markedUnopened: { type: boolean }
+              wastedQty: { $ref: '#/components/schemas/DecimalString' }
+              wasteReason:
+                type: string
+                description: Obligatorio cuando wastedQty > 0.
+
+    CloseRecipePreparationResponse:
+      type: object
+      properties:
+        id: { type: string }
+        recipeId: { type: string }
+        status: { type: string, enum: [CLOSED] }
+        actualPortions: { type: integer }
+        closedByOperatorId: { type: string, nullable: true }
+        closedAt: { type: string, format: date-time }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              insumoId: { type: string }
+              extractedQty: { $ref: '#/components/schemas/DecimalString' }
+              consumedQty: { $ref: '#/components/schemas/DecimalString' }
+              leftoverQty: { $ref: '#/components/schemas/DecimalString' }
+              leftoverLocationId: { type: string, nullable: true }
+              wastedQty: { $ref: '#/components/schemas/DecimalString' }
+              wasteReason: { type: string, nullable: true }
+
+    AbandonRecipePreparationResponse:
+      type: object
+      properties:
+        id: { type: string }
+        status: { type: string, enum: [ABANDONED] }
+        unlinkedRemanentes: { type: integer }
+        closedAt: { type: string, format: date-time }
 
     RecordExtractionResponse:
       type: object

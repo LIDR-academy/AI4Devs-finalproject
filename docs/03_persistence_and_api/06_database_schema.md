@@ -444,6 +444,8 @@ model Remanente {
   location                 LocationType
   sublocation              String?         @db.VarChar(100)
   status                   RemanenteStatus @default(ACTIVE)
+  isPristine               Boolean         @default(true) @map("is_pristine") // US-028 / TK-104: false tras el primer consumo. Habilita "devolver a bodega" junto con el marcado manual "envase sin abrir".
+  recipePreparationId      String?         @map("recipe_preparation_id") @db.Uuid // US-027 / TK-103: FK a recipe_preparations (onDelete: SetNull).
   openedAt                 DateTime        @default(now()) @map("opened_at")
   originalExpirationDate   DateTime        @map("original_expiration_date")
   calculatedExpirationDate DateTime        @map("calculated_expiration_date")

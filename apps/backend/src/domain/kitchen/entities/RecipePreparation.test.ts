@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { RecipePreparation } from './RecipePreparation.js';
+import { PreparationNotOpenException } from '../errors/PreparationNotOpenException.js';
 
 const NOW = new Date('2026-02-01T12:00:00.000Z');
 
@@ -57,5 +58,53 @@ describe('RecipePreparation', () => {
       openedAt: NOW,
     });
     expect(p.isOpen).toBe(false);
+  });
+
+  it('close transiciona OPEN → CLOSED y fija actualPortions / closedBy / closedAt (US-028)', () => {
+    const closedAt = new Date('2026-02-01T15:00:00.000Z');
+    const p = RecipePreparation.openNew('p', 'r', 8, 'op-a', NOW);
+    p.close(8, 'op-b', closedAt);
+    expect(p.status).toBe('CLOSED');
+    expect(p.isOpen).toBe(false);
+    expect(p.actualPortions).toBe(8);
+    expect(p.closedByOperatorId).toBe('op-b');
+    expect(p.closedAt).toBe(closedAt);
+  });
+
+  it('close rechaza porciones reales negativas', () => {
+    const p = RecipePreparation.openNew('p', 'r', 8, 'op-a', NOW);
+    expect(() => p.close(-1, 'op-b', NOW)).toThrow(/negativas/i);
+    expect(p.status).toBe('OPEN');
+  });
+
+  it('un segundo close (o cerrar una abandonada) lanza 409 con el estado actual', () => {
+    const p = RecipePreparation.openNew('p', 'r', 8, 'op-a', NOW);
+    p.close(8, 'op-b', NOW);
+    try {
+      p.close(8, 'op-b', NOW);
+      expect.unreachable('debió lanzar');
+    } catch (e) {
+      expect(e).toBeInstanceOf(PreparationNotOpenException);
+      expect((e as PreparationNotOpenException).statusCode).toBe(409);
+      expect((e as Error).message).toContain('CLOSED');
+      expect((e as Error).message).toContain('p');
+      expect((e as Error).message).toMatch(/no está abierta/i);
+    }
+  });
+
+  it('abandon transiciona OPEN → ABANDONED', () => {
+    const p = RecipePreparation.openNew('prep-x', 'r', 8, 'op-a', NOW);
+    p.abandon('op-b', NOW);
+    expect(p.status).toBe('ABANDONED');
+    expect(p.closedByOperatorId).toBe('op-b');
+    expect(p.closedAt).toBe(NOW);
+    try {
+      p.abandon('op-b', NOW);
+      expect.unreachable('debió lanzar');
+    } catch (e) {
+      expect(e).toBeInstanceOf(PreparationNotOpenException);
+      expect((e as Error).message).toContain('ABANDONED');
+      expect((e as Error).message).toContain('prep-x');
+    }
   });
 });

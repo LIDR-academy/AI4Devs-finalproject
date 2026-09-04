@@ -8,9 +8,11 @@ import {
 import {
   ExtractionUnitOfWork,
   IStockUnitOfWork,
+  PreparationCloseUnitOfWork,
   WarehouseBalancesAfterDeduction,
 } from '../../../domain/stock/repositories/IStockUnitOfWork.js';
 import { RecipePreparation } from '../../../domain/kitchen/entities/RecipePreparation.js';
+import { RecipePreparationItem } from '../../../domain/kitchen/entities/RecipePreparationItem.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 import { InsufficientStockException } from '../../../domain/stock/errors/InsufficientStockException.js';
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
@@ -23,6 +25,8 @@ export class InMemoryStockRepository
   public movements: StockMovementRecord[] = [];
   /** US-027: preparaciones de receta (compartido con `InMemoryRecipePreparationRepository`). */
   public recipePreparations: Map<string, RecipePreparation> = new Map();
+  /** US-028: ítems de conciliación materializados al cerrar una preparación. */
+  public recipePreparationItems: Map<string, RecipePreparationItem> = new Map();
 
   async findById(id: string): Promise<Insumo | null> {
     return this.insumos.get(id) || null;
@@ -97,30 +101,82 @@ export class InMemoryStockRepository
   }
 
   /**
-   * AUDIT-DEV-006 F-1: fake de `IStockUnitOfWork`. Toma un snapshot (shallow — cada
-   * escritura reemplaza la entrada del `Map`, nunca la muta in place) y lo restaura
-   * ante cualquier excepción, replicando el rollback de `$transaction`.
+   * AUDIT-DEV-006 F-1: replica el rollback de `$transaction` para los fakes de
+   * `IStockUnitOfWork`. Toma un snapshot shallow de todos los `Map`/array de estado
+   * (cada escritura reemplaza la entrada, nunca la muta in place) y lo restaura ante
+   * cualquier excepción.
    */
-  async runExtraction<T>(work: (uow: ExtractionUnitOfWork) => Promise<T>): Promise<T> {
+  private async withSnapshot<T>(work: () => Promise<T>): Promise<T> {
     const snapshot = {
       insumos: new Map(this.insumos),
       remanentes: new Map(this.remanentes),
       movements: [...this.movements],
       recipePreparations: new Map(this.recipePreparations),
+      recipePreparationItems: new Map(this.recipePreparationItems),
     };
     try {
-      return await work(this);
+      return await work();
     } catch (error) {
       this.insumos = snapshot.insumos;
       this.remanentes = snapshot.remanentes;
       this.movements = snapshot.movements;
       this.recipePreparations = snapshot.recipePreparations;
+      this.recipePreparationItems = snapshot.recipePreparationItems;
       throw error;
     }
   }
 
+  async runExtraction<T>(work: (uow: ExtractionUnitOfWork) => Promise<T>): Promise<T> {
+    return this.withSnapshot(() => work(this));
+  }
+
   async saveRecipePreparation(preparation: RecipePreparation): Promise<void> {
     this.recipePreparations.set(preparation.id, preparation);
+  }
+
+  /** US-028: frontera transaccional del cierre / abandono de una preparación. */
+  async runPreparationClose<T>(work: (uow: PreparationCloseUnitOfWork) => Promise<T>): Promise<T> {
+    return this.withSnapshot(() => work(this));
+  }
+
+  async findRemanentesByPreparation(preparationId: string): Promise<Remanente[]> {
+    return Array.from(this.remanentes.values()).filter(
+      (r) => r.recipePreparationId === preparationId && r.status === 'ACTIVE'
+    );
+  }
+
+  async saveRecipePreparationItem(item: RecipePreparationItem): Promise<void> {
+    this.recipePreparationItems.set(item.id, item);
+  }
+
+  async incrementWarehouseStock(
+    insumoId: string,
+    storageLocationId: string,
+    quantity: DecimalQuantity
+  ): Promise<void> {
+    const insumo = this.insumos.get(insumoId);
+    if (!insumo) {
+      throw new EntityNotFoundException('Insumo', insumoId);
+    }
+    const hasLine = insumo.stockLines.some((l) => l.storageLocationId === storageLocationId);
+    const nextLines = hasLine
+      ? insumo.stockLines.map((l) =>
+          l.storageLocationId === storageLocationId
+            ? { storageLocationId: l.storageLocationId, quantity: l.quantity.add(quantity) }
+            : l
+        )
+      : [...insumo.stockLines, { storageLocationId, quantity }];
+
+    this.insumos.set(
+      insumoId,
+      new Insumo({
+        id: insumo.id,
+        name: insumo.name,
+        unitOfMeasure: insumo.unitOfMeasure,
+        unitCost: insumo.unitCost,
+        stockLines: nextLines,
+      })
+    );
   }
 
   /**
