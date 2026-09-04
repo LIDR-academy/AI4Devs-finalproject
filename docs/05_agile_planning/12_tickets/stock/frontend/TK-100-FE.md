@@ -4,7 +4,7 @@ id: TK-100-FE
 related_story: US-014 · AUDIT-DEV-006 F-5/F-6
 points: 3
 type: frontend
-status: approved
+status: done
 inputs:
   - docs/audits/AUDIT-DEV-006-warehouse-extraction-quality-report.md
   - docs/05_agile_planning/11_user_stories/stock/US-014.md

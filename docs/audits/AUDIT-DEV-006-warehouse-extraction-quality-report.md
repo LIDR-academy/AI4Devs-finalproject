@@ -56,11 +56,12 @@
 
 ## 🎟️ Tickets de remediación generados
 
-| Ticket | Sev. | Alcance | Hallazgos |
-| :-- | :-- | :-- | :-- |
-| **TK-098** | 🔴 Crítica | backend | F-1 (Unit of Work transaccional), F-2 (decremento atómico condicional), F-10 (tests de concurrencia + rollback + camino Prisma) |
-| **TK-099** | 🟠 Media | backend | F-3 (puertos `Clock` / `IdGenerator`), F-4 (excepción de dominio), F-7 (`fromLoc` = id), F-8 (ignorar `operatorId` de body con auth), F-9 (`remanenteId: null`) |
-| **TK-100-FE** | 🟠 Media | frontend | F-5 (eliminar fallback modo demo), F-6 (`DecimalQuantity` en el stepper de cantidad) |
+| Ticket | Sev. | Alcance | Hallazgos | Estado |
+| :-- | :-- | :-- | :-- | :-- |
+| **TK-098** | 🔴 Crítica | backend | F-1 (Unit of Work transaccional), F-2 (decremento atómico condicional), F-10 (tests de concurrencia + rollback + camino Prisma) | ✅ Done `878ff7b` |
+| **TK-099** | 🟠 Media | backend | F-3 (puertos `Clock` / `IdGenerator`), F-4 (excepción de dominio), F-8 (ignorar `operatorId` de body con auth), F-9 (`remanenteId: null`) | ✅ Done `c2fdf24` |
+| **TK-100-FE** | 🟠 Media | frontend | F-5 (eliminar fallback modo demo), F-6 (`DecimalQuantity` en el stepper de cantidad) | ✅ Done `8edc4b4` |
+| **TK-101** | 🟢 Baja | backend | F-7 (`fromLoc` = id de sector, diferido de TK-099 — requiere migración Prisma) | 📝 Draft |
 
 Los tres tickets se enmarcan en `US-014` + `US-025` (capacidades ya existentes) — no introducen reglas de negocio nuevas, por lo que aplica el patrón "N/A (Técnico)" (precedente `TK-091` / `TK-094` / `TK-097`). Guard 28: la única decisión de negocio abierta (destino del fallback modo demo, F-5) fue consultada con el humano y resuelta ("eliminar por completo").
 
@@ -79,13 +80,21 @@ Los gates deterministas asociados (`check_usecase_transaction_boundary`, verific
 
 ---
 
-## 📌 Addendum de Resolución (2026-09-03)
+## 📌 Addendum de Resolución (2026-09-03 → 2026-09-04)
 
 Decisión del humano: **resolver los puntos A + B + C**.
 
-* **A/B:** los 3 tickets pasan a `status: approved`. Orden de implementación: **TK-098 → TK-100-FE → TK-099** (1 commit atómico por ticket, TDD Red-Green-Refactor, gates acotados al diff).
-* **C:** reglas permanentes C-DEV-006-1..4 escritas (tabla de arriba). Commit de gobernanza: `docs(governance): technical-remediation ticket path + AUDIT-DEV-006 permanent rules [skip-tk]`.
-* `.agents/` tocado: `04_dev_audit_workflow.md` FASE 0.4 (carve-out `N/A (Técnico)` ampliado). `README.md` 2.10.0 → 2.11.0, `CHANGELOG.md` [Unreleased].
+* **C (commit `8e1c6fb`):** reglas permanentes C-DEV-006-1..4 escritas (tabla de arriba). `.agents/` — `04_dev_audit_workflow.md` FASE 0.4 (carve-out `N/A (Técnico)` ampliado), `README.md` 2.10.0 → 2.11.0.
+* **A/B:** los 3 tickets implementados en el orden acordado, 1 commit atómico por ticket, TDD.
+
+| Ticket | Commit | Hallazgos | Verificación |
+| :-- | :-- | :-- | :-- |
+| **TK-098** | `878ff7b` | F-1, F-2, F-10 | 213 tests backend · mutation 100 % en `RecordExtractionUseCase.ts` · **verificado contra Postgres 15 real** (rollback de `$transaction` + 2 `execute()` concurrentes → 1×201 + 1×422, sin sobreventa) |
+| **TK-100-FE** | `8edc4b4` | F-5, F-6 | 139 tests frontend · fallback demo eliminado · `DecimalQuantity` en el stepper |
+| **TK-099** | `c2fdf24` | F-3, F-4, F-8, F-9 | mutation ≥ 70 % por archivo · `Clock`/`IdGenerator` inyectados · `openapi.yaml` `remanenteId` nullable |
+| **TK-101** | 📝 Draft | **F-7** (diferido de TK-099) | necesita columna `StockMovement.fromStorageLocationId` + migración Prisma (aprobación humana, AGENTS §3) + cambio del contrato de `GET /stock/movements`; + barrido `IdGenerator` en `RestockInsumoUseCase`/`CreateLocationUseCase` (misma clase que F-3, fuera del alcance de TK-099) |
+
+**No verificado en este entorno (declarado):** `oasdiff` (breaking-change check de `check_contract_drift.sh`) — binario ausente; el cambio `remanenteId` nullable queda documentado en TK-099 y en el `description` del schema.
 
 ---
 
