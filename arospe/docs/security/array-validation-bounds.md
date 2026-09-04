@@ -14,6 +14,8 @@ Epic 3 add.
 - [Confirmed: neither `bail` form helps](#confirmed-neither-bail-form-helps)
 - [The shapes that do bound it](#the-shapes-that-do-bound-it)
 - [Status in story 0026: bounded by a written hand-off, not by code](#status-in-story-0026-bounded-by-a-written-hand-off-not-by-code)
+- [Story 0027: the two-pass shape is only half the bound — the mutation point needs one too](#story-0027-the-two-pass-shape-is-only-half-the-bound--the-mutation-point-needs-one-too)
+- [Story 0027 re-audit: a cap on the array's *length* is not a cap on the loop's *work*](#story-0027-re-audit-a-cap-on-the-arrays-length-is-not-a-cap-on-the-loops-work)
 
 ## A `max:` rule on an array does not gate that array's `.*` rules
 
@@ -236,7 +238,223 @@ both rule sets, this hazard is live in production with nothing behind it. The co
 the docblock and hand-off item 5 — writing, not enforcement — and the check that closes this is a
 review of 0027's save path, not a test in this story.
 
-_Last updated: 2026-09-03 — Story 0026 (Product ↔ Sales Region assignment and tax resolution
+## Story 0027: the two-pass shape is only half the bound — the mutation point needs one too
+
+Story 0027 (products list + editor UI) is the story the section above hands off to, and it is the
+**review of 0027's save path** that section names as the check which closes this. That review found
+the hand-off half-discharged, and — more usefully than the miss itself — found that the hand-off was
+**not sufficient on its own**, because it addresses the `validate()` call and says nothing about how
+the array gets its length in the first place.
+
+✅ **`salesRegionIds` — the hand-off followed exactly.** `App\Livewire\Products\Editor::save()`
+validates the two rule sets in two sequential calls, with an inline comment naming the obligation:
+
+```php
+// app/Livewire/Products/Editor.php — save()
+// 2. The region array's SHAPE AND BOUND, alone, in its own call -- must throw before a
+//    single per-element exists() query runs (obligation 7, D-12(b2)).
+Validator::make(
+    ['regionIds' => $this->regionIds],
+    ['regionIds' => $this->salesRegionIdsRules()],
+)->validate();
+
+// 3. Only now the per-element rules, provably against at most 254 elements.
+Validator::make(
+    ['regionIds' => $this->regionIds],
+    ['regionIds.*' => $this->salesRegionIdRules($preserved)],
+)->validate();
+```
+
+❌ **As found (story 0027, Phase 4) — `galleryMediaIds`, the *other* call site this page names, wired
+as-is in the same method, twelve lines above the ✅.** **Closed 2026-09-04** — the block below is the
+code *as found* and is no longer in the file; see
+[the re-audit section](#story-0027-re-audit-a-cap-on-the-arrays-length-is-not-a-cap-on-the-loops-work)
+for the shipped two-pass replacement and for the residual its companion fix introduced. Both halves
+sat in one `$this->validate([...])` call, which is the exact shape this page's ❌ describes:
+
+```php
+// app/Livewire/Products/Editor.php — save(), step 1
+$this->validate([
+    // … the scalar fields …
+    'galleryMediaIds' => $this->productGalleryMediaIdsRules(),          // ['array', 'max:20']
+    'galleryMediaIds.*' => ['string', 'distinct', Rule::exists('media', 'id')],
+]);
+```
+
+Measured on this worktree with the rule pair above, 2,000 submitted ids:
+
+| shape | queries issued | wall time | error messages returned |
+| --- | --- | --- | --- |
+| one pass (as found) | **2,000** | 3.28 s | 2,001 |
+| two passes (the ✅ above) | **0** | 0.00 s | 1 |
+
+**The generalisable half, and the reason this is a new section rather than a repeat.** The hand-off
+in the section above is phrased entirely in terms of the `validate()` call, and that framing quietly
+assumes the array's *length* is somebody else's problem. It is not, and this call site is where that
+shows:
+
+- `Editor::$galleryMediaIds` is `#[Locked]`, so no `$set` / `wire:model` write can reach it — which
+  reads as "the client does not control this array". It does. `#[Locked]` binds the **property write
+  channel**, never the component's own public methods, and `addGalleryImages(array $media)` is a
+  public Livewire method (also an `#[On('product-images-added')]` listener, which
+  [api/routes.md](../api/routes.md#applivewirecomponentswysiwygeditor--the-gallerys-first-real-consumer-and-the-second-routeless-gated-component)
+  already records is registered page-globally and therefore client-reachable). It appends every item
+  it is handed, with no cap, so the client picks the length regardless of the lock.
+- Even with the validation fixed, the array still lives in **component state**: it is serialised into
+  the snapshot and shipped both ways on every later round trip, and `addGalleryImages()`'s own
+  `in_array()` dedupe over the growing array is quadratic across repeated calls. A bound that exists
+  only inside `save()` does not touch either.
+
+**Rule.** For a client-supplied id array, the two-pass validation bounds the *save*; only a bound at
+the **mutation point** bounds the *component*. Cap the array in PHP where it grows — the
+`array_slice($ids, 0, self::MAX_RESOLVABLE_SELECTED)` shape
+`App\Livewire\Components\SearchableMultiSelect::resolveIdsAllowingPartialFailure()` already ships —
+and validate in two passes as well. The review question at the end of
+[The shapes that do bound it](#the-shapes-that-do-bound-it) gains a second half: *who chose the
+element count, and is there any path that grows this array without passing the rule that bounds it?*
+
+⚠️ **Also worth knowing for whichever story fixes this:** the one-pass shape does not only cost
+queries, it returns **one error message per element** (2,001 above). Livewire persists the error bag
+across requests, so an oversized submission bloats every subsequent round trip until the bag is
+reset — a second, independent reason the shape check must throw first.
+
+## Story 0027 re-audit: a cap on the array's *length* is not a cap on the loop's *work*
+
+Both halves of the section above shipped, and were re-verified against the real files rather than
+taken on the fix commit's word:
+
+✅ **The save-path ❌ above is closed.** `Editor::save()` now validates `galleryMediaIds`'s shape and
+bound in its own `Validator::make(...)->validate()` call, then `galleryMediaIds.*` in a second — the
+identical two-pass shape `regionIds` already used, twelve lines below it. The one-pass block quoted
+in that ❌ no longer exists in the file.
+
+✅ **The mutation point gained a cap.** `Editor::addGalleryImages()` now carries
+`self::MAX_GALLERY_SIZE = 20`, derived from and documented against
+`productGalleryMediaIdsRules()`'s own `max:20`, and breaks out of its loop once the strip is full.
+
+❌ **As found (story 0027 Phase 4 re-audit round 2; closed by round 3 — see the ✅ below): the cap
+bounds how much the array *grows*, not how
+much the loop *does*.** The same round's other fix (F-4, "derive the preview server-side, never from
+the event payload") put a `Media::query()->find($id)` **inside** that loop, and the loop's only exit
+is the array-length check — which a payload of ids that never make it into the array never trips:
+
+```php
+// app/Livewire/Products/Editor.php — addGalleryImages(), as found
+foreach ($media as $item) {                                    // ← unbounded: $media is client-sized
+    if (count($this->galleryMediaIds) >= self::MAX_GALLERY_SIZE) {
+        break;                                                 // ← only fires once the array GROWS
+    }
+    // … isset / in_array dedupe …
+    $selected = Media::query()->find($id);                     // ← one query per item, always
+    if ($selected === null) {
+        continue;                                              // ← array unchanged, loop continues
+    }
+    // …
+}
+```
+
+Measured on this worktree (`app/Livewire/Products/Editor.php` at the time of the re-audit), 500
+freshly-generated UUIDs matching no `media` row, passed straight to the public method:
+
+| payload | `media` SELECTs issued | wall time | final array length |
+| --- | --- | --- | --- |
+| 500 ids, all non-existent | **500** | 492 ms | 0 |
+| 500 ids, all real and distinct | 20 | — | 20 (cap works) |
+
+So the cost is linear in what the *client* sends, not in what the component keeps — the same
+one-query-per-submitted-element profile as the save-path ❌ this page opened with, arriving through a
+method rather than through a validator. Three ways to reach it, all cheap: non-existent ids, ids of
+rows deleted since, or (in the deduped branch) nothing at all. `addGalleryImages()` is
+`#[On('product-images-added')]`, so `Livewire.dispatch(...)` from the console is sufficient; the
+actor needs `products.create`/`products.edit` only because `Editor::mount()` gates on them.
+
+**Rule, extending the one above.** *Capping an accumulator does not cap a loop that can iterate
+without filling it.* When a fix moves a database read (or any per-item cost) inside a loop over
+client-supplied input, the bound must be on the **iteration count**, not on the collection the loop
+writes into — `foreach (array_slice($media, 0, self::MAX_GALLERY_SIZE) as $item)`, or better, slice
+first and resolve the whole slice in one `Media::query()->whereIn('id', $ids)->get()`, which also
+collapses the legitimate path from N queries to one. And note the companion test gap this round
+exposed: `regionIds` has an explicit zero-query regression test
+(`tests/Feature/Products/EditorTest.php`, "an oversized regionIds submission issues zero
+sales_regions existence queries") while the gallery path — the call site this page is *about* — has
+no query-count test at either the validator or the mutation point, so both bounds there are asserted
+only by behaviour.
+
+✅ **Closed (story 0027 Phase 4 re-audit round 3), and the slot above was written for exactly this.**
+The candidate list is sliced to the remaining capacity **before any query runs**, and the whole slice
+is resolved in **one** `whereIn()` — so both the iteration count and the query count are bounded by
+`MAX_GALLERY_SIZE`, never by what the client sends:
+
+```php
+// app/Livewire/Products/Editor.php — addGalleryImages(), shipped
+$remainingCapacity = self::MAX_GALLERY_SIZE - count($this->galleryMediaIds);
+
+$candidateIds = collect($media)
+    ->pluck('id')
+    ->filter()
+    ->map(fn (mixed $id): string => (string) $id)
+    ->take(max($remainingCapacity, 0))   // ← bounds the LOOP, before the database is touched
+    ->all();
+
+$foundMedia = Media::query()->whereIn('id', $candidateIds)->get()->keyBy('id');   // ← exactly one
+
+foreach ($candidateIds as $id) {
+    // … the array-length break, the in_array() dedupe, and $this->toPreview($selected) …
+}
+```
+
+Three properties re-verified by execution rather than read off the diff. **(a)** 500 non-existent ids
+now issue **1** `media` SELECT, down from 500 — pinned by `tests/Feature/Products/EditorTest.php`,
+*"addGalleryImages() with an oversized non-existent-id submission issues exactly one media query, not
+one per item"*, which closes the companion test gap the ❌ above named. **(b)** `max($remainingCapacity, 0)`
+is load-bearing, not defensive noise: `Collection::take()` with a **negative** argument takes from the
+**end** of the collection, so an unguarded negative would silently resurrect an unbounded-ish slice
+rather than yielding nothing. **(c)** An empty `$candidateIds` still issues one query, compiled to
+`select * from `media` where 0 = 1` — no unbound placeholder, no error, and one query is the floor for
+a Livewire round trip anyway, so an early `return` would be a micro-optimisation rather than a bound.
+
+⚠️ **The shipped query-count test cannot distinguish "sliced before the query" from "not sliced at
+all".** Both shapes issue exactly one SELECT; only the *binding count* differs (20 versus 500). If a
+later refactor moves the `take()` after the query — or drops it, reasoning that one query is already
+cheap — that test stays green while the whereIn's placeholder list becomes client-sized again.
+Assert the bindings, not only the query count: `expect(count($query->bindings))->toBeLessThanOrEqual(20)`
+inside the existing `DB::listen()` closure is the one-line strengthening, and it is the only assertion
+that actually pins the slice.
+
+⚠️ **Two residuals in the same method, both Low and both deliberately recorded rather than fixed in
+this round.** First, `(string) $id` throws `ErrorException: Array to string conversion` — a 500 on
+`/livewire/update` — for a payload item whose `id` is itself an array (`[['id' => ['a','b']]]`),
+verified by executing the pipeline with `HandleExceptions` bootstrapped, which is what turns PHP's
+warning into a throw on the real request path; `filter()` already absorbs a missing key, a `null` and
+a non-array item, so an array-valued id is the one shape that escapes it. This is **not** introduced
+by the slice — `setFeaturedImage()` has carried the identical `(string) $item['id']` since F-4 — and
+the fix for both is one predicate, `->filter(fn (mixed $id): bool => is_string($id) || is_int($id))`,
+in place of the bare `filter()`. Second, the slice runs **before** the dedupe, so an id already in the
+strip consumes a slot: with 19 images held and a payload of `[alreadyInStrip, newImage]`, the slice
+keeps only the first, the loop skips it as a duplicate, and `newImage` is dropped even though there
+was room for it. Fail-closed (it can only add fewer images, never more) and invisible except at the
+boundary; `->unique()` plus a `->reject()` of the ids already held, applied **before** `->take()`,
+restores the pre-slice semantics while keeping every bound above intact.
+
+_Last updated: 2026-09-04 — Story 0027 (products list + editor UI), Phase 4 **re-audit round 3**.
+Closed the ❌ this page opened one round earlier with a ✅ quoting the shipped `take()`-before-`whereIn()`
+shape and the three properties re-verified by execution, plus the ⚠️ that the new regression test pins
+the query *count* but not the *slice* (both shapes issue one query; only the binding count moves) and
+the ⚠️ recording the two Low residuals left in the method — an array-valued `id` reaching `(string)`,
+and the slice running ahead of the dedupe. The ❌ is relabelled **as found** rather than deleted, per
+this project's [audit-authored-page rule](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20):
+a page written during an audit describes a state the next round is expected to change, so the fix gets
+a slot rather than a rewrite._
+
+_Previously: 2026-09-04 — Story 0027 (products list + editor UI), Phase 4 **re-audit**. Added the
+section directly above, verifying the previous round's two fixes and recording the residual the
+second of them introduced, per this project's rule that a security fix is new code and is audited as
+such ([errors-log.md](../errors-log.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19)).
+The save-path ❌ in the section above it is now **closed** and is marked so in place rather than left
+describing a tree that no longer exists; the new ❌ is marked **open** so the next round has a slot to
+fill rather than a framing to rewrite._
+
+_Previously: 2026-09-03 — Story 0026 (Product ↔ Sales Region assignment and tax resolution
 backend), Phase 4 **second re-audit**. Written in the previous round as a ❌/✅ pair with the ❌ marked
 **as found and open**, per [errors-log.md](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)'s
 rule that an audit-authored page must leave a slot for the fix rather than need its framing

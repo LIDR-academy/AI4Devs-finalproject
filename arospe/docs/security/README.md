@@ -321,6 +321,22 @@ repo must follow — always with a real code example pulled from this repository
   per-element rule bounds nothing, so adopting it means deleting D12's validated preserved-vs-
   assignable per-element rule outright, hand-rolling `required`/`string`/`distinct` and the
   per-element error keys in PHP, and resting the bound on an `array_slice()` line nothing enforces.
+  **Extended by story 0027's Phase 4 (2026-09-03)**, which is the *"review of 0027's save path"* the
+  section above names as the check that closes this — and it closed only half of it. `regionIds` got
+  the two-pass shape exactly as handed off; `galleryMediaIds`, the other call site this page names by
+  name, was wired **as-is** twelve lines above it in the same method (2,000 submitted ids → 2,000
+  `Rule::exists()` queries in 3.28 s and 2,001 error messages, despite `max:20` — measured). The
+  durable half is not the miss but what it exposed: **the hand-off's `validate()`-shaped framing is
+  only half the bound.** `$galleryMediaIds` is `#[Locked]`, which reads as "the client does not
+  control this array" and is false — `#[Locked]` binds the property write channel, never the
+  component's own public methods, and `addGalleryImages(array $media)` is a public (and
+  `#[On]`-listening, therefore page-globally client-reachable) method that appends with no cap. So the
+  array's length is client-chosen regardless of the lock, it lives in the serialised snapshot on every
+  later round trip, and its dedupe `in_array()` is quadratic across calls. **Rule: two-pass validation
+  bounds the save; only a cap at the mutation point bounds the component** — reach for
+  `SearchableMultiSelect::resolveIdsAllowingPartialFailure()`'s `array_slice()` shape where the array
+  grows, and do both. The page's review question gains a second half: *is there any path that grows
+  this array without passing the rule that bounds it?*
 
 _Last updated: 2026-09-03 — Story 0026, **Phase 4 second re-audit**: no new page. Updated the
 [array-validation-bounds.md](array-validation-bounds.md) entry above for finding **R-1's**

@@ -1,7 +1,7 @@
 # [0031] Product variants — the variant builder inside the product editor (UI)
 
 ## Description
-Build the **variant builder** embedded in [0027](0027-products-list-and-editor-ui.md)'s routed product
+Build the **variant builder** embedded in [0027](done/0027-products-list-and-editor-ui.md)'s routed product
 editor: a list of the product's existing variants and a form that composes one attribute-value
 combination at a time, each variant carrying its **live-previewed, read-only, derived SKU**, its own
 price and stock, and an **optional** own image picked through the shared media gallery
@@ -35,7 +35,7 @@ includes database-expert: **no**
 
 No schema change, no migration, no index decision, no new query shape beyond two eager loads over
 tables 0029 designed. `database-expert` is therefore not convened, matching
-[0025](done/0025-product-categories-ui.md)'s and [0027](0027-products-list-and-editor-ui.md)'s precedent for
+[0025](done/0025-product-categories-ui.md)'s and [0027](done/0027-products-list-and-editor-ui.md)'s precedent for
 the sibling screens.
 
 > 🟣 **The classification is unchanged by the 2026-08-19 generator decision, and this is stated
@@ -1396,7 +1396,7 @@ Definition of Done hands this over explicitly — a generator UI *"inherits the 
 every test written against it**, which is 0027 **D-4**'s own argument for paginating from day one.
 
 **Decision: the variants list paginates from the start**, `->paginate(25)` matching
-[0027](0027-products-list-and-editor-ui.md) **D-4**'s page size exactly (two differently-paginated lists
+[0027](done/0027-products-list-and-editor-ui.md) **D-4**'s page size exactly (two differently-paginated lists
 on one product screen is the same class of defect as **OQ-9**'s two money inputs). Four consequences,
 all of which Phase 3 must carry:
 
@@ -1420,7 +1420,7 @@ consistency with 0027.
 [OQ-6](#open-questions) asked whether `position` ships on variants and noted *"it is not expressible
 today"* — a reorder needs a whole-set rewrite in one transaction, and 0029 ships no
 `ReorderProductVariants`. **R-6** filed it as the same shape as
-[0027](0027-products-list-and-editor-ui.md)'s **OQ-6**/**D-9a** finding about `SyncProductGallery` one
+[0027](done/0027-products-list-and-editor-ui.md)'s **OQ-6**/**D-9a** finding about `SyncProductGallery` one
 story over. 0029's amendment settles both halves, though only one of them the way the question expected.
 
 **Half 1 — variant *images*: the question does not apply, and it never could.** Checked against 0029's
@@ -2330,7 +2330,7 @@ should warn on it"* about **attribute-type** reordering; 0030 owns that screen (
 🟣 **OQ-13 — What page size does the paginated variants list use?** *(new 2026-08-19, opened by
 [D-17.4](#d-174--the-pagination-consequence-decided-here-because-retrofitting-it-is-the-expensive-path);
 does **not** block Phase 3 — the mechanism is decided, only the constant is open)*
-- **(a) 25, matching [0027](0027-products-list-and-editor-ui.md) **D-4**'s `->paginate(25)` _(recommended)_.**
+- **(a) 25, matching [0027](done/0027-products-list-and-editor-ui.md) **D-4**'s `->paginate(25)` _(recommended)_.**
   Two differently-paginated lists on one product screen is the same class of inconsistency **OQ-9**
   refuses for the two money inputs, and 25 already survived review one story over.
 - (b) A larger page (50) on the argument that a generated batch of 40 should be visible at once.
@@ -2350,7 +2350,7 @@ approach) and `frontend-qa` (test design), per
 [PRD §2.2](../../docs/PRD/PRD.md#22-products)'s *"Product variants (extends the prototype)"* Gherkin block
 and [§2.3](../../docs/PRD/PRD.md#23-shared-media-gallery), and grounded in **full readings** of
 [0029](0029-product-variants-backend.md) (2,306 lines, read in full — it was substantially redesigned on
-the same day) and [0027](0027-products-list-and-editor-ui.md) (1,512 lines, read in full), plus
+the same day) and [0027](done/0027-products-list-and-editor-ui.md) (1,512 lines, read in full), plus
 [0028](0028-product-attribute-types-and-values-backend.md),
 [0030](0030-product-attribute-types-and-values-ui.md) and
 [0020](done/0020-shared-media-gallery-modal-ui.md) for their data and embedding contracts, and the whole of

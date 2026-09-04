@@ -187,3 +187,102 @@ re-derive, never the full prose of a finalized story.
   and the picker have exactly two/no grouping tiers respectively — do not reintroduce a
   grouping-membership concept anywhere in story 0027 — story 0026 (D10).
 - Full mechanism is documented at [docs/database/schema.md#product_sales_region](../../../docs/database/schema.md#product_sales_region).
+
+## Story 0027 — Products list + editor UI (discharges 0026's hand-off; the first real caller of ProductPolicy/CreateProduct/UpdateProduct/DeleteProduct/SyncProductGallery/SyncProductSalesRegions/SearchSalesRegions)
+
+- Three routes, one new area file `routes/products.php` (`require`d from `web.php`): `GET /products` →
+  `products.index`, `GET /products/create` → `products.create`, `GET /products/{product}/edit` →
+  `products.edit` — all `can:products.view`. `products.create`/`.edit` both resolve **the same**
+  `App\Livewire\Products\Editor` class (the app's first component repeated across two route names) —
+  story 0027.
+- `App\Livewire\Products\Index` (flat view, `resources/views/livewire/products.blade.php` — the
+  `Index`-in-a-subfolder exception): `#[Computed] products(): LengthAwarePaginator`, explicit-column
+  `select()` (never `description`), eager-loads `category:id,name` +
+  `featuredImage:id,title,path,webp_path,avif_path`, `orderBy('name')->orderBy('id')`, `paginate(25)`,
+  mapped `->through()` into row arrays `{id,name,sku,price,stock,stockBand,displayStatus,thumbnail,
+  canEdit,canDelete}`. `canEdit`/`canDelete` are `Gate::allows('update'|'delete', $product)` — the
+  same `ProductPolicy` methods `confirmDelete()`/`deleteProduct()` and `Editor` authorize against, so
+  the per-row hint cannot drift — story 0027.
+- `App\Livewire\Products\Editor` (nested view, `resources/views/livewire/products/editor.blade.php` —
+  the ordinary mirror rule, one level deeper than `Index`'s in the same folder): `$productId` is
+  `#[Locked] ?string`, written only from `$product->id` inside `mount()`. **`$status` is a plain
+  `string` (`ProductStatus::Draft->value` default), never a typed `ProductStatus` property** — task
+  0015 finding F8's rule (`EnumSynth` hydrates a forged value through `::from()` *before* validation,
+  turning a tampered status into a raw `\ValueError`/500 instead of a validation error) applied a
+  second time on a second screen. `$type` is a plain `string` defaulting to `''` with **no** legitimate
+  default at all (0024's own rule) — its `<flux:select>` placeholder is `disabled selected value=""`,
+  the one new Flux/Blaze markup rule this screen adds. Four imagery properties
+  (`$featuredMediaId`/`$featuredPreview`/`$galleryMediaIds`/`$galleryPreviews`) are all `#[Locked]`,
+  written only from a server-side `Media::find()`/`whereIn()` lookup inside the two `#[On]` listeners
+  below — never from the event payload's own `title`/`url` fields. `$regionIds` is the
+  `SearchableMultiSelect` child's `#[Modelable]` target and is deliberately **not** locked — story 0027.
+- **Two `Gallery` embeds + one `WysiwygEditor` + one `SearchableMultiSelect`, all on one page, is now a
+  real, shipped instance later stories (0031, 0077) can pattern-match against.** Featured-image picker:
+  `select-event="featured-image-selected"` → `#[On] setFeaturedImage()`, single-select. Gallery-strip
+  picker: `select-event="product-images-added"` → `#[On] addGalleryImages()`, multi-select. Both sit
+  inside `@can('viewAny', \App\Models\Media::class)`, with the trigger button rendered `disabled`
+  (never hidden) on the else-branch. The WYSIWYG's own internal gallery derives its event name per
+  instance (0021 D5) — three `Gallery` instances, three distinct names, no cross-wiring — story 0027.
+- **`setFeaturedImage()`/`addGalleryImages()` are page-globally-registered `#[On]` listeners on a
+  *routed* component and still needed their own `Gate::authorize('viewAny', Media::class)` (F-6,
+  code-review re-audit)** — the route's `can:products.view` replay covers only that one ability, not
+  the finer `media.view` these two listeners actually need. Generalises: **a route's `can:` replay
+  covers only the ability it names; a method inside that route asking a different, finer ability still
+  needs its own gate.** Full write-up:
+  [docs/security/livewire-authorization.md](../../../docs/security/livewire-authorization.md#the-routeless-case-a-component-with-no-route-has-no-per-request-backstop-at-all) — story 0027.
+- `addGalleryImages()` carries `self::MAX_GALLERY_SIZE = 20` (matching
+  `productGalleryMediaIdsRules()`'s `max:20`) as a **mutation-point** cap, not only a `save()`-time
+  validation cap — a public, client-dispatchable method with no other bound would otherwise let the
+  array grow past 20 in component state (serialized into the snapshot every round trip) even if
+  `save()` is never called. Re-audit (R-1) then found the cap alone insufficient: it only stopped the
+  *array* growing, not the *loop* — a payload of hundreds of non-existent/duplicate ids still drove one
+  `Media::query()->find()` per item. Fixed by slicing candidate ids to remaining capacity **before**
+  any query runs and resolving the survivors in one `whereIn()`. **Rule: capping an accumulator does
+  not cap a loop that can iterate without filling it** — story 0027.
+- Gallery reorder ships as **buttons** (`moveGalleryImageEarlier()`/`moveGalleryImageLater()`), never
+  drag — mutates only the in-memory `$galleryMediaIds`/`$galleryPreviews` arrays, no query, no pivot
+  write, nothing persisted until `save()`. `save()` **always** passes the complete reordered array to
+  `CreateProduct`/`UpdateProduct` (never a default) — `SyncProductGallery` is **never called directly**
+  from `Editor`, discharging 0024's own hand-off item (d) — story 0027.
+- **`save()`'s ordering, now the shipped reference for "one `DB::transaction()` composing multiple
+  writers" on this screen family**: authorize (`create`/`update` via `LogRefusedPrivilegedAttempt`) →
+  read `$preserved = $product?->salesRegions->pluck('id')->all() ?? []` from the **persisted** row,
+  never the request → canonicalise `name`/`sku` → validate core fields → validate `galleryMediaIds`
+  shape+bound alone, then `galleryMediaIds.*` → validate `regionIds` shape+bound alone, then
+  `regionIds.*` against `salesRegionIdRules($preserved)` → mandatory
+  `$searchSalesRegions->resolveSelected($this->regionIds)` (never skipped, never a short-circuit) →
+  **open** `DB::transaction()` → `create()`/`update()` (which reach `SyncProductGallery` internally) →
+  `$syncRegions($saved, $this->regionIds)` → redirect to `products.index`. This discharges 0026's DoD
+  hand-off items 1–4 in full — story 0027.
+- **The `.*`-wildcard two-pass validation pattern 0026 handed off is now extended from `regionIds` to
+  `galleryMediaIds` too, in the identical shape**: `Validator::make(['x' => $arr], ['x' =>
+  $shapeAndBoundRules])->validate()` first, then a second `Validator::make(['x' => $arr], ['x.*' =>
+  $perElementRules])->validate()` — never combined, because Laravel expands a `.*` wildcard against
+  every element regardless of whether the parent's own `max:` already failed. Full measurements (one
+  combined call = one `Rule::exists()` query per submitted id before the cap is ever consulted) at
+  [docs/security/array-validation-bounds.md](../../../docs/security/array-validation-bounds.md#story-0027-the-two-pass-shape-is-only-half-the-bound--the-mutation-point-needs-one-too) — story 0027.
+- `ProductPolicy` now has real call sites for **all four** abilities (`viewAny` via `Index::mount()`;
+  `create`/`update`/`delete` as a **second** layer over 0024's already-self-authorizing actions, via
+  `Editor::mount()`/`::save()` and `Index::confirmDelete()`/`::deleteProduct()`) — story 0027.
+- Thumbnail/preview URLs are built at the call site from 0019's real `path`/`webp_path`/`avif_path`
+  columns via `Storage::disk('public')->url(...)` — **there is no `url()`-style accessor on
+  `App\Models\Media`.** Mirrors `Gallery::toPayloadItem()`'s and `WysiwygEditor::insertImage()`'s
+  identical shape; `Editor::toPreview(Media $media): array` is the one reviewable place per component
+  — story 0027.
+- Sidebar: `config/modules.php` gained `items.products` (`group: platform`, icon `cube`,
+  `current_when: 'products.*'`, `permissions: ['products.view']`), matching
+  `lang/{en,es}/navigation.php` leaves. `resources/views/layouts/app/sidebar.blade.php` untouched
+  (fifth confirmation of the registry's append-data-only claim) — story 0027.
+- New lang groups `products.index.*` / `products.editor.*` in both locales, plus
+  `products.sales_regions.unresolvable` (the `resolveSelected()` failure message). `products.php` is
+  now a six-story writer (0024/0024a/0024b/0025/0026/0027) — extend, never recreate — story 0027.
+- **The story 0020/0021 `dev.media-gallery-harness` scaffolding is fully retired**: both harness
+  browser test files (`tests/Browser/Media/GalleryTest.php`,
+  `tests/Browser/Components/WysiwygEditorTest.php`, plus the un-red-phase-listed
+  `WysiwygEditorOutputHtmlTest.php`) were re-pointed at `route('products.create')`/
+  `route('products.edit', $product)` and made green **before** `App\Livewire\Dev\MediaGalleryHarness`,
+  its view, its `routes/web.php` registration block and `tests/Feature/Dev/MediaGalleryHarnessRouteTest.php`
+  were deleted. No later story should expect `app/Livewire/Dev/` to exist — story 0027.
+- Full mechanism is documented at
+  [docs/api/routes.md#productsindex-productscreate-and-productsedit--the-fifth-permission-gated-route-family](../../../docs/api/routes.md#productsindex-productscreate-and-productsedit--the-fifth-permission-gated-route-family)
+  and [docs/architecture/authorization.md#productpolicy--the-sixth-policy-and-the-second-built-entirely-for-a-screen-that-does-not-exist-yet](../../../docs/architecture/authorization.md#productpolicy--the-sixth-policy-and-the-second-built-entirely-for-a-screen-that-does-not-exist-yet).

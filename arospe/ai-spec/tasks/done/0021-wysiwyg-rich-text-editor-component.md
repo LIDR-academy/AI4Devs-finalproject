@@ -1149,7 +1149,7 @@ Low, 1 Info.
   **Phase 5 correction (code-reviewer finding B2, then verified by a dedicated read of all four
   consumer task files): no new note was ever added to those files — the original sentence above
   overclaimed a written amendment that does not exist.** What is actually true, checked file by file:
-  [0027](../0027-products-list-and-editor-ui.md) already independently establishes and relies on the
+  [0027](0027-products-list-and-editor-ui.md) already independently establishes and relies on the
   identical sanitize-on-write architecture — `CreateProduct`/`UpdateProduct` sanitize the description
   through 0024a's `SanitizeProductDescription` before persistence, its own R-12 states *"there is no
   `{!! !!}` anywhere in either view"*, and it even records 0076 D-8's second sanitization layer (a
