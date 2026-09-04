@@ -101,6 +101,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-111** | `kitchen` | **Medio** | **Alta** | 3 SP | `US-007`: vista previa de disponibilidad por ingrediente (`GET /kitchen/recipes/:id/availability`), reutiliza el cálculo de `ConsumeRecipeUseCase` sin mutar. ✅ Done. | 🟡 P1 - Alta |
 | **TK-111-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-111`. `US-007`: `RecipeSelectorModal` muestra requerido/disponible por ingrediente y bloquea confirmar si falta stock. ✅ Done. | 🟡 P1 - Alta |
 | **TK-112-FE** | `kitchen` | **Medio** | **Alta** | 3 SP | `US-026`: pestañas de filtro por área de cocina (`LocationFilterTabs`) filtraban por literales legados que dejaron de coincidir con `Remanente.location` desde `TK-102-FE` — bug confirmado en vivo (0 resultados en toda pestaña de área). ✅ Done. | 🔴 P0 - Crítica |
+| **TK-113-FE** | `auth` | **Bajo** | **Baja** | 2 SP | `US-031`: chips de operario reciente (`localStorage`, device-local) en `PinLoginModal` — fusión selectiva de mockup Stitch. 📝 Draft. | 🟢 P2 - Media |
+| **TK-114-FE** | `kitchen` | **Bajo** | **Baja** | 2 SP | `US-031`: botón circular de acción rápida (72×72px, reusa el token de `US-023`) para "Extraer de Bodega" junto a la barra de Salud FEFO. 📝 Draft. | 🟢 P2 - Media |
+| **TK-115-FE** | `kitchen` | **Bajo** | **Baja** | 1 SP | `US-031`: resaltado full-bleed de fila con varianza negativa pendiente de motivo en `ShiftReconciliationWizard`. 📝 Draft. | 🟢 P3 - Baja |
+| **TK-116-FE** | `stock` | **Medio** | **Baja** | 3 SP | `US-031`: barra de herramientas acoplada (búsqueda/filtro/vista grid-lista, persistida por dispositivo) en el catálogo de bodega. 📝 Draft. | 🟢 P2 - Media |
 
 ---
 
@@ -190,6 +194,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-111** | [US-007](../11_user_stories/kitchen/US-007.md) | Vista Previa de Disponibilidad por Ingrediente de Receta | `kitchen` | 3 | Should Have | [kitchen/backend/TK-111.md](kitchen/backend/TK-111.md) |
 | **TK-111-FE** | [US-007](../11_user_stories/kitchen/US-007.md) | Vista Previa de Disponibilidad en "Preparar Receta" | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-111-FE.md](kitchen/frontend/TK-111-FE.md) |
 | **TK-112-FE** | [US-026](../11_user_stories/stock/US-026.md) | Pestañas de Filtro por Área de Cocina Dejaron de Coincidir con los Remanentes Reales | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-112-FE.md](kitchen/frontend/TK-112-FE.md) |
+| **TK-113-FE** | [US-031](../11_user_stories/shared/US-031.md) | Chips de Operario Reciente en el Login | `auth` | 2 | Could Have | [shared/frontend/TK-113-FE.md](shared/frontend/TK-113-FE.md) |
+| **TK-114-FE** | [US-031](../11_user_stories/shared/US-031.md) | Botón de Acción Rápida Circular en el Tablero de Cocina | `kitchen` | 2 | Could Have | [kitchen/frontend/TK-114-FE.md](kitchen/frontend/TK-114-FE.md) |
+| **TK-115-FE** | [US-031](../11_user_stories/shared/US-031.md) | Resaltado Full-Bleed de Fila con Varianza en Conciliación | `kitchen` | 1 | Could Have | [kitchen/frontend/TK-115-FE.md](kitchen/frontend/TK-115-FE.md) |
+| **TK-116-FE** | [US-031](../11_user_stories/shared/US-031.md) | Barra de Herramientas Acoplada en el Catálogo de Bodega | `stock` | 3 | Could Have | [stock/frontend/TK-116-FE.md](stock/frontend/TK-116-FE.md) |
 | **TK-106-FE** | [US-025](../11_user_stories/stock/US-025.md) | Aviso de Stock por Sub-Sector en la Extracción de Bodega | `stock` | 2 | Must Have | [stock/frontend/TK-106-FE.md](stock/frontend/TK-106-FE.md) |
 | **TK-075-FE** | [US-017](../11_user_stories/settings/US-017.md) | Frontend System Settings & Branding UI | `settings` | 3 | Should Have | [settings/frontend/TK-075-FE.md](settings/frontend/TK-075-FE.md) |
 | **TK-077-FE** | [US-018](../11_user_stories/auth/US-018.md) | Modal Táctil y Pantalla de Recuperación de PIN de Administrador | `auth` | 3 | Should Have | [auth/frontend/TK-077-FE.md](auth/frontend/TK-077-FE.md) |

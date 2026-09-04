@@ -1,12 +1,13 @@
 ---
 document: ui_ux_design_system
-version: 4.1.0
+version: 4.2.0
 status: approved
 inputs:
   - docs/01_product_definition/02_prd.md
   - docs/02_architecture_design/04_technical_design.md
   - docs/05_agile_planning/11_user_stories/shared/US-022.md
   - docs/05_agile_planning/11_user_stories/shared/US-023.md
+  - docs/05_agile_planning/11_user_stories/shared/US-031.md
 ---
 
 # 🎨 Especificación de Sistema de Diseño UI/UX y Ergonomía Táctil
@@ -321,5 +322,28 @@ Todas las ventanas modales de la aplicación (`PinLoginModal`, `WarehouseExtract
    - Pestañas táctiles en la vista de remanentes para filtrar por sector físico: `[ Todos ]`, `[ Refrigerador Principal ]`, `[ Mesa de Preparación ]`, `[ Línea de Servicio ]`.
 4. **Reloj Regresivo en Vivo (Live Countdown):**
    - Temporizador dinámico en formato `HH:MM:SS` con micro-animación pulsante para insumos críticos ($<6\text{h}$).
+
+---
+
+## 🧩 8. Arquitectura UI/UX v4.2.0: Fusión Selectiva de Patrones Explorados (Stitch)
+
+> **Amplía** v4.1.0 sin reemplazar tokens ni tipografía. Cubierto por `US-031`. Origen: 5 mockups exploratorios generados con Google Stitch (`docs/02_architecture_design/stitch_designs/*.html`, no productivos — reusan los tokens ya aprobados de este documento, convertidos a clases Tailwind, más algunos tokens Material genéricos de relleno del scaffold que **no** se adoptan). De los patrones nuevos que sí introducían, se fusionan 4 puntuales; el resto de cada mockup (paleta MD3 de relleno, estructura de sidebar, etc.) se descarta por no aportar sobre lo ya implementado — p.ej. la barra "Salud FEFO" del mockup 2 ya existía en `FEFOInventoryHealthBar.tsx` desde v3.0.0 y no cambia.
+
+1. **Chips de Operario Reciente (`PinLoginModal`):**
+   - Bajo el campo de ID de operario, hasta 3 chips táctiles con los últimos IDs que iniciaron sesión **en ese dispositivo** (no una lista de usuarios del sistema — no hay endpoint que la exponga, ver nota en `PinLoginModal.tsx`). Fuente: `localStorage`, client-only, nunca sincronizado con el backend.
+   - Un tap rellena el campo de ID sin loguear; el PIN se sigue tecleando a mano.
+   - Estilo: `border: 1px solid var(--rule)`, texto `font-family-mono`, mismo tratamiento que los chips de sugerencia del mockup 1.
+
+2. **Botón de Acción Rápida Circular Grande (`action-target-lg`, tablero de cocina):**
+   - Nuevo tamaño táctil, **72×72px**, círculo (`border-radius: 9999px`) — mismo diámetro y misma excepción documentada a la regla de esquinas rectas que el botón de acción circular de `US-023` (§ token `.btn-touch` de 72×72px, punto 113 de este documento); no es un tercer tamaño, es el mismo patrón reutilizado para una acción de un solo toque en el tablero (p. ej. `Extraer Bodega`), anclado junto a la barra de Salud FEFO.
+   - Reservado para **una única acción primaria** por vista — no reemplaza los botones por fila existentes, es un atajo adicional.
+
+3. **Resaltado Full-Bleed de Fila con Varianza (`ShiftReconciliationWizard`):**
+   - La fila de un ítem con varianza negativa pendiente de motivo pasa de un tratamiento de borde a un fondo tintado **de sangre completa** (`margin-inline` negativo hasta el borde del contenedor, `background: color-mix(in srgb, var(--color-danger) 5%, transparent)`, `border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent)`), para que sea visible sin tener que leer el texto — más contraste posicional bajo luz de cocina.
+   - No cambia el color de texto ni los targets táctiles ya validados; es un cambio de fondo únicamente.
+
+4. **Barra de Herramientas Acoplada (`BodegaRoute`, catálogo):**
+   - Búsqueda + filtro + alternador de vista (grid/lista) en una franja `bg-card` con borde inferior, **anclada sobre la tabla/grilla del catálogo** en vez de vivir en un modal o cabecera de página separada.
+   - El alternador grid/lista persiste la preferencia por dispositivo (`localStorage`), igual que el interruptor de turno día/noche.
 
 

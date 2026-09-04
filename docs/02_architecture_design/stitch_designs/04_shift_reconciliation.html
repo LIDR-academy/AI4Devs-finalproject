@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RestoStock - Shift Reconciliation Wizard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400;700;900&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "secondary-fixed": "#eee1cd",
+            "ink-dark": "#18140f",
+            "tertiary": "#204c1e",
+            "secondary-fixed-dim": "#d1c5b2",
+            "secondary-night": "#9aa394",
+            "primary-container": "#2e5f76",
+            "on-tertiary": "#ffffff",
+            "on-primary-container": "#a8d8f2",
+            "secondary": "#665d4e",
+            "card-day": "#f7f2e6",
+            "error": "#ba1a1a",
+            "primary": "#10475d",
+            "success-day": "#3e6b3a",
+            "neutral-day": "#efe8d8",
+            "danger-day": "#b43a24",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f3f3f5",
+            "on-tertiary-fixed-variant": "#245022",
+            "on-surface": "#1a1c1d",
+            "tertiary-container": "#376434",
+            "primary-fixed-dim": "#9dcde8",
+            "neutral-night": "#171c18",
+            "tertiary-fixed-dim": "#a1d398",
+            "on-error-container": "#93000a",
+            "surface-dim": "#d9dadc",
+            "on-secondary-container": "#6c6353",
+            "on-primary-fixed-variant": "#174c62",
+            "surface-variant": "#e2e2e4",
+            "danger-night": "#e1573a",
+            "on-surface-variant": "#41484c",
+            "success-night": "#7cb36e",
+            "outline-variant": "#c1c7cd",
+            "on-secondary": "#ffffff",
+            "on-secondary-fixed": "#211b0f",
+            "tertiary-fixed": "#bcf0b2",
+            "card-night": "#1f251f",
+            "on-tertiary-fixed": "#002203",
+            "surface-tint": "#33647b",
+            "on-error": "#ffffff",
+            "inverse-surface": "#2e3132",
+            "on-secondary-fixed-variant": "#4e4637",
+            "primary-fixed": "#c1e8ff",
+            "background": "#f9f9fb",
+            "surface-bright": "#f9f9fb",
+            "warning-day": "#8a6414",
+            "surface": "#f9f9fb",
+            "paper-bright": "#fbf8ef",
+            "outline": "#71787d",
+            "surface-container-high": "#e7e8ea",
+            "secondary-container": "#eee1cd",
+            "primary-night": "#6faac7",
+            "inverse-primary": "#9dcde8",
+            "surface-container-highest": "#e2e2e4",
+            "on-tertiary-container": "#acdfa2",
+            "on-background": "#1a1c1d",
+            "inverse-on-surface": "#f0f1f2",
+            "tertiary-night": "#7cb36e",
+            "warning-night": "#e6be55",
+            "on-primary-fixed": "#001e2b",
+            "on-primary": "#ffffff",
+            "surface-container": "#edeef0",
+            "error-container": "#ffdad6"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "sidebar-width": "88px",
+            "sm": "8px",
+            "lg": "24px",
+            "md": "16px",
+            "action-target-lg": "72px",
+            "touch-target-min": "48px"
+          },
+          "fontFamily": {
+            "h2": ["Big Shoulders Display", "sans-serif"],
+            "data-mono": ["IBM Plex Mono", "monospace"],
+            "body-md": ["IBM Plex Sans", "sans-serif"],
+            "h1": ["Big Shoulders Display", "sans-serif"],
+            "label-sm": ["IBM Plex Sans", "sans-serif"],
+            "h1-mobile": ["Big Shoulders Display", "sans-serif"]
+          },
+          "fontSize": {
+            "h2": ["1.5rem", { "lineHeight": "1.2", "fontWeight": "900" }],
+            "data-mono": ["1rem", { "lineHeight": "1.4", "fontWeight": "400" }],
+            "body-md": ["1rem", { "lineHeight": "1.5", "fontWeight": "500" }],
+            "h1": ["2.25rem", { "lineHeight": "1.1", "fontWeight": "900" }],
+            "label-sm": ["0.875rem", { "lineHeight": "1", "fontWeight": "600" }],
+            "h1-mobile": ["1.75rem", { "lineHeight": "1.1", "fontWeight": "900" }]
+          }
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-neutral-night text-paper-bright font-body-md overflow-hidden selection:bg-primary-night selection:text-ink-dark dark">
+<!-- Background Image Overlay (Simulating SCREEN_5) -->
+<div class="fixed inset-0 z-0 opacity-20 pointer-events-none" data-alt="A blurry, dark background showing a complex data dashboard with tables and charts in an industrial setting, mostly charcoal and dark green tones." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA8ranPDez4wsFPCvsyN3WNDo_VWXkVWSgBzTBcxxA8jHegHGxfV-KSOJ1hqGc9d_dPzoAYNM0P6a7pZWJEunEi38Glc5xKvvPNzb5UNG6Xx4rm0c0DgjacKpLBoT-uZAXp0SheaRM9_T_vQ8FK9Zq0y4QIq2qSwKOHjM-RjlfI0pvzOxz_QUrN0o5QeGrujdoxe3PN8pfVCbpVKR9_CHrhZatY1ueEzRz0VYe6XGm5aKcCAGlbmO2IO7mLOxXzASyy8Ci1Z90WEXWf'); background-size: cover; background-position: center;"></div>
+<!-- App Shell: SideNavBar -->
+<nav class="fixed left-0 top-0 h-screen w-sidebar-width bg-paper-bright border-r-2 border-dashed border-outline flex flex-col items-center py-md z-10 hidden md:flex">
+<div class="[writing-mode:vertical-rl] font-h2 text-h2 text-ink-dark font-black py-lg mb-8 uppercase tracking-tighter">
+      RESTOSTOCK UNO
+    </div>
+<div class="flex-1 w-full flex flex-col gap-2">
+<a class="w-full aspect-square flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+</a>
+<a class="w-full aspect-square flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="warehouse">warehouse</span>
+</a>
+<a class="w-full aspect-square flex items-center justify-center bg-primary text-on-primary border-l-4 border-primary transition-colors duration-100" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book" data-weight="fill" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+</a>
+<a class="w-full aspect-square flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+</a>
+<a class="w-full aspect-square flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors mt-auto" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</a>
+</div>
+</nav>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-ink-dark/80 backdrop-blur-sm p-4 md:pl-[104px]">
+<!-- Modal Container -->
+<div class="w-full max-w-4xl bg-[#1a1f1b] border border-neutral-day rounded-none shadow-2xl flex flex-col border-t-4 border-t-primary-night max-h-[921px]">
+<!-- Header -->
+<div class="flex items-start justify-between p-lg border-b border-outline/30">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 flex items-center justify-center bg-primary-night/10 rounded-full text-primary-night">
+<span class="material-symbols-outlined text-3xl" data-icon="assignment_turned_in">assignment_turned_in</span>
+</div>
+<div>
+<h2 class="font-h1 text-h1 text-[#f5f3e9] uppercase tracking-wide">CONCILIACIÓN DE TURNO <span class="text-h2 opacity-80">(CIERRE FÍSICO)</span></h2>
+<p class="font-data-mono text-data-mono text-[#9e9c93]">Ajuste de inventario físico vs teórico para auditoría FEFO y trazabilidad</p>
+</div>
+</div>
+<button aria-label="Cerrar modal" class="w-touch-target-min h-touch-target-min flex items-center justify-center text-outline-variant hover:text-paper-bright hover:bg-inverse-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<!-- Content (Scrollable) -->
+<div class="flex-1 overflow-y-auto p-lg space-y-6">
+<!-- Table Header -->
+<div class="grid grid-cols-12 gap-4 pb-2 border-b border-outline/30 font-label-sm text-label-sm text-secondary-night uppercase tracking-wider">
+<div class="col-span-5">Ítem &amp; Estado Teórico</div>
+<div class="col-span-4">Conteo Físico (Táctil)</div>
+<div class="col-span-3">Motivo de Desvío</div>
+</div>
+<!-- Row 1: Discrepancy (Urgent) -->
+<div class="grid grid-cols-12 gap-4 items-center bg-danger-night/5 border border-danger-night/20 p-4 -mx-4">
+<div class="col-span-5 space-y-1">
+<div class="font-body-md text-lg font-bold text-paper-bright">Leche Entera</div>
+<div class="font-data-mono text-sm text-outline-variant">Teórico: 0,8 L | Expira en <span class="text-danger-night">21.6h</span></div>
+<div class="inline-flex items-center gap-1 bg-danger-night text-ink-dark px-2 py-1 font-label-sm text-label-sm uppercase mt-2">
+<span class="material-symbols-outlined text-[14px]" data-icon="warning">warning</span>
+              Varianza: -0,3 L (desvío crítico &gt;50%)
+            </div>
+</div>
+<div class="col-span-4 flex items-center gap-2">
+<button class="w-touch-target-min h-touch-target-min bg-inverse-surface border border-outline flex items-center justify-center text-paper-bright active:bg-outline-variant transition-colors">
+<span class="material-symbols-outlined" data-icon="remove">remove</span>
+</button>
+<input class="w-full h-touch-target-min bg-card-night border-b-2 border-danger-night text-center font-data-mono text-xl text-paper-bright focus:ring-0 focus:border-danger-night px-0" readonly="" type="text" value="0,5 L"/>
+<button class="w-touch-target-min h-touch-target-min bg-inverse-surface border border-outline flex items-center justify-center text-paper-bright active:bg-outline-variant transition-colors">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+<div class="col-span-3">
+<select class="w-full h-touch-target-min bg-inverse-surface border border-danger-night text-paper-bright font-body-md text-sm px-3 focus:ring-1 focus:ring-danger-night focus:border-danger-night appearance-none rounded-none">
+<option value="derrame">Derrame Accidental en Cocina</option>
+<option value="vencido">Descarte por Vencimiento</option>
+<option value="error">Error de Registro Previo</option>
+</select>
+</div>
+</div>
+<!-- Row 2: Matched -->
+<div class="grid grid-cols-12 gap-4 items-center p-4 -mx-4 hover:bg-inverse-surface/50 transition-colors">
+<div class="col-span-5 space-y-1">
+<div class="font-body-md text-lg font-bold text-paper-bright">Queso Mozzarella</div>
+<div class="font-data-mono text-sm text-outline-variant">Teórico: 2,5 Kg | Expira en 48.0h</div>
+<div class="inline-flex items-center gap-1 bg-success-night/20 text-success-night border border-success-night/30 px-2 py-1 font-label-sm text-label-sm uppercase mt-2">
+<span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span>
+              Varianza: 0,0 Kg (Cuadrado exacto)
+            </div>
+</div>
+<div class="col-span-4 flex items-center gap-2">
+<button class="w-touch-target-min h-touch-target-min bg-inverse-surface border border-outline/30 flex items-center justify-center text-outline active:bg-outline-variant transition-colors">
+<span class="material-symbols-outlined" data-icon="remove">remove</span>
+</button>
+<input class="w-full h-touch-target-min bg-transparent border-b border-outline/50 text-center font-data-mono text-xl text-paper-bright focus:ring-0 focus:border-primary-night px-0" readonly="" type="text" value="2,5 Kg"/>
+<button class="w-touch-target-min h-touch-target-min bg-inverse-surface border border-outline/30 flex items-center justify-center text-outline active:bg-outline-variant transition-colors">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+<div class="col-span-3">
+<div class="w-full h-touch-target-min border border-outline/20 text-outline-variant font-body-md text-sm px-3 flex items-center bg-transparent opacity-50 cursor-not-allowed">
+              N/A (Sin desvío)
+             </div>
+</div>
+</div>
+<!-- Confirmation Section -->
+<div class="mt-8 space-y-6 pt-6 border-t border-outline/30">
+<!-- Critical Variance Alert -->
+<div class="border-2 border-danger-day bg-danger-day/10 p-md flex gap-4 items-start cursor-pointer hover:bg-danger-day/20 transition-colors" onclick="document.getElementById('supervisor-check').click()">
+<div class="text-danger-day mt-1">
+<span class="material-symbols-outlined text-3xl" data-icon="warning">warning</span>
+</div>
+<div class="flex-1">
+<h4 class="font-label-sm text-label-sm text-danger-day uppercase mb-2">Requiere Autorización</h4>
+<label class="flex items-center gap-3 cursor-pointer select-none">
+<input class="w-6 h-6 bg-transparent border-2 border-danger-day text-danger-day focus:ring-danger-day rounded-none" id="supervisor-check" type="checkbox"/>
+<span class="font-body-md text-paper-bright">Confirmo autorización de discrepancia crítica con supervisor de turno</span>
+</label>
+</div>
+</div>
+<!-- Notes -->
+<div>
+<textarea class="w-full bg-transparent border border-neutral-day p-4 text-paper-bright placeholder:text-outline-variant font-body-md focus:ring-1 focus:ring-primary-night focus:border-primary-night resize-none rounded-none" placeholder="Observaciones del turno..." rows="3"></textarea>
+</div>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="p-lg border-t border-outline/30 flex justify-end gap-4 bg-card-night">
+<button class="h-touch-target-min px-8 border border-neutral-day text-paper-bright font-label-sm text-label-sm uppercase hover:bg-inverse-surface transition-colors">
+          Cancelar
+        </button>
+<button class="h-touch-target-min px-8 bg-primary-night text-ink-dark font-label-sm text-label-sm uppercase font-bold flex items-center gap-2 hover:bg-primary-fixed transition-colors">
+<span class="material-symbols-outlined" data-icon="check_box" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_box</span>
+          Guardar y Cerrar Turno
+        </button>
+</div>
+</div>
+</div>
+</body></html>

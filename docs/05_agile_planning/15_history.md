@@ -416,3 +416,14 @@ inputs:
   - Backend 360 tests / build / lint verdes (0 warnings nuevos). Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`) verdes; `check_schema_drift.sh`/`check_contract_drift.sh` (sin breaking change) en verde; mutation ≥ 70 % en los 6 archivos domain/application tocados.
   - **`AUDIT-DEV-006` cerrado por completo — los 9 hallazgos (F-1 a F-9) resueltos entre `TK-098`/`TK-099`/`TK-100-FE`/`TK-101`.**
   - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).
+
+### 2026-09-04 (cont.) - US-031 (Etapa 1): fusión selectiva de patrones de UI explorados con Stitch — spec antes de código (Guard 26)
+- **Hito:** el humano preguntó si era posible replantear/estandarizar el diseño UI/UX. Se encontraron 5 mockups exploratorios generados con Google Stitch, ya en el repo pero sin trackear (`docs/02_architecture_design/stitch_designs/*.html`, no productivos) — reusan los tokens ya aprobados del Sistema FEFO (`05_ui_ux_design_system.md` v4.1.0), no proponen una paleta nueva. Comparando cada mockup contra la pantalla real equivalente se confirmó que la mayoría de lo propuesto ya estaba implementado (p. ej. la barra "Salud FEFO" del tablero de cocina, ya en `FEFOInventoryHealthBar.tsx` desde v3.0.0) — se descartó reabrir la auditoría de contraste o los tokens. Se identificaron 4 patrones puntuales genuinamente nuevos; el humano los seleccionó los 4 para fusionar.
+- **Acciones Realizadas (Etapa 1 completa, Guard 26 — sin código todavía):**
+  - ✅ `05_ui_ux_design_system.md` → v4.2.0: nueva sección "Fusión Selectiva de Patrones Explorados (Stitch)" documentando los 4 patrones (chips de operario reciente, botón de acción rápida circular reusando el token 72×72px de `US-023`, resaltado full-bleed de fila con varianza, barra de herramientas acoplada del catálogo).
+  - ✅ `US-031.md` (nueva): 5 escenarios Gherkin (uno por patrón + no-regresión).
+  - ✅ 4 tickets nuevos en estado `draft`: `TK-113-FE` (chips operario reciente, `auth`), `TK-114-FE` (FAB acción rápida, `kitchen`), `TK-115-FE` (resaltado fila varianza, `kitchen`), `TK-116-FE` (toolbar catálogo, `stock`).
+  - ✅ Matriz de trazabilidad (`REQ-039` a `REQ-042`, estado "📝 Especificado, Sin Implementar"), ambos índices (`indice_user_stories.md`, `indice_tickets.md`) actualizados.
+- **Estado:**
+  - Solo documentación — cero código todavía, cumpliendo Guard 26 (Stage 1 completa antes de `SK-16`/`SK-17`).
+  - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).

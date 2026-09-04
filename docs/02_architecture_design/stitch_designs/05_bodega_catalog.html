@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bodega - RESTOSTOCK UNO (Turno Noche)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400..900&amp;family=IBM+Plex+Mono:ital,wght@0,100..700;1,100..700&amp;family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#d9dadc",
+                        "secondary": "#665d4e",
+                        "tertiary": "#204c1e",
+                        "on-error": "#ffffff",
+                        "success-night": "#7cb36e",
+                        "card-day": "#f7f2e6",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e2e2e4",
+                        "inverse-primary": "#9dcde8",
+                        "primary-night": "#6faac7",
+                        "secondary-container": "#eee1cd",
+                        "inverse-surface": "#2e3132",
+                        "on-secondary-container": "#6c6353",
+                        "primary": "#10475d",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#a1d398",
+                        "background": "#f9f9fb",
+                        "secondary-fixed": "#eee1cd",
+                        "warning-day": "#8a6414",
+                        "on-secondary": "#ffffff",
+                        "success-day": "#3e6b3a",
+                        "surface-container-low": "#f3f3f5",
+                        "on-error-container": "#93000a",
+                        "danger-day": "#b43a24",
+                        "paper-bright": "#fbf8ef",
+                        "on-primary": "#ffffff",
+                        "secondary-night": "#9aa394",
+                        "on-tertiary-fixed-variant": "#245022",
+                        "surface-container-highest": "#e2e2e4",
+                        "secondary-fixed-dim": "#d1c5b2",
+                        "surface-tint": "#33647b",
+                        "surface-container-high": "#e7e8ea",
+                        "on-secondary-fixed-variant": "#4e4637",
+                        "on-background": "#1a1c1d",
+                        "surface": "#f9f9fb",
+                        "surface-container": "#edeef0",
+                        "outline": "#71787d",
+                        "on-tertiary-container": "#acdfa2",
+                        "on-tertiary-fixed": "#002203",
+                        "danger-night": "#e1573a",
+                        "primary-container": "#2e5f76",
+                        "on-primary-fixed-variant": "#174c62",
+                        "on-surface": "#1a1c1d",
+                        "primary-fixed": "#c1e8ff",
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#9dcde8",
+                        "warning-night": "#e6be55",
+                        "surface-bright": "#f9f9fb",
+                        "on-primary-container": "#a8d8f2",
+                        "tertiary-fixed": "#bcf0b2",
+                        "on-secondary-fixed": "#211b0f",
+                        "on-primary-fixed": "#001e2b",
+                        "ink-dark": "#18140f",
+                        "tertiary-container": "#376434",
+                        "neutral-day": "#efe8d8",
+                        "inverse-on-surface": "#f0f1f2",
+                        "outline-variant": "#c1c7cd",
+                        "tertiary-night": "#7cb36e",
+                        "card-night": "#1f251f",
+                        "on-surface-variant": "#41484c",
+                        "neutral-night": "#171c18"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0px",
+                        "lg": "0px",
+                        "xl": "0px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "touch-target-min": "48px",
+                        "sidebar-width": "88px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "action-target-lg": "72px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "h2": ["Big Shoulders Display"],
+                        "h1-mobile": ["Big Shoulders Display"],
+                        "body-md": ["IBM Plex Sans"],
+                        "label-sm": ["IBM Plex Sans"],
+                        "h1": ["Big Shoulders Display"],
+                        "data-mono": ["IBM Plex Mono"]
+                    },
+                    "fontSize": {
+                        "h2": ["1.5rem", { "lineHeight": "1.2", "fontWeight": "900" }],
+                        "h1-mobile": ["1.75rem", { "lineHeight": "1.1", "fontWeight": "900" }],
+                        "body-md": ["1rem", { "lineHeight": "1.5", "fontWeight": "500" }],
+                        "label-sm": ["0.875rem", { "lineHeight": "1", "fontWeight": "600" }],
+                        "h1": ["2.25rem", { "lineHeight": "1.1", "fontWeight": "900" }],
+                        "data-mono": ["1rem", { "lineHeight": "1.4", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #171c18; color: #fbf8ef; }
+    </style>
+</head>
+<body class="bg-neutral-night text-paper-bright font-body-md h-screen w-screen overflow-hidden flex selection:bg-primary-night selection:text-ink-dark">
+<!-- App Shell: SideNavBar -->
+<nav class="bg-neutral-day text-ink-dark fixed left-0 top-0 h-screen w-sidebar-width border-r-2 border-dashed border-outline-variant flex flex-col items-center py-md z-50">
+<!-- Perforations Top -->
+<div class="w-4 h-4 rounded-full bg-neutral-night shadow-inner mb-lg"></div>
+<div class="w-4 h-4 rounded-full bg-neutral-night shadow-inner mb-lg"></div>
+<!-- Branding -->
+<div class="flex-1 flex items-center justify-center">
+<span class="[writing-mode:vertical-rl] rotate-180 font-h2 text-h2 text-ink-dark font-black tracking-widest uppercase">RESTOSTOCK UNO</span>
+</div>
+<!-- Perforations Bottom -->
+<div class="w-4 h-4 rounded-full bg-neutral-night shadow-inner mt-lg"></div>
+<div class="w-4 h-4 rounded-full bg-neutral-night shadow-inner mt-lg"></div>
+</nav>
+<!-- Main Content Area -->
+<div class="ml-sidebar-width flex-1 flex flex-col h-full overflow-hidden">
+<!-- App Shell: TopNavBar -->
+<header class="bg-card-night border-b border-outline-variant h-16 flex items-center justify-between px-lg z-40 shrink-0">
+<!-- Navigation Links -->
+<nav class="flex h-full gap-lg">
+<a class="h-full flex items-center text-on-surface-variant font-label-sm text-label-sm uppercase hover:text-primary-night transition-colors" href="#">Inventario</a>
+<a class="h-full flex items-center text-primary-night border-b-[3px] border-paper-bright font-label-sm text-label-sm uppercase font-bold" href="#">Bodega</a>
+<a class="h-full flex items-center text-on-surface-variant font-label-sm text-label-sm uppercase hover:text-primary-night transition-colors" href="#">Recetas</a>
+<a class="h-full flex items-center text-on-surface-variant font-label-sm text-label-sm uppercase hover:text-primary-night transition-colors" href="#">Reportes</a>
+<a class="h-full flex items-center text-on-surface-variant font-label-sm text-label-sm uppercase hover:text-primary-night transition-colors" href="#">Ajustes</a>
+</nav>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-md font-label-sm text-label-sm uppercase">
+<div class="flex items-center gap-sm text-success-night">
+<span class="text-xs">●</span>
+<span>CONECTADO</span>
+</div>
+<div class="w-px h-4 bg-outline-variant mx-sm"></div>
+<span class="text-on-surface-variant">Administrador</span>
+<button class="text-outline hover:text-paper-bright transition-colors flex items-center gap-sm">
+<span>[→ Cerrar Sesión]</span>
+</button>
+<div class="w-px h-4 bg-outline-variant mx-sm"></div>
+<!-- Shift Toggle -->
+<div class="flex border border-outline-variant h-8 items-center bg-inverse-surface">
+<button class="px-3 h-full text-outline hover:text-paper-bright transition-colors">DÍA</button>
+<div class="w-px h-full bg-outline-variant"></div>
+<button class="px-3 h-full bg-neutral-night text-paper-bright font-bold">NOCHE</button>
+</div>
+</div>
+</header>
+<!-- Page Content Scrollable -->
+<main class="flex-1 overflow-y-auto p-lg flex flex-col gap-lg">
+<!-- Bodega Header -->
+<div class="flex items-center justify-between shrink-0">
+<h1 class="font-h1 text-h1 uppercase tracking-tighter text-paper-bright">BODEGA</h1>
+<div class="flex gap-md">
+<button class="h-[52px] px-lg border border-paper-bright text-paper-bright hover:bg-inverse-surface transition-colors font-label-sm text-label-sm uppercase flex items-center gap-sm">
+<span class="material-symbols-outlined text-lg">location_on</span>
+                        [📍 Ubicaciones]
+                    </button>
+<button class="h-[52px] px-lg bg-primary-night text-ink-dark font-label-sm text-label-sm uppercase font-bold hover:brightness-110 transition-all flex items-center gap-sm active:scale-95">
+<span class="material-symbols-outlined text-lg">inventory_2</span>
+                        [📦 Extraer de Bodega]
+                    </button>
+</div>
+</div>
+<!-- Insumo Catalog Panel -->
+<div class="bg-card-night border border-paper-bright flex flex-col flex-1 min-h-0">
+<!-- Toolbar -->
+<div class="p-md border-b border-outline-variant flex gap-md items-center bg-inverse-surface shrink-0">
+<div class="relative flex-1 max-w-md h-touch-target-min">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full h-full bg-neutral-night border border-paper-bright text-paper-bright pl-10 pr-4 placeholder-outline focus:outline-none focus:border-primary-night font-body-md text-body-md" placeholder="Buscar insumo en bodega..." type="text"/>
+</div>
+<div class="flex-1"></div>
+<button class="h-touch-target-min px-md border border-paper-bright text-paper-bright hover:bg-neutral-night transition-colors font-label-sm text-label-sm uppercase flex items-center gap-sm shrink-0">
+<span class="material-symbols-outlined text-lg">add</span>
+                        [+ Nuevo Insumo]
+                    </button>
+</div>
+<!-- Stock List (Tactile Table) -->
+<div class="flex-1 overflow-y-auto p-md flex flex-col gap-md">
+<!-- ROW 1 (Expanded) -->
+<div class="border border-outline-variant bg-neutral-night">
+<!-- Main Row -->
+<div class="p-4 flex items-center gap-md hover:bg-inverse-surface transition-colors cursor-pointer">
+<div class="flex-1">
+<h3 class="font-label-sm text-label-sm uppercase font-bold text-paper-bright">LECHE ENTERA</h3>
+<div class="text-sm text-primary-night flex items-center gap-1 mt-1 font-label-sm text-label-sm uppercase">
+<span class="material-symbols-outlined text-[16px]">arrow_drop_down</span>
+                                    ▼ Desglose por sub-sector
+                                </div>
+</div>
+<div class="font-data-mono text-h2 text-paper-bright text-right min-w-[120px]">
+                                10,0 L
+                            </div>
+<button class="ml-4 h-[44px] px-4 border border-paper-bright text-paper-bright hover:bg-inverse-surface transition-colors font-label-sm text-label-sm uppercase flex items-center gap-sm active:scale-95" onclick="event.stopPropagation()">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+                                [+ Reabastecer]
+                            </button>
+</div>
+<!-- Expanded Content -->
+<div class="px-4 pb-4 pt-2 border-t border-dashed border-outline-variant bg-card-night">
+<div class="grid grid-cols-[1fr_auto] gap-y-3 gap-x-8 pl-8">
+<div class="text-paper-bright font-body-md text-body-md flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-success-night inline-block"></span>
+                                    Cámara Fría Principal
+                                </div>
+<div class="font-data-mono text-data-mono text-paper-bright text-right">
+                                    10,0 L
+                                </div>
+<div class="text-outline font-body-md text-body-md flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-outline inline-block"></span>
+                                    Bodega de Secos
+                                </div>
+<div class="font-data-mono text-data-mono text-outline text-right">
+                                    0,0 L
+                                </div>
+</div>
+</div>
+</div>
+<!-- ROW 2 (Collapsed) -->
+<div class="border border-outline-variant bg-neutral-night hover:border-paper-bright transition-colors">
+<div class="p-4 flex items-center gap-md cursor-pointer">
+<div class="flex-1">
+<h3 class="font-label-sm text-label-sm uppercase text-paper-bright">QUESO MOZZARELLA</h3>
+<div class="text-sm text-outline flex items-center gap-1 mt-1 font-label-sm text-label-sm uppercase">
+<span class="material-symbols-outlined text-[16px]">arrow_right</span>
+                                    ► Ver desglose por sector
+                                </div>
+</div>
+<div class="font-data-mono text-h2 text-paper-bright text-right min-w-[120px]">
+                                25,0 Kg
+                            </div>
+<button class="ml-4 h-[44px] px-4 border border-outline-variant text-outline hover:border-paper-bright hover:text-paper-bright transition-colors font-label-sm text-label-sm uppercase flex items-center gap-sm active:scale-95" onclick="event.stopPropagation()">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+                                [+ Reabastecer]
+                            </button>
+</div>
+</div>
+<!-- ROW 3 (Collapsed) -->
+<div class="border border-outline-variant bg-neutral-night hover:border-paper-bright transition-colors">
+<div class="p-4 flex items-center gap-md cursor-pointer">
+<div class="flex-1">
+<h3 class="font-label-sm text-label-sm uppercase text-paper-bright">CARNE PICADA VACUNO</h3>
+<div class="text-sm text-outline flex items-center gap-1 mt-1 font-label-sm text-label-sm uppercase">
+<span class="material-symbols-outlined text-[16px]">arrow_right</span>
+                                    ► Ver desglose por sector
+                                </div>
+</div>
+<div class="font-data-mono text-h2 text-paper-bright text-right min-w-[120px]">
+                                15,5 Kg
+                            </div>
+<button class="ml-4 h-[44px] px-4 border border-outline-variant text-outline hover:border-paper-bright hover:text-paper-bright transition-colors font-label-sm text-label-sm uppercase flex items-center gap-sm active:scale-95" onclick="event.stopPropagation()">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+                                [+ Reabastecer]
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
