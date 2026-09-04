@@ -11,6 +11,7 @@ import { LocationHasStockException } from '../../../../domain/stock/errors/Locat
 import { LocationHasRemanentesException } from '../../../../domain/stock/errors/LocationHasRemanentesException.js';
 import { requireRole } from '../../../http/middlewares/requireRole.js';
 import { handleZodOrNext } from '../../../http/utils/responseUtils.js';
+import { cryptoIdGenerator } from '../../../shared/cryptoIdGenerator.js';
 
 const createLocationSchema = z.object({
   name: z.string().min(2, 'El nombre del sector debe tener al menos 2 caracteres.'),
@@ -79,7 +80,7 @@ async function applyLocationUpdate(
 
 function buildHandlers(locationRepo: IStorageLocationRepository, insumoRepo?: StockAndRemanenteRepo) {
   const getLocationsUseCase = new GetLocationsUseCase(locationRepo, insumoRepo);
-  const createLocationUseCase = new CreateLocationUseCase(locationRepo);
+  const createLocationUseCase = new CreateLocationUseCase(locationRepo, cryptoIdGenerator);
 
   const list = async (_req: Request, res: Response, next: NextFunction) => {
     try {

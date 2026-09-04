@@ -33,6 +33,7 @@ inputs:
 | **POST** | `/api/v1/stock/insumos` | `CreateInsumoRequest` | `CreateInsumoResponse` | Da de alta un insumo nuevo en el catálogo maestro con stock inicial en 0 (`TK-057`). |
 | **GET** | `/api/v1/stock/insumos` | *Ninguno* | `ListInsumosResponse` | Obtiene la lista de insumos del catálogo maestro (`TK-057`). |
 | **PATCH** | `/api/v1/stock/insumos/{id}/restock` | `RestockInsumoRequest` | `RestockInsumoResponse` | Suma la cantidad recibida a un sub-sector de bodega de un insumo existente (`TK-060` / `US-025`). |
+| **GET** | `/api/v1/stock/movements` | `?insumoId=&startDate=&endDate=` | `StockMovementHistoryItem[]` | Histórico de movimientos de stock, auditoría (`TK-050`). Rol `ADMIN`. Desde `TK-101`: cada ítem expone `fromStorageLocationId` — `fromLoc` refleja el nombre ACTUAL del sub-sector si aún existe (join), no un snapshot desincronizable por renombrar. |
 | **GET** | `/api/v1/locations` | *Ninguno* | `ListStorageLocationsResponse` | Lista los sectores físicos de almacenamiento (`US-016`). Cualquier rol autenticado. |
 | **POST** | `/api/v1/locations` | `CreateStorageLocationRequest` | `StorageLocationResponse` | Da de alta un sector físico (`US-016`). Rol `ADMIN`. |
 | **PUT** | `/api/v1/locations/{id}` | `UpdateStorageLocationRequest` | `StorageLocationResponse` | Edita o activa/desactiva un sector (`US-016`). Rol `ADMIN`. `409` si se desactiva un sector con existencias (`US-025`). |

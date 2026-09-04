@@ -44,7 +44,7 @@ export function createStockRouter(
     : undefined;
   const createInsumoUseCase = new CreateInsumoUseCase(stockRepository, locationRepository);
   const listInsumosUseCase = new ListInsumosUseCase(stockRepository, locationRepository);
-  const restockInsumoUseCase = new RestockInsumoUseCase(stockRepository, stockRepository, locationRepository);
+  const restockInsumoUseCase = new RestockInsumoUseCase(stockRepository, stockRepository, cryptoIdGenerator, locationRepository);
   const controller = new StockController(
     useCase,
     getMovementHistoryUseCase,

@@ -402,6 +402,8 @@ model StorageLocation {
 
   // US-025: existencias de bodega alojadas en este sub-sector
   warehouseStocks WarehouseStock[]
+  // AUDIT-DEV-006 F-7 / TK-101: movimientos con este sub-sector como origen
+  stockMovements  StockMovement[]
 
   @@map("storage_locations")
 }
@@ -482,17 +484,22 @@ model StockMovement {
   // (CONSUMPTION / SHIFT_RECONCILIATION_VARIANCE). Nullable — histórico previo a la
   // migración, o si el motivo se borrase manualmente en BD (la app solo desactiva).
   reasonId     String?        @map("reason_id") @db.Uuid
+  // AUDIT-DEV-006 F-7 / TK-101: id del sub-sector de bodega de origen (FK). `fromLocation`
+  // se conserva como snapshot de display para movimientos sin FK (históricos, sin sub-sector).
+  fromStorageLocationId String? @map("from_storage_location_id") @db.Uuid
   createdAt    DateTime       @default(now()) @map("created_at")
 
   // Relaciones
-  insumo            Insumo             @relation(fields: [insumoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  remanente         Remanente?         @relation(fields: [remanenteId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  user              User               @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  consumptionReason ConsumptionReason? @relation(fields: [reasonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  insumo             Insumo             @relation(fields: [insumoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  remanente          Remanente?         @relation(fields: [remanenteId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  user               User               @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  consumptionReason  ConsumptionReason? @relation(fields: [reasonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  fromStorageLocation StorageLocation?  @relation(fields: [fromStorageLocationId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   // Índices
   @@index([createdAt, insumoId])
   @@index([userId])
+  @@index([fromStorageLocationId])
   @@index([remanenteId])
   @@index([reasonId])
   @@map("stock_movements")

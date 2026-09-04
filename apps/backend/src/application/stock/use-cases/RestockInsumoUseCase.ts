@@ -5,6 +5,7 @@ import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuan
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
 import { UNCLASSIFIED_WAREHOUSE_LOCATION_ID } from '../../../domain/stock/entities/Insumo.js';
 import { resolveWarehouseSector } from './resolveWarehouseSector.js';
+import { IdGenerator } from '../../../domain/shared/IdGenerator.js';
 
 export interface RestockInsumoDTO {
   insumoId: string;
@@ -26,6 +27,9 @@ export class RestockInsumoUseCase {
   constructor(
     private readonly insumoRepository: IInsumoRepository,
     private readonly remanenteRepository: IRemanenteRepository,
+    // AUDIT-DEV-006 F-3 / TK-101: reemplaza `mov-${Date.now()}` (colisiona en el mismo
+    // milisegundo ante reintento/doble submit).
+    private readonly idGenerator: IdGenerator,
     private readonly locationRepository?: IStorageLocationRepository
   ) {}
 
@@ -44,7 +48,7 @@ export class RestockInsumoUseCase {
 
     // Auditoria de movimiento (mismo mecanismo que extraccion/descarte, TK-050).
     await this.remanenteRepository.recordMovement({
-      id: `mov-${Date.now()}`,
+      id: this.idGenerator.next('mov'),
       insumoId: insumo.id,
       type: 'RESTOCK',
       quantity: addedQty.toString(),

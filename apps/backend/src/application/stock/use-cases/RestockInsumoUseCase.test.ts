@@ -3,6 +3,17 @@ import { RestockInsumoUseCase } from './RestockInsumoUseCase.js';
 import { CreateInsumoUseCase } from './CreateInsumoUseCase.js';
 import { InMemoryStockRepository } from '../../../infrastructure/stock/repositories/InMemoryStockRepository.js';
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
+import { IdGenerator } from '../../../domain/shared/IdGenerator.js';
+
+// AUDIT-DEV-006 F-3 / TK-101: mismo fake que RecordExtractionUseCase.test.ts.
+class SequentialIdGenerator implements IdGenerator {
+  private readonly counters = new Map<string, number>();
+  next(prefix: string): string {
+    const n = (this.counters.get(prefix) ?? 0) + 1;
+    this.counters.set(prefix, n);
+    return `${prefix}-${n}`;
+  }
+}
 
 describe('RestockInsumoUseCase', () => {
   let repository: InMemoryStockRepository;
@@ -12,7 +23,7 @@ describe('RestockInsumoUseCase', () => {
   beforeEach(() => {
     repository = new InMemoryStockRepository();
     createInsumoUseCase = new CreateInsumoUseCase(repository);
-    restockUseCase = new RestockInsumoUseCase(repository, repository);
+    restockUseCase = new RestockInsumoUseCase(repository, repository, new SequentialIdGenerator());
   });
 
   it('suma la cantidad recibida al stock de bodega existente (incremental, no absoluto)', async () => {
@@ -39,6 +50,8 @@ describe('RestockInsumoUseCase', () => {
     const movements = repository.movements.filter((m) => m.insumoId === insumo.id);
     expect(movements).toHaveLength(1);
     expect(movements[0]).toMatchObject({
+      // AUDIT-DEV-006 F-3 / TK-101: el id viene del IdGenerator inyectado, no de `Date.now()`.
+      id: 'mov-1',
       insumoId: insumo.id,
       type: 'RESTOCK',
       quantity: '3.000',

@@ -7,6 +7,9 @@ export interface StockMovementRecord {
   quantity: string;
   fromLoc: string;
   toLoc: string;
+  /** AUDIT-DEV-006 F-7 / TK-101: id del sub-sector de bodega de origen (FK). `fromLoc`
+   * se conserva como snapshot de display para movimientos sin FK (históricos, cocina). */
+  fromStorageLocationId?: string;
   operatorId?: string;
   purpose?: string;
   reason?: string;

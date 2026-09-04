@@ -98,6 +98,8 @@ model StorageLocation {
   warehouseStocks WarehouseStock[]
   // US-026: remanentes de cocina ubicados en esta área (type = KITCHEN)
   remanentes      Remanente[]
+  // AUDIT-DEV-006 F-7 / TK-101: movimientos de extracción/descarte con este sub-sector como origen
+  stockMovements  StockMovement[]
 }
 
 model SystemSettings {
@@ -172,24 +174,31 @@ model Remanente {
 }
 
 model StockMovement {
-  id                String             @id @default(uuid())
-  insumoId          String
-  type              String // EXTRACTION, DISCARD, RECONCILIATION, RESTOCK, EXTRACTION_RECIPE, DISCARD_DIRECT
-  quantity          Decimal            @db.Decimal(12, 3)
-  fromLoc           String
-  toLoc             String
-  operatorId        String?
-  purpose           String? // KITCHEN_STOCK, RECIPE, DIRECT_DISCARD
-  reason            String? // Motivo descriptivo de extracción o descarte directo / notas libres de consumo (ADR-004)
-  reasonId          String? // ADR-004 / TK-108 / TK-109: motivo estructurado del catálogo ConsumptionReason
-  recipeId          String? // ID de receta asociada si purpose == RECIPE
-  createdAt         DateTime           @default(now())
-  insumo            Insumo             @relation(fields: [insumoId], references: [id], onDelete: Cascade)
-  operator          User?              @relation(fields: [operatorId], references: [id], onDelete: SetNull)
+  id                    String             @id @default(uuid())
+  insumoId              String
+  type                  String // EXTRACTION, DISCARD, RECONCILIATION, RESTOCK, EXTRACTION_RECIPE, DISCARD_DIRECT
+  quantity              Decimal            @db.Decimal(12, 3)
+  fromLoc               String
+  // AUDIT-DEV-006 F-7 / TK-101: id del sub-sector de bodega de origen (FK). `fromLoc`
+  // se conserva como snapshot de display para movimientos sin FK (históricos, cocina).
+  fromStorageLocationId String?
+  toLoc                 String
+  operatorId            String?
+  purpose               String? // KITCHEN_STOCK, RECIPE, DIRECT_DISCARD
+  reason                String? // Motivo descriptivo de extracción o descarte directo / notas libres de consumo (ADR-004)
+  reasonId              String? // ADR-004 / TK-108 / TK-109: motivo estructurado del catálogo ConsumptionReason
+  recipeId              String? // ID de receta asociada si purpose == RECIPE
+  createdAt             DateTime           @default(now())
+  insumo                Insumo             @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+  operator              User?              @relation(fields: [operatorId], references: [id], onDelete: SetNull)
   // Preserva el histórico si el motivo se desactiva o, en un caso límite, se borra manualmente en BD.
-  consumptionReason ConsumptionReason? @relation(fields: [reasonId], references: [id], onDelete: SetNull)
+  consumptionReason     ConsumptionReason? @relation(fields: [reasonId], references: [id], onDelete: SetNull)
+  // Preserva el histórico si el sub-sector se borra manualmente en BD (la app no lo permite
+  // mientras tenga stock — Invariante 1-bis — pero sí una vez vaciado).
+  fromStorageLocation   StorageLocation?   @relation(fields: [fromStorageLocationId], references: [id], onDelete: SetNull)
 
   @@index([reasonId])
+  @@index([fromStorageLocationId])
 }
 
 // ADR-004 / US-030: catálogo administrable de motivos de consumo (US-004) y de

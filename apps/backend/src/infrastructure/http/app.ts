@@ -186,12 +186,16 @@ interface AppRepositories {
 
 function buildQueryRepositories(
   options: AppOptions,
-  stockRepo: IInsumoRepository & IRemanenteRepository & IStockUnitOfWork
+  stockRepo: IInsumoRepository & IRemanenteRepository & IStockUnitOfWork,
+  // AUDIT-DEV-006 F-7 / TK-101: el histórico de movimientos resuelve el nombre ACTUAL
+  // del sub-sector de origen (join) cuando aún existe — necesita el catálogo de ubicaciones.
+  locationRepo: IStorageLocationRepository
 ) {
   const stockInMemory = stockRepo as InMemoryStockRepository;
   return {
     stockMovementQueryRepo:
-      options.stockMovementQueryRepository ?? new InMemoryStockMovementQueryRepository(stockInMemory),
+      options.stockMovementQueryRepository ??
+      new InMemoryStockMovementQueryRepository(stockInMemory, locationRepo),
     remanenteQueryRepo:
       options.remanenteQueryRepository ?? new InMemoryRemanenteQueryRepository(stockInMemory),
   };
@@ -209,11 +213,11 @@ function buildAuxiliaryRepositories(options: AppOptions) {
 // Repositorios e inyeccion de dependencias por defecto para dev/standalone
 function buildDefaultRepositories(options: AppOptions): AppRepositories {
   const stockRepo = options.stockRepository ?? new InMemoryStockRepository();
-  const queryRepos = buildQueryRepositories(options, stockRepo);
+  const auxRepos = buildAuxiliaryRepositories(options);
+  const queryRepos = buildQueryRepositories(options, stockRepo, auxRepos.locationRepo);
   const recipePreparationRepo =
     options.recipePreparationRepository ??
     new InMemoryRecipePreparationRepository(stockRepo as InMemoryStockRepository);
-  const auxRepos = buildAuxiliaryRepositories(options);
   return {
     userRepo: options.userRepository ?? new InMemoryUserRepository(),
     jwtSecret: options.jwtSecret ?? process.env.JWT_SECRET ?? 'restostock-test-only-jwt-secret',

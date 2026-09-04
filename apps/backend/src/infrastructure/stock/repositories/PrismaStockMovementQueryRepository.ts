@@ -23,7 +23,7 @@ export class PrismaStockMovementQueryRepository implements IStockMovementQueryRe
 
     const list = await this.prisma.stockMovement.findMany({
       where,
-      include: { insumo: true },
+      include: { insumo: true, fromStorageLocation: true },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -33,7 +33,11 @@ export class PrismaStockMovementQueryRepository implements IStockMovementQueryRe
       insumoName: movement.insumo.name,
       type: movement.type,
       quantity: movement.quantity.toString(),
-      fromLoc: movement.fromLoc,
+      // AUDIT-DEV-006 F-7 / TK-101: si el sub-sector aún existe, se muestra su nombre
+      // ACTUAL (join) — renombrar el StorageLocation se refleja en el histórico. El
+      // `fromLoc` guardado (snapshot) es el fallback para movimientos sin FK.
+      fromLoc: movement.fromStorageLocation?.name ?? movement.fromLoc,
+      fromStorageLocationId: movement.fromStorageLocationId,
       toLoc: movement.toLoc,
       operatorId: movement.operatorId,
       purpose: movement.purpose,

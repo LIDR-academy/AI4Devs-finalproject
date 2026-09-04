@@ -1610,12 +1610,16 @@ components:
           $ref: '#/components/schemas/DecimalString'
         fromLoc:
           type: string
+          description: 'AUDIT-DEV-006 F-7: nombre ACTUAL del sub-sector de origen si `fromStorageLocationId` aún resuelve (join); si no, el snapshot histórico guardado.'
+        fromStorageLocationId:
+          type: string
+          nullable: true
+          description: 'AUDIT-DEV-006 F-7 / TK-101: id del sub-sector de bodega de origen. `null` en movimientos sin sub-sector de origen (RESTOCK, CONSUMPTION, SHIFT_RECONCILIATION_VARIANCE) o históricos previos a esta migración.'
         toLoc:
           type: string
         createdAt:
           type: string
           format: date-time
-          enum: [ACTIVE, CONSUMED, DISCARDED]
 
     StockByLocationEntry:
       type: object

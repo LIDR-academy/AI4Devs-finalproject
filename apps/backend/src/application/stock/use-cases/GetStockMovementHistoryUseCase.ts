@@ -13,6 +13,8 @@ export interface StockMovementHistoryResponseDTO {
   type: string;
   quantity: string;
   fromLoc: string;
+  /** AUDIT-DEV-006 F-7 / TK-101: id del sub-sector de origen (`undefined` en históricos/cocina). */
+  fromStorageLocationId?: string | null;
   toLoc: string;
   createdAt: string;
 }
@@ -30,6 +32,7 @@ export class GetStockMovementHistoryUseCase {
       type: movement.type,
       quantity: movement.quantity,
       fromLoc: movement.fromLoc,
+      fromStorageLocationId: movement.fromStorageLocationId,
       toLoc: movement.toLoc,
       createdAt: movement.createdAt.toISOString(),
     }));

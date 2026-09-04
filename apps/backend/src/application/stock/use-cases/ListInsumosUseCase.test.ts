@@ -4,6 +4,7 @@ import { CreateInsumoUseCase } from './CreateInsumoUseCase.js';
 import { RestockInsumoUseCase } from './RestockInsumoUseCase.js';
 import { InMemoryStockRepository } from '../../../infrastructure/stock/repositories/InMemoryStockRepository.js';
 import { InMemoryLocationRepository } from '../../../infrastructure/stock/repositories/InMemoryLocationRepository.js';
+import { cryptoIdGenerator } from '../../../infrastructure/shared/cryptoIdGenerator.js';
 
 describe('ListInsumosUseCase', () => {
   let repository: InMemoryStockRepository;
@@ -36,7 +37,7 @@ describe('ListInsumosUseCase', () => {
     const locationRepo = new InMemoryLocationRepository();
     const list = new ListInsumosUseCase(repository, locationRepo);
     const create = new CreateInsumoUseCase(repository, locationRepo);
-    const restock = new RestockInsumoUseCase(repository, repository, locationRepo);
+    const restock = new RestockInsumoUseCase(repository, repository, cryptoIdGenerator, locationRepo);
 
     const insumo = await create.execute({
       name: 'Lomo Vacuno',
