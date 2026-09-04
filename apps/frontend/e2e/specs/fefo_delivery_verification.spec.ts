@@ -34,8 +34,9 @@ test.describe('RestoStock - Segunda Entrega E2E Critical Path Suite', () => {
   });
 
   test('Flujo de Extracción de Insumos con FEFO y Alta TRR', async ({ page }) => {
+    const loginPage = new LoginPage(page);
     const dashboardPage = new DashboardPage(page);
-    await page.goto('/');
+    await loginPage.login('1234');
 
     // Act: Abrir modal de extracción
     await dashboardPage.openExtractionModal();
@@ -43,7 +44,12 @@ test.describe('RestoStock - Segunda Entrega E2E Critical Path Suite', () => {
     // ASSERT 1: ORACULO UI - Modal de Extracción visible
     await expect(page.getByText(/Extracción de Bodega/i)).toBeVisible();
 
-    // ASSERT 2: ORACULO RED - Solicitud de catálogo de insumos
-    // ORACULO ESTADO: Cierre de modal y actualización de lista FEFO
+    // ASSERT 2: ORACULO RED - Selectores de sector e insumos renderizados
+    await expect(page.locator('#select-from-sector-extraction, #select-insumo-extraction').first()).toBeVisible();
+
+    // ASSERT 3: ORACULO ESTADO - Cierre de modal y retorno a vista de cocina
+    await page.locator('button:has-text("Cancelar")').click();
+    await expect(page.locator('.modal-overlay')).toHaveCount(0);
   });
 });
+

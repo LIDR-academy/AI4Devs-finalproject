@@ -18,8 +18,8 @@ export class DashboardPage {
     this.page = page;
     this.headerTitle = page.locator('h1, header');
     this.userBadge = page.locator('#btn-open-user-management, .user-badge');
-    this.extractionButton = page.locator('button:has-text("Extraer Insumo de Bodega")');
-    this.recipeButton = page.locator('button:has-text("Descontar Receta FEFO")');
+    this.extractionButton = page.locator('#btn-open-extraction, button:has-text("Extraer de Bodega"), button:has-text("Extraer Insumo de Bodega")');
+    this.recipeButton = page.locator('#btn-open-recipe, button:has-text("Preparar Receta"), button:has-text("Descontar Receta FEFO")');
     this.reconciliationButton = page.locator('#btn-open-reconciliation');
     this.reportsButton = page.locator('#btn-open-reports');
     this.activeRemanentesCards = page.locator('.remanente-card');
