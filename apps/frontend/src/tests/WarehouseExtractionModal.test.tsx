@@ -227,3 +227,98 @@ describe('TK-096-FE: WarehouseExtractionModal — Sub-sector de bodega de origen
     expect(capturedBody).toMatchObject({ fromStorageLocationId: 'loc-seed-dry' });
   });
 });
+
+describe('TK-100-FE (AUDIT-DEV-006): errores reales del backend y aritmética decimal', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('F-5: un 422 del backend se muestra en el ErrorBanner — no un éxito falso, no cierra, no onSuccess', async () => {
+    const onSuccess = vi.fn();
+    const onClose = vi.fn();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url.includes('/kitchen/remanentes-activos')) return { ok: true, status: 200, json: async () => [] };
+        if (url.includes('/recipes')) return { ok: true, status: 200, json: async () => [] };
+        if (url.includes('/locations')) {
+          return { ok: true, status: 200, json: async () => [{ id: 'loc-seed-dry', name: 'Bodega de Secos', type: 'WAREHOUSE', isActive: true }] };
+        }
+        if (url.includes('/stock/insumos')) return { ok: true, status: 200, json: async () => INSUMOS_FIXTURE };
+        if (url.includes('/stock/extraction')) {
+          return {
+            ok: false,
+            status: 422,
+            json: async () => ({
+              type: 'https://restostock.com/errors/insufficient-stock',
+              title: 'InsufficientStockException',
+              status: 422,
+              detail: 'Stock insuficiente para el insumo Queso Mozzarella. Solicitado: 999.000, Disponible: 10.000.',
+            }),
+          };
+        }
+        return { ok: true, status: 200, json: async () => ({}) };
+      })
+    );
+
+    render(<WarehouseExtractionModal isOpen={true} onClose={onClose} onSuccess={onSuccess} />);
+
+    await waitFor(() => {
+      expect((screen.getByLabelText(/Sector de Bodega Origen/i) as HTMLSelectElement).value).toBe('loc-seed-dry');
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar Extracción/i }));
+
+    expect(await screen.findByText(/[Ss]tock insuficiente/i)).toBeInTheDocument();
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('F-5: si falla la carga de insumos, muestra error con Reintentar y NO renderiza el formulario', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url.includes('/kitchen/remanentes-activos')) return { ok: true, status: 200, json: async () => [] };
+        if (url.includes('/recipes')) return { ok: true, status: 200, json: async () => [] };
+        if (url.includes('/locations')) return { ok: true, status: 200, json: async () => [] };
+        if (url.includes('/stock/insumos')) {
+          return { ok: false, status: 500, json: async () => ({ title: 'InternalServerError', status: 500, detail: 'boom' }) };
+        }
+        return { ok: true, status: 200, json: async () => ({}) };
+      })
+    );
+
+    render(<WarehouseExtractionModal isOpen={true} onClose={() => {}} onSuccess={() => {}} />);
+
+    expect(await screen.findByRole('button', { name: /Reintentar/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Confirmar Extracción/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Seleccionar Insumo de Bodega/i)).not.toBeInTheDocument();
+  });
+
+  it('F-6: el stepper suma en decimal exacto (1.0 +0.5 ×3 = 2.5, sin 2.4999…)', async () => {
+    stubFetchForExtractionModal({});
+    render(<WarehouseExtractionModal isOpen={true} onClose={() => {}} onSuccess={() => {}} />);
+
+    const qtyInput = (await screen.findByLabelText(/Cantidad a Extraer/i)) as HTMLInputElement;
+    expect(qtyInput.value).toBe('1');
+
+    const incBtn = document.getElementById('btn-increment-qty') as HTMLButtonElement;
+    fireEvent.click(incBtn);
+    fireEvent.click(incBtn);
+    fireEvent.click(incBtn);
+    expect(qtyInput.value).toBe('2.5');
+  });
+
+  it('F-6: escribir 0 en la cantidad no se auto-corrige a 0.5 y el submit lo rechaza', async () => {
+    stubFetchForExtractionModal({});
+    const onSuccess = vi.fn();
+    render(<WarehouseExtractionModal isOpen={true} onClose={() => {}} onSuccess={onSuccess} />);
+
+    const qtyInput = (await screen.findByLabelText(/Cantidad a Extraer/i)) as HTMLInputElement;
+    fireEvent.change(qtyInput, { target: { value: '0' } });
+    expect(qtyInput.value).toBe('0');
+
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar Extracción/i }));
+    expect(await screen.findByText(/cantidad a extraer debe ser mayor que cero/i)).toBeInTheDocument();
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+});

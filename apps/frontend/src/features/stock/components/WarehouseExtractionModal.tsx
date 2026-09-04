@@ -7,8 +7,12 @@ import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ModalFooterActions } from '../../../shared/components/ModalFooterActions.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 import { mapToUserFriendlyError } from '../../../shared/utils/errorMessageMapper.js';
+import { DecimalQuantity } from '../../../shared/domain/DecimalQuantity.js';
 import { StorageSectorSelect } from './StorageSectorSelect.js';
 import styles from './WarehouseExtractionModal.module.css';
+
+const QTY_STEP = '0.5';
+const QTY_MIN = '0.5';
 
 
 interface WarehouseExtractionModalProps {
@@ -193,8 +197,14 @@ const QuantityStepper: React.FC<QuantityStepperProps> = ({ quantity, onIncrement
       <input
         type="number"
         step="0.1"
+        min="0"
         value={quantity}
-        onChange={(e) => onChange(parseFloat(e.target.value) || 0.5)}
+        onChange={(e) => {
+          // AUDIT-DEV-006 F-6: no coacciona en silencio '' / NaN a 0.5 — un valor
+          // inválido pasa como 0 y la validación de submit lo rechaza explícitamente.
+          const parsed = Number(e.target.value);
+          onChange(Number.isFinite(parsed) ? parsed : 0);
+        }}
         className={`input-touch ${styles['qty-stepper-input-lg']}`}
         id="input-quantity-extraction"
       />
@@ -426,19 +436,26 @@ function useExtractionFields() {
   };
 }
 
+// AUDIT-DEV-006 F-6: aritmética decimal (VO compartido), no `prev + 0.5` con flotantes.
+const stepQuantityUp = (prev: number): number => new DecimalQuantity(prev).add(QTY_STEP).toNumber();
+const stepQuantityDown = (prev: number): number =>
+  new DecimalQuantity(prev).subtractClamped(QTY_STEP).clampMin(QTY_MIN).toNumber();
+
+function extractionValidationError(s: ReturnType<typeof useExtractionFields>): string | null {
+  if (s.purpose === 'DIRECT_DISCARD' && !s.reason.trim()) return 'Debe especificar el motivo descriptivo del descarte directo.';
+  if (!s.fromStorageLocationId) return 'Debe seleccionar el sub-sector de bodega de origen.';
+  if (!new DecimalQuantity(s.quantity || 0).isPositive()) return 'La cantidad a extraer debe ser mayor que cero.';
+  return null;
+}
+
 function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: () => void) {
   const s = useExtractionFields();
   const activeInsumoId = s.selectedInsumoId || (insumos.length > 0 ? insumos[0].id : '');
   const duplicateActiveRemanentes = useDuplicateRemanenteWarning(activeInsumoId);
 
-  const handleIncrement = () => s.setQuantity((prev) => Math.round((prev + 0.5) * 10) / 10);
-  const handleDecrement = () => s.setQuantity((prev) => Math.max(0.5, Math.round((prev - 0.5) * 10) / 10));
-
-  const validationError = (): string | null => {
-    if (s.purpose === 'DIRECT_DISCARD' && !s.reason.trim()) return 'Debe especificar el motivo descriptivo del descarte directo.';
-    if (!s.fromStorageLocationId) return 'Debe seleccionar el sub-sector de bodega de origen.';
-    return null;
-  };
+  const handleIncrement = () => s.setQuantity(stepQuantityUp);
+  const handleDecrement = () => s.setQuantity(stepQuantityDown);
+  const validationError = (): string | null => extractionValidationError(s);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -486,31 +503,68 @@ function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: ()
   return { error: s.error, bind };
 }
 
-function useAvailableInsumos(isOpen: boolean): Insumo[] {
+interface AvailableInsumosState {
+  insumos: Insumo[];
+  loading: boolean;
+  error: string | null;
+  reload: () => void;
+}
+
+// AUDIT-DEV-006 F-5: sin fallback a lista demo estática. Si el backend falla, se expone
+// el error para que el modal lo muestre y ofrezca reintentar — nunca insumos inventados.
+function useAvailableInsumos(isOpen: boolean): AvailableInsumosState {
   const [insumos, setInsumos] = useState<Insumo[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadNonce, setReloadNonce] = useState(0);
 
   React.useEffect(() => {
-    if (isOpen) {
-      StockService.getInsumos()
-        .then((items) => {
-          setInsumos(items.map((i) => ({ id: i.id, name: i.name, stock: Number(i.warehouseStock), unit: i.unitOfMeasure })));
-        })
-        .catch(() => {
-          setInsumos(StockService.getAvailableInsumos());
-        });
-    }
-  }, [isOpen]);
+    if (!isOpen) return;
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    StockService.getInsumos()
+      .then((items) => {
+        if (cancelled) return;
+        setInsumos(items.map((i) => ({ id: i.id, name: i.name, stock: Number(i.warehouseStock), unit: i.unitOfMeasure })));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setInsumos([]);
+        setError(mapToUserFriendlyError(err).message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, reloadNonce]);
 
-  return insumos.length > 0 ? insumos : StockService.getAvailableInsumos();
+  return { insumos, loading, error, reload: () => setReloadNonce((n) => n + 1) };
 }
+
+const InsumosLoadError: React.FC<{ message: string; onRetry: () => void; onClose: () => void }> = ({ message, onRetry, onClose }) => (
+  <div className="flex-column flex-gap-md">
+    <ErrorBanner message={message} />
+    <div className="flex-gap-md">
+      <button type="button" className="btn-touch btn-secondary" onClick={onClose}>
+        Cerrar
+      </button>
+      <button type="button" className="btn-touch btn-primary" onClick={onRetry} id="btn-retry-load-insumos">
+        Reintentar
+      </button>
+    </div>
+  </div>
+);
 
 export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
 }) => {
-  const displayInsumos = useAvailableInsumos(isOpen);
-  const form = useExtractionForm(displayInsumos, onSuccess, onClose);
+  const insumosState = useAvailableInsumos(isOpen);
+  const form = useExtractionForm(insumosState.insumos, onSuccess, onClose);
 
   if (!isOpen) return null;
 
@@ -523,9 +577,18 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
         onClose={onClose}
       />
 
-      {form.error && <ErrorBanner message={form.error} />}
-
-      <ExtractionForm insumos={displayInsumos} onCancel={onClose} {...form.bind} />
+      {insumosState.error ? (
+        <InsumosLoadError message={insumosState.error} onRetry={insumosState.reload} onClose={onClose} />
+      ) : insumosState.loading && insumosState.insumos.length === 0 ? (
+        <p role="status" className={styles['extraction-note-banner']}>Cargando insumos de bodega…</p>
+      ) : insumosState.insumos.length === 0 ? (
+        <ErrorBanner message="No hay insumos de bodega disponibles para extraer." />
+      ) : (
+        <>
+          {form.error && <ErrorBanner message={form.error} />}
+          <ExtractionForm insumos={insumosState.insumos} onCancel={onClose} {...form.bind} />
+        </>
+      )}
     </Modal>
   );
 };

@@ -28,10 +28,11 @@ export interface RecipeListItem {
 
 export class RecipesService {
   /**
-   * Llamada estricta a /stock/insumos (sin fallback silencioso a datos mock):
-   * a diferencia de StockService.getInsumos() -pensado para el modo offline de
-   * cocina-, dar de alta una receta contra un insumo inventado si el backend
-   * falla corrompería el catálogo maestro. Ver TK-069.
+   * Llamada estricta a /stock/insumos. Dar de alta una receta contra un insumo
+   * inventado si el backend falla corrompería el catálogo maestro. Ver TK-069.
+   * (Desde AUDIT-DEV-006 F-5, `StockService.getInsumos()` también propaga sus
+   * errores en vez de caer a datos mock — esta duplicación ya no aporta nada
+   * distinto y podría unificarse en un ticket futuro.)
    */
   public static async listInsumos(): Promise<InsumoItem[]> {
     return apiRequest<InsumoItem[]>('/stock/insumos');

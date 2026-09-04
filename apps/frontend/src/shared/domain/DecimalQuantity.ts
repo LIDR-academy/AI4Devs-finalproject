@@ -21,9 +21,26 @@ export class DecimalQuantity {
     this.value = new Decimal(value);
   }
 
+  public add(amount: string | number | Decimal): DecimalQuantity {
+    return new DecimalQuantity(this.value.plus(new Decimal(amount)));
+  }
+
   public subtractClamped(amount: string | number | Decimal): DecimalQuantity {
     const result = Decimal.max(0, this.value.minus(new Decimal(amount)));
     return new DecimalQuantity(result);
+  }
+
+  /** Devuelve `this` si es >= `min`, si no devuelve `min` (clamp inferior). */
+  public clampMin(min: string | number | Decimal): DecimalQuantity {
+    return new DecimalQuantity(Decimal.max(new Decimal(min), this.value));
+  }
+
+  public toNumber(): number {
+    return this.value.toNumber();
+  }
+
+  public isPositive(): boolean {
+    return this.value.isPositive() && !this.value.isZero();
   }
 
   public times(factor: string | number | Decimal): DecimalQuantity {
