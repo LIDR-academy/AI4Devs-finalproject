@@ -172,6 +172,10 @@ const STORAGE_LOCATIONS = [
   { id: 'loc-seed-meat-fridge', name: 'Heladera de Carnes', type: 'WAREHOUSE' as const, description: 'Refrigerador dedicado a proteínas' },
   { id: 'loc-seed-freezer', name: 'Cámara de Congelados', type: 'WAREHOUSE' as const, description: 'Cámara de congelación' },
   { id: 'loc-seed-kitchen-fridge', name: 'Refrigerador Principal Cocina', type: 'KITCHEN' as const, description: 'Destino de remanentes en línea de fríos' },
+  // US-026: áreas de cocina del catálogo — deben coincidir en (id, name) con la migración
+  // `20260904040356_remanente_storage_location_fk` para que el replay + seed sea idempotente.
+  { id: 'loc-seed-kitchen-prep', name: 'Mesa de Preparación', type: 'KITCHEN' as const, description: 'Mesa de trabajo / mise en place' },
+  { id: 'loc-seed-kitchen-line', name: 'Línea de Servicio', type: 'KITCHEN' as const, description: 'Línea de emplatado y despacho' },
 ];
 
 async function seedStorageLocations(): Promise<void> {

@@ -8,6 +8,8 @@ export interface RemanenteFEFOResponseDTO {
   currentQuantity: string;
   initialQuantity: string;
   location: string;
+  storageLocationId?: string;
+  storageLocationName: string;
   expirationDate: string;
   hoursRemaining: number;
   isCriticalAlert: boolean;
@@ -17,8 +19,8 @@ export interface RemanenteFEFOResponseDTO {
 export class GetActiveRemanentesUseCase {
   constructor(private readonly remanenteQueryRepository: IRemanenteQueryRepository) {}
 
-  public async execute(location?: string, insumoId?: string): Promise<RemanenteFEFOResponseDTO[]> {
-    const rawRemanentes = await this.remanenteQueryRepository.findActiveRemanentes(location, insumoId);
+  public async execute(storageLocationId?: string, insumoId?: string): Promise<RemanenteFEFOResponseDTO[]> {
+    const rawRemanentes = await this.remanenteQueryRepository.findActiveRemanentes(storageLocationId, insumoId);
     const now = new Date();
 
     return rawRemanentes.map((item) => {
@@ -34,6 +36,8 @@ export class GetActiveRemanentesUseCase {
         currentQuantity: item.currentQuantity,
         initialQuantity: item.initialQuantity,
         location: item.location,
+        storageLocationId: item.storageLocationId,
+        storageLocationName: item.storageLocationName ?? item.location,
         expirationDate: item.expirationDate.toISOString(),
         hoursRemaining,
         isCriticalAlert,

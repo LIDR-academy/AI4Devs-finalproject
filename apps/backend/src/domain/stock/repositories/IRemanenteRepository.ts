@@ -21,4 +21,10 @@ export interface IRemanenteRepository {
   findActiveRemanentesByInsumoId(insumoId: string): Promise<Remanente[]>;
   saveRemanente(remanente: Remanente): Promise<void>;
   recordMovement(movement: StockMovementRecord): Promise<void>;
+  /**
+   * US-026 / Invariante 5: `true` si existe algún `Remanente` `ACTIVE` en el área de
+   * cocina indicada. Se comprueba por FK (`storageLocationId`) y, para remanentes
+   * históricos sin FK, por el literal `location` == `locationName`.
+   */
+  existsActiveRemanenteAtLocation(storageLocationId: string, locationName: string): Promise<boolean>;
 }

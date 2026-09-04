@@ -107,6 +107,19 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
     await this.saveRemanenteOn(this.prisma, remanente);
   }
 
+  public async existsActiveRemanenteAtLocation(
+    storageLocationId: string,
+    locationName: string
+  ): Promise<boolean> {
+    const count = await this.prisma.remanente.count({
+      where: {
+        status: 'ACTIVE',
+        OR: [{ storageLocationId }, { location: locationName }],
+      },
+    });
+    return count > 0;
+  }
+
   public async recordMovement(movement: StockMovementRecord): Promise<void> {
     await this.recordMovementOn(this.prisma, movement);
   }
@@ -181,6 +194,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
         currentQuantity: remanente.currentQuantity.toDecimal(),
         initialQuantity: remanente.initialQuantity.toDecimal(),
         location: remanente.location,
+        storageLocationId: remanente.storageLocationId ?? null,
         status: remanente.status as RemanenteStatusType,
         expirationDate: remanente.expirationDate,
         terminalAt: remanente.terminalAt ?? null,
@@ -211,6 +225,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
     currentQuantity: { toString(): string };
     initialQuantity: { toString(): string };
     location: string;
+    storageLocationId: string | null;
     status: string;
     expirationDate: Date;
     createdAt: Date;
@@ -222,6 +237,7 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
       currentQuantity: new DecimalQuantity(raw.currentQuantity.toString()),
       initialQuantity: new DecimalQuantity(raw.initialQuantity.toString()),
       location: raw.location,
+      storageLocationId: raw.storageLocationId ?? undefined,
       status: raw.status as RemanenteStatusType,
       expirationDate: raw.expirationDate,
       createdAt: raw.createdAt,

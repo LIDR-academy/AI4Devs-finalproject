@@ -1054,10 +1054,14 @@ components:
             drawn from. The backend validates the balance of the
             (insumoId, fromStorageLocationId) line only. 404 if it does not exist,
             422 if the insumo has no stock line in that sector.
-        toLocation:
+        toStorageLocationId:
           type: string
-          enum: [KITCHEN_FRIDGE, KITCHEN_FREEZER, KITCHEN_PANTRY, KITCHEN_PREP]
           default: KITCHEN_FRIDGE
+          description: >-
+            US-026 — id of the KITCHEN-type, active StorageLocation the remanente
+            is placed in. Legacy literals (KITCHEN_FRIDGE / KITCHEN_PREP /
+            KITCHEN_LINE) are still accepted and resolved without a catalog FK.
+            404 if a non-legacy value does not resolve to an active KITCHEN area.
         purpose:
           type: string
           enum: [KITCHEN_STOCK, RECIPE, DIRECT_DISCARD]
@@ -1282,6 +1286,14 @@ components:
           $ref: '#/components/schemas/DecimalString'
         location:
           type: string
+          description: US-026 — display cache (kitchen area name or legacy literal).
+        storageLocationId:
+          type: string
+          nullable: true
+          description: US-026 — FK to the KITCHEN-type StorageLocation (null for legacy remanentes).
+        storageLocationName:
+          type: string
+          description: US-026 — resolved area name; falls back to `location`.
         expirationDate:
           type: string
           format: date-time

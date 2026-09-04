@@ -8,7 +8,10 @@ export interface RemanenteProps {
   insumoId: string;
   currentQuantity: DecimalQuantity;
   initialQuantity: DecimalQuantity;
+  /** US-026: caché de display/movimiento (= `name` del área). Ver `storageLocationId`. */
   location: string;
+  /** US-026: FK al área de cocina del catálogo (`StorageLocation type = KITCHEN`). */
+  storageLocationId?: string;
   status: RemanenteStatusType;
   expirationDate: Date;
   createdAt?: Date;
@@ -30,7 +33,10 @@ export class Remanente {
     hoursToExpire: number = 24,
     // AUDIT-DEV-006 F-3: instante de creación inyectable. Por defecto el reloj real
     // (compatibilidad con `vi.setSystemTime` en los tests de dominio existentes).
-    now: Date = new Date()
+    now: Date = new Date(),
+    // US-026: FK al área de cocina del catálogo. Opcional para compatibilidad con
+    // los tests de dominio que solo pasan el literal.
+    storageLocationId?: string
   ): Remanente {
     const expirationDate = new Date(now.getTime() + hoursToExpire * 60 * 60 * 1000);
 
@@ -40,6 +46,7 @@ export class Remanente {
       currentQuantity: quantity,
       initialQuantity: quantity,
       location,
+      storageLocationId,
       status: 'ACTIVE',
       expirationDate,
       createdAt: now,
@@ -64,6 +71,10 @@ export class Remanente {
 
   public get location(): string {
     return this.props.location;
+  }
+
+  public get storageLocationId(): string | undefined {
+    return this.props.storageLocationId;
   }
 
   public get status(): RemanenteStatusType {

@@ -15,7 +15,8 @@ const recordExtractionSchema = z
     fromStorageLocationId: z
       .string({ required_error: 'El sub-sector de bodega de origen es obligatorio.' })
       .min(1, 'El sub-sector de bodega de origen es obligatorio.'),
-    toLocation: z.string().optional().default('KITCHEN_FRIDGE'),
+    // US-026: área de cocina de destino (StorageLocation type=KITCHEN) o literal legado.
+    toStorageLocationId: z.string().optional().default('KITCHEN_FRIDGE'),
     operatorId: z.string().optional(),
     purpose: z.enum(['KITCHEN_STOCK', 'RECIPE', 'DIRECT_DISCARD']).optional().default('KITCHEN_STOCK'),
     reason: z.string().optional(),

@@ -14,11 +14,13 @@ import { DiscardReasonRequiredException } from '../../../domain/stock/errors/Dis
 import { Clock } from '../../../domain/shared/Clock.js';
 import { IdGenerator } from '../../../domain/shared/IdGenerator.js';
 import { resolveWarehouseSector } from './resolveWarehouseSector.js';
+import { resolveKitchenArea } from './resolveKitchenArea.js';
 
 export interface RecordExtractionDTO {
   insumoId: string;
   quantity: number | string;
-  toLocation?: string;
+  /** US-026: área de cocina de destino (`StorageLocation type = KITCHEN`) o literal legado. */
+  toStorageLocationId?: string;
   /** US-025: sub-sector de bodega del que sale el stock. */
   fromStorageLocationId?: string;
   operatorId?: string;
@@ -88,14 +90,16 @@ export class RecordExtractionUseCase {
     purpose: 'KITCHEN_STOCK' | 'RECIPE',
     dto: RecordExtractionDTO
   ): Promise<ExtractionResponseDTO> {
-    const location = dto.toLocation || 'KITCHEN_FRIDGE';
+    const area = await resolveKitchenArea(this.locationRepository, dto.toStorageLocationId);
+    const location = area.name;
     const remanente = Remanente.createNew(
       this.idGenerator.next('rem'),
       insumo.id,
       requestedQty,
       location,
       24,
-      this.clock.now()
+      this.clock.now(),
+      area.id
     );
     const movementType = purpose === 'RECIPE' ? 'EXTRACTION_RECIPE' : 'EXTRACTION';
 

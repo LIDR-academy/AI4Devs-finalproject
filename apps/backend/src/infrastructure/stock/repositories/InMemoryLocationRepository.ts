@@ -17,6 +17,10 @@ export class InMemoryLocationRepository implements IStorageLocationRepository {
       new StorageLocation({ id: 'loc-3', name: 'KITCHEN_PREP', type: 'KITCHEN', description: 'Mesa de Preparación', isActive: true }),
       new StorageLocation({ id: 'loc-4', name: 'KITCHEN_LINE', type: 'KITCHEN', description: 'Línea de Servicio', isActive: true }),
       new StorageLocation({ id: 'loc-5', name: 'WASTE_BIN', type: 'KITCHEN', description: 'Contenedor de Mermas/Descarte', isActive: true }),
+      // US-026: áreas de cocina del catálogo (mismos id/name que prisma/seed.ts + la migración)
+      new StorageLocation({ id: 'loc-seed-kitchen-fridge', name: 'Refrigerador Principal Cocina', type: 'KITCHEN', description: 'Destino de remanentes en línea de fríos', isActive: true }),
+      new StorageLocation({ id: 'loc-seed-kitchen-prep', name: 'Mesa de Preparación', type: 'KITCHEN', description: 'Mesa de trabajo / mise en place', isActive: true }),
+      new StorageLocation({ id: 'loc-seed-kitchen-line', name: 'Línea de Servicio', type: 'KITCHEN', description: 'Línea de emplatado y despacho', isActive: true }),
     ];
     locs.forEach((l) => this.locations.set(l.id, l));
   }

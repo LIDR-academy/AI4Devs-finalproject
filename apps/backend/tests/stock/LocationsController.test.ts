@@ -109,6 +109,46 @@ describe('Storage Locations API — RBAC por ruta (TK-074, patrón TK-093)', () 
     expect(deactivate.status).toBe(409);
   });
 
+  it('TK-102 (US-026): un área de cocina con un remanente activo no puede eliminarse ni desactivarse (409)', async () => {
+    const stockRepo = new InMemoryStockRepository();
+    const app = createApp({ requireAuth: false, stockRepository: stockRepo, locationRepository: new InMemoryLocationRepository() });
+
+    // alta de insumo con stock en bodega + extracción a un área de cocina del catálogo
+    await request(app)
+      .post('/api/v1/stock/insumos')
+      .send({ name: 'Queso', unitOfMeasure: 'KG', initialWarehouseStock: '5.000', storageLocationId: 'loc-seed-meat-fridge' });
+    const ext = await request(app)
+      .post('/api/v1/stock/extraction')
+      .send({ insumoId: (await request(app).get('/api/v1/stock/insumos')).body[0].id, fromStorageLocationId: 'loc-seed-meat-fridge', quantity: '2.000', toStorageLocationId: 'loc-seed-kitchen-prep' });
+    expect(ext.status).toBe(201);
+    expect(ext.body.location).toBe('Mesa de Preparación');
+
+    const del = await request(app).delete('/api/v1/locations/loc-seed-kitchen-prep');
+    expect(del.status).toBe(409);
+    expect(del.body).toHaveProperty('title', 'LocationHasRemanentesException');
+    expect(del.body.detail).toContain('Mesa de Preparación');
+    expect(del.body.detail).toMatch(/ingredientes abiertos/i);
+
+    const deactivate = await request(app).put('/api/v1/locations/loc-seed-kitchen-prep').send({ isActive: false });
+    expect(deactivate.status).toBe(409);
+  });
+
+  it('TK-102 (US-026): extraer a un sub-sector de bodega (no cocina) como destino → 404', async () => {
+    const stockRepo = new InMemoryStockRepository();
+    const app = createApp({ requireAuth: false, stockRepository: stockRepo, locationRepository: new InMemoryLocationRepository() });
+    await request(app)
+      .post('/api/v1/stock/insumos')
+      .send({ name: 'Harina', unitOfMeasure: 'KG', initialWarehouseStock: '5.000', storageLocationId: 'loc-seed-meat-fridge' });
+    const insumoId = (await request(app).get('/api/v1/stock/insumos')).body[0].id;
+
+    const res = await request(app)
+      .post('/api/v1/stock/extraction')
+      .send({ insumoId, fromStorageLocationId: 'loc-seed-meat-fridge', quantity: '1.000', toStorageLocationId: 'loc-seed-dry' });
+
+    expect(res.status).toBe(404);
+    expect(res.body.detail).toMatch(/Área de cocina/i);
+  });
+
   it('ADMIN puede crear, editar y eliminar sectores', async () => {
     const app = makeApp();
     const t = `Bearer ${tokenFor('ADMIN')}`;

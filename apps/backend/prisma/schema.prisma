@@ -90,6 +90,8 @@ model StorageLocation {
   updatedAt       DateTime         @updatedAt
   // US-025: existencias de bodega alojadas en este sub-sector
   warehouseStocks WarehouseStock[]
+  // US-026: remanentes de cocina ubicados en esta área (type = KITCHEN)
+  remanentes      Remanente[]
 }
 
 model SystemSettings {
@@ -136,13 +138,22 @@ model Remanente {
   insumoId        String
   currentQuantity Decimal         @default(0) @db.Decimal(12, 3)
   initialQuantity Decimal         @default(0) @db.Decimal(12, 3)
+  // US-026: caché denormalizado de display/movimiento (= name del área). La fuente
+  // canónica de la ubicación es storageLocationId cuando está presente.
   location        String          @default("KITCHEN_FRIDGE")
+  // US-026: FK al área de cocina del catálogo (type = KITCHEN). Nullable: los remanentes
+  // históricos conservan solo el literal en `location`. RESTRICT: un área con remanentes
+  // ACTIVE no puede borrarse (Invariante 5).
+  storageLocationId String?
   status          RemanenteStatus @default(ACTIVE)
   expirationDate  DateTime
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   terminalAt      DateTime?
   insumo          Insumo          @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+  storageLocation StorageLocation? @relation(fields: [storageLocationId], references: [id], onDelete: Restrict)
+
+  @@index([storageLocationId])
 }
 
 model StockMovement {

@@ -2,11 +2,13 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { IStorageLocationRepository } from '../../../../domain/stock/repositories/IStorageLocationRepository.js';
 import { IInsumoRepository } from '../../../../domain/stock/repositories/IInsumoRepository.js';
+import { IRemanenteRepository } from '../../../../domain/stock/repositories/IRemanenteRepository.js';
 import { GetLocationsUseCase } from '../../../../application/stock/use-cases/GetLocationsUseCase.js';
 import { CreateLocationUseCase } from '../../../../application/stock/use-cases/CreateLocationUseCase.js';
 import { StorageLocation } from '../../../../domain/stock/entities/StorageLocation.js';
 import { EntityNotFoundException } from '../../../../domain/errors/EntityNotFoundException.js';
 import { LocationHasStockException } from '../../../../domain/stock/errors/LocationHasStockException.js';
+import { LocationHasRemanentesException } from '../../../../domain/stock/errors/LocationHasRemanentesException.js';
 import { requireRole } from '../../../http/middlewares/requireRole.js';
 import { respondValidationError } from '../../../http/utils/responseUtils.js';
 
@@ -37,19 +39,29 @@ function handleControllerError(req: Request, res: Response, next: NextFunction, 
   next(err as Error);
 }
 
+type StockAndRemanenteRepo = IInsumoRepository & Partial<IRemanenteRepository>;
+
 async function assertLocationHasNoStock(
-  insumoRepo: IInsumoRepository | undefined,
+  repo: StockAndRemanenteRepo | undefined,
   location: StorageLocation
 ): Promise<void> {
-  if (!insumoRepo) return;
-  if (await insumoRepo.existsStockAtLocation(location.id)) {
+  if (!repo) return;
+  if (location.type === 'WAREHOUSE' && (await repo.existsStockAtLocation(location.id))) {
     throw new LocationHasStockException(location.name);
+  }
+  // US-026 / Invariante 5: un área de cocina con remanentes activos es indeleble.
+  if (
+    location.type === 'KITCHEN' &&
+    repo.existsActiveRemanenteAtLocation &&
+    (await repo.existsActiveRemanenteAtLocation(location.id, location.name))
+  ) {
+    throw new LocationHasRemanentesException(location.name);
   }
 }
 
 async function applyLocationUpdate(
   locationRepo: IStorageLocationRepository,
-  insumoRepo: IInsumoRepository | undefined,
+  insumoRepo: StockAndRemanenteRepo | undefined,
   id: string,
   parsed: ReturnType<typeof updateLocationSchema.parse>
 ): Promise<StorageLocation> {
@@ -72,7 +84,7 @@ async function applyLocationUpdate(
   return updated;
 }
 
-function buildHandlers(locationRepo: IStorageLocationRepository, insumoRepo?: IInsumoRepository) {
+function buildHandlers(locationRepo: IStorageLocationRepository, insumoRepo?: StockAndRemanenteRepo) {
   const getLocationsUseCase = new GetLocationsUseCase(locationRepo, insumoRepo);
   const createLocationUseCase = new CreateLocationUseCase(locationRepo);
 
@@ -130,7 +142,7 @@ function buildHandlers(locationRepo: IStorageLocationRepository, insumoRepo?: II
 export function createLocationsController(
   locationRepo: IStorageLocationRepository,
   isAuthRequired = true,
-  insumoRepo?: IInsumoRepository
+  insumoRepo?: StockAndRemanenteRepo
 ): Router {
   const router = Router();
   const adminOnly = isAuthRequired ? [requireRole('ADMIN')] : [];

@@ -71,6 +71,16 @@ export class InMemoryStockRepository
     this.remanentes.set(remanente.id, remanente);
   }
 
+  async existsActiveRemanenteAtLocation(storageLocationId: string, locationName: string): Promise<boolean> {
+    for (const rem of this.remanentes.values()) {
+      if (rem.status !== 'ACTIVE') continue;
+      if (rem.storageLocationId === storageLocationId || rem.location === locationName) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public seedInsumo(insumo: Insumo): void {
     this.insumos.set(insumo.id, insumo);
   }

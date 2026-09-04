@@ -28,7 +28,7 @@ describe('TK-050: Trazabilidad de Movimientos de Stock (auditoria, solo ADMIN)',
     await request(app)
       .post('/api/v1/stock/extraction')
       .set('Authorization', `Bearer ${adminToken}`)
-      .send({ insumoId: 'ins-mozzarella-1', fromStorageLocationId: 'loc-1', quantity: '2.000', toLocation: 'KITCHEN_FRIDGE' });
+      .send({ insumoId: 'ins-mozzarella-1', fromStorageLocationId: 'loc-1', quantity: '2.000', toStorageLocationId: 'KITCHEN_FRIDGE' });
 
     const response = await request(app)
       .get('/api/v1/stock/movements')

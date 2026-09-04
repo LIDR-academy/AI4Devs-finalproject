@@ -57,7 +57,7 @@ describe('TK-093: RBAC explícito por ruta en mutaciones de cocina y stock', () 
     const res = await request(app())
       .post('/api/v1/stock/extraction')
       .set('Authorization', `Bearer ${tokenFor('AUDITOR_READONLY')}`)
-      .send({ insumoId: 'ins-1', quantity: '1.000', toLocation: 'KITCHEN_FRIDGE' });
+      .send({ insumoId: 'ins-1', quantity: '1.000', toStorageLocationId: 'KITCHEN_FRIDGE' });
 
     expect(res.status).toBe(403);
   });
@@ -73,7 +73,7 @@ describe('TK-093: RBAC explícito por ruta en mutaciones de cocina y stock', () 
     const extraction = await request(app())
       .post('/api/v1/stock/extraction')
       .set('Authorization', `Bearer ${tokenFor('KITCHEN_STAFF')}`)
-      .send({ insumoId: 'ins-1', quantity: '1.000', toLocation: 'KITCHEN_FRIDGE' });
+      .send({ insumoId: 'ins-1', quantity: '1.000', toStorageLocationId: 'KITCHEN_FRIDGE' });
     expect(extraction.status).not.toBe(403);
     expect(extraction.status).not.toBe(401);
   });

@@ -32,7 +32,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
         insumoId: 'ins-mozzarella-1',
         fromStorageLocationId: 'loc-1',
         quantity: '2.000',
-        toLocation: 'KITCHEN_FRIDGE',
+        toStorageLocationId: 'KITCHEN_FRIDGE',
       });
 
     // 3. ASSERT (Entonces): Verificación con los 3 Oráculos (Guard 20)
@@ -103,7 +103,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
         insumoId: 'ins-mozzarella-1',
         fromStorageLocationId: 'loc-1',
         quantity: '1.500',
-        toLocation: 'KITCHEN_PREP',
+        toStorageLocationId: 'KITCHEN_PREP',
         purpose: 'RECIPE',
         reason: 'Preparacion Pizza Especial',
         recipeId: 'rec-pizza-01',
@@ -219,7 +219,7 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
 
     const response = await request(app)
       .post('/api/v1/stock/extraction')
-      .send({ insumoId: 'ins-lomo-2', fromStorageLocationId: 'loc-seed-meat-fridge', quantity: '3.000', toLocation: 'KITCHEN_FRIDGE' });
+      .send({ insumoId: 'ins-lomo-2', fromStorageLocationId: 'loc-seed-meat-fridge', quantity: '3.000', toStorageLocationId: 'KITCHEN_FRIDGE' });
 
     expect(response.status).toBe(201);
     expect(response.body.remainingSectorStock).toBe('9.000');

@@ -146,12 +146,12 @@ describe('RecordExtractionUseCase (unitario)', () => {
     expect(result.remanenteId).toBe(uow.savedRemanentes[0].id);
   });
 
-  it('purpose RECIPE: movimiento tipo EXTRACTION_RECIPE con recipeId y toLocation elegido', async () => {
+  it('purpose RECIPE: movimiento tipo EXTRACTION_RECIPE con recipeId y toStorageLocationId elegido', async () => {
     await useCase.execute({
       insumoId: 'ins-1',
       fromStorageLocationId: 'loc-1',
       quantity: '1.000',
-      toLocation: 'KITCHEN_PREP',
+      toStorageLocationId: 'KITCHEN_PREP',
       purpose: 'RECIPE',
       recipeId: 'rec-9',
       reason: 'Mise en place',

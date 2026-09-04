@@ -5,7 +5,12 @@ export interface ActiveRemanenteDTO {
   unitOfMeasure: string;
   currentQuantity: string;
   initialQuantity: string;
+  /** US-026: caché de display (= `name` del área o literal legado). */
   location: string;
+  /** US-026: FK al área de cocina del catálogo (undefined en remanentes históricos). */
+  storageLocationId?: string;
+  /** US-026: nombre resuelto del área (join); cae a `location` si no hay FK. */
+  storageLocationName?: string;
   expirationDate: Date;
   status: string;
   createdAt: Date;
@@ -14,5 +19,6 @@ export interface ActiveRemanenteDTO {
 }
 
 export interface IRemanenteQueryRepository {
-  findActiveRemanentes(location?: string, insumoId?: string): Promise<ActiveRemanenteDTO[]>;
+  /** `storageLocationId` filtra por área de cocina (US-026); acepta también un literal legado. */
+  findActiveRemanentes(storageLocationId?: string, insumoId?: string): Promise<ActiveRemanenteDTO[]>;
 }
