@@ -196,7 +196,22 @@
         this exact "typed input + apply button" content shape, and this component's own
         linkPopoverOpen/x-show pairing is what the browser tests (a later technical task) drive
         through fill()/click() either way. --}}
-        <div class="relative">
+        {{--
+            The trigger button and the popover it opens must share the SAME element that carries
+            `x-on:click.outside` -- Alpine's outside-click check excludes only clicks landing on
+            that bound element or its descendants, never clicks on a sibling. The button used to sit
+            OUTSIDE the popover `<div>` that alone carried `click.outside`, so the button's own click
+            (which follows the mousedown that opens the popover) was itself read as "outside" and
+            closed the popover a moment after opening it -- reproduced live as the popover flashing
+            open then immediately shut. Moving `click.outside`/the escape listener up to this
+            wrapper, which contains both the button and the popover, is the fix: a click on the
+            trigger is now a click on a descendant of the bound element, so it is correctly excluded.
+        --}}
+        <div
+            class="relative"
+            x-on:click.outside="closeLinkPopover()"
+            x-on:keydown.escape.window="closeLinkPopover()"
+        >
             @if ($disabled)
                 <flux:button
                     variant="ghost"
@@ -221,8 +236,6 @@
             <div
                 x-show="linkPopoverOpen"
                 x-cloak
-                x-on:click.outside="closeLinkPopover()"
-                x-on:keydown.escape.window="closeLinkPopover()"
                 class="absolute z-10 mt-1 flex w-64 flex-col gap-2 rounded-lg border border-zinc-200 bg-white p-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
             >
                 <flux:input
