@@ -4,7 +4,7 @@ id: TK-116-FE
 related_story: US-031
 points: 3
 type: frontend
-status: draft
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/shared/US-031.md
   - docs/02_architecture_design/05_ui_ux_design_system.md
@@ -32,4 +32,10 @@ Fusión selectiva del mockup `05_bodega_catalog.html` (Stitch) — `US-031` Esce
 4. **Commit:** `feat(stock): docked search/filter/view toolbar on warehouse catalog (TK-116-FE)`.
 
 ## 📌 Notas de implementación
-*   Pendiente de implementación.
+*   **Verificado antes de codificar** (prerrequisito del propio ticket): `InsumoCatalogPanel.tsx` ya tenía búsqueda por nombre, pero vivía suelta bajo el header, sin filtro adicional definido ni alternador de vista. Se acotó el alcance a lo que era delta real: reubicar la búsqueda dentro de una franja `CatalogToolbar` acoplada directamente sobre la tabla/grilla, + alternador grid/lista nuevo. Se descartó inventar una dimensión de "filtro" sin necesidad de producto definida — evita agregar un control especulativo sin uso real.
+*   `catalogViewPreference.ts` nuevo (misma convención que `useFefoTheme.ts`/`recentOperators.ts`): clave `fefo-catalog-view`, default `'table'`, cae al default ante cualquier valor ausente o corrupto.
+*   `CatalogToolbar.tsx` nuevo: búsqueda + alternador grid/lista (`role="group"`, `aria-pressed`).
+*   `InsumoCatalogGrid.tsx` nuevo: vista de tarjetas, misma disponibilidad de desglose por sub-sector (`stockByLocation`) que `InsumoTable`, sin duplicación real (`jscpd` sobre ambos componentes: 0 clones).
+*   `InsumoCatalogPanel.tsx`: `InsumoCatalogHeader` pierde la búsqueda (se movió a `CatalogToolbar`); `useCatalogViewState()` extraído para no exceder el límite de líneas por función del linter.
+*   6 tests nuevos (3 `catalogViewPreference.test.ts` + 3 `CatalogToolbar.test.tsx`): default sin preferencia, persistencia de "grid" tras remount, búsqueda sigue filtrando el mismo set en ambas vistas.
+*   Sin regresiones: 191 tests frontend (185→191), build/lint verdes (0 warnings nuevos — se extrajo un hook para evitar uno).

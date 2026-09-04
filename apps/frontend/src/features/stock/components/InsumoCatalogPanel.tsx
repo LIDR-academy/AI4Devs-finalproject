@@ -1,49 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Search, Truck, ChevronRight, ChevronDown } from 'lucide-react';
+import { Package, Truck, ChevronRight, ChevronDown } from 'lucide-react';
 import { StockService, InsumoItem } from '../services/stock.service.js';
 import { CreateInsumoModal } from './CreateInsumoModal.js';
 import { RestockInsumoModal } from './RestockInsumoModal.js';
+import { CatalogToolbar } from './CatalogToolbar.js';
+import { InsumoCatalogGrid } from './InsumoCatalogGrid.js';
+import { CatalogView, getCatalogView, setCatalogView } from '../catalogViewPreference.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 import styles from './InsumoCatalogPanel.module.css';
 
 interface InsumoCatalogHeaderProps {
   onCreateClick: () => void;
-  search: string;
-  onSearchChange: (value: string) => void;
   canManage: boolean;
 }
 
-const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick, search, onSearchChange, canManage }) => (
-  <>
-    <div className="flex-between flex-wrap mb-6 gap-4">
-      <div className="flex-gap-xs">
-        <Package size={22} className="text-primary-color flex-shrink-0" />
-        <div>
-          <h1 className="m-0 fs-lg fw-bold">Inventario y Catálogo de Bodega</h1>
-          <p className="text-secondary-color mt-1 fs-sm">
-            Gestiona el catálogo maestro de ingredientes y su disponibilidad en bodega principal.
-          </p>
-        </div>
+const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick, canManage }) => (
+  <div className="flex-between flex-wrap mb-6 gap-4">
+    <div className="flex-gap-xs">
+      <Package size={22} className="text-primary-color flex-shrink-0" />
+      <div>
+        <h1 className="m-0 fs-lg fw-bold">Inventario y Catálogo de Bodega</h1>
+        <p className="text-secondary-color mt-1 fs-sm">
+          Gestiona el catálogo maestro de ingredientes y su disponibilidad en bodega principal.
+        </p>
       </div>
-
-      {canManage && (
-        <button type="button" onClick={onCreateClick} className="btn-touch btn-primary">
-          + Nuevo Insumo
-        </button>
-      )}
     </div>
 
-    <div className="search-input-wrapper">
-      <Search size={18} className="search-icon-left" />
-      <input
-        type="text"
-        value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="Buscar insumo por nombre..."
-        className="input-touch input-with-icon w-full fs-md"
-      />
-    </div>
-  </>
+    {canManage && (
+      <button type="button" onClick={onCreateClick} className="btn-touch btn-primary">
+        + Nuevo Insumo
+      </button>
+    )}
+  </div>
 );
 
 interface InsumoTableRowProps {
@@ -144,9 +132,10 @@ interface InsumoCatalogBodyProps {
   filteredInsumos: InsumoItem[];
   onRestock: (insumo: InsumoItem) => void;
   canManage: boolean;
+  view: CatalogView;
 }
 
-const InsumoCatalogBody: React.FC<InsumoCatalogBodyProps> = ({ error, loading, filteredInsumos, onRestock, canManage }) => (
+const InsumoCatalogBody: React.FC<InsumoCatalogBodyProps> = ({ error, loading, filteredInsumos, onRestock, canManage, view }) => (
   <>
     {error && <ErrorBanner message={error} />}
 
@@ -156,11 +145,25 @@ const InsumoCatalogBody: React.FC<InsumoCatalogBodyProps> = ({ error, loading, f
       <div className="card-dashboard text-center text-secondary-color p-6">
         No se encontraron insumos registrados en bodega.
       </div>
+    ) : view === 'grid' ? (
+      <InsumoCatalogGrid insumos={filteredInsumos} onRestock={onRestock} canManage={canManage} />
     ) : (
       <InsumoTable insumos={filteredInsumos} onRestock={onRestock} canManage={canManage} />
     )}
   </>
 );
+
+/** TK-116-FE (US-031): alternador grid/lista del catálogo, persistido por dispositivo. */
+function useCatalogViewState() {
+  const [view, setView] = useState<CatalogView>(() => getCatalogView());
+
+  const handleViewChange = (next: CatalogView) => {
+    setView(next);
+    setCatalogView(next);
+  };
+
+  return { view, handleViewChange };
+}
 
 /**
  * @param canManage `true` sólo para ADMIN — muestra "+ Nuevo Insumo" y "Reabastecer"
@@ -174,6 +177,7 @@ export const InsumoCatalogPanel: React.FC<{ canManage?: boolean }> = ({ canManag
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [restockTarget, setRestockTarget] = useState<InsumoItem | null>(null);
+  const { view, handleViewChange } = useCatalogViewState();
 
   const fetchInsumos = async () => {
     setLoading(true);
@@ -200,12 +204,9 @@ export const InsumoCatalogPanel: React.FC<{ canManage?: boolean }> = ({ canManag
 
   return (
     <div className={styles['insumo-catalog-panel']}>
-      <InsumoCatalogHeader
-        onCreateClick={() => setIsModalOpen(true)}
-        search={search}
-        onSearchChange={setSearch}
-        canManage={canManage}
-      />
+      <InsumoCatalogHeader onCreateClick={() => setIsModalOpen(true)} canManage={canManage} />
+
+      <CatalogToolbar search={search} onSearchChange={setSearch} view={view} onViewChange={handleViewChange} />
 
       <InsumoCatalogBody
         error={error}
@@ -213,6 +214,7 @@ export const InsumoCatalogPanel: React.FC<{ canManage?: boolean }> = ({ canManag
         filteredInsumos={filteredInsumos}
         onRestock={setRestockTarget}
         canManage={canManage}
+        view={view}
       />
 
       <CreateInsumoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={fetchInsumos} />

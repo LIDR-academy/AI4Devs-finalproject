@@ -427,3 +427,15 @@ inputs:
 - **Estado:**
   - Solo documentación — cero código todavía, cumpliendo Guard 26 (Stage 1 completa antes de `SK-16`/`SK-17`).
   - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).
+
+### 2026-09-04 (cont.) - US-031 cerrada: TK-113-FE, TK-115-FE, TK-116-FE implementados; TK-114-FE cerrado sin código
+- **Hito:** implementación de los 3 tickets restantes de `US-031` (Etapa 1 ya commiteada). Al llegar a `TK-114-FE` se encontró, verificando antes de codificar (paso obligatorio del propio DoD), que el patrón ya existía: `ActionButton` (`US-023`/`TK-086-FE`) en `AccionesEstadoGrid` ya es el círculo de 72×72px junto a la barra de Salud FEFO que el ticket pedía construir — se cerró documentando el hallazgo, sin duplicar el componente.
+- **Acciones Realizadas:**
+  - ✅ `TK-113-FE`: `recentOperators.ts` (nuevo) — chips de operario reciente en `PinLoginModal`, `localStorage` device-local, máx. 3, más reciente primero, sin duplicados, nunca el PIN.
+  - ⚪ `TK-114-FE`: cerrado sin código — ya implementado por `US-023`.
+  - ✅ `TK-115-FE`: `.reconciliation-row--pending-reason` en `ShiftReconciliationWizard` — resaltado full-bleed (`color-mix` sobre `--color-danger`, `margin-inline` negativo) para fila con varianza negativa sin motivo, independiente de `.reconciliation-row--critical`.
+  - ✅ `TK-116-FE`: `catalogViewPreference.ts` + `CatalogToolbar.tsx` + `InsumoCatalogGrid.tsx` (nuevos) — búsqueda reubicada en una franja acoplada sobre la tabla/grilla, alternador grid/lista persistido por dispositivo. Alcance acotado deliberadamente sin inventar una dimensión de "filtro" sin necesidad de producto definida.
+- **Estado:**
+  - Frontend 191 tests (174→191 en toda la épica), build/lint verdes (0 warnings nuevos — se extrajo `useCatalogViewState()` para evitar uno). `jscpd` entre `InsumoCatalogPanel`/`InsumoCatalogGrid`: 0 clones.
+  - **`US-031` cerrada.** No cambia ningún token/tipografía del Sistema FEFO — solo patrones de interacción puntuales, fusionados selectivamente desde mockups exploratorios no productivos.
+  - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).
