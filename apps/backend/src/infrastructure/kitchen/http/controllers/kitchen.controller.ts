@@ -71,6 +71,10 @@ const performShiftReconciliationSchema = z.object({
     z.object({
       remanenteId: z.string().min(1),
       physicalQuantity: z.union([z.number().min(0), z.string().min(1)]).transform((val) => val.toString()),
+      // ADR-004 / US-008 / TK-109: opcional a nivel de schema — la obligatoriedad depende
+      // de si la varianza resulta negativa, se valida en el dominio/aplicación (mismo
+      // patrón que la merma de TK-104).
+      reasonId: z.string().min(1).optional(),
     })
   ),
 });

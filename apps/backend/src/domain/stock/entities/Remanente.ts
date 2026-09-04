@@ -186,6 +186,22 @@ export class Remanente {
     }
   }
 
+  /**
+   * TK-109 / US-008: sobrante encontrado en la conciliación de turno (varianza
+   * positiva — el conteo físico superó al teórico). No exige motivo (no es una
+   * pérdida) y no toca `isPristine` — un recuento con superávit no es una
+   * manipulación del remanente, a diferencia de `consumeQuantity`.
+   */
+  public increaseQuantity(amount: DecimalQuantity): void {
+    if (this.props.status !== 'ACTIVE') {
+      throw new ExcessConsumptionException(
+        `Ajuste de superávit de ${amount.toString()}`,
+        '0.0000 (Remanente no esta activo)'
+      );
+    }
+    this.props.currentQuantity = this.props.currentQuantity.add(amount);
+  }
+
   public discard(): DecimalQuantity {
     if (this.props.status !== 'ACTIVE') {
       throw new ExcessConsumptionException(

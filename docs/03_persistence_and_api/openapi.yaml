@@ -1102,7 +1102,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ShiftReconciliationResponse'
         '400':
-          description: Invalid reconciliation payload
+          description: Invalid reconciliation payload, or a negative-variance line is missing reasonId / references a deactivated ConsumptionReason (ADR-004) — nothing in the batch is applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: A line's reasonId does not match any ConsumptionReason (ADR-004) — nothing in the batch is applied
           content:
             application/json:
               schema:
@@ -1948,6 +1954,9 @@ components:
                 type: string
               physicalQuantity:
                 $ref: '#/components/schemas/DecimalString'
+              reasonId:
+                type: string
+                description: 'ADR-004 / US-008: id of an active ConsumptionReason. Required only when physicalQuantity < the remanente''s current theoretical quantity (negative variance) — a positive variance (surplus) needs none.'
 
     ShiftReconciliationResponse:
       type: object

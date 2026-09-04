@@ -49,6 +49,29 @@ function buildPreparationCloseUseCases(deps: PreparationCloseDeps): {
   };
 }
 
+// ADR-004 / TK-108 / TK-109: tanto el consumo manual como la varianza negativa de
+// conciliación exigen un motivo del mismo catálogo — sin él tampoco se puede montar
+// el caso de uso correspondiente (evita un 500 en runtime en vez de un 4xx claro).
+function buildReasonDependentUseCases(
+  remanenteRepository: IRemanenteRepository | undefined,
+  remanenteQueryRepository: IRemanenteQueryRepository,
+  reconciliationRepo: IShiftReconciliationRepository,
+  consumptionReasonRepository: IConsumptionReasonRepository | undefined
+): { consume?: ConsumeRemanenteUseCase; reconcile?: PerformShiftReconciliationUseCase } {
+  if (!remanenteRepository || !consumptionReasonRepository) {
+    return {};
+  }
+  return {
+    consume: new ConsumeRemanenteUseCase(remanenteRepository, consumptionReasonRepository),
+    reconcile: new PerformShiftReconciliationUseCase(
+      remanenteRepository,
+      remanenteQueryRepository,
+      reconciliationRepo,
+      consumptionReasonRepository
+    ),
+  };
+}
+
 function buildKitchenController(
   remanenteQueryRepository: IRemanenteQueryRepository,
   remanenteRepository?: IRemanenteRepository,
@@ -60,22 +83,22 @@ function buildKitchenController(
 ): KitchenController {
   const reconciliationRepo = reconciliationRepository ?? new InMemoryShiftReconciliationRepository();
   const preparationClose = buildPreparationCloseUseCases({ ...closeDeps, recipePreparationRepository });
+  const reasonDependent = buildReasonDependentUseCases(
+    remanenteRepository,
+    remanenteQueryRepository,
+    reconciliationRepo,
+    consumptionReasonRepository
+  );
   return new KitchenController(
     new GetActiveRemanentesUseCase(remanenteQueryRepository),
-    // ADR-004 / TK-108: el motivo estructurado es obligatorio, así que sin el catálogo
-    // de motivos tampoco se puede montar el caso de uso (evita un 500 en runtime).
-    remanenteRepository && consumptionReasonRepository
-      ? new ConsumeRemanenteUseCase(remanenteRepository, consumptionReasonRepository)
-      : undefined,
+    reasonDependent.consume,
     remanenteRepository ? new DiscardRemanenteUseCase(remanenteRepository) : undefined,
     // US-029: consumo ad-hoc dentro de runAdhocConsumption (C-DEV-006-1) — necesita el
     // IStockUnitOfWork, no solo IRemanenteRepository (que ya no basta desde TK-105).
     recipeRepository && closeDeps.stockUnitOfWork
       ? new ConsumeRecipeUseCase(recipeRepository, closeDeps.stockUnitOfWork, systemClock, cryptoIdGenerator)
       : undefined,
-    remanenteRepository
-      ? new PerformShiftReconciliationUseCase(remanenteRepository, remanenteQueryRepository, reconciliationRepo)
-      : undefined,
+    reasonDependent.reconcile,
     recipePreparationRepository
       ? new GetRecipePreparationsUseCase(recipePreparationRepository, remanenteQueryRepository)
       : undefined,

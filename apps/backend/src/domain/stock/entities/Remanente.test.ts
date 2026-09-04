@@ -178,4 +178,28 @@ describe('Remanente Domain Entity — Consumo FEFO y Descarte', () => {
       expect(() => r.returnToWarehouse()).toThrow(ExcessConsumptionException);
     });
   });
+
+  // TK-109 / US-008: sobrante de conciliación de turno (varianza positiva) — bugfix,
+  // antes no había ningún método de dominio que sincronizara currentQuantity con superávit.
+  describe('increaseQuantity (TK-109 / US-008: superávit de conciliación)', () => {
+    it('suma el monto a currentQuantity y mantiene el remanente ACTIVE', () => {
+      const r = Remanente.createNew('rem-1', 'ins-1', new DecimalQuantity('2.000'));
+      r.increaseQuantity(new DecimalQuantity('0.500'));
+      expect(r.currentQuantity.toString()).toBe('2.500');
+      expect(r.status).toBe('ACTIVE');
+    });
+
+    it('no toca isPristine — un superávit encontrado no es una manipulación del remanente', () => {
+      const r = Remanente.createNew('rem-1', 'ins-1', new DecimalQuantity('2.000'));
+      expect(r.isPristine).toBe(true);
+      r.increaseQuantity(new DecimalQuantity('0.500'));
+      expect(r.isPristine).toBe(true);
+    });
+
+    it('lanza ExcessConsumptionException si el remanente ya no está ACTIVE', () => {
+      const r = Remanente.createNew('rem-1', 'ins-1', new DecimalQuantity('2.000'));
+      r.discard();
+      expect(() => r.increaseQuantity(new DecimalQuantity('0.500'))).toThrow(ExcessConsumptionException);
+    });
+  });
 });

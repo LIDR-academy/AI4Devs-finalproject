@@ -28,7 +28,7 @@ inputs:
 | **GET** | `/api/v1/recipes` | *Ninguno* | `ListRecipesResponse` | Obtiene la lista de recetas (`TK-057`, ruta actual desde `TK-069`). |
 | **GET** | `/api/v1/kitchen/recipes` 🚧 | *Ninguno* | `ListRecipesResponse` | *(Nunca implementado)* Reemplazado por `GET /api/v1/recipes` (`TK-057`/`TK-069`) — ver §2.7. |
 | **POST** | `/api/v1/kitchen/recipes/:id/consume` | `ConsumeRecipeRequest` | `ConsumeRecipeResponse` | Descuenta stock en cocina en cascada FEFO basado en los ingredientes de la receta. |
-| **POST** | `/api/v1/kitchen/shift-reconciliation` | `ShiftReconciliationRequest` | `ShiftReconciliationResponse` | Ejecuta el cierre de turno, auto-descarta vencidos y reporta auditoría de discrepancias. |
+| **POST** | `/api/v1/kitchen/shift-reconciliation` | `ShiftReconciliationRequest` | `ShiftReconciliationResponse` | Ejecuta el cierre de turno, auto-descarta vencidos y reporta auditoría de discrepancias. Desde `ADR-004`/`TK-109`: `items[].reasonId` obligatorio en varianza negativa. |
 | **POST** | `/api/v1/stock/insumos` | `CreateInsumoRequest` | `CreateInsumoResponse` | Da de alta un insumo nuevo en el catálogo maestro con stock inicial en 0 (`TK-057`). |
 | **GET** | `/api/v1/stock/insumos` | *Ninguno* | `ListInsumosResponse` | Obtiene la lista de insumos del catálogo maestro (`TK-057`). |
 | **PATCH** | `/api/v1/stock/insumos/{id}/restock` | `RestockInsumoRequest` | `RestockInsumoResponse` | Suma la cantidad recibida a un sub-sector de bodega de un insumo existente (`TK-060` / `US-025`). |
@@ -56,7 +56,7 @@ inputs:
 > **Nota — trazabilidad de consumo ([ADR-004](../02_architecture_design/adr/ADR-004-consumption-reason-catalog.md)):**
 > - `/api/v1/consumption-reasons` (`GET`/`POST`/`PUT`): ✅ Done (`TK-107`, `US-030`) — catálogo administrable descrito arriba.
 > - `POST /api/v1/kitchen/remanentes/{id}/consume` (consumo de remanente): ✅ Done (`TK-108`) — exige `reasonId` (FK al catálogo activo; `404` si no existe, `400` si está desactivado) `+ notes?` (texto libre siempre opcional). `StockMovement.reasonId` nullable, `onDelete: SetNull`. Breaking change deliberado (`reasonId` es un campo requerido nuevo) — `openapi.yaml` `version: 5.0.0`.
-> - `POST /api/v1/kitchen/shift-reconciliation`: 📝 Pendiente (`TK-109`) — cada línea de varianza **negativa** exigirá `reasonId` (400 y ninguna línea se aplica si falta alguno); varianza **positiva** no exige motivo y corrige un bug existente (`Remanente.currentQuantity` no se actualizaba con el sobrante).
+> - `POST /api/v1/kitchen/shift-reconciliation`: ✅ Done (`TK-109`) — cada línea de varianza **negativa** exige `reasonId` (400/404 y **ninguna línea del cierre se aplica** si alguna falla, incluidas las positivas del mismo lote); varianza **positiva** no exige motivo y corrige un bug existente (`Remanente.currentQuantity` ahora se sincroniza con el sobrante vía `Remanente.increaseQuantity`, antes solo quedaba en el `StockMovement` de auditoría).
 
 ---
 
@@ -399,17 +399,22 @@ sequenceDiagram
 ---
 
 ### 2.9. `POST /api/v1/kitchen/shift-reconciliation`
-*   **Descripción:** Procesa el cierre de turno y la conciliación física de inventario de cocina. Auto-descarta todos los remanentes que hayan excedido el tiempo de vida TRR y registra las desviaciones reportadas por el conteo del operario.
+> **Corrección (`TK-109`):** el payload/respuesta de ejemplo de esta sección no coincidían con `PerformShiftReconciliationUseCase` real (`operatorId` faltante, `insumoId` en vez de `remanenteId`, forma de respuesta distinta) — corregido de paso al tocar este endpoint para `ADR-004`.
+
+*   **Descripción:** Procesa el cierre de turno y la conciliación física de inventario de cocina. Auto-descarta todos los remanentes que hayan excedido el tiempo de vida TRR y registra las desviaciones reportadas por el conteo del operario. Desde `ADR-004`/`TK-109`: cada línea con varianza **negativa** (conteo físico < teórico) exige `reasonId`; si falta, **nada del cierre se aplica** (ni siquiera las líneas con varianza positiva del mismo lote). La varianza **positiva** (superávit) sincroniza `Remanente.currentQuantity` sin exigir motivo.
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
-    *   `Authorization: Bearer <token_jwt>` (Rol mínimo: `OPERATOR`)
+    *   `Authorization: Bearer <token_jwt>` (Rol: `ADMIN` o `KITCHEN_STAFF`)
 *   **Request Payload (`ShiftReconciliationRequest`):**
     ```json
     {
+      "operatorId": "usr-op-1",
+      "notes": "Cierre de turno noche",
       "items": [
         {
-          "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
-          "physicalQuantity": "1.2000"
+          "remanenteId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
+          "physicalQuantity": "1.200",
+          "reasonId": "reason-seed-1"
         }
       ]
     }
@@ -417,12 +422,22 @@ sequenceDiagram
 *   **Response Success (`201 Created` - `ShiftReconciliationResponse`):**
     ```json
     {
-      "message": "Shift reconciliation processed successfully",
-      "reconciliationId": "ab901518-a89e-4c33-b9cd-bb901518f88c",
-      "autoDiscardsCount": 3,
-      "variancesCount": 1
+      "reconciliationId": "recon-1735900000000",
+      "autoDiscardedCount": 3,
+      "processedItemsCount": 1,
+      "items": [
+        {
+          "remanenteId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
+          "insumoId": "ins-salsa",
+          "physicalQuantity": "1.200",
+          "theoreticalQuantity": "1.500",
+          "variance": "-0.300"
+        }
+      ]
     }
     ```
+*   **Response Error (`400 Bad Request`):** una línea con varianza negativa sin `reasonId`, o con un motivo desactivado.
+*   **Response Error (`404 Not Found`):** el `reasonId` de una línea con varianza negativa no matchea ningún `ConsumptionReason`.
 
 ---
 
