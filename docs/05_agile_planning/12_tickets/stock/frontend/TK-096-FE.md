@@ -4,7 +4,7 @@ id: TK-096-FE
 related_story: US-025
 points: 5
 type: frontend
-status: approved
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/stock/US-025.md
   - docs/03_persistence_and_api/07_api_specification.md
