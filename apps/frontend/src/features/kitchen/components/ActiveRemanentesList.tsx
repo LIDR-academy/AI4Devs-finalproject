@@ -9,7 +9,8 @@ import styles from './ActiveRemanentesList.module.css';
 
 interface ActiveRemanentesListProps {
   items: RemanenteFEFOItem[];
-  onConsume: (id: string, qty: number) => void;
+  // ADR-004 / TK-108-FE: ya no consume directo — abre ConsumeReasonModal (motivo obligatorio).
+  onRequestConsume: (item: RemanenteFEFOItem, qty: number) => void;
   onDiscard: (item: RemanenteFEFOItem) => void;
 }
 
@@ -74,16 +75,16 @@ interface RemanenteActionButtonsProps {
   item: RemanenteFEFOItem;
   isDiscrete: boolean;
   isCritical: boolean;
-  onConsume: (id: string, qty: number) => void;
+  onRequestConsume: (item: RemanenteFEFOItem, qty: number) => void;
   onDiscard: (item: RemanenteFEFOItem) => void;
 }
 
-const RemanenteActionButtons: React.FC<RemanenteActionButtonsProps> = ({ item, isDiscrete, isCritical, onConsume, onDiscard }) => (
+const RemanenteActionButtons: React.FC<RemanenteActionButtonsProps> = ({ item, isDiscrete, isCritical, onRequestConsume, onDiscard }) => (
   <div className="flex-gap-sm flex-wrap">
     <button
       type="button"
       className={`btn-touch btn-secondary ${styles['remanente-qty-btn']}`}
-      onClick={() => onConsume(item.id, isDiscrete ? 1 : 0.25)}
+      onClick={() => onRequestConsume(item, isDiscrete ? 1 : 0.25)}
       title={isDiscrete ? 'Consumir 1 unidad' : 'Consumir 0.25 porciones'}
       id={`btn-consume-025-${item.id}`}
     >
@@ -93,7 +94,7 @@ const RemanenteActionButtons: React.FC<RemanenteActionButtonsProps> = ({ item, i
     <button
       type="button"
       className={`btn-touch btn-secondary ${styles['remanente-qty-btn']}`}
-      onClick={() => onConsume(item.id, isDiscrete ? 2 : 0.5)}
+      onClick={() => onRequestConsume(item, isDiscrete ? 2 : 0.5)}
       title={isDiscrete ? 'Consumir 2 unidades' : 'Consumir 0.5 porciones'}
       id={`btn-consume-050-${item.id}`}
     >
@@ -104,7 +105,7 @@ const RemanenteActionButtons: React.FC<RemanenteActionButtonsProps> = ({ item, i
     <RowButton
       variant={isCritical ? 'urgent' : 'default'}
       className={`${styles['remanente-qty-btn']} ${styles['remanente-qty-btn--wide']}`}
-      onClick={() => onConsume(item.id, isDiscrete ? 5 : 1.0)}
+      onClick={() => onRequestConsume(item, isDiscrete ? 5 : 1.0)}
       title={isDiscrete ? 'Consumir 5 unidades' : 'Consumir 1.0 porcion'}
       id={`btn-consume-100-${item.id}`}
     >
@@ -127,11 +128,11 @@ const RemanenteActionButtons: React.FC<RemanenteActionButtonsProps> = ({ item, i
 interface RemanenteListItemProps {
   item: RemanenteFEFOItem;
   index: number;
-  onConsume: (id: string, qty: number) => void;
+  onRequestConsume: (item: RemanenteFEFOItem, qty: number) => void;
   onDiscard: (item: RemanenteFEFOItem) => void;
 }
 
-const RemanenteListItem: React.FC<RemanenteListItemProps> = ({ item, index, onConsume, onDiscard }) => {
+const RemanenteListItem: React.FC<RemanenteListItemProps> = ({ item, index, onRequestConsume, onDiscard }) => {
   const isCritical = item.hoursRemaining < 24;
   const isDiscrete = DISCRETE_UNITS.includes(item.unitOfMeasure.toUpperCase());
 
@@ -141,12 +142,12 @@ const RemanenteListItem: React.FC<RemanenteListItemProps> = ({ item, index, onCo
     >
       <RemanenteInfoBlock item={item} index={index} isCritical={isCritical} />
       <RemanenteQuantityDisplay item={item} />
-      <RemanenteActionButtons item={item} isDiscrete={isDiscrete} isCritical={isCritical} onConsume={onConsume} onDiscard={onDiscard} />
+      <RemanenteActionButtons item={item} isDiscrete={isDiscrete} isCritical={isCritical} onRequestConsume={onRequestConsume} onDiscard={onDiscard} />
     </div>
   );
 };
 
-export const ActiveRemanentesList: React.FC<ActiveRemanentesListProps> = ({ items, onConsume, onDiscard }) => {
+export const ActiveRemanentesList: React.FC<ActiveRemanentesListProps> = ({ items, onRequestConsume, onDiscard }) => {
   if (items.length === 0) {
     return <RemanentesEmptyState />;
   }
@@ -154,7 +155,7 @@ export const ActiveRemanentesList: React.FC<ActiveRemanentesListProps> = ({ item
   return (
     <div className="flex-column gap-4">
       {items.map((item, index) => (
-        <RemanenteListItem key={item.id} item={item} index={index} onConsume={onConsume} onDiscard={onDiscard} />
+        <RemanenteListItem key={item.id} item={item} index={index} onRequestConsume={onRequestConsume} onDiscard={onDiscard} />
       ))}
     </div>
   );

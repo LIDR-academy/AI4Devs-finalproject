@@ -300,3 +300,16 @@ inputs:
   - Backend 328 tests / build / lint verdes. Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`) verdes; mutation ≥ 70 % en los 3 archivos domain/application tocados (Guard 11) — `InactiveConsumptionReasonException.ts` necesitó un `.test.ts` dedicado (la cobertura indirecta vía el test HTTP dejó sobrevivir un mutante `StringLiteral` que vaciaba el mensaje; 4 tests unitarios directos lo resolvieron, mismo patrón de `TK-105`).
   - **Pendiente:** `TK-108-FE` (modal de motivo al consumir, reemplaza el toque directo), luego `TK-109`/`TK-109-FE` (motivo obligatorio en varianza negativa de conciliación + fix del bug de superávit).
   - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).
+
+### 2026-09-04 (cont.) - TK-108-FE: Modal de Motivo al Consumir un Remanente — US-004 completa
+- **Hito:** los 3 botones rápidos de cantidad de `ActiveRemanentesList` (`-0.25`/`-0.5`/`-1.0`, o su equivalente discreto) ya no consumen con un solo toque — abren `ConsumeReasonModal` (mismo patrón que `DiscardModal`) con la cantidad ya elegida, un selector de motivo (catálogo activo de `TK-107-FE`) y notas de texto libre siempre opcionales, antes de confirmar. **Con esto se completa US-004 v1.1.0 de punta a punta backend + frontend.**
+- **Acciones Realizadas:**
+  - ✅ `ActiveRemanentesList.onConsume` → `onRequestConsume(item, qty)`: ya no llama al servicio directo, solo abre el modal (`InventarioRoute` guarda `{remanente, quantity}` en `consumeTarget`, mismo patrón que `discardTarget`). El modal es quien llama a `KitchenService.consumeRemanente`, igual que `DiscardModal` con `discardRemanente`.
+  - ✅ `kitchen.service.ts.consumeRemanente` gana `reasonId` (obligatorio) + `notes?` en el body — mantiene su fallback offline preexistente (deuda ya documentada, `C-DEV-006-3`, fuera de alcance).
+  - ✅ `consumeValidationError` sin `required` nativo (Guard 38) — mismo patrón que `extractionValidationError` de `WarehouseExtractionModal`: sin motivo, `ErrorBanner`, nunca el popup del navegador.
+  - ✅ `ConsumptionReasonsService.list()` de `TK-107-FE` reutilizado tal cual (sin `includeInactive` → solo activos, abierto a cualquier autenticado).
+  - ✅ 3 tests de componente: sin motivo → bloqueado con `ErrorBanner`/sin `POST`/`<select>` sin `required`; con motivo → `POST` con `reasonId`+`notes` correctos; `target=null` no renderiza nada.
+- **Estado:**
+  - Frontend 165 tests / build / lint limpios (0 errores nuevos; 1 fallo intermitente preexistente de `RecipeSelectorModal.test.tsx` al correr la suite completa, confirmado no relacionado — pasa solo y en la re-corrida de la suite completa). Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`, `check_inline_styles`, `check_native_alerts`) verdes.
+  - **Épica US-004 v1.1.0 cerrada.** Sigue: `TK-109`/`TK-109-FE` (motivo obligatorio en varianza negativa de conciliación de turno + fix del bug de superávit que no sincronizaba `Remanente.currentQuantity`) — cierra el resto de ADR-004.
+  - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).

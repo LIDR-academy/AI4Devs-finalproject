@@ -124,9 +124,11 @@ export class KitchenService {
     }
   }
 
-  public static async consumeRemanente(remanenteId: string, quantity: number | string): Promise<void> {
+  // ADR-004 / US-004 / TK-108-FE: reasonId es obligatorio (catálogo administrable, US-030);
+  // notes es texto libre siempre opcional.
+  public static async consumeRemanente(remanenteId: string, quantity: number | string, reasonId: string, notes?: string): Promise<void> {
     try {
-      await apiRequest(`/kitchen/remanentes/${remanenteId}/consume`, { method: 'POST', body: { quantity } });
+      await apiRequest(`/kitchen/remanentes/${remanenteId}/consume`, { method: 'POST', body: { quantity, reasonId, notes } });
       return;
     } catch (err) {
       console.error('[KitchenService] Error de red en consumeRemanente:', err);

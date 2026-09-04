@@ -94,7 +94,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-107** | `kitchen` | **Medio** | **Alta** | 5 SP | `US-030`: catálogo de motivos de consumo administrable (crear/editar/activar-desactivar), semilla editable. ✅ Done. | 🟡 P1 - Alta |
 | **TK-107-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-107`. `US-030`: panel de administración del catálogo en `/ajustes`. ✅ Done. | 🟡 P1 - Alta |
 | **TK-108** | `kitchen` | **Medio** | **Alta** | 3 SP | Depende de `TK-107`. `US-004`: motivo estructurado obligatorio + texto libre opcional al consumir un remanente — cierra el hueco de trazabilidad más transitado de la app. ✅ Done. | 🟡 P1 - Alta |
-| **TK-108-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-108`, `TK-107-FE`. `US-004`: modal de motivo al consumir (reemplaza el toque directo). 📝 Draft. | 🟡 P1 - Alta |
+| **TK-108-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-108`, `TK-107-FE`. `US-004`: modal de motivo al consumir (reemplaza el toque directo). ✅ Done. | 🟡 P1 - Alta |
 | **TK-109** | `kitchen` | **Alto** | **Alta** | 5 SP | Depende de `TK-107`. `US-008`: motivo obligatorio en varianza negativa de conciliación de turno + fix de bug (superávit no sincronizaba el remanente). 📝 Draft. | 🟡 P1 - Alta |
 | **TK-109-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-109`, `TK-107-FE`. `US-008`: selector de motivo por línea con varianza negativa en el wizard de cierre de turno. 📝 Draft. | 🟡 P1 - Alta |
 

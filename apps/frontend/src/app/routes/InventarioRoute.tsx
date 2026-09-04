@@ -4,6 +4,7 @@ import { ActionButton } from '../../shared/components/ActionButton.js';
 import { bucketRemanentes, type UrgencyLevel } from '../../shared/components/urgency.js';
 import { KitchenService, RemanenteFEFOItem } from '../../features/kitchen/services/kitchen.service.js';
 import { ActiveRemanentesList } from '../../features/kitchen/components/ActiveRemanentesList.js';
+import { ConsumeReasonModal, ConsumeTarget } from '../../features/kitchen/components/ConsumeReasonModal.js';
 import { WarehouseExtractionModal } from '../../features/stock/components/WarehouseExtractionModal.js';
 import { DiscardModal } from '../../features/kitchen/components/DiscardModal.js';
 import { RecipeSelectorModal } from '../../features/kitchen/components/RecipeSelectorModal.js';
@@ -98,15 +99,7 @@ function useInventarioData() {
     loadRemanentes();
   }, [loadRemanentes]);
 
-  const handleConsume = useCallback(
-    async (id: string, qty: number) => {
-      await KitchenService.consumeRemanente(id, qty);
-      await loadRemanentes();
-    },
-    [loadRemanentes],
-  );
-
-  return { remanentes, isLoading, loadRemanentes, handleConsume };
+  return { remanentes, isLoading, loadRemanentes };
 }
 
 function useKitchenOpModals() {
@@ -114,6 +107,9 @@ function useKitchenOpModals() {
   const [isRecipeOpen, setIsRecipeOpen] = useState(false);
   const [isReconciliationOpen, setIsReconciliationOpen] = useState(false);
   const [discardTarget, setDiscardTarget] = useState<RemanenteFEFOItem | null>(null);
+  // ADR-004 / TK-108-FE: los botones rápidos de cantidad abren el modal de motivo,
+  // en vez de consumir directo (mismo patrón que discardTarget).
+  const [consumeTarget, setConsumeTarget] = useState<ConsumeTarget | null>(null);
   return {
     isExtractionOpen,
     setIsExtractionOpen,
@@ -123,6 +119,8 @@ function useKitchenOpModals() {
     setIsReconciliationOpen,
     discardTarget,
     setDiscardTarget,
+    consumeTarget,
+    setConsumeTarget,
   };
 }
 
@@ -153,7 +151,7 @@ const KitchenBoardTitle: React.FC = () => (
 /** Ruta Inventario (`/`, US-023): el Tablero FEFO de cocina, antes cuerpo de `App.tsx`. */
 export const InventarioRoute: React.FC = () => {
   const { currentUser } = useAppShell();
-  const { remanentes, isLoading, loadRemanentes, handleConsume } = useInventarioData();
+  const { remanentes, isLoading, loadRemanentes } = useInventarioData();
   const modals = useKitchenOpModals();
   const [activeLocation, setActiveLocation] = useState<LocationFilter>('ALL');
 
@@ -182,12 +180,17 @@ export const InventarioRoute: React.FC = () => {
       <KitchenBoardTitle />
       <LocationFilterTabs activeLocation={activeLocation} onLocationSelect={setActiveLocation} counts={counts} />
       <main>
-        <ActiveRemanentesList items={filtered} onConsume={handleConsume} onDiscard={(item) => modals.setDiscardTarget(item)} />
+        <ActiveRemanentesList
+          items={filtered}
+          onRequestConsume={(item, qty) => modals.setConsumeTarget({ remanente: item, quantity: qty })}
+          onDiscard={(item) => modals.setDiscardTarget(item)}
+        />
       </main>
 
       <WarehouseExtractionModal isOpen={modals.isExtractionOpen} onClose={() => modals.setIsExtractionOpen(false)} onSuccess={loadRemanentes} />
       <RecipeSelectorModal isOpen={modals.isRecipeOpen} onClose={() => modals.setIsRecipeOpen(false)} onSuccess={loadRemanentes} />
       <DiscardModal remanente={modals.discardTarget} onClose={() => modals.setDiscardTarget(null)} onSuccess={loadRemanentes} />
+      <ConsumeReasonModal target={modals.consumeTarget} onClose={() => modals.setConsumeTarget(null)} onSuccess={loadRemanentes} />
       <ShiftReconciliationWizard
         isOpen={modals.isReconciliationOpen}
         remanentes={remanentes}
