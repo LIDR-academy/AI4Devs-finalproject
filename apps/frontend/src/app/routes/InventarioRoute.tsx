@@ -155,13 +155,15 @@ export const InventarioRoute: React.FC = () => {
   const modals = useKitchenOpModals();
   const [activeLocation, setActiveLocation] = useState<LocationFilter>('ALL');
 
-  const counts: Record<LocationFilter, number> = {
-    ALL: remanentes.length,
-    KITCHEN_FRIDGE: remanentes.filter((r) => r.location === 'KITCHEN_FRIDGE').length,
-    KITCHEN_PREP: remanentes.filter((r) => r.location === 'KITCHEN_PREP').length,
-    KITCHEN_LINE: remanentes.filter((r) => r.location === 'KITCHEN_LINE').length,
-  };
-  const filtered = activeLocation === 'ALL' ? remanentes : remanentes.filter((r) => r.location === activeLocation);
+  // US-026 / TK-112-FE: por storageLocationId (id real del área), no por el literal
+  // `location` — desde TK-102-FE, `location` guarda el nombre del área, no un literal
+  // fijo (confirmado contra la base real: las pestañas antiguas siempre mostraban 0).
+  const counts: Record<string, number> = { ALL: remanentes.length };
+  for (const r of remanentes) {
+    if (!r.storageLocationId) continue;
+    counts[r.storageLocationId] = (counts[r.storageLocationId] ?? 0) + 1;
+  }
+  const filtered = activeLocation === 'ALL' ? remanentes : remanentes.filter((r) => r.storageLocationId === activeLocation);
 
   return (
     <>

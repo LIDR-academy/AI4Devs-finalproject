@@ -100,6 +100,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-110** | `kitchen` | **Bajo** | **Baja** | 2 SP | `US-017`: umbral de alerta crítica FEFO leía un `24` hardcodeado en vez de `SystemSettings.criticalAlertHours` — remediación técnica (C-DEV-006-4). ✅ Done. | 🟢 P2 - Media |
 | **TK-111** | `kitchen` | **Medio** | **Alta** | 3 SP | `US-007`: vista previa de disponibilidad por ingrediente (`GET /kitchen/recipes/:id/availability`), reutiliza el cálculo de `ConsumeRecipeUseCase` sin mutar. ✅ Done. | 🟡 P1 - Alta |
 | **TK-111-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-111`. `US-007`: `RecipeSelectorModal` muestra requerido/disponible por ingrediente y bloquea confirmar si falta stock. ✅ Done. | 🟡 P1 - Alta |
+| **TK-112-FE** | `kitchen` | **Medio** | **Alta** | 3 SP | `US-026`: pestañas de filtro por área de cocina (`LocationFilterTabs`) filtraban por literales legados que dejaron de coincidir con `Remanente.location` desde `TK-102-FE` — bug confirmado en vivo (0 resultados en toda pestaña de área). ✅ Done. | 🔴 P0 - Crítica |
 
 ---
 
@@ -188,6 +189,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-110** | [US-017](../11_user_stories/settings/US-017.md) | Umbral de Alerta Crítica FEFO Ignoraba SystemSettings | `kitchen` | 2 | Should Have | [kitchen/backend/TK-110.md](kitchen/backend/TK-110.md) |
 | **TK-111** | [US-007](../11_user_stories/kitchen/US-007.md) | Vista Previa de Disponibilidad por Ingrediente de Receta | `kitchen` | 3 | Should Have | [kitchen/backend/TK-111.md](kitchen/backend/TK-111.md) |
 | **TK-111-FE** | [US-007](../11_user_stories/kitchen/US-007.md) | Vista Previa de Disponibilidad en "Preparar Receta" | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-111-FE.md](kitchen/frontend/TK-111-FE.md) |
+| **TK-112-FE** | [US-026](../11_user_stories/stock/US-026.md) | Pestañas de Filtro por Área de Cocina Dejaron de Coincidir con los Remanentes Reales | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-112-FE.md](kitchen/frontend/TK-112-FE.md) |
 | **TK-106-FE** | [US-025](../11_user_stories/stock/US-025.md) | Aviso de Stock por Sub-Sector en la Extracción de Bodega | `stock` | 2 | Must Have | [stock/frontend/TK-106-FE.md](stock/frontend/TK-106-FE.md) |
 | **TK-075-FE** | [US-017](../11_user_stories/settings/US-017.md) | Frontend System Settings & Branding UI | `settings` | 3 | Should Have | [settings/frontend/TK-075-FE.md](settings/frontend/TK-075-FE.md) |
 | **TK-077-FE** | [US-018](../11_user_stories/auth/US-018.md) | Modal Táctil y Pantalla de Recuperación de PIN de Administrador | `auth` | 3 | Should Have | [auth/frontend/TK-077-FE.md](auth/frontend/TK-077-FE.md) |

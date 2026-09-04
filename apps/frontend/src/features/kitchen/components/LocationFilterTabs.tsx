@@ -1,23 +1,46 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapPin } from 'lucide-react';
+import { fetchActiveKitchenAreas, StorageLocationDto } from '../../stock/services/locations.service.js';
 import styles from './LocationFilterTabs.module.css';
 
-export type LocationFilter = 'ALL' | 'KITCHEN_FRIDGE' | 'KITCHEN_PREP' | 'KITCHEN_LINE';
+// US-026 / TK-112-FE: id real de un área de cocina (StorageLocation.id) o 'ALL' — ya no
+// una unión fija de 3 literales (KITCHEN_FRIDGE/PREP/LINE). Esos literales dejaron de
+// coincidir con `Remanente.location` desde que TK-102-FE volvió dinámico el destino de
+// la extracción (confirmado contra la base real: los remanentes activos guardan el
+// nombre del área, no el literal — las pestañas fijas siempre mostraban 0).
+export type LocationFilter = string;
 
 interface LocationFilterTabsProps {
   activeLocation: LocationFilter;
   onLocationSelect: (loc: LocationFilter) => void;
-  counts: Record<LocationFilter, number>;
+  counts: Record<string, number>;
+}
+
+function useKitchenAreas(): StorageLocationDto[] {
+  const [areas, setAreas] = useState<StorageLocationDto[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchActiveKitchenAreas()
+      .then((items) => {
+        if (!cancelled) setAreas(items);
+      })
+      .catch(() => {
+        if (!cancelled) setAreas([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return areas;
 }
 
 export const LocationFilterTabs: React.FC<LocationFilterTabsProps> = ({ activeLocation, onLocationSelect, counts }) => {
-  // TK-095-FE WS-4 #12: etiquetas cortas (como el artefacto "Sistema FEFO"); el
-  // nombre completo va en `title` para no perder contexto.
-  const tabs: { id: LocationFilter; label: string; full?: string }[] = [
+  const areas = useKitchenAreas();
+  const tabs: { id: LocationFilter; label: string }[] = [
     { id: 'ALL', label: 'Todos' },
-    { id: 'KITCHEN_FRIDGE', label: 'Refrigerador', full: 'Refrigerador Principal' },
-    { id: 'KITCHEN_PREP', label: 'Mesa Prep', full: 'Mesa de Preparación' },
-    { id: 'KITCHEN_LINE', label: 'Línea', full: 'Línea de Servicio' },
+    ...areas.map((area) => ({ id: area.id, label: area.name })),
   ];
 
   return (
@@ -33,11 +56,11 @@ export const LocationFilterTabs: React.FC<LocationFilterTabsProps> = ({ activeLo
           <button
             key={tab.id}
             type="button"
-            title={tab.full ?? tab.label}
+            title={tab.label}
             className={`btn-touch flex-gap-xs ${styles['location-tab-btn']} ${isActive ? 'btn-primary fw-bold' : 'btn-secondary'}`}
             onClick={() => onLocationSelect(tab.id)}
           >
-            {tab.label}
+            <span className={styles['location-tab-label-text']}>{tab.label}</span>
             <span className={`${styles['badge-count']} ${isActive ? styles['badge-count--active'] : styles['badge-count--inactive']}`}>
               {count}
             </span>

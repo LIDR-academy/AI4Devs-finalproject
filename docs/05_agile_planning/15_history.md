@@ -379,3 +379,16 @@ inputs:
   - Frontend 171 tests / build / lint limpios (0 warnings nuevos tras extraer `ConfirmButton`). Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`, `check_inline_styles`, `check_native_alerts`) verdes.
   - **US-007 v1.1.0 completa, backend + frontend.**
   - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).
+
+### 2026-09-04 (cont.) - TK-112-FE: las pestañas de filtro por área de cocina dejaron de coincidir con los remanentes reales
+- **Hito:** siguiendo con las prioridades del análisis de hardcodeos (el humano dijo "continue" tras cerrar `TK-110`/`TK-111`/`TK-111-FE`), se investigó si los literales `KITCHEN_FRIDGE`/`KITCHEN_PREP`/`KITCHEN_LINE` de `LocationFilterTabs` seguían siendo válidos — **no lo eran**. Desde que `TK-102-FE` volvió dinámico el destino de la extracción, `Remanente.location` guarda el nombre real del área (`"Refrigerador Principal Cocina"`, etc.), no el literal. **Confirmado contra la base viva** (`docker exec restostock_postgres psql ... SELECT location, "storageLocationId" FROM "Remanente" WHERE status='ACTIVE'`): los 3 remanentes activos tienen exactamente esos nombres, ninguno el literal. Resultado real: las pestañas "Refrigerador"/"Mesa Prep"/"Línea" del tablero FEFO siempre mostraban 0 remanentes, aunque existieran — solo "Todos" funcionaba.
+- **Acciones Realizadas:**
+  - ✅ `RemanenteFEFOItem` (frontend) gana `storageLocationId?: string` — el backend ya lo enviaba desde `TK-102`, el tipo del frontend lo descartaba en silencio.
+  - ✅ `LocationFilterTabs.tsx` reescrito: ya no 3 pestañas fijas — se puebla dinámicamente desde `fetchActiveKitchenAreas()` (mismo servicio ya usado por `StorageSectorSelect` desde `TK-102-FE`), una pestaña por área de cocina activa + "Todos". `LocationFilter` pasa de unión fija a `string` (id real del área).
+  - ✅ `InventarioRoute.tsx`: `counts`/`filtered` comparan por `storageLocationId`, no por el literal `location`.
+  - ✅ Etiquetas cortas hardcodeadas ("Refrigerador"/"Mesa Prep"/"Línea", de `TK-095-FE WS-4 #12`) retiradas — con nombres de área dinámicos no hay una lista fija que acortar a mano; se usa el nombre real con `text-overflow: ellipsis` + `title`.
+  - ✅ 3 tests nuevos (`LocationFilterTabs.test.tsx`, sobre `InventarioRoute` completo vía `AppShellCtx.Provider` — sin necesidad del router completo): pestañas con nombres reales, conteo correcto por área, filtrado correcto al hacer clic, con los datos exactos confirmados en la base real.
+- **Estado:**
+  - Frontend 174 tests / build / lint limpios (0 warnings nuevos). Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`, `check_inline_styles`, `check_native_alerts`) verdes.
+  - Remediación técnica (C-DEV-006-4) — sin ADR nueva, `US-026`/`ADR-003` ya especificaban el modelo multi-sector; el bug era que esta UI en particular no se había actualizado cuando `TK-102-FE` lo activó.
+  - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).

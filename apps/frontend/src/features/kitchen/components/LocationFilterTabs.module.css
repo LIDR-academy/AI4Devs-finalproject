@@ -9,5 +9,9 @@
 .location-tabs-bar { margin-bottom: var(--space-4); }
 .location-tabs-label { font-size: var(--fs-sm); color: var(--text-secondary); margin-right: var(--space-1); }
 .location-tab-btn { height: 40px; padding: 0 14px; font-size: var(--fs-sm); }
+/* US-026 / TK-112-FE: el nombre del área es dinámico (lo elige el admin) — ya no hay
+   una etiqueta corta fija que acortar a mano; se trunca visualmente y el nombre
+   completo queda en el atributo `title` del botón. */
+.location-tab-label-text { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .badge-count--active { background-color: var(--color-primary-on); color: var(--color-primary); }
 .badge-count--inactive { background-color: var(--bg-card); color: var(--text-secondary); }

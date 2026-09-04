@@ -36,6 +36,10 @@ export interface RemanenteFEFOItem {
   currentQuantity: string;
   initialQuantity: string;
   location: string;
+  // US-026 / TK-112-FE: el backend (`GetActiveRemanentesUseCase`) ya lo enviaba —
+  // el tipo del frontend lo descartaba en silencio, dejando el filtro por área
+  // sin forma de distinguir un área real de otra (solo tenía el nombre en `location`).
+  storageLocationId?: string;
   expirationDate: string;
   hoursRemaining: number;
   isCriticalAlert: boolean;
