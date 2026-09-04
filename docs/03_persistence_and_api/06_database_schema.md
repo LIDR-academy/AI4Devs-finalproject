@@ -550,6 +550,18 @@ model RecipePreparationItem {
   @@map("recipe_preparation_items")
 }
 
+// ADR-004 / US-030: catálogo administrable de motivos de consumo (US-004) y de
+// varianza negativa de conciliación de turno (US-008). Se desactiva, nunca se borra.
+model ConsumptionReason {
+  id        String   @id @default(uuid())
+  label     String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("consumption_reasons")
+}
+
 model RecipeIngredient {
   id        String   @id @default(uuid()) @db.Uuid
   recipeId  String   @map("recipe_id") @db.Uuid

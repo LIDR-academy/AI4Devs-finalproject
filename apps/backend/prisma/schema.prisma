@@ -189,6 +189,16 @@ model StockMovement {
   operator   User?    @relation(fields: [operatorId], references: [id], onDelete: SetNull)
 }
 
+// ADR-004 / US-030: catálogo administrable de motivos de consumo (US-004) y de
+// varianza negativa de conciliación de turno (US-008). Se desactiva, nunca se borra.
+model ConsumptionReason {
+  id        String   @id @default(uuid())
+  label     String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model SystemHealth {
   id        String   @id @default(uuid())
   status    String

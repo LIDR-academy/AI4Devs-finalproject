@@ -11,6 +11,7 @@ import { PrismaStockMovementQueryRepository } from '../stock/repositories/Prisma
 import { PrismaRoleRepository } from '../security/repositories/PrismaRoleRepository.js';
 import { PrismaLocationRepository } from '../stock/repositories/PrismaLocationRepository.js';
 import { PrismaSettingsRepository } from '../settings/repositories/PrismaSettingsRepository.js';
+import { PrismaConsumptionReasonRepository } from '../kitchen/repositories/PrismaConsumptionReasonRepository.js';
 
 /**
  * Composición root real de infraestructura: fuera de "production" no fuerza nada (createApp
@@ -37,6 +38,7 @@ export function buildRepositoriesForEnvironment(
     roleRepository: new PrismaRoleRepository(prisma),
     locationRepository: new PrismaLocationRepository(prisma),
     settingsRepository: new PrismaSettingsRepository(prisma),
+    consumptionReasonRepository: new PrismaConsumptionReasonRepository(prisma),
   };
 }
 

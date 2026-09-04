@@ -10,7 +10,7 @@ import { EntityNotFoundException } from '../../../../domain/errors/EntityNotFoun
 import { LocationHasStockException } from '../../../../domain/stock/errors/LocationHasStockException.js';
 import { LocationHasRemanentesException } from '../../../../domain/stock/errors/LocationHasRemanentesException.js';
 import { requireRole } from '../../../http/middlewares/requireRole.js';
-import { respondValidationError } from '../../../http/utils/responseUtils.js';
+import { handleZodOrNext } from '../../../http/utils/responseUtils.js';
 
 const createLocationSchema = z.object({
   name: z.string().min(2, 'El nombre del sector debe tener al menos 2 caracteres.'),
@@ -31,13 +31,6 @@ function mapLocation(l: StorageLocation) {
   return { id: l.id, name: l.name, type: l.type, description: l.description, isActive: l.isActive };
 }
 
-function handleControllerError(req: Request, res: Response, next: NextFunction, err: unknown): void {
-  if (err instanceof z.ZodError) {
-    respondValidationError(req, res, err.errors.map((e) => e.message).join('; '));
-    return;
-  }
-  next(err as Error);
-}
 
 type StockAndRemanenteRepo = IInsumoRepository & Partial<IRemanenteRepository>;
 
@@ -102,7 +95,7 @@ function buildHandlers(locationRepo: IStorageLocationRepository, insumoRepo?: St
       const loc = await createLocationUseCase.execute(parsed);
       res.status(201).json(mapLocation(loc));
     } catch (err) {
-      handleControllerError(req, res, next, err);
+      handleZodOrNext(req, res, next, err);
     }
   };
 
@@ -112,7 +105,7 @@ function buildHandlers(locationRepo: IStorageLocationRepository, insumoRepo?: St
       const updated = await applyLocationUpdate(locationRepo, insumoRepo, req.params.id, parsed);
       res.json(mapLocation(updated));
     } catch (err) {
-      handleControllerError(req, res, next, err);
+      handleZodOrNext(req, res, next, err);
     }
   };
 

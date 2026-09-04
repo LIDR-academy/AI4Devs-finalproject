@@ -562,6 +562,135 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/consumption-reasons:
+    get:
+      summary: List consumption reasons (US-030 / ADR-004)
+      description: >-
+        By default returns only active reasons, visible to any authenticated user.
+        `includeInactive=true` additionally returns deactivated reasons and requires the ADMIN role.
+      operationId: listConsumptionReasons
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: includeInactive
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of consumption reasons
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListConsumptionReasonsResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: includeInactive=true requested by a non-ADMIN user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a consumption reason (US-030 / ADR-004)
+      operationId: createConsumptionReason
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConsumptionReasonRequest'
+      responses:
+        '201':
+          description: Consumption reason created (active by default)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionReason'
+        '400':
+          description: Input validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/consumption-reasons/{id}:
+    put:
+      summary: Rename and/or (de)activate a consumption reason (US-030 / ADR-004)
+      description: 'Deactivate-never-delete: a deactivated reason is preserved for historical `StockMovement` references and simply disappears from the active-only listing.'
+      operationId: updateConsumptionReason
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConsumptionReasonRequest'
+      responses:
+        '200':
+          description: Consumption reason updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionReason'
+        '400':
+          description: Input validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Consumption reason not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/kitchen/remanentes-activos:
     get:
       summary: List active kitchen remanentes ordered by FEFO
@@ -1588,6 +1717,40 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/StorageLocation'
+
+    ConsumptionReason:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+          example: "Preparación de plato"
+        isActive:
+          type: boolean
+
+    CreateConsumptionReasonRequest:
+      type: object
+      required:
+        - label
+      properties:
+        label:
+          type: string
+          minLength: 1
+
+    UpdateConsumptionReasonRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          minLength: 1
+        isActive:
+          type: boolean
+
+    ListConsumptionReasonsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ConsumptionReason'
 
     RemanenteItem:
       type: object

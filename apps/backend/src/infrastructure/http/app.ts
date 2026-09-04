@@ -50,6 +50,11 @@ import { InMemorySettingsRepository } from '../settings/repositories/InMemorySet
 import { createSettingsController } from '../settings/http/controllers/settings.controller.js';
 import { IEmailService } from '../../domain/auth/ports/IEmailService.js';
 
+import { IConsumptionReasonRepository } from '../../domain/kitchen/repositories/IConsumptionReasonRepository.js';
+import { InMemoryConsumptionReasonRepository } from '../kitchen/repositories/InMemoryConsumptionReasonRepository.js';
+import { createConsumptionReasonsController } from '../kitchen/http/controllers/consumption-reasons.controller.js';
+import { cryptoIdGenerator } from '../shared/cryptoIdGenerator.js';
+
 export interface AppOptions {
   userRepository?: IUserRepository;
   emailService?: IEmailService;
@@ -63,6 +68,7 @@ export interface AppOptions {
   roleRepository?: IRoleRepository;
   locationRepository?: IStorageLocationRepository;
   settingsRepository?: ISystemSettingsRepository;
+  consumptionReasonRepository?: IConsumptionReasonRepository;
   jwtSecret?: string;
   corsAllowedOrigins?: string;
   rateLimit?: { windowMs: number; max: number };
@@ -175,6 +181,7 @@ interface AppRepositories {
   roleRepo: IRoleRepository;
   locationRepo: IStorageLocationRepository;
   settingsRepo: ISystemSettingsRepository;
+  consumptionReasonRepo: IConsumptionReasonRepository;
 }
 
 function buildQueryRepositories(
@@ -195,6 +202,7 @@ function buildAuxiliaryRepositories(options: AppOptions) {
     roleRepo: options.roleRepository ?? new InMemoryRoleRepository(),
     locationRepo: options.locationRepository ?? new InMemoryLocationRepository(),
     settingsRepo: options.settingsRepository ?? new InMemorySettingsRepository(),
+    consumptionReasonRepo: options.consumptionReasonRepository ?? new InMemoryConsumptionReasonRepository(),
   };
 }
 
@@ -242,7 +250,7 @@ function mountApiRoutes(
   authMiddleware: ReturnType<typeof createAuthenticateJWTMiddleware>,
   isAuthRequired: boolean
 ): void {
-  const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, recipePreparationRepo, reportRepo, roleRepo, locationRepo, settingsRepo } = repos;
+  const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, recipePreparationRepo, reportRepo, roleRepo, locationRepo, settingsRepo, consumptionReasonRepo } = repos;
   const guard = isAuthRequired ? [authMiddleware] : [];
 
   app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo, isAuthRequired, locationRepo, recipePreparationRepo));
@@ -252,6 +260,9 @@ function mountApiRoutes(
   app.use('/api/v1/roles', ...guard, createRolesController(roleRepo));
   app.use('/api/v1/locations', ...guard, createLocationsController(locationRepo, isAuthRequired, stockRepo));
   app.use('/api/v1/settings', ...guard, createSettingsController(settingsRepo));
+  // US-030: catálogo de motivos de consumo — lectura para cualquier autenticado,
+  // mutación y `includeInactive` solo ADMIN (gateado dentro del propio controller).
+  app.use('/api/v1/consumption-reasons', ...guard, createConsumptionReasonsController(consumptionReasonRepo, cryptoIdGenerator, isAuthRequired));
 }
 
 export function createApp(options: AppOptions = {}): Express {

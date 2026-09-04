@@ -1,4 +1,5 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
 
 /**
  * Emite una respuesta de error de validación estandarizada bajo el formato RFC 7807 Problem Details.
@@ -14,4 +15,18 @@ export function respondValidationError(req: Request, res: Response, detailMsg: s
     error: 'ValidationError',
     message: detailMsg,
   });
+}
+
+/**
+ * Handler de `catch` compartido para controllers: un `ZodError` se traduce a
+ * `respondValidationError` (400), cualquier otra excepción sigue al `errorHandler`
+ * central vía `next`. Antes duplicado entre `locations.controller.ts` y
+ * `consumption-reasons.controller.ts` (TK-107).
+ */
+export function handleZodOrNext(req: Request, res: Response, next: NextFunction, err: unknown): void {
+  if (err instanceof z.ZodError) {
+    respondValidationError(req, res, err.errors.map((e) => e.message).join('; '));
+    return;
+  }
+  next(err);
 }

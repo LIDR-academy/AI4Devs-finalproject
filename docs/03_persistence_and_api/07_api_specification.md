@@ -42,6 +42,9 @@ inputs:
 | **POST** | `/api/v1/kitchen/recipe-preparations/{id}/close` | `CloseRecipePreparationRequest` | `CloseRecipePreparationResponse` | ✅ Done (`TK-104`/`TK-104-FE`). Concilia la preparación: consumo por cuadre, sobrante con ubicación, merma con motivo. Transaccional. |
 | **POST** | `/api/v1/kitchen/recipe-preparations/{id}/abandon` | *Ninguno* | `AbandonRecipePreparationResponse` | ✅ Done (`TK-104`/`TK-104-FE`). Cierra sin conciliar; los remanentes quedan `ACTIVE` sin etiqueta de preparación. |
 | **GET** | `/api/v1/reports/preparation-waste` | *Query Params* | `PreparationWasteReportResponse` | ✅ Done (`TK-105`). Merma de preparación por receta/ingrediente/motivo (cantidad + `$` + % + `overThreshold`) + consumo real vs. teórico por receta/ingrediente. Rol `ADMIN`. |
+| **GET** | `/api/v1/consumption-reasons` | `?includeInactive=` | `ListConsumptionReasonsResponse` | ✅ Done ([ADR-004](../02_architecture_design/adr/ADR-004-consumption-reason-catalog.md) / `TK-107`, `US-030`). Catálogo administrable de motivos de consumo. Sin filtro: solo activos, cualquier autenticado. `includeInactive=true`: rol `ADMIN`. |
+| **POST** | `/api/v1/consumption-reasons` | `CreateConsumptionReasonRequest` | `ConsumptionReason` | ✅ Done (`TK-107`). Crea un motivo (activo por defecto). Rol `ADMIN`. |
+| **PUT** | `/api/v1/consumption-reasons/{id}` | `UpdateConsumptionReasonRequest` | `ConsumptionReason` | ✅ Done (`TK-107`). Renombra y/o activa/desactiva un motivo — desactivar, nunca borrar (preserva referencias históricas en `StockMovement.reasonId`). Rol `ADMIN`. |
 
 > **Nota — cambios en endpoints existentes ([ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md)):**
 > - `POST /api/v1/stock/extraction`: `toLocation` (literal) → `toStorageLocationId` (FK a `StorageLocation type=KITCHEN`, `TK-102`); `+ plannedPortions`, `+ recipePreparationId` y `recipeId` obligatorio cuando `purpose=RECIPE` (`TK-103`); `RecordExtractionResponse + recipePreparationId`.
@@ -49,6 +52,11 @@ inputs:
 > - `POST /api/v1/kitchen/recipes/:id/consume`: se conserva (consumo ad-hoc) — ✅ Done (`TK-105`): ahora corre dentro de una frontera transaccional (`IStockUnitOfWork.runAdhocConsumption`, revierte por completo ante stock insuficiente de cualquier ingrediente) y emite un `StockMovement` `CONSUMPTION_RECIPE` por cada remanente afectado.
 > - `DELETE`/`PUT /api/v1/locations/{id}`: `409` también si un área `type=KITCHEN` tiene remanentes `ACTIVE` (`TK-102`).
 > - `GET`/`PUT /api/v1/settings`: ✅ Done (`TK-105`) — `+ preparationWasteAlertPercent` (int, 0-100, default 5).
+
+> **Nota — trazabilidad de consumo ([ADR-004](../02_architecture_design/adr/ADR-004-consumption-reason-catalog.md)):**
+> - `/api/v1/consumption-reasons` (`GET`/`POST`/`PUT`): ✅ Done (`TK-107`, `US-030`) — catálogo administrable descrito arriba.
+> - `POST /api/v1/kitchen/consumption` (consumo de remanente): 📝 Pendiente (`TK-108`) — pasará a exigir `reasonId` (FK al catálogo activo) `+ notes?` (texto libre siempre opcional); `StockMovement.reasonId` nullable, `onDelete: SetNull`.
+> - `POST /api/v1/kitchen/shift-reconciliation`: 📝 Pendiente (`TK-109`) — cada línea de varianza **negativa** exigirá `reasonId` (400 y ninguna línea se aplica si falta alguno); varianza **positiva** no exige motivo y corrige un bug existente (`Remanente.currentQuantity` no se actualizaba con el sobrante).
 
 ---
 

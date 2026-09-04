@@ -89,3 +89,7 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
+
+# Playwright (e2e) run artifacts
+apps/frontend/test-results/
+apps/frontend/playwright-report/

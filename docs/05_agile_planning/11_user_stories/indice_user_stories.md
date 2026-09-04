@@ -46,20 +46,22 @@ Este documento contiene las especificaciones detalladas de las historias de usua
 ### 🍳 Cocina (`/kitchen/`)
 *   **[US-003: Consulta Táctil de Remanentes Activos en Orden FEFO](kitchen/US-003.md)**
     *   *Descripción:* Provee una pantalla en cocina para listar todos los ingredientes abiertos ordenados cronológicamente por su fecha de vencimiento acelerado, previniendo el desperdicio.
-*   **[US-004: Registro de Consumo Parcial de Remanentes](kitchen/US-004.md)**
-    *   *Descripción:* Permite registrar consumos parciales aplicados a preparaciones durante el turno para mantener el inventario de la línea al día.
+*   **[US-004: Registro de Consumo Parcial de Remanentes](kitchen/US-004.md)** (v1.1.0)
+    *   *Descripción:* Permite registrar consumos parciales aplicados a preparaciones durante el turno para mantener el inventario de la línea al día. Desde `ADR-004`, exige un motivo estructurado (catálogo `US-030`) + texto libre opcional.
 *   **[US-005: Registro de Descartes y Mermas](kitchen/US-005.md)**
     *   *Descripción:* Permite el egreso total del sistema de insumos abiertos inservibles (vencidos, contaminados o dañados) documentando detalladamente la causa de la pérdida.
 *   **[US-006: Consulta de Alertas y Notificaciones Críticas en Cocina](kitchen/US-006.md)**
     *   *Descripción:* Provee un panel táctil interactivo en cocina con alertas semafóricas para vencimientos FEFO inminentes, rotura de stock en línea y pérdidas de conexión (offline).
 *   **[US-007: Consumo Rápido de Stock por Recetas](kitchen/US-007.md)**
     *   *Descripción:* Permite el registro de consumo en lote de múltiples ingredientes a partir de una receta maestra, aplicando descuento en cascada FEFO sobre los remanentes.
-*   **[US-008: Cierre de Turno y Conciliación de Cocina](kitchen/US-008.md)**
-    *   *Descripción:* Provee un flujo guiado de fin de jornada para reportar conteo físico real, auto-descartar insumos vencidos de forma masiva y registrar variaciones de stock.
+*   **[US-008: Cierre de Turno y Conciliación de Cocina](kitchen/US-008.md)** (v1.1.0)
+    *   *Descripción:* Provee un flujo guiado de fin de jornada para reportar conteo físico real, auto-descartar insumos vencidos de forma masiva y registrar variaciones de stock. Desde `ADR-004`, la varianza negativa exige motivo por línea; se corrige el bug de superávit no sincronizado.
 *   **[US-027: Apertura Automática de Preparación de Receta al Extraer](kitchen/US-027.md)** ✅
     *   *Descripción:* Extraer de bodega con `purpose = RECIPE` (con `recipeId` ahora obligatorio) abre una `RecipePreparation` que agrupa los remanentes de esa tanda. 📝 Draft (ADR-003).
 *   **[US-028: Cierre de Preparación de Receta — Sobrante con Ubicación y Merma con Motivo](kitchen/US-028.md)** ✅
     *   *Descripción:* Al cerrar una preparación, el operario declara porciones reales y, por ingrediente, cuánto sobró y **en qué área lo guardó** y cuánto se descartó y por qué; el consumo se calcula por cuadre. El sobrante intacto puede volver a bodega. 📝 Draft (ADR-003).
+*   **[US-030: Catálogo de Motivos de Consumo (Administrable)](kitchen/US-030.md)**
+    *   *Descripción:* El Administrador mantiene un catálogo de motivos (crear, editar, activar/desactivar) que el equipo de cocina elige al consumir un remanente o al declarar una varianza negativa de conciliación de turno. Backend ✅ (`TK-107`); panel de administración 📝 Draft (`TK-107-FE`, ADR-004).
 
 ### 📊 Reportes (`/reports/`)
 *   **[US-009: Dashboard y Reporte de Mermas Visibles](reports/US-009.md)**

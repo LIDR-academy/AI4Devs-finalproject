@@ -91,6 +91,12 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-105** | `reports` | **Medio** | **Baja** | 5 SP | Depende de `TK-104`, `TK-078`. `US-029`: reporte de mermas de preparación + consumo real vs teórico; `ConsumeRecipeUseCase` legacy pasa a emitir `CONSUMPTION_RECIPE`. ✅ Done. | 🟢 P2 - Media |
 | **TK-105-FE** | `reports` | **Bajo** | **Baja** | 3 SP | Depende de `TK-105`, `TK-078-FE`. `US-029`: panel de reporte de mermas de preparación + ajuste de umbral. ✅ Done. | 🟢 P2 - Media |
 | **TK-106-FE** | `stock` | **Alto** | **Muy Alta** | 2 SP | Depende de `TK-096-FE`. `US-025` — bug reportado en vivo: la extracción no avisaba que el sub-sector de origen no tenía el insumo (mostraba el total agregado). Aviso en vivo + validación de cliente. ✅ Done. | 🔴 P0 - Bug en vivo |
+| **TK-107** | `kitchen` | **Medio** | **Alta** | 5 SP | `US-030`: catálogo de motivos de consumo administrable (crear/editar/activar-desactivar), semilla editable. ✅ Done. | 🟡 P1 - Alta |
+| **TK-107-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-107`. `US-030`: panel de administración del catálogo en `/ajustes`. 📝 Draft. | 🟡 P1 - Alta |
+| **TK-108** | `kitchen` | **Medio** | **Alta** | 3 SP | Depende de `TK-107`. `US-004`: motivo estructurado obligatorio + texto libre opcional al consumir un remanente — cierra el hueco de trazabilidad más transitado de la app. 📝 Draft. | 🟡 P1 - Alta |
+| **TK-108-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-108`, `TK-107-FE`. `US-004`: modal de motivo al consumir (reemplaza el toque directo). 📝 Draft. | 🟡 P1 - Alta |
+| **TK-109** | `kitchen` | **Alto** | **Alta** | 5 SP | Depende de `TK-107`. `US-008`: motivo obligatorio en varianza negativa de conciliación de turno + fix de bug (superávit no sincronizaba el remanente). 📝 Draft. | 🟡 P1 - Alta |
+| **TK-109-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-109`, `TK-107-FE`. `US-008`: selector de motivo por línea con varianza negativa en el wizard de cierre de turno. 📝 Draft. | 🟡 P1 - Alta |
 
 ---
 
@@ -170,6 +176,12 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-103-FE** | [US-027](../11_user_stories/kitchen/US-027.md) | Extracción para Receta con Preparación + Tablero "Preparaciones en Curso" | `kitchen` | 5 | Should Have | [kitchen/frontend/TK-103-FE.md](kitchen/frontend/TK-103-FE.md) |
 | **TK-104-FE** | [US-028](../11_user_stories/kitchen/US-028.md) | Pantalla "Cerrar Preparación de Receta" | `kitchen` | 8 | Should Have | [kitchen/frontend/TK-104-FE.md](kitchen/frontend/TK-104-FE.md) |
 | **TK-105-FE** | [US-029](../11_user_stories/reports/US-029.md) | Panel de Reporte de Mermas de Preparación | `reports` | 3 | Should Have | [reports/frontend/TK-105-FE.md](reports/frontend/TK-105-FE.md) |
+| **TK-107** | [US-030](../11_user_stories/kitchen/US-030.md) | Catálogo de Motivos de Consumo — CRUD | `kitchen` | 5 | Should Have | [kitchen/backend/TK-107.md](kitchen/backend/TK-107.md) |
+| **TK-107-FE** | [US-030](../11_user_stories/kitchen/US-030.md) | Panel de Administración de Motivos de Consumo | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-107-FE.md](kitchen/frontend/TK-107-FE.md) |
+| **TK-108** | [US-004](../11_user_stories/kitchen/US-004.md) | Motivo Obligatorio en el Consumo Manual de Remanentes | `kitchen` | 3 | Should Have | [kitchen/backend/TK-108.md](kitchen/backend/TK-108.md) |
+| **TK-108-FE** | [US-004](../11_user_stories/kitchen/US-004.md) | Modal de Motivo al Consumir un Remanente | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-108-FE.md](kitchen/frontend/TK-108-FE.md) |
+| **TK-109** | [US-008](../11_user_stories/kitchen/US-008.md) | Motivo en Varianza Negativa + Fix de Superávit | `kitchen` | 5 | Should Have | [kitchen/backend/TK-109.md](kitchen/backend/TK-109.md) |
+| **TK-109-FE** | [US-008](../11_user_stories/kitchen/US-008.md) | Selector de Motivo por Línea en Cierre de Turno | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-109-FE.md](kitchen/frontend/TK-109-FE.md) |
 | **TK-106-FE** | [US-025](../11_user_stories/stock/US-025.md) | Aviso de Stock por Sub-Sector en la Extracción de Bodega | `stock` | 2 | Must Have | [stock/frontend/TK-106-FE.md](stock/frontend/TK-106-FE.md) |
 | **TK-075-FE** | [US-017](../11_user_stories/settings/US-017.md) | Frontend System Settings & Branding UI | `settings` | 3 | Should Have | [settings/frontend/TK-075-FE.md](settings/frontend/TK-075-FE.md) |
 | **TK-077-FE** | [US-018](../11_user_stories/auth/US-018.md) | Modal Táctil y Pantalla de Recuperación de PIN de Administrador | `auth` | 3 | Should Have | [auth/frontend/TK-077-FE.md](auth/frontend/TK-077-FE.md) |
