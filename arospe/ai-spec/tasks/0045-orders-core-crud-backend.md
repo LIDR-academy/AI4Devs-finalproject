@@ -13,7 +13,7 @@ Blade markup, no notification, no status transitions, no refunds, no tax resolut
 > ## ⛔ BLOCKED — cross-epic dependency (read this before Phase 3)
 >
 > **This story is fully specified now, but its Phase 3 implementation cannot start until PRD Epic 2
-> stories [0024](done/0024-products-core-crud-backend.md) (Products), [0029](0029-product-variants-backend.md)
+> stories [0024](done/0024-products-core-crud-backend.md) (Products), [0029](done/0029-product-variants-backend.md)
 > (Product Variants), [0035](0035-shipping-carriers-backend.md) (Shipping Carriers),
 > [0036](0036-shipping-rate-rules-backend.md) (Shipping Rates) and
 > [0038](0038-payment-methods-bank-transfer-backend.md) (Payment Methods) are all `done`.**
@@ -965,7 +965,7 @@ rediscovery.
 | Blocking story | Provides | Consumed by |
 | --- | --- | --- |
 | [0024](done/0024-products-core-crud-backend.md) — Products | `products` table, `products.price` / `.name` / `.sku`, `ProductFactory` | `order_items.product_id`; the price/name/SKU snapshots and their regression tests |
-| [0029](0029-product-variants-backend.md) — Product Variants | `product_variants` table, `ProductVariantFactory` | `order_items.product_variant_id`; the variant line-item scenario |
+| [0029](done/0029-product-variants-backend.md) — Product Variants | `product_variants` table, `ProductVariantFactory` | `order_items.product_variant_id`; the variant line-item scenario |
 | [0035](0035-shipping-carriers-backend.md) — Shipping Carriers | `shipping_carriers` | transitively, via `shipping_rates` |
 | [0036](0036-shipping-rate-rules-backend.md) — Shipping Rates | `shipping_rates` table | `orders.shipping_rate_id` |
 | [0038](0038-payment-methods-bank-transfer-backend.md) — Payment Methods | `payment_methods` table, the seeded bank-transfer row | `orders.payment_method_id` (NOT NULL — no order can be created without it) |

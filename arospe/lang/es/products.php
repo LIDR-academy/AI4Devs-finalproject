@@ -47,6 +47,15 @@ return [
         'delete_confirm_text' => '¿Seguro que quieres eliminar ":name"? Esta acción no se puede deshacer.',
     ],
 
+    // Historia 0029 -- clave por clave idéntico a lang/en/products.php.
+    'variants' => [
+        'duplicate_combination' => 'Esta combinación de valores de atributo ya existe en este producto.',
+        'derived_sku_taken' => 'El SKU derivado :sku ya está en uso por otro producto o variante.',
+        'derived_sku_empty_segment' => 'El valor de atributo ":value" no se puede usar para derivar un SKU -- por favor, renómbralo.',
+        'derived_sku_too_long' => 'El SKU derivado superaría los :max caracteres. Renombra un valor de atributo o el SKU del producto para acortarlo.',
+        'parent_sku_change_collides' => 'Cambiar el SKU del producto crearía un SKU duplicado para una de sus variantes. No se guardaron los cambios.',
+    ],
+
     // Historia 0027 -- clave por clave idéntico a lang/en/products.php.
     'editor' => [
         'title_create' => 'Nuevo producto',

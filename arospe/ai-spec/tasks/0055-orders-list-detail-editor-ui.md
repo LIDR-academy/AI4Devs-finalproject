@@ -22,7 +22,7 @@ every control mirrors a predicate its own guard already reads.
 > [0053](0053-order-tax-region-resolution-physical-backend.md) and
 > [0054](0054-order-tax-region-resolution-virtual-backend.md) — **and 0045 is itself ⛔ blocked** on five
 > PRD Epic 2 stories ([0024](done/0024-products-core-crud-backend.md),
-> [0029](0029-product-variants-backend.md), [0035](0035-shipping-carriers-backend.md),
+> [0029](done/0029-product-variants-backend.md), [0035](0035-shipping-carriers-backend.md),
 > [0036](0036-shipping-rate-rules-backend.md), [0038](0038-payment-methods-bank-transfer-backend.md)).
 >
 > **The chain is three links long, so state it once and check all three:** 0055 → {0045, 0048–0054} →

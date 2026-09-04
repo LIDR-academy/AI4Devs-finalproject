@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -124,6 +125,22 @@ class Product extends Model
     public function salesRegions(): BelongsToMany
     {
         return $this->belongsToMany(SalesRegion::class, 'product_sales_region', 'product_id', 'sales_region_id');
+    }
+
+    /**
+     * This product's variants (story 0029, D-8/D-17.2). Ordered inside the
+     * relationship, never at the call site: `position ASC, sku ASC` -- the
+     * `sku` tiebreak is total because `sku` is `UNIQUE NOT NULL`, unlike
+     * `gallery()`'s own `media_id` tiebreak above, which is only unique
+     * within one product's gallery.
+     *
+     * @return HasMany<ProductVariant, $this>
+     */
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class)
+            ->orderBy('position')
+            ->orderBy('sku');
     }
 
     /**

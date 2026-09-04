@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Product;
+use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -100,4 +101,41 @@ test('the four permission strings ProductPolicy gates on are all in the seeded p
     $actor->givePermissionTo(['products.view', 'products.create', 'products.edit', 'products.delete']);
 
     expect($actor->getAllPermissions())->toHaveCount(4);
+});
+
+// =====================================================================
+// Story 0029, D-12: variant operations reuse THIS policy's existing `update` ability, gated
+// against the PARENT PRODUCT (Gate::authorize('update', $variant->product)) -- there is no
+// ProductVariantPolicy and no new ability, on the ground that a variant's authorization question
+// is always "may this actor manage this product's catalog entry?", the same question every other
+// `update`/`delete` call already answers. The allow/deny pair, the Super Admin bypass, and
+// Gate::forUser()->authorize() throwing are therefore already pinned above by the generic
+// `update`/`delete` tests -- there is no second, variant-shaped ability to duplicate them for.
+// What genuinely does not exist above, and what this story adds, is a real Feature-level
+// permission-cache-staleness regression: a revoked permission must take effect on the NEXT
+// request/user resolution with no cache flush in between the write and the check.
+// =====================================================================
+
+test('a revoked permission is reflected on a freshly resolved user with no cache flush between the revoke and the re-check', function () {
+    $role = Role::create(['name' => 'Variant Editor', 'guard_name' => 'web']);
+    $role->givePermissionTo('products.edit');
+
+    $actor = User::factory()->create();
+    $actor->assignRole($role);
+
+    $target = Product::factory()->create();
+
+    // Act: warm the permission cache by asserting the actor currently CAN.
+    expect(Gate::forUser($actor)->allows('update', $target))->toBeTrue();
+
+    // Revoke via a role change -- no forgetCachedPermissions() call anywhere between this and the
+    // re-assert below, per the test-arrangement note this trait shares with every other
+    // authorization file in this app.
+    $role->revokePermissionTo('products.edit');
+
+    // Assert against a FRESHLY RESOLVED user instance, never the same $actor object, so the
+    // assertion cannot pass merely because an in-memory relation was never reloaded.
+    $freshActor = User::query()->find($actor->id);
+
+    expect(Gate::forUser($freshActor)->allows('update', $target))->toBeFalse();
 });
