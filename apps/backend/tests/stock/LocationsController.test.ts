@@ -123,6 +123,11 @@ describe('Storage Locations API — RBAC por ruta (TK-074, patrón TK-093)', () 
     expect(ext.status).toBe(201);
     expect(ext.body.location).toBe('Mesa de Preparación');
 
+    // el área de cocina con el remanente activo se marca hasStock en el listado
+    const list = await request(app).get('/api/v1/locations');
+    expect(list.body.find((l: { id: string }) => l.id === 'loc-seed-kitchen-prep').hasStock).toBe(true);
+    expect(list.body.find((l: { id: string }) => l.id === 'loc-seed-kitchen-line').hasStock).toBe(false);
+
     const del = await request(app).delete('/api/v1/locations/loc-seed-kitchen-prep');
     expect(del.status).toBe(409);
     expect(del.body).toHaveProperty('title', 'LocationHasRemanentesException');

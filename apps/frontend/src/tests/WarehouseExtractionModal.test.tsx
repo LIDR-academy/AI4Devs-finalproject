@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import { WarehouseExtractionModal } from '../features/stock/components/WarehouseExtractionModal.js';
 
 const INSUMOS_FIXTURE = [
@@ -179,12 +179,13 @@ describe('TK-096-FE: WarehouseExtractionModal — Sub-sector de bodega de origen
     stubFetchForExtractionModal({});
     render(<WarehouseExtractionModal isOpen={true} onClose={() => {}} onSuccess={() => {}} />);
 
-    await waitFor(() => {
-      const select = screen.getByLabelText(/Sector de Bodega Origen/i) as HTMLSelectElement;
-      expect(select.value).toBe('loc-seed-meat-fridge');
-    });
-    // el sector de cocina no debe aparecer como opción de origen
-    expect(screen.queryByRole('option', { name: 'Refrigerador Cocina' })).not.toBeInTheDocument();
+    const originSelect = await screen.findByLabelText(/Sector de Bodega Origen/i);
+    await waitFor(() => expect((originSelect as HTMLSelectElement).value).toBe('loc-seed-meat-fridge'));
+    // el área de cocina no debe aparecer como opción de ORIGEN (solo en el destino)
+    expect(within(originSelect).queryByRole('option', { name: 'Refrigerador Cocina' })).not.toBeInTheDocument();
+    // TK-102-FE: sí aparece como opción de DESTINO en cocina
+    const destSelect = await screen.findByLabelText(/Ubicación Destino en Cocina/i);
+    expect(within(destSelect).getByRole('option', { name: 'Refrigerador Cocina' })).toBeInTheDocument();
   });
 
   it('envía fromStorageLocationId en el POST /stock/extraction', async () => {
@@ -195,7 +196,7 @@ describe('TK-096-FE: WarehouseExtractionModal — Sub-sector de bodega de origen
         if (url.includes('/kitchen/remanentes-activos')) return { ok: true, status: 200, json: async () => [] };
         if (url.includes('/recipes')) return { ok: true, status: 200, json: async () => [] };
         if (url.includes('/locations')) {
-          return { ok: true, status: 200, json: async () => [{ id: 'loc-seed-dry', name: 'Bodega de Secos', type: 'WAREHOUSE', isActive: true }] };
+          return { ok: true, status: 200, json: async () => [{ id: 'loc-seed-dry', name: 'Bodega de Secos', type: 'WAREHOUSE', isActive: true }, { id: 'loc-seed-kitchen-prep', name: 'Mesa de Preparación', type: 'KITCHEN', isActive: true }] };
         }
         if (url.includes('/stock/insumos')) return { ok: true, status: 200, json: async () => INSUMOS_FIXTURE };
         if (url.includes('/stock/extraction')) {
@@ -226,6 +227,55 @@ describe('TK-096-FE: WarehouseExtractionModal — Sub-sector de bodega de origen
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
     expect(capturedBody).toMatchObject({ fromStorageLocationId: 'loc-seed-dry' });
   });
+
+  it('TK-102-FE (US-026): envía toStorageLocationId con el id del área de cocina elegida del catálogo', async () => {
+    let capturedBody: Record<string, unknown> | null = null;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url.includes('/kitchen/remanentes-activos')) return { ok: true, status: 200, json: async () => [] };
+        if (url.includes('/recipes')) return { ok: true, status: 200, json: async () => [] };
+        if (url.includes('/locations')) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => [
+              { id: 'loc-seed-dry', name: 'Bodega de Secos', type: 'WAREHOUSE', isActive: true },
+              { id: 'loc-seed-kitchen-prep', name: 'Mesa de Preparación', type: 'KITCHEN', isActive: true },
+              { id: 'loc-seed-kitchen-line', name: 'Línea de Servicio', type: 'KITCHEN', isActive: true },
+            ],
+          };
+        }
+        if (url.includes('/stock/insumos')) return { ok: true, status: 200, json: async () => INSUMOS_FIXTURE };
+        if (url.includes('/stock/extraction')) {
+          capturedBody = JSON.parse(init?.body as string);
+          return {
+            ok: true,
+            status: 201,
+            json: async () => ({
+              remanenteId: 'rem-x', insumoId: 'ins-1', insumoName: 'Queso Mozzarella', quantityExtracted: '1.000',
+              fromStorageLocationId: 'loc-seed-dry', remainingSectorStock: '9.000', remainingWarehouseStock: '9.000',
+              location: 'Línea de Servicio', expirationDate: new Date().toISOString(), status: 'ACTIVE',
+            }),
+          };
+        }
+        return { ok: true, status: 200, json: async () => ({}) };
+      })
+    );
+
+    const onSuccess = vi.fn();
+    render(<WarehouseExtractionModal isOpen={true} onClose={() => {}} onSuccess={onSuccess} />);
+
+    const dest = (await screen.findByLabelText(/Ubicación Destino en Cocina/i)) as HTMLSelectElement;
+    await waitFor(() => expect(dest.value).toBe('loc-seed-kitchen-prep')); // auto-selecciona la primera
+    fireEvent.change(dest, { target: { value: 'loc-seed-kitchen-line' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar Extracción/i }));
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(capturedBody).toMatchObject({ toStorageLocationId: 'loc-seed-kitchen-line' });
+    expect(capturedBody).not.toHaveProperty('toLocation');
+  });
 });
 
 describe('TK-100-FE (AUDIT-DEV-006): errores reales del backend y aritmética decimal', () => {
@@ -242,7 +292,7 @@ describe('TK-100-FE (AUDIT-DEV-006): errores reales del backend y aritmética de
         if (url.includes('/kitchen/remanentes-activos')) return { ok: true, status: 200, json: async () => [] };
         if (url.includes('/recipes')) return { ok: true, status: 200, json: async () => [] };
         if (url.includes('/locations')) {
-          return { ok: true, status: 200, json: async () => [{ id: 'loc-seed-dry', name: 'Bodega de Secos', type: 'WAREHOUSE', isActive: true }] };
+          return { ok: true, status: 200, json: async () => [{ id: 'loc-seed-dry', name: 'Bodega de Secos', type: 'WAREHOUSE', isActive: true }, { id: 'loc-seed-kitchen-prep', name: 'Mesa de Preparación', type: 'KITCHEN', isActive: true }] };
         }
         if (url.includes('/stock/insumos')) return { ok: true, status: 200, json: async () => INSUMOS_FIXTURE };
         if (url.includes('/stock/extraction')) {

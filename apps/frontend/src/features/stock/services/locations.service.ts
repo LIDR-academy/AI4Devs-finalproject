@@ -16,6 +16,12 @@ export async function fetchActiveWarehouseSectors(): Promise<StorageLocationDto[
   return all.filter((l) => l.type === 'WAREHOUSE' && l.isActive);
 }
 
+/** Áreas de cocina activas, para el desplegable de destino en la extracción (US-026). */
+export async function fetchActiveKitchenAreas(): Promise<StorageLocationDto[]> {
+  const all = await LocationsService.fetchLocations();
+  return all.filter((l) => l.type === 'KITCHEN' && l.isActive);
+}
+
 export const LocationsService = {
   async fetchLocations(): Promise<StorageLocationDto[]> {
     return apiRequest<StorageLocationDto[]>('/locations');

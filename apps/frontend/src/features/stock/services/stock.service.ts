@@ -5,7 +5,8 @@ export interface ExtractionRequest {
   quantity: number | string;
   /** US-025: sub-sector de bodega de origen — obligatorio. */
   fromStorageLocationId: string;
-  toLocation?: string;
+  /** US-026: id del área de cocina de destino (StorageLocation type=KITCHEN) o literal legado. */
+  toStorageLocationId?: string;
   purpose?: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD';
   reason?: string;
   recipeId?: string;

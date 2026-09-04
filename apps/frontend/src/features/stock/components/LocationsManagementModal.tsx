@@ -89,7 +89,8 @@ interface LocationsListProps {
   onDeleteLocation: (id: string, name: string) => void;
 }
 
-const HAS_STOCK_HINT = 'El sector tiene existencias asociadas';
+// US-026: aplica a bodega con existencias y a áreas de cocina con remanentes activos.
+const HAS_STOCK_HINT = 'Tiene existencias o ingredientes abiertos asociados';
 
 const LocationRowInfo: React.FC<{ loc: StorageLocationDto }> = ({ loc }) => (
   <div className="flex-gap-xs">

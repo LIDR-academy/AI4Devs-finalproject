@@ -133,16 +133,14 @@ const DiscardReasonField: React.FC<{ reason: string; onReasonChange: (r: string)
 );
 
 const KitchenDestinationField: React.FC<{ location: string; onLocationChange: (l: string) => void }> = ({ location, onLocationChange }) => (
-  <div>
-    <label htmlFor="select-location-extraction" className="form-label">
-      Ubicación Destino en Cocina:
-    </label>
-    <select value={location} onChange={(e) => onLocationChange(e.target.value)} className="input-touch" id="select-location-extraction">
-      <option value="KITCHEN_FRIDGE">Refrigerador Principal (KITCHEN_FRIDGE)</option>
-      <option value="KITCHEN_PREP">Mesa de Preparación (KITCHEN_PREP)</option>
-      <option value="KITCHEN_LINE">Línea de Servicio (KITCHEN_LINE)</option>
-    </select>
-  </div>
+  // US-026: áreas de cocina del catálogo (StorageLocation type=KITCHEN), sin literales.
+  <StorageSectorSelect
+    id="select-location-extraction"
+    label="Ubicación Destino en Cocina *"
+    areaType="KITCHEN"
+    value={location}
+    onChange={onLocationChange}
+  />
 );
 
 const ExtractionSelectFields: React.FC<ExtractionSelectFieldsProps> = ({
@@ -379,7 +377,8 @@ async function performExtraction(args: PerformExtractionArgs) {
     insumoId: activeInsumoId,
     quantity: quantity.toString(),
     fromStorageLocationId,
-    toLocation: purpose === 'DIRECT_DISCARD' ? 'WASTE_BIN' : location,
+    // US-026: id del área de cocina del catálogo (el descarte directo no la usa).
+    toStorageLocationId: purpose === 'DIRECT_DISCARD' ? undefined : location,
     purpose,
     reason: reason.trim() || undefined,
     recipeId: selectedRecipeId || undefined,
@@ -421,7 +420,7 @@ function useExtractionFields() {
   const [selectedInsumoId, setSelectedInsumoId] = useState('');
   const [quantity, setQuantity] = useState(1.0);
   const [purpose, setPurpose] = useState<'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD'>('KITCHEN_STOCK');
-  const [location, setLocation] = useState('KITCHEN_FRIDGE');
+  const [location, setLocation] = useState(''); // US-026: id del área de cocina; StorageSectorSelect auto-selecciona la primera
   const [fromStorageLocationId, setFromStorageLocationId] = useState('');
   const [reason, setReason] = useState('');
   const [recipes, setRecipes] = useState<{ id: string; name: string }[]>([]);
