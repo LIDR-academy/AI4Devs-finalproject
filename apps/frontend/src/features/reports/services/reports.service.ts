@@ -15,6 +15,39 @@ export interface RotationMetrics {
   sampleSize: number;
 }
 
+/** US-029: una línea de merma de preparación (receta → ingrediente → motivo). */
+export interface PreparationWasteLine {
+  recipeId: string;
+  recipeName: string;
+  insumoId: string;
+  insumoName: string;
+  unitOfMeasure: string;
+  wasteReason: string;
+  totalWastedQty: string;
+  totalExtractedQty: string;
+  wastePercent: string;
+  wastedCost: string | null;
+  overThreshold: boolean;
+}
+
+/** US-029 Escenario 2: consumo real vs. teórico para una receta → ingrediente. */
+export interface RecipeConsumptionLine {
+  recipeId: string;
+  recipeName: string;
+  insumoId: string;
+  insumoName: string;
+  unitOfMeasure: string;
+  theoreticalQty: string;
+  actualQty: string;
+  differenceQty: string;
+}
+
+export interface PreparationWasteReport {
+  wasteByReason: PreparationWasteLine[];
+  consumptionVsTheoretical: RecipeConsumptionLine[];
+  wasteAlertThresholdPercent: number;
+}
+
 export class ReportsService {
   public static async fetchRotationMetrics(startDate: string, endDate: string): Promise<RotationMetrics> {
     try {
@@ -61,5 +94,14 @@ export class ReportsService {
         },
       ];
     }
+  }
+
+  // US-029 / TK-105-FE: sin fallback mock — un error real se propaga para que el panel
+  // lo muestre con ErrorBanner (C-DEV-006-3), a diferencia de los dos métodos legacy de
+  // arriba (deuda preexistente de TK-078-FE, fuera del alcance de este ticket).
+  public static async fetchPreparationWasteReport(startDate: string, endDate: string): Promise<PreparationWasteReport> {
+    return apiRequest<PreparationWasteReport>(
+      `/reports/preparation-waste?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
+    );
   }
 }

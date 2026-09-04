@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS: SystemSettingsDto = {
   criticalAlertHours: 24,
   defaultRemanenteHours: 24,
   varianceTolerancePercent: 5,
+  preparationWasteAlertPercent: 5,
 };
 
 type FieldKey = keyof SystemSettingsDto;
@@ -108,7 +109,10 @@ export const RestaurantSettingsPanel: React.FC = () => {
           <Field id="setting-remanente-hours" label="Vida Útil Estándar Remanente (Horas)" type="number" required min={1} value={settings.defaultRemanenteHours} onChange={(v) => setField('defaultRemanenteHours', v)} />
         </div>
 
-        <Field id="setting-idle-timeout" label="Cierre de Sesión por Inactividad Táctil (Minutos)" type="number" required min={1} max={1440} value={settings.idleTimeoutMinutes ?? 15} onChange={(v) => setField('idleTimeoutMinutes', v)} />
+        <div className={`metrics-grid ${styles['two-col-grid']}`}>
+          <Field id="setting-idle-timeout" label="Cierre de Sesión por Inactividad Táctil (Minutos)" type="number" required min={1} max={1440} value={settings.idleTimeoutMinutes ?? 15} onChange={(v) => setField('idleTimeoutMinutes', v)} />
+          <Field id="setting-prep-waste-alert" label="Umbral de Alerta de Merma de Preparación (%)" type="number" required min={0} max={100} value={settings.preparationWasteAlertPercent ?? 5} onChange={(v) => setField('preparationWasteAlertPercent', v)} />
+        </div>
 
         {message && <SuccessFeedbackBanner message={message} />}
 

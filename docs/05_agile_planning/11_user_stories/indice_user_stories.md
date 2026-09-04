@@ -68,7 +68,7 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Registra el costo unitario de cada insumo y valoriza en `$` el reporte de mermas, cerrando el gap del KPI #1 del PRD (hoy solo medible en cantidades físicas). ✅ Backend (`TK-078`) y Frontend (`TK-078-FE`) implementados.
 *   **[US-020: Indicador TRR Real en el Dashboard de Reportes](reports/US-020.md)**
     *   *Descripción:* Calcula y muestra el tiempo real promedio de rotación de remanentes, el único indicador que valida en la práctica el KPI #2 del PRD (TRR < 72h). ✅ Backend (`TK-079`) y Frontend (`TK-079-FE`) implementados.
-*   **[US-029: Reporte de Mermas de Preparación y Auditoría del Consumo Ad-hoc de Recetas](reports/US-029.md)**
+*   **[US-029: Reporte de Mermas de Preparación y Auditoría del Consumo Ad-hoc de Recetas](reports/US-029.md)** ✅
     *   *Descripción:* Reporte de merma generada al preparar recetas (por receta / ingrediente / motivo) + consumo real vs teórico; de paso, el consumo ad-hoc de receta legacy pasa a registrar `CONSUMPTION_RECIPE`. 📝 Draft — diferible (ADR-003).
 
 ### 🛠️ Shared / Transversal (`/shared/`)

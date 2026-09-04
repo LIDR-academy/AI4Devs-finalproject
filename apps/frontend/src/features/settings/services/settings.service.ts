@@ -9,6 +9,8 @@ export interface SystemSettingsDto {
   defaultRemanenteHours: number;
   varianceTolerancePercent: number;
   idleTimeoutMinutes?: number;
+  /** US-029 / TK-105: umbral (%) de merma de preparación destacado en el reporte. */
+  preparationWasteAlertPercent?: number;
 }
 
 

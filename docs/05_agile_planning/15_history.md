@@ -233,4 +233,14 @@ inputs:
 - **Estado:**
   - Backend 301 tests / build / lint verdes. Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`, `check_decimal_arithmetic`, `check_privilege_defaults`, `check_contract_drift`) verdes; `check_migration_schema_parity.sh` (Postgres efímero) confirma la cadena de migraciones = `schema.prisma`. Mutation ≥ 70 % en los 9 archivos domain/application tocados (Guard 11) — incluyó agregar `SystemSettings.test.ts` y `UpdateSystemSettingsUseCase.test.ts`, que no existían.
   - **Pendiente (diferible):** `TK-105-FE` (panel del reporte + ajuste del umbral en Configuración). `oasdiff` no disponible (breaking-change check no ejecutado). Sin push — sigue programado para el 10-sep.
+
+### 2026-09-04 (cont.) - TK-105-FE: Panel de Reporte de Mermas de Preparación — épica ADR-003 completa
+- **Hito:** nueva sección "Mermas de Preparación de Recetas" en `ReportsDashboard` (`/reportes`): tabla agrupada por receta (`<details>`/`<summary>` nativos, colapsable) con la merma por ingrediente/motivo (cantidad, `$` valorizado, % destacado sobre el umbral configurado — solo marca visual, sin toast/notificación, decisión #12) y, aparte, el consumo real vs. teórico por receta/ingrediente con la diferencia. `preparationWasteAlertPercent` editable en `/ajustes` (mismo patrón que `criticalAlertHours`). Con esto **se completa la épica ADR-003: US-026/027/028/029, de punta a punta backend + frontend.**
+- **Acciones Realizadas:**
+  - ✅ `reports.service.ts.fetchPreparationWasteReport` — sin fallback mock (C-DEV-006-3, a diferencia de los 2 métodos legacy del mismo archivo, deuda de TK-078-FE fuera de alcance). `settings.service.ts` + `RestaurantSettingsPanel` ganan el campo.
+  - ✅ De paso, `filterRange` (Hoy/7 Días/Mes) del dashboard pasó a determinar realmente el rango de fechas consultado — antes (TK-078) disparaba el refetch pero el cálculo quedaba fijo en 7 días sin importar la pestaña; necesario para que el panel nuevo filtre igual que el resto.
+  - ✅ Tests: agrupación por receta, línea sobre el umbral con marca visual (`role="alert"`/`"status"` ausentes — sin notificación), consumo real vs. teórico con la diferencia, estados vacíos explícitos.
+- **Estado:**
+  - Frontend 157 tests / build / lint limpios (0 warnings nuevos). Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`, `check_inline_styles`, `check_native_alerts`) verdes.
+  - **Épica ADR-003 cerrada** — `TK-102` a `TK-105-FE`, `US-026`/`US-027`/`US-028`/`US-029` todas ✅. Sin push — sigue programado para el 10-sep.
   - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).

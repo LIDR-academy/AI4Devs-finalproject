@@ -89,7 +89,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-104** | `kitchen` | **Muy Alto** | **Media** | 13 SP | Depende de `TK-103`, `TK-102`, `TK-101`. `US-028` / ADR-003: cierre y abandono de preparación — consumo por cuadre, sobrante con ubicación (área de cocina o bodega si "intacto"), merma con motivo, todo en una transacción (C-DEV-006-1). ✅ Done. | 🟢 P2 - Media |
 | **TK-104-FE** | `kitchen` | **Alto** | **Media** | 8 SP | Depende de `TK-104`, `TK-103-FE`. `US-028`: pantalla "Cerrar preparación" (sobrante + dónde + merma + motivo, cuadre visible, "envase sin abrir"). ✅ Done. | 🟢 P2 - Media |
 | **TK-105** | `reports` | **Medio** | **Baja** | 5 SP | Depende de `TK-104`, `TK-078`. `US-029`: reporte de mermas de preparación + consumo real vs teórico; `ConsumeRecipeUseCase` legacy pasa a emitir `CONSUMPTION_RECIPE`. ✅ Done. | 🟢 P2 - Media |
-| **TK-105-FE** | `reports` | **Bajo** | **Baja** | 3 SP | Depende de `TK-105`, `TK-078-FE`. `US-029` (diferible): panel de reporte de mermas de preparación + ajuste de umbral. 📝 Draft. | 🟢 P2 - Media |
+| **TK-105-FE** | `reports` | **Bajo** | **Baja** | 3 SP | Depende de `TK-105`, `TK-078-FE`. `US-029`: panel de reporte de mermas de preparación + ajuste de umbral. ✅ Done. | 🟢 P2 - Media |
 
 ---
 
@@ -247,7 +247,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-079: Indicador TRR Real (Rotation Metrics)](reports/backend/TK-079.md)** (Backend) — cierra el gap del KPI #2 del PRD (TRR < 72h), hoy forzado pero nunca reportado.
 *   **[TK-079-FE: Card de KPI de TRR Real en el Dashboard](reports/frontend/TK-079-FE.md)** (Frontend)
 *   **[TK-105: Reporte de Mermas de Preparación + Auditoría del Consumo Ad-hoc](reports/backend/TK-105.md)** (Backend) — ✅ Done. `US-029` / `ADR-003`: explota los datos de cierre de preparación; de paso `ConsumeRecipeUseCase` legacy pasa a emitir `CONSUMPTION_RECIPE` (antes invisible en la auditoría).
-*   **[TK-105-FE: Panel de Reporte de Mermas de Preparación](reports/frontend/TK-105-FE.md)** (Frontend) — 📝 Draft, diferible. `US-029`.
+*   **[TK-105-FE: Panel de Reporte de Mermas de Preparación](reports/frontend/TK-105-FE.md)** (Frontend) — ✅ Done. `US-029`.
 
 ### 🔐 Autenticación (`auth/`)
 *   **[TK-002: Autenticación por PIN](auth/backend/TK-002.md)** (Backend)

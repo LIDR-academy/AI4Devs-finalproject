@@ -2,10 +2,13 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ReportsDashboard } from '../features/reports/components/ReportsDashboard.js';
 
+const EMPTY_PREPARATION_WASTE_REPORT = { wasteByReason: [], consumptionVsTheoretical: [], wasteAlertThresholdPercent: 5 };
+
 function stubFetchWithWasteAndSettings(
   wasteItems: unknown[],
   currencySymbol: string,
-  rotationMetrics?: { averageTrrHours: number | null; targetTrrHours: number; sampleSize: number }
+  rotationMetrics?: { averageTrrHours: number | null; targetTrrHours: number; sampleSize: number },
+  preparationWasteReport?: unknown
 ) {
   vi.stubGlobal(
     'fetch',
@@ -30,6 +33,9 @@ function stubFetchWithWasteAndSettings(
           status: 200,
           json: async () => rotationMetrics ?? { averageTrrHours: 48.3, targetTrrHours: 72, sampleSize: 12 },
         };
+      }
+      if (url.includes('/reports/preparation-waste')) {
+        return { ok: true, status: 200, json: async () => preparationWasteReport ?? EMPTY_PREPARATION_WASTE_REPORT };
       }
       return { ok: true, status: 200, json: async () => wasteItems };
     })
@@ -146,5 +152,101 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
     const trrCard = screen.getByText('TRR Real (Rotación de Remanentes)').closest('.card-dashboard');
     expect(trrCard?.querySelector('.card-badge-icon--danger')).not.toBeNull();
     expect(trrCard?.querySelector('.card-badge-icon--success')).toBeNull();
+  });
+
+  describe('TK-105-FE (US-029): sección "Mermas de Preparación de Recetas"', () => {
+    it('agrupa la merma por receta y muestra cantidad, % y valorización', async () => {
+      stubFetchWithWasteAndSettings([], '$', undefined, {
+        wasteByReason: [
+          {
+            recipeId: 'rec-pizza',
+            recipeName: 'Pizza Margarita',
+            insumoId: 'ins-queso',
+            insumoName: 'Queso Mozzarella',
+            unitOfMeasure: 'KG',
+            wasteReason: 'recorte no aprovechable',
+            totalWastedQty: '0.100',
+            totalExtractedQty: '2.000',
+            wastePercent: '5.00',
+            wastedCost: '0.40',
+            overThreshold: false,
+          },
+        ],
+        consumptionVsTheoretical: [],
+        wasteAlertThresholdPercent: 5,
+      });
+
+      render(<ReportsDashboard userRole="ADMIN" />);
+
+      expect(await screen.findByText(/Pizza Margarita/)).toBeInTheDocument();
+      expect(screen.getByText('Queso Mozzarella')).toBeInTheDocument();
+      expect(screen.getByText(/recorte no aprovechable/)).toBeInTheDocument();
+      expect(screen.getByText(/5\.00%/)).toBeInTheDocument();
+      expect(screen.getByText('$0.40')).toBeInTheDocument();
+    });
+
+    it('una línea sobre el umbral se marca visualmente, sin disparar ningún toast/notificación', async () => {
+      stubFetchWithWasteAndSettings([], '$', undefined, {
+        wasteByReason: [
+          {
+            recipeId: 'rec-pizza',
+            recipeName: 'Pizza Margarita',
+            insumoId: 'ins-queso',
+            insumoName: 'Queso Mozzarella',
+            unitOfMeasure: 'KG',
+            wasteReason: 'caído al piso',
+            totalWastedQty: '0.120',
+            totalExtractedQty: '1.000',
+            wastePercent: '12.00',
+            wastedCost: null,
+            overThreshold: true,
+          },
+        ],
+        consumptionVsTheoretical: [],
+        wasteAlertThresholdPercent: 5,
+      });
+
+      render(<ReportsDashboard userRole="ADMIN" />);
+
+      const percentEl = await screen.findByText(/12\.00%/);
+      expect(percentEl.closest('span')).toHaveClass('text-danger-color');
+      // Sin notificación (#12 diferido): ningún role="alert"/"status" además del propio contenido.
+      expect(screen.queryAllByRole('alert')).toHaveLength(0);
+      expect(screen.queryAllByRole('status')).toHaveLength(0);
+    });
+
+    it('muestra consumo real vs. teórico por receta con la diferencia', async () => {
+      stubFetchWithWasteAndSettings([], '$', undefined, {
+        wasteByReason: [],
+        consumptionVsTheoretical: [
+          {
+            recipeId: 'rec-pizza',
+            recipeName: 'Pizza Margarita',
+            insumoId: 'ins-queso',
+            insumoName: 'Queso Mozzarella',
+            unitOfMeasure: 'KG',
+            theoreticalQty: '2.100',
+            actualQty: '2.300',
+            differenceQty: '0.200',
+          },
+        ],
+        wasteAlertThresholdPercent: 5,
+      });
+
+      render(<ReportsDashboard userRole="ADMIN" />);
+
+      expect(await screen.findByText(/Pizza Margarita — consumo real vs\. teórico/i)).toBeInTheDocument();
+      expect(screen.getByText(/Teórico: 2\.100 KG/)).toBeInTheDocument();
+      expect(screen.getByText(/Real: 2\.300 KG/)).toBeInTheDocument();
+      expect(screen.getByText(/Diferencia: \+0\.200 KG/)).toBeInTheDocument();
+    });
+
+    it('sin mermas ni preparaciones en el período, muestra estados vacíos explícitos', async () => {
+      stubFetchWithWasteAndSettings([], '$');
+      render(<ReportsDashboard userRole="ADMIN" />);
+
+      expect(await screen.findByText(/Sin mermas de preparación registradas/i)).toBeInTheDocument();
+      expect(screen.getByText(/Sin preparaciones cerradas/i)).toBeInTheDocument();
+    });
   });
 });

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { BarChart3, Calendar, Trash2, PieChart, RefreshCw, Clock } from 'lucide-react';
 import { ReportsService, WasteSummaryItem, RotationMetrics } from '../services/reports.service.js';
 import { SettingsService } from '../../settings/services/settings.service.js';
+import { PreparationWasteReportPanel } from './PreparationWasteReportPanel.js';
 import styles from './ReportsDashboard.module.css';
 
 interface ReportsDashboardProps {
@@ -190,19 +191,29 @@ const WasteBarChart: React.FC<WasteBarChartProps> = ({ isLoading, data, maxVal, 
  * `<main>` del shell (ruta `/reportes`), no como `<Modal>` flotante — consistente
  * con `/estaciones` y `/recetas`. El gating `ADMIN` vive en `<ProtectedRoute>`.
  */
-export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole }) => {
+function useReportRangeDates(filterRange: FilterRange): { startDate: string; endDate: string } {
+  // TK-105-FE: filterRange ahora sí determina el rango consultado — antes (TK-078)
+  // disparaba el refetch pero el cálculo quedaba fijo en 7 días sin importar la pestaña.
+  return useMemo(() => {
+    const daysByRange: Record<FilterRange, number> = { today: 1, week: 7, month: 30 };
+    const now = new Date();
+    return {
+      startDate: new Date(now.getTime() - daysByRange[filterRange] * 86400000).toISOString(),
+      endDate: now.toISOString(),
+    };
+  }, [filterRange]);
+}
+
+function useReportsData(userRole: string, filterRange: FilterRange) {
   const [data, setData] = useState<WasteSummaryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [filterRange, setFilterRange] = useState<FilterRange>('week');
   const [currencySymbol, setCurrencySymbol] = useState('$');
   const [rotationMetrics, setRotationMetrics] = useState<RotationMetrics | null>(null);
+  const { startDate, endDate } = useReportRangeDates(filterRange);
 
   useEffect(() => {
     if (userRole !== 'ADMIN') return;
     setIsLoading(true);
-    const now = new Date();
-    const startDate = new Date(now.getTime() - 7 * 86400000).toISOString();
-    const endDate = now.toISOString();
 
     ReportsService.fetchWasteReport(startDate, endDate)
       .then(setData)
@@ -213,7 +224,14 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole }) 
     SettingsService.fetchSettings()
       .then((settings) => setCurrencySymbol(settings.currencySymbol))
       .catch(() => {});
-  }, [userRole, filterRange]);
+  }, [userRole, startDate, endDate]);
+
+  return { data, isLoading, currencySymbol, rotationMetrics, startDate, endDate };
+}
+
+export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole }) => {
+  const [filterRange, setFilterRange] = useState<FilterRange>('week');
+  const { data, isLoading, currencySymbol, rotationMetrics, startDate, endDate } = useReportsData(userRole, filterRange);
 
   const totalQuantity = data.reduce((acc, item) => acc + parseFloat(item.totalDiscardedQuantity || '0'), 0);
   const expirationWaste = data
@@ -239,6 +257,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole }) 
 
       <KpiCards totalQuantity={totalQuantity} expirationWaste={expirationWaste} rotationMetrics={rotationMetrics} />
       <WasteBarChart isLoading={isLoading} data={data} maxVal={maxVal} currencySymbol={currencySymbol} />
+      <PreparationWasteReportPanel startDate={startDate} endDate={endDate} currencySymbol={currencySymbol} />
     </>
   );
 };
