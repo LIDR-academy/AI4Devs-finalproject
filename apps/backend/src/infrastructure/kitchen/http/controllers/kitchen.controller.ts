@@ -4,6 +4,7 @@ import { GetActiveRemanentesUseCase } from '../../../../application/kitchen/use-
 import { ConsumeRemanenteUseCase } from '../../../../application/kitchen/use-cases/ConsumeRemanenteUseCase.js';
 import { DiscardRemanenteUseCase } from '../../../../application/kitchen/use-cases/DiscardRemanenteUseCase.js';
 import { ConsumeRecipeUseCase } from '../../../../application/kitchen/use-cases/ConsumeRecipeUseCase.js';
+import { GetRecipeAvailabilityUseCase } from '../../../../application/kitchen/use-cases/GetRecipeAvailabilityUseCase.js';
 import { PerformShiftReconciliationUseCase } from '../../../../application/kitchen/use-cases/PerformShiftReconciliationUseCase.js';
 import { GetRecipePreparationsUseCase } from '../../../../application/kitchen/use-cases/GetRecipePreparationsUseCase.js';
 import { ClosePreparationUseCase } from '../../../../application/kitchen/use-cases/ClosePreparationUseCase.js';
@@ -28,6 +29,12 @@ const discardRemanenteSchema = z.object({
 
 const consumeRecipeSchema = z.object({
   portions: z.number().int().positive().optional().default(1),
+});
+
+// US-007 v1.1.0 / TK-111: mismo criterio de `portions` que consumeRecipeSchema, pero
+// vía query string (z.coerce, ya que los query params llegan siempre como texto).
+const recipeAvailabilityQuerySchema = z.object({
+  portions: z.coerce.number().int().positive().optional().default(1),
 });
 
 const qty = z.union([z.number().min(0), z.string().min(1)]).transform((v) => v.toString());
@@ -88,7 +95,8 @@ export class KitchenController {
     private readonly performShiftReconciliationUseCase?: PerformShiftReconciliationUseCase,
     private readonly getRecipePreparationsUseCase?: GetRecipePreparationsUseCase,
     private readonly closePreparationUseCase?: ClosePreparationUseCase,
-    private readonly abandonPreparationUseCase?: AbandonPreparationUseCase
+    private readonly abandonPreparationUseCase?: AbandonPreparationUseCase,
+    private readonly getRecipeAvailabilityUseCase?: GetRecipeAvailabilityUseCase
   ) {}
 
   public closePreparation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -228,6 +236,29 @@ export class KitchenController {
         portions: parsedBody.portions,
       });
 
+      res.status(200).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
+        return;
+      }
+      next(error);
+    }
+  };
+
+  // US-007 v1.1.0 / TK-111: vista previa de solo lectura — requerido vs. disponible por
+  // ingrediente, antes de que el cocinero confirme el consumo (evita descubrir el
+  // quiebre de stock recién con el 422 de `consumeRecipe`).
+  public getRecipeAvailability = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const query = recipeAvailabilityQuerySchema.parse(req.query);
+
+      if (!this.getRecipeAvailabilityUseCase) {
+        throw new Error('GetRecipeAvailabilityUseCase no configurado.');
+      }
+
+      const result = await this.getRecipeAvailabilityUseCase.execute(id, query.portions);
       res.status(200).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) {

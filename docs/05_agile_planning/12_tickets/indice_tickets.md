@@ -98,6 +98,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-109** | `kitchen` | **Alto** | **Alta** | 5 SP | Depende de `TK-107`. `US-008`: motivo obligatorio en varianza negativa de conciliación de turno + fix de bug (superávit no sincronizaba el remanente). ✅ Done. | 🟡 P1 - Alta |
 | **TK-109-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-109`, `TK-107-FE`. `US-008`: selector de motivo por línea con varianza negativa en el wizard de cierre de turno. ✅ Done. | 🟡 P1 - Alta |
 | **TK-110** | `kitchen` | **Bajo** | **Baja** | 2 SP | `US-017`: umbral de alerta crítica FEFO leía un `24` hardcodeado en vez de `SystemSettings.criticalAlertHours` — remediación técnica (C-DEV-006-4). ✅ Done. | 🟢 P2 - Media |
+| **TK-111** | `kitchen` | **Medio** | **Alta** | 3 SP | `US-007`: vista previa de disponibilidad por ingrediente (`GET /kitchen/recipes/:id/availability`), reutiliza el cálculo de `ConsumeRecipeUseCase` sin mutar. ✅ Done. | 🟡 P1 - Alta |
+| **TK-111-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-111`. `US-007`: `RecipeSelectorModal` muestra requerido/disponible por ingrediente y bloquea confirmar si falta stock. 📝 Draft. | 🟡 P1 - Alta |
 
 ---
 
@@ -184,6 +186,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-109** | [US-008](../11_user_stories/kitchen/US-008.md) | Motivo en Varianza Negativa + Fix de Superávit | `kitchen` | 5 | Should Have | [kitchen/backend/TK-109.md](kitchen/backend/TK-109.md) |
 | **TK-109-FE** | [US-008](../11_user_stories/kitchen/US-008.md) | Selector de Motivo por Línea en Cierre de Turno | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-109-FE.md](kitchen/frontend/TK-109-FE.md) |
 | **TK-110** | [US-017](../11_user_stories/settings/US-017.md) | Umbral de Alerta Crítica FEFO Ignoraba SystemSettings | `kitchen` | 2 | Should Have | [kitchen/backend/TK-110.md](kitchen/backend/TK-110.md) |
+| **TK-111** | [US-007](../11_user_stories/kitchen/US-007.md) | Vista Previa de Disponibilidad por Ingrediente de Receta | `kitchen` | 3 | Should Have | [kitchen/backend/TK-111.md](kitchen/backend/TK-111.md) |
+| **TK-111-FE** | [US-007](../11_user_stories/kitchen/US-007.md) | Vista Previa de Disponibilidad en "Preparar Receta" | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-111-FE.md](kitchen/frontend/TK-111-FE.md) |
 | **TK-106-FE** | [US-025](../11_user_stories/stock/US-025.md) | Aviso de Stock por Sub-Sector en la Extracción de Bodega | `stock` | 2 | Must Have | [stock/frontend/TK-106-FE.md](stock/frontend/TK-106-FE.md) |
 | **TK-075-FE** | [US-017](../11_user_stories/settings/US-017.md) | Frontend System Settings & Branding UI | `settings` | 3 | Should Have | [settings/frontend/TK-075-FE.md](settings/frontend/TK-075-FE.md) |
 | **TK-077-FE** | [US-018](../11_user_stories/auth/US-018.md) | Modal Táctil y Pantalla de Recuperación de PIN de Administrador | `auth` | 3 | Should Have | [auth/frontend/TK-077-FE.md](auth/frontend/TK-077-FE.md) |

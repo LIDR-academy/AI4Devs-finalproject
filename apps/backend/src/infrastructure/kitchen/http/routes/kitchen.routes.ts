@@ -1,14 +1,16 @@
-import { Router } from 'express';
+import { Router, RequestHandler } from 'express';
 import { KitchenController } from '../controllers/kitchen.controller.js';
 import { GetActiveRemanentesUseCase } from '../../../../application/kitchen/use-cases/GetActiveRemanentesUseCase.js';
 import { ConsumeRemanenteUseCase } from '../../../../application/kitchen/use-cases/ConsumeRemanenteUseCase.js';
 import { DiscardRemanenteUseCase } from '../../../../application/kitchen/use-cases/DiscardRemanenteUseCase.js';
 import { ConsumeRecipeUseCase } from '../../../../application/kitchen/use-cases/ConsumeRecipeUseCase.js';
+import { GetRecipeAvailabilityUseCase } from '../../../../application/kitchen/use-cases/GetRecipeAvailabilityUseCase.js';
 import { GetRecipePreparationsUseCase } from '../../../../application/kitchen/use-cases/GetRecipePreparationsUseCase.js';
 import { ClosePreparationUseCase } from '../../../../application/kitchen/use-cases/ClosePreparationUseCase.js';
 import { AbandonPreparationUseCase } from '../../../../application/kitchen/use-cases/AbandonPreparationUseCase.js';
 import { IRemanenteQueryRepository } from '../../../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
 import { IRemanenteRepository } from '../../../../domain/stock/repositories/IRemanenteRepository.js';
+import { IInsumoRepository } from '../../../../domain/stock/repositories/IInsumoRepository.js';
 import { IStockUnitOfWork } from '../../../../domain/stock/repositories/IStockUnitOfWork.js';
 import { IStorageLocationRepository } from '../../../../domain/stock/repositories/IStorageLocationRepository.js';
 import { IRecipeRepository } from '../../../../domain/recipes/repositories/IRecipeRepository.js';
@@ -74,9 +76,23 @@ function buildReasonDependentUseCases(
   };
 }
 
+// US-007 v1.1.0 / TK-111: `remanenteRepository` en producción es siempre `stockRepo`
+// (implementa también `IInsumoRepository`) — `.findById` es el guard runtime de esa
+// capacidad, ya que `IRemanenteRepository` no declara un método con ese nombre.
+function buildRecipeAvailabilityUseCase(
+  recipeRepository: IRecipeRepository | undefined,
+  remanenteRepository: (IRemanenteRepository & Partial<IInsumoRepository>) | undefined,
+  remanenteQueryRepository: IRemanenteQueryRepository
+): GetRecipeAvailabilityUseCase | undefined {
+  if (!recipeRepository || !remanenteRepository?.findById) {
+    return undefined;
+  }
+  return new GetRecipeAvailabilityUseCase(recipeRepository, remanenteRepository as IInsumoRepository, remanenteQueryRepository);
+}
+
 function buildKitchenController(
   remanenteQueryRepository: IRemanenteQueryRepository,
-  remanenteRepository?: IRemanenteRepository,
+  remanenteRepository?: IRemanenteRepository & Partial<IInsumoRepository>,
   recipeRepository?: IRecipeRepository,
   reconciliationRepository?: IShiftReconciliationRepository,
   recipePreparationRepository?: IRecipePreparationRepository,
@@ -110,13 +126,55 @@ function buildKitchenController(
       ? new GetRecipePreparationsUseCase(recipePreparationRepository, remanenteQueryRepository)
       : undefined,
     preparationClose.close,
-    preparationClose.abandon
+    preparationClose.abandon,
+    buildRecipeAvailabilityUseCase(recipeRepository, remanenteRepository, remanenteQueryRepository)
   );
+}
+
+interface KitchenRouteDeps {
+  remanenteRepository?: IRemanenteRepository & Partial<IInsumoRepository>;
+  recipeRepository?: IRecipeRepository;
+  recipePreparationRepository?: IRecipePreparationRepository;
+  stockUnitOfWork?: IStockUnitOfWork;
+  locationRepository?: IStorageLocationRepository;
+}
+
+// Lecturas: todas abiertas a cualquier autenticado (datos operativos, no sensibles) —
+// solo previsualizan/consultan, no mutan nada.
+function mountReadRoutes(router: Router, controller: KitchenController, deps: KitchenRouteDeps): void {
+  router.get('/remanentes-activos', controller.getActiveRemanentes);
+  if (deps.recipePreparationRepository) {
+    // US-027: tablero de preparaciones de receta.
+    router.get('/recipe-preparations', controller.listRecipePreparations);
+    router.get('/recipe-preparations/:id', controller.getRecipePreparation);
+  }
+  if (deps.recipeRepository && deps.remanenteRepository?.findById) {
+    // US-007 v1.1.0 / TK-111: requerido vs. disponible por ingrediente, antes de confirmar.
+    router.get('/recipes/:id/availability', controller.getRecipeAvailability);
+  }
+}
+
+// TK-093 (AUDIT-SEC-001 F-3): cada ruta de mutación declara explícitamente sus roles
+// permitidos — no basta el authMiddleware heredado a nivel de mount (default-deny).
+function mountMutationRoutes(router: Router, controller: KitchenController, operators: RequestHandler[], deps: KitchenRouteDeps): void {
+  if (deps.recipePreparationRepository && deps.stockUnitOfWork && deps.locationRepository) {
+    // US-028: cierre / abandono de preparación.
+    router.post('/recipe-preparations/:id/close', ...operators, controller.closePreparation);
+    router.post('/recipe-preparations/:id/abandon', ...operators, controller.abandonPreparation);
+  }
+  if (deps.remanenteRepository) {
+    router.post('/remanentes/:id/consume', ...operators, controller.consumeRemanente);
+    router.post('/remanentes/:id/discard', ...operators, controller.discardRemanente);
+    router.post('/shift-reconciliation', ...operators, controller.performShiftReconciliation);
+  }
+  if (deps.recipeRepository && deps.stockUnitOfWork) {
+    router.post('/recipes/:id/consume', ...operators, controller.consumeRecipe);
+  }
 }
 
 export function createKitchenRouter(
   remanenteQueryRepository: IRemanenteQueryRepository,
-  remanenteRepository?: IRemanenteRepository,
+  remanenteRepository?: IRemanenteRepository & Partial<IInsumoRepository>,
   recipeRepository?: IRecipeRepository,
   reconciliationRepository?: IShiftReconciliationRepository,
   isAuthRequired = true,
@@ -128,8 +186,6 @@ export function createKitchenRouter(
 ): Router {
   const router = Router();
 
-  // TK-093 (AUDIT-SEC-001 F-3): cada ruta de mutación declara explícitamente sus roles
-  // permitidos — no basta el authMiddleware heredado a nivel de mount (default-deny).
   // Los operarios de cocina ejecutan estas acciones per PRD §2.2; cuando US-015/TK-073
   // introduzca roles nuevos, sustituir por authorizePermissions('kitchen:...'). Cuando la
   // auth está desactivada (tests de negocio, requireAuth:false) el guard de rol también
@@ -147,27 +203,9 @@ export function createKitchenRouter(
     settingsRepository
   );
 
-  // Lectura de la lista FEFO: abierta a cualquier usuario autenticado (dato operativo,
-  // no sensible) — la escritura sí exige rol explícito abajo.
-  router.get('/remanentes-activos', controller.getActiveRemanentes);
-  if (recipePreparationRepository) {
-    // US-027: tablero de preparaciones de receta — lectura para cualquier autenticado.
-    router.get('/recipe-preparations', controller.listRecipePreparations);
-    router.get('/recipe-preparations/:id', controller.getRecipePreparation);
-  }
-  if (recipePreparationRepository && stockUnitOfWork && locationRepository) {
-    // US-028: cierre / abandono de preparación — mutación, rol explícito.
-    router.post('/recipe-preparations/:id/close', ...operators, controller.closePreparation);
-    router.post('/recipe-preparations/:id/abandon', ...operators, controller.abandonPreparation);
-  }
-  if (remanenteRepository) {
-    router.post('/remanentes/:id/consume', ...operators, controller.consumeRemanente);
-    router.post('/remanentes/:id/discard', ...operators, controller.discardRemanente);
-    router.post('/shift-reconciliation', ...operators, controller.performShiftReconciliation);
-  }
-  if (recipeRepository && stockUnitOfWork) {
-    router.post('/recipes/:id/consume', ...operators, controller.consumeRecipe);
-  }
+  const deps: KitchenRouteDeps = { remanenteRepository, recipeRepository, recipePreparationRepository, stockUnitOfWork, locationRepository };
+  mountReadRoutes(router, controller, deps);
+  mountMutationRoutes(router, controller, operators, deps);
 
   return router;
 }

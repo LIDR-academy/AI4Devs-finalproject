@@ -28,6 +28,7 @@ inputs:
 | **GET** | `/api/v1/recipes` | *Ninguno* | `ListRecipesResponse` | Obtiene la lista de recetas (`TK-057`, ruta actual desde `TK-069`). |
 | **GET** | `/api/v1/kitchen/recipes` 🚧 | *Ninguno* | `ListRecipesResponse` | *(Nunca implementado)* Reemplazado por `GET /api/v1/recipes` (`TK-057`/`TK-069`) — ver §2.7. |
 | **POST** | `/api/v1/kitchen/recipes/:id/consume` | `ConsumeRecipeRequest` | `ConsumeRecipeResponse` | Descuenta stock en cocina en cascada FEFO basado en los ingredientes de la receta. |
+| **GET** | `/api/v1/kitchen/recipes/:id/availability` | `?portions=` | `RecipeAvailabilityResponse` | ✅ Done (`TK-111`, `US-007` v1.1.0). Vista previa de solo lectura: requerido vs. disponible por ingrediente, antes de confirmar. Reutiliza el mismo cálculo que `consume`, sin mutar nada. |
 | **POST** | `/api/v1/kitchen/shift-reconciliation` | `ShiftReconciliationRequest` | `ShiftReconciliationResponse` | Ejecuta el cierre de turno, auto-descarta vencidos y reporta auditoría de discrepancias. Desde `ADR-004`/`TK-109`: `items[].reasonId` obligatorio en varianza negativa. |
 | **POST** | `/api/v1/stock/insumos` | `CreateInsumoRequest` | `CreateInsumoResponse` | Da de alta un insumo nuevo en el catálogo maestro con stock inicial en 0 (`TK-057`). |
 | **GET** | `/api/v1/stock/insumos` | *Ninguno* | `ListInsumosResponse` | Obtiene la lista de insumos del catálogo maestro (`TK-057`). |
@@ -377,10 +378,12 @@ sequenceDiagram
 ---
 
 ### 2.8. `POST /api/v1/kitchen/recipes/:id/consume`
-*   **Descripción:** Ejecuta el descuento de stock rápido basado en la receta provista. El sistema buscará de manera automática todos los remanentes activos de los ingredientes requeridos y los debitará en orden FEFO (fecha de vencimiento más antigua primero).
+> **Corrección (`TK-111`):** el ejemplo de respuesta de esta sección no coincidía con `ConsumeRecipeResponse` real — corregido de paso al tocar este endpoint para agregar §2.8-bis.
+
+*   **Descripción:** Ejecuta el descuento de stock rápido basado en la receta provista. El sistema buscará de manera automática todos los remanentes activos de los ingredientes requeridos y los debitará en orden FEFO (fecha de vencimiento más antigua primero). Desde `US-007` v1.1.0, el frontend consulta `GET .../availability` (§2.8-bis) antes de confirmar — este endpoint sigue siendo la autoridad final (`422` si de verdad falta stock).
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
-    *   `Authorization: Bearer <token_jwt>` (Rol mínimo: `OPERATOR`)
+    *   `Authorization: Bearer <token_jwt>` (Rol: `ADMIN` o `KITCHEN_STAFF`)
 *   **Request Payload (`ConsumeRecipeRequest`):**
     ```json
     {
@@ -390,11 +393,42 @@ sequenceDiagram
 *   **Response Success (`200 OK` - `ConsumeRecipeResponse`):**
     ```json
     {
-      "message": "Recipe consumption recorded successfully in cascade FEFO",
       "recipeId": "aa9f88d1-12cd-41e2-b9e1-bb901518f88c",
-      "movementsCount": 4
+      "recipeName": "Pizza Margarita",
+      "portions": 2,
+      "ingredientsConsumed": [
+        { "insumoId": "ins-queso", "totalConsumed": "0.300", "remanentesAffectedCount": 2 }
+      ]
     }
     ```
+
+---
+
+### 2.8-bis. `GET /api/v1/kitchen/recipes/:id/availability`
+*   **Descripción:** Vista previa de solo lectura (`US-007` v1.1.0 / `TK-111`) — para cada ingrediente de la receta, muestra la cantidad requerida (`RecipeIngredient.quantity × portions`) contra la disponible (suma de remanentes activos de ese insumo). No muta nada; reutiliza exactamente el mismo cálculo que `consume` antes de decidir si el consumo procede. Abierto a cualquier autenticado (dato operativo, igual que `/remanentes-activos`).
+*   **Cabeceras Requeridas:**
+    *   `Authorization: Bearer <token_jwt>` (cualquier rol autenticado)
+*   **Query Params:** `portions` (entero ≥ 1, default `1`).
+*   **Response Success (`200 OK` - `RecipeAvailabilityResponse`):**
+    ```json
+    {
+      "recipeId": "aa9f88d1-12cd-41e2-b9e1-bb901518f88c",
+      "recipeName": "Pizza Margarita",
+      "portions": 2,
+      "ingredients": [
+        {
+          "insumoId": "ins-queso",
+          "insumoName": "Queso Mozzarella",
+          "unitOfMeasure": "KG",
+          "requiredQuantity": "0.300",
+          "availableQuantity": "0.500",
+          "isSufficient": true
+        }
+      ],
+      "isFullyAvailable": true
+    }
+    ```
+*   **Response Error (`404 Not Found`):** la receta no existe.
 
 ---
 

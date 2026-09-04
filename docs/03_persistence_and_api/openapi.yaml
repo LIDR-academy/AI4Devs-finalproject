@@ -1012,6 +1012,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/kitchen/recipes/{id}/availability:
+    get:
+      summary: Preview required vs. available quantity per ingredient before confirming a recipe (US-007 v1.1.0)
+      operationId: getRecipeAvailability
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: portions
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: Per-ingredient availability preview — read-only, mutates nothing (may still show isFullyAvailable false; the authoritative check is consumeRecipe's own 422)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeAvailabilityResponse'
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/recipes:
     get:
       summary: List all recipes, with ingredients (TK-069, modulo recipe independiente de TK-057)
@@ -1875,6 +1910,35 @@ components:
                 $ref: '#/components/schemas/DecimalString'
               remanentesAffectedCount:
                 type: integer
+
+    RecipeAvailabilityResponse:
+      type: object
+      properties:
+        recipeId:
+          type: string
+        recipeName:
+          type: string
+        portions:
+          type: integer
+        ingredients:
+          type: array
+          items:
+            type: object
+            properties:
+              insumoId:
+                type: string
+              insumoName:
+                type: string
+              unitOfMeasure:
+                type: string
+              requiredQuantity:
+                $ref: '#/components/schemas/DecimalString'
+              availableQuantity:
+                $ref: '#/components/schemas/DecimalString'
+              isSufficient:
+                type: boolean
+        isFullyAvailable:
+          type: boolean
 
     CreateRecipeIngredient:
       type: object
