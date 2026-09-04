@@ -4,7 +4,7 @@ id: TK-114-FE
 related_story: US-031
 points: 2
 type: frontend
-status: draft
+status: not_needed
 inputs:
   - docs/05_agile_planning/11_user_stories/shared/US-031.md
   - docs/02_architecture_design/05_ui_ux_design_system.md
@@ -31,4 +31,5 @@ Fusión selectiva del mockup `02_kitchen_dashboard.html` (Stitch) — `US-031` E
 4. **Commit:** `feat(kitchen): circular quick-action button for warehouse extraction on dashboard (TK-114-FE)`.
 
 ## 📌 Notas de implementación
-*   Pendiente de implementación.
+*   **Cerrado sin código — ya implementado.** Al verificar antes de codificar (paso obligatorio del alcance de este mismo ticket), `AccionesEstadoGrid` (`InventarioRoute.tsx`) ya renderiza `ActionButton` (`shared/components/ActionButton.tsx`, `US-023`/`TK-086-FE`) para "Extraer de Bodega": círculo de exactamente 72×72px (`border-radius: 9999px`, la misma excepción documentada en `05_ui_ux_design_system.md`), montado en el mismo panel que `StatusPanel`/`FEFOInventoryHealthBar`, ya gateado por rol, ya abre `WarehouseExtractionModal`. Es funcional y visualmente idéntico a lo que este ticket pedía construir.
+*   Se descarta agregar un segundo botón redundante: duplicaría el mismo `aria-label`/acción en la misma vista, violando el propio principio de no-duplicación de este framework. El "fusionar" de `US-031` Escenario 2 se da por satisfecho por el componente preexistente — el hallazgo pasa a documentación (aquí + `US-031`), sin diff de código.
