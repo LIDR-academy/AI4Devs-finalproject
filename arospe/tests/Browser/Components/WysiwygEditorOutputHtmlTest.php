@@ -30,7 +30,22 @@
 // only), but they stay in the allow-list check below because D-16's own list includes them as
 // alternates -- an editor that DID emit them would still be compliant.
 
+// ⚠️ MIGRATED by story 0027's D-14 (2026-09-03) -- this file used to run against the D13/OQ-1
+// harness (dev.media-gallery-harness), which existed only because WysiwygEditor had no real host
+// page. 0027's App\Livewire\Products\Editor is the real, routed consumer (routes/products.php's
+// `products.edit`), and it embeds exactly ONE WysiwygEditor instance -- bound to `description` --
+// so every `[data-test="harness-editor-instance"] [data-test="..."]`-scoped selector collapses to
+// its unscoped form (wysiwygHtmlTestInstanceSelector() below), matching
+// tests/Browser/Components/WysiwygEditorTest.php's identical migration. Every visit() now opens
+// the real editor against a product pre-seeded with the same BEFORE/AFTER description fragment
+// pair the harness used to seed via its own $editorValue property. The harness component/view/
+// route (plus tests/Feature/Dev/MediaGalleryHarnessRouteTest.php) HAVE been deleted by this story --
+// this file (and its sibling) were made green against the real editor first, and only then was the
+// harness removed.
+
 use App\Models\Media;
+use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Facades\Storage;
@@ -62,14 +77,31 @@ function wysiwygHtmlTestCleanupMedia(Media $media): void
 function wysiwygHtmlTestActor(): User
 {
     $actor = User::factory()->create();
-    $actor->givePermissionTo(['media.view', 'media.create', 'media.edit']);
+    $actor->givePermissionTo(['products.view', 'products.create', 'products.edit', 'media.view', 'media.create', 'media.edit']);
 
     return $actor;
 }
 
+/**
+ * A product pre-seeded with the known BEFORE/AFTER description fragment pair several cases below
+ * need -- the migrated equivalent of the harness's own seeded `$editorValue` property, matching
+ * tests/Browser/Components/WysiwygEditorTest.php's identical fixture.
+ */
+function wysiwygHtmlTestProduct(): Product
+{
+    return Product::factory()->create([
+        'product_category_id' => ProductCategory::factory()->create()->id,
+        'description' => '<p>BEFORE AFTER</p>',
+    ]);
+}
+
+/**
+ * Unscoped -- the editor mounts exactly ONE WysiwygEditor instance (unlike the harness's two), so
+ * none of the harness's own duplication-hazard scoping applies here.
+ */
 function wysiwygHtmlTestInstanceSelector(string $dataTest): string
 {
-    return '[data-test="harness-editor-instance"] [data-test="'.$dataTest.'"]';
+    return '[data-test="'.$dataTest.'"]';
 }
 
 function wysiwygHtmlTestRegionSelector(): string
@@ -218,10 +250,11 @@ test('every toolbar action produces only tags inside the sanitizer allow-list', 
     $this->actingAs($actor);
 
     $media = Media::factory()->withRealFiles()->create(['title' => 'Allow List Widget', 'description' => null]);
+    $product = wysiwygHtmlTestProduct();
 
     $region = wysiwygHtmlTestRegionSelector();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
     if ($action === 'bold') {
         $page->script(wysiwygHtmlTestSelectWordScript($region, 'BEFORE'));
@@ -274,10 +307,11 @@ test('a description composed from several toolbar actions in sequence still stay
     $this->actingAs($actor);
 
     $media = Media::factory()->withRealFiles()->create(['title' => 'Composed Widget', 'description' => null]);
+    $product = wysiwygHtmlTestProduct();
 
     $region = wysiwygHtmlTestRegionSelector();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
     // bold -> heading -> bullet list -> link -> image, each acted on a fresh selection/caret built
     // by the same generic TreeWalker helpers used above -- they survive whatever nesting the
@@ -330,9 +364,10 @@ test('the produced link href carries a supported scheme, and an unsupported sche
     $actor = wysiwygHtmlTestActor();
     $this->actingAs($actor);
 
+    $product = wysiwygHtmlTestProduct();
     $region = wysiwygHtmlTestRegionSelector();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
     $page->script(wysiwygHtmlTestSelectWordScript($region, 'BEFORE'));
     $page->click(wysiwygHtmlTestInstanceSelector('wysiwyg-link'))->assertNoJavaScriptErrors();
@@ -367,10 +402,11 @@ test('the inserted image is a bare img carrying the original url and title, neve
 
     $media = Media::factory()->withRealFiles()->create(['title' => 'Figure-Free Widget', 'description' => null]);
     $expectedUrl = Storage::disk('public')->url($media->path);
+    $product = wysiwygHtmlTestProduct();
 
     $region = wysiwygHtmlTestRegionSelector();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
     $page->click(wysiwygHtmlTestInstanceSelector('wysiwyg-insert-image'))->assertNoJavaScriptErrors();
     $page->click(wysiwygHtmlTestGalleryModal('media-tile-'.$media->id))->assertNoJavaScriptErrors();

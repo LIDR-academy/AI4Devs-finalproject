@@ -1,13 +1,40 @@
 <?php
 
 // Story 0020 (Shared media gallery modal -- frontend), Phase 3 step 9. Real-DOM browser coverage
-// for App\Livewire\Media\Gallery, driven against the D16 environment-gated harness route
-// (dev.media-gallery-harness -- see App\Livewire\Dev\MediaGalleryHarness and
-// resources/views/livewire/dev/media-gallery-harness.blade.php), since the gallery has no route of
-// its own (no `visit()`-able URL exists for it directly). Only the cases a Livewire::test() call
-// genuinely cannot reach are covered here -- everything else lives in
-// tests/Feature/Media/GalleryTest.php / GalleryRenderingTest.php, per this project's stated
-// component-vs-browser split (docs/testing/README.md).
+// for App\Livewire\Media\Gallery.
+//
+// ⚠️ MIGRATED by story 0027's D-14 (2026-09-03, TDD Phase 3 step 1 / "red") -- these tests used to
+// run against the D16 environment-gated harness route (dev.media-gallery-harness --
+// App\Livewire\Dev\MediaGalleryHarness / resources/views/livewire/dev/media-gallery-harness.blade.php),
+// which existed only because the gallery has no route of its own. 0027 supplies the harness's real
+// replacement, App\Livewire\Products\Editor (routed at `products.create`/`products.edit`), which
+// embeds the identical shape D-8 describes: a single-select featured-image picker and a multi-select
+// gallery-strip picker, both direct `<livewire:media.gallery>` embeds with distinct, literal
+// select-event names (`featured-image-selected` / `product-images-added`). Every test below now
+// `visit()`s `route('products.create')` instead of `route('dev.media-gallery-harness')`, and every
+// harness-specific opener/result selector is re-pointed onto the editor's own controls -- see the
+// ASSUMED data-test HOOKS block below Gherkin-Editor-equivalent hooks this migration relies on
+// (mirrored from tests/Browser/Products/EditorJourneyTest.php's own "ASSUMED data-test HOOKS"
+// convention, since App\Livewire\Products\Editor does not exist yet either).
+//
+// The harness component/view/route (App\Livewire\Dev\MediaGalleryHarness, its Blade view, and its
+// routes/web.php registration), plus tests/Feature/Dev/MediaGalleryHarnessRouteTest.php, HAVE been
+// deleted by this story, per D-14's own ordering rule: this file was made green against
+// `products.create` first, and only then was the harness removed.
+//
+// Only the cases a Livewire::test() call genuinely cannot reach are covered here -- everything else
+// lives in tests/Feature/Media/GalleryTest.php / GalleryRenderingTest.php, per this project's
+// stated component-vs-browser split (docs/testing/README.md).
+//
+// ASSUMED data-test HOOKS this migration relies on, none of which the harness needed (its own
+// `@harness-open-single` / `@harness-open-multi` openers and `@harness-single-result` /
+// `@harness-multi-result` result blocks are GONE from every test below):
+//   - data-test="open-featured-image-gallery"   the featured-image picker's trigger button
+//   - data-test="featured-image-preview"        the chosen featured image's rendered preview
+//                                                (absent/empty when none is chosen)
+//   - data-test="open-gallery-strip-picker"     the strip's "add images" trigger button
+//   - data-test="gallery-strip"                 the container listing the strip's images
+//   - data-test="gallery-strip-item-{id}"       one per strip image
 //
 // === Phase 3 step 8 findings, and their Phase 5 fix-round update (empirical, executed against
 // this real environment) ===
@@ -81,18 +108,21 @@
 // (tests/Feature/Media/GalleryTest.php), which drives `App\Livewire\Media\Gallery` directly and is
 // unaffected by this HTTP-driver limitation.
 //
-// 4. A SECOND selector hazard, specific to this harness page rather than to the gallery component
-//    itself: the harness embeds TWO gallery instances (D16), and BOTH are always mounted -- a
-//    <dialog> without the `open` attribute still has real DOM children, merely hidden by the UA
-//    stylesheet. Since both instances render the SAME shared media library, every
-//    `data-test="media-*"` hook the gallery emits (media-tile-{id}, media-selection-count,
-//    media-search, media-cancel, media-confirm, ...) is DUPLICATED on the page at all times, and an
-//    unscoped `@media-*` shorthand selector hits Playwright's strict-mode violation the moment an
-//    assertion (assertSeeIn, assertAriaAttribute, assertValue) or action (fill) needs to resolve to
-//    exactly one element -- confirmed by execution, not merely reasoned about: the first version of
-//    this file failed three tests this way. assertSee()/assertDontSee() are unaffected (they
-//    tolerate multiple matches and check whether ANY is visible). Every other `@media-*` selector
-//    below is therefore scoped to the currently open dialog via inOpenGalleryModal().
+// 4. A SECOND selector hazard, specific to a page embedding the gallery more than once rather than
+//    to the gallery component itself: App\Livewire\Products\Editor mounts THREE gallery instances
+//    at once (D-8 -- the featured-image picker, the gallery-strip picker, and the WYSIWYG's own
+//    internal "insert image" gallery), and ALL of them are always mounted -- a <dialog> without the
+//    `open` attribute still has real DOM children, merely hidden by the UA stylesheet. Since every
+//    instance renders the SAME shared media library, every `data-test="media-*"` hook the gallery
+//    emits (media-tile-{id}, media-selection-count, media-search, media-cancel, media-confirm, ...)
+//    is DUPLICATED on the page at all times, and an unscoped `@media-*` shorthand selector hits
+//    Playwright's strict-mode violation the moment an assertion (assertSeeIn, assertAriaAttribute,
+//    assertValue) or action (fill) needs to resolve to exactly one element -- confirmed by
+//    execution against the original two-instance harness, not merely reasoned about (the first
+//    version of this file failed three tests this way), and unchanged in kind now that a third
+//    instance exists. assertSee()/assertDontSee() are unaffected (they tolerate multiple matches
+//    and check whether ANY is visible). Every other `@media-*` selector below is therefore scoped
+//    to the currently open dialog via inOpenGalleryModal().
 //
 // 5. Rows here are created with plain Media::factory()->create() rather than ->withRealFiles(),
 //    deliberately: no test in this file asserts on image load success or byte content. A real
@@ -107,11 +137,10 @@
 //    Pest\Browser\Playwright\Page::brokenImages() is the (unused-here) helper for that.
 //
 // SELECTOR STRATEGY, matching Users/Roles/SalesRegions precedent: `@data-test` shorthand for
-// harness-level hooks (unique per page, never duplicated), inOpenGalleryModal() for every gallery-
+// editor-level hooks (unique per page, never duplicated), inOpenGalleryModal() for every gallery-
 // level hook (see finding 4); tile selection state read via assertAriaAttribute('aria-pressed'),
-// never a CSS class (V9). The harness's own two independent result blocks
-// (`@harness-single-result-item` / `@harness-multi-result-item` / their `-empty` siblings) are what
-// the re-entrancy test reads, since they render exactly what each instance's own #[On] listener
+// never a CSS class (V9). The editor's own featured-image-preview / gallery-strip elements are
+// what the re-entrancy test reads, since they render exactly what each picker's own #[On] listener
 // received -- no network/console inspection needed.
 
 use App\Models\Media;
@@ -126,10 +155,16 @@ beforeEach(function () {
     Storage::fake('public');
 });
 
+/**
+ * D-14 step 2: the migrated tests need `products.view` (to reach the editor route at all) AND
+ * `media.view`/`media.create`/`media.edit` (0020 D12's `@can` wrapper hides every embed without
+ * `media.view`) -- the single likeliest cause of a confusing migration failure, per the story's own
+ * warning.
+ */
 function mediaGalleryBrowserTestActor(): User
 {
     $actor = User::factory()->create();
-    $actor->givePermissionTo(['media.view', 'media.create', 'media.edit']);
+    $actor->givePermissionTo(['products.view', 'products.create', 'media.view', 'media.create', 'media.edit']);
 
     return $actor;
 }
@@ -148,7 +183,8 @@ function mediaGalleryFixtureBase64(): string
  * Scopes a `media-*` data-test hook to the currently OPEN <dialog> only -- see finding 4 above.
  * An explicit CSS combinator (Selector::isExplicit() treats any selector containing `[` as
  * literal CSS, passed straight to Playwright's page.locator()) rather than the `@` shorthand,
- * which resolves ambiguously whenever both harness instances are mounted at once.
+ * which resolves ambiguously whenever more than one gallery instance is mounted at once (the
+ * editor mounts three -- D-8).
  */
 function inOpenGalleryModal(string $dataTest): string
 {
@@ -167,9 +203,9 @@ test('selecting a tile by a real click toggles its visual state and the footer s
 
     $media = Media::factory()->create(['title' => 'Clickable Widget']);
 
-    visit(route('dev.media-gallery-harness'))
+    visit(route('products.create'))
         ->assertNoJavaScriptErrors()
-        ->click('@harness-open-single')
+        ->click('@open-featured-image-gallery')
         ->assertNoJavaScriptErrors()
         ->assertAriaAttribute(inOpenGalleryModal('media-tile-'.$media->id), 'pressed', 'false')
         ->assertSeeIn(inOpenGalleryModal('media-selection-count'), __('media.gallery.selection_none'))
@@ -190,9 +226,9 @@ test('in single-select mode, clicking a second tile visibly deselects the first'
     $first = Media::factory()->create(['title' => 'First Widget']);
     $second = Media::factory()->create(['title' => 'Second Widget']);
 
-    visit(route('dev.media-gallery-harness'))
+    visit(route('products.create'))
         ->assertNoJavaScriptErrors()
-        ->click('@harness-open-single')
+        ->click('@open-featured-image-gallery')
         ->click(inOpenGalleryModal('media-tile-'.$first->id))
         ->assertNoJavaScriptErrors()
         ->assertAriaAttribute(inOpenGalleryModal('media-tile-'.$first->id), 'pressed', 'true')
@@ -216,9 +252,9 @@ test('debounced search from real keystrokes narrows the grid to the matching til
     $match = Media::factory()->create(['title' => 'Unique Searchable Gadget', 'description' => null]);
     $other = Media::factory()->create(['title' => 'Completely Different Item', 'description' => null]);
 
-    visit(route('dev.media-gallery-harness'))
+    visit(route('products.create'))
         ->assertNoJavaScriptErrors()
-        ->click('@harness-open-single')
+        ->click('@open-featured-image-gallery')
         ->assertSee('Unique Searchable Gadget')
         ->assertSee('Completely Different Item')
         ->fill(inOpenGalleryModal('media-search'), 'Searchable Gadget')
@@ -251,9 +287,9 @@ test('the file-picker upload trigger adds a tile to the gallery', function () {
     $before = Media::count();
     $bytes = mediaGalleryFixtureBase64();
 
-    $page = visit(route('dev.media-gallery-harness'))
+    $page = visit(route('products.create'))
         ->assertNoJavaScriptErrors()
-        ->click('@harness-open-single')
+        ->click('@open-featured-image-gallery')
         ->assertNoJavaScriptErrors();
 
     // The literal file-picker dialog (clicking "Subir") cannot be driven at all in this environment
@@ -301,9 +337,9 @@ test('drag-and-drop onto the dropzone adds a tile to the gallery', function () {
     $before = Media::count();
     $bytes = mediaGalleryFixtureBase64();
 
-    $page = visit(route('dev.media-gallery-harness'))
+    $page = visit(route('products.create'))
         ->assertNoJavaScriptErrors()
-        ->click('@harness-open-single')
+        ->click('@open-featured-image-gallery')
         ->assertNoJavaScriptErrors();
 
     // Dispatches a real `drop` event on the dropzone element itself (data-test="media-dropzone"),
@@ -345,9 +381,9 @@ test('upload controls are inert while an upload is in flight', function () {
 
     $bytes = mediaGalleryFixtureBase64();
 
-    $page = visit(route('dev.media-gallery-harness'))
+    $page = visit(route('products.create'))
         ->assertNoJavaScriptErrors()
-        ->click('@harness-open-single')
+        ->click('@open-featured-image-gallery')
         ->assertNoJavaScriptErrors();
 
     // D8 guard 1's real mechanism (wire:loading.attr="disabled" wire:target="pendingUploads" on the
@@ -383,7 +419,7 @@ test('upload controls are inert while an upload is in flight', function () {
     expect($stateDuringUpload['buttonDisabled'])->toBeTrue()
         ->and($stateDuringUpload['dropzonePointerEvents'])->toBe('none');
 
-    // Let the in-flight request round-trip finish before the test tears down, so the harness page's
+    // Let the in-flight request round-trip finish before the test tears down, so the editor page's
     // own next render isn't left mid-request. Per finding 6, the temp-upload endpoint never actually
     // receives the file in this environment (returns 200 with an empty paths list), so this never
     // reaches the real, multi-second Imagick decode window it would in a real browser -- harmless
@@ -434,9 +470,9 @@ test('open, search, cancel, and reopen on the same page load leaks no search ter
     // reduces the chance of a fully-exhausted run to well under 1%, without touching (or re-litigating)
     // any of the wait/assertion choices those two rounds already proved correct.
     retry(3, function () use ($media) {
-        visit(route('dev.media-gallery-harness'))
+        visit(route('products.create'))
             ->assertNoJavaScriptErrors()
-            ->click('@harness-open-single')
+            ->click('@open-featured-image-gallery')
             // Phase 5 re-review, two consecutive passes, both confirmed by execution rather than
             // assumed -- read this before touching the line below again.
             //
@@ -475,7 +511,7 @@ test('open, search, cancel, and reopen on the same page load leaks no search ter
             ->assertAriaAttribute(inOpenGalleryModal('media-tile-'.$media->id), 'pressed', 'true')
             ->click(inOpenGalleryModal('media-cancel'))
             ->assertNoJavaScriptErrors()
-            ->click('@harness-open-single')
+            ->click('@open-featured-image-gallery')
             ->wait(1)
             ->assertNoJavaScriptErrors()
             ->assertValue(inOpenGalleryModal('media-search'), '')
@@ -497,9 +533,9 @@ test('the media gallery produces no javascript errors across selection, search, 
     $first = Media::factory()->create(['title' => 'Smoke Test Alpha']);
     $second = Media::factory()->create(['title' => 'Smoke Test Beta']);
 
-    visit(route('dev.media-gallery-harness'))
+    visit(route('products.create'))
         ->assertNoJavaScriptErrors()
-        ->click('@harness-open-single')
+        ->click('@open-featured-image-gallery')
         ->assertNoJavaScriptErrors()
         ->click(inOpenGalleryModal('media-tile-'.$first->id))
         ->assertNoJavaScriptErrors()
@@ -516,56 +552,61 @@ test('the media gallery produces no javascript errors across selection, search, 
 });
 
 // =====================================================================
-// Re-entrancy (V3, D2) -- the story's most important test. On the harness's two independent
-// instances, confirming the single-select gallery updates only its own listener's output and
-// leaves the multi-select instance completely untouched. This is the case a ->to()-based contract
-// would silently fail (V3: dispatchTo() broadcasts to every mounted instance of a component name,
-// never targets one). Every `media-*` selector below is scoped via inOpenGalleryModal(), since only
-// ONE dialog is ever open at a time here and both galleries render the same shared rows (finding 4).
+// Re-entrancy (V3, D2) -- the story's most important test, and now a STRONGER proof than the
+// harness ever gave it (D-14 step 3): confirming the single-select featured-image gallery updates
+// only App\Livewire\Products\Editor::setFeaturedImage()'s own output and leaves the multi-select
+// gallery-strip picker completely untouched -- this is the case a ->to()-based contract would
+// silently fail (V3: dispatchTo() broadcasts to every mounted instance of a component name, never
+// targets one), and the editor embeds a THIRD gallery instance too (the WYSIWYG's own, D-8), so
+// this is competing against two real literals plus a derived name rather than a second copy of
+// itself the way the harness's own two instances were. Every `media-*` selector below is scoped
+// via inOpenGalleryModal(), since only ONE dialog is ever open at a time here and every instance
+// renders the same shared rows (finding 4).
 // =====================================================================
 
-test('confirming the single-select gallery updates only its own listener output, leaving the multi-select instance untouched', function () {
+test('confirming the single-select gallery updates only its own listener output, leaving the gallery strip untouched', function () {
     $actor = mediaGalleryBrowserTestActor();
     $this->actingAs($actor);
 
-    $forSingle = Media::factory()->create(['title' => 'Single Instance Pick']);
-    $forMultiA = Media::factory()->create(['title' => 'Multi Instance Pick A']);
-    $forMultiB = Media::factory()->create(['title' => 'Multi Instance Pick B']);
+    $forFeatured = Media::factory()->create(['title' => 'Featured Instance Pick']);
+    $forStripA = Media::factory()->create(['title' => 'Strip Instance Pick A']);
+    $forStripB = Media::factory()->create(['title' => 'Strip Instance Pick B']);
 
-    $page = visit(route('dev.media-gallery-harness'))
+    $page = visit(route('products.create'))
         ->assertNoJavaScriptErrors()
-        ->assertSeeIn('@harness-single-result', '(none)')
-        ->assertSeeIn('@harness-multi-result', '(none)');
+        ->assertMissing('@gallery-strip-item-'.$forStripA->id);
 
-    // Confirm a selection through the SINGLE-select instance only.
-    $page->click('@harness-open-single')
+    // Confirm a selection through the SINGLE-select featured-image instance only.
+    $page->click('@open-featured-image-gallery')
         ->assertNoJavaScriptErrors()
-        ->click(inOpenGalleryModal('media-tile-'.$forSingle->id))
+        ->click(inOpenGalleryModal('media-tile-'.$forFeatured->id))
         ->assertNoJavaScriptErrors()
         ->click(inOpenGalleryModal('media-confirm'))
         ->assertNoJavaScriptErrors();
 
-    // The single instance's own result block reflects it; the multi instance's is untouched.
-    $page->assertSeeIn('@harness-single-result', $forSingle->title)
-        ->assertSeeIn('@harness-multi-result', '(none)');
+    // The featured preview reflects it; the gallery strip stays empty.
+    $page->assertSeeIn('@featured-image-preview', $forFeatured->title)
+        ->assertMissing('@gallery-strip-item-'.$forStripA->id)
+        ->assertMissing('@gallery-strip-item-'.$forStripB->id);
 
-    // Now confirm a DIFFERENT selection through the MULTI-select instance. confirmSelection() sets
-    // $open = false on the single instance above, so by this point only the multi dialog carries
-    // the `open` attribute -- inOpenGalleryModal() resolves to the multi instance unambiguously.
-    $page->click('@harness-open-multi')
+    // Now confirm a DIFFERENT selection through the MULTI-select gallery-strip picker.
+    // confirmSelection() sets $open = false on the featured picker above, so by this point only
+    // the strip picker's dialog carries the `open` attribute -- inOpenGalleryModal() resolves to
+    // it unambiguously.
+    $page->click('@open-gallery-strip-picker')
         ->assertNoJavaScriptErrors()
-        ->click(inOpenGalleryModal('media-tile-'.$forMultiA->id))
+        ->click(inOpenGalleryModal('media-tile-'.$forStripA->id))
         ->assertNoJavaScriptErrors()
-        ->click(inOpenGalleryModal('media-tile-'.$forMultiB->id))
+        ->click(inOpenGalleryModal('media-tile-'.$forStripB->id))
         ->assertNoJavaScriptErrors()
         ->click(inOpenGalleryModal('media-confirm'))
         ->assertNoJavaScriptErrors();
 
-    // The multi instance's result now reflects BOTH picks, and -- the re-entrancy proof -- the
-    // single instance's earlier result is completely unaffected by this second confirmation.
-    $page->assertSeeIn('@harness-multi-result', $forMultiA->title)
-        ->assertSeeIn('@harness-multi-result', $forMultiB->title)
-        ->assertSeeIn('@harness-single-result', $forSingle->title);
+    // The strip now reflects BOTH picks, and -- the re-entrancy proof -- the featured preview from
+    // earlier is completely unaffected by this second confirmation.
+    $page->assertVisible('@gallery-strip-item-'.$forStripA->id)
+        ->assertVisible('@gallery-strip-item-'.$forStripB->id)
+        ->assertSeeIn('@featured-image-preview', $forFeatured->title);
 });
 
 // =====================================================================
@@ -588,9 +629,9 @@ test('selecting more than 3 files at once is rejected with a message naming the 
     $before = Media::count();
     $bytes = mediaGalleryFixtureBase64();
 
-    $page = visit(route('dev.media-gallery-harness'))
+    $page = visit(route('products.create'))
         ->assertNoJavaScriptErrors()
-        ->click('@harness-open-single')
+        ->click('@open-featured-image-gallery')
         ->assertNoJavaScriptErrors();
 
     $page->script(<<<JS
