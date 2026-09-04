@@ -439,3 +439,20 @@ inputs:
   - Frontend 191 tests (174→191 en toda la épica), build/lint verdes (0 warnings nuevos — se extrajo `useCatalogViewState()` para evitar uno). `jscpd` entre `InsumoCatalogPanel`/`InsumoCatalogGrid`: 0 clones.
   - **`US-031` cerrada.** No cambia ningún token/tipografía del Sistema FEFO — solo patrones de interacción puntuales, fusionados selectivamente desde mockups exploratorios no productivos.
   - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).
+
+### 2026-09-04 (cont.) - TK-117: authorizePermissions conectado a rutas reales — AUDIT-SEC-002 F-1 crítico corregido
+- **Hito:** el humano pidió cerrar `US-015`/`TK-073` (código muerto documentado: `authorizePermissions` existía pero nunca se usaba). Verificando antes de conectar el middleware a las rutas se encontró algo más serio: **`/api/v1/roles` no tenía NINGÚN guard de rol/permiso** — solo `authMiddleware` (autenticación). Cualquier usuario logueado, incluido `KITCHEN_STAFF`, podía reescribir los permisos de cualquier rol (incluido `ADMIN`), crear roles con cualquier permiso, o eliminar roles personalizados. El único test previo de esas rutas corría con `requireAuth: false`, así que nunca lo ejerció. Documentado como `AUDIT-SEC-002` (misma clase de hallazgo que `AUDIT-SEC-001`, distinta ruta).
+- **Análisis previo (evitó dos regresiones silenciosas antes de escribir código):**
+  - `InMemoryRoleRepository` solo sembraba `ADMIN`, no `KITCHEN_STAFF` — de haber convertido rutas sin corregir esto, `authorizePermissions` habría resuelto KITCHEN_STAFF como "rol inexistente" (403) en cualquier test con los repos in-memory por defecto, aunque el rol real sí tuviera el permiso en Postgres. Corregido sembrando también `KITCHEN_STAFF` con los mismos 5 permisos del seed real de Prisma.
+  - El seed real asigna `stock:read`/`stock:restock` a `KITCHEN_STAFF`, pero `GET /stock/movements`/`PATCH /insumos/:id/restock` son hoy estrictamente `ADMIN`-only. Convertir esas 2 rutas a permiso fino habría **expandido silenciosamente** el acceso real de cocina — se preguntó explícitamente al humano y se decidió mantenerlas en `requireRole('ADMIN')`, documentado como decisión de producto, no limitación técnica.
+- **Acciones Realizadas:**
+  - ✅ **Crítico:** `roles.controller.ts` — las 5 rutas exigen `authorizePermissions(roleRepo, 'roles:manage')`.
+  - ✅ **Seguro (sin cambio de acceso real):** `POST /stock/extraction` → `stock:extract`; mutaciones de cocina → `kitchen:recipe_prepare`/`kitchen:remanente_consume`; `reports/*` → `reports:view`; `auth/users*` → `users:manage`.
+  - ✅ Cada guard convertido cae al `requireRole` anterior si `roleRepository` no se inyecta — nunca a "sin guard" por un parámetro faltante (defensa contra la misma clase de bug que motivó este ticket).
+  - ✅ `InMemoryRoleRepository` siembra `KITCHEN_STAFF` (antes solo `ADMIN`), espejo exacto de `prisma/seed.ts`.
+  - ✅ Test end-to-end (`CustomRolePermissions.test.ts`): crea un rol nuevo vía API real con un solo permiso, prueba que accede a lo que le corresponde y **solo** a eso — el objetivo real de `US-015` Escenario 1, antes inalcanzable en la práctica.
+- **Estado:**
+  - Backend 360→369 tests, build/lint verdes (0 warnings nuevos — se extrajo `buildExtractionGuard()` para evitar uno). `knip` confirma que `authorizePermissions.middleware.ts` deja de estar en la lista de código muerto. `jscpd` sin clones nuevos entre las 5 rutas tocadas.
+  - Sin cambios de dominio/aplicación — todo el diff es infraestructura, por eso no aplica el gate de mutation score (Guard 11, acotado a domain/application).
+  - `US-015` sigue `MOSTLY_DONE` (Escenario 2, JWT+autoredirección frontend, no forma parte de este ticket) pero su gap más serio (Escenario 3 + el hallazgo no documentado de `/roles`) queda cerrado. `TK-073` pasa a `done`.
+  - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).

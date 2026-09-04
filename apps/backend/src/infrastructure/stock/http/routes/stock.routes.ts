@@ -13,14 +13,32 @@ import { cryptoIdGenerator } from '../../../shared/cryptoIdGenerator.js';
 import { IStockMovementQueryRepository } from '../../../../domain/stock/repositories/IStockMovementQueryRepository.js';
 import { IStorageLocationRepository } from '../../../../domain/stock/repositories/IStorageLocationRepository.js';
 import { IRecipePreparationRepository } from '../../../../domain/kitchen/repositories/IRecipePreparationRepository.js';
+import { IRoleRepository } from '../../../../domain/security/repositories/IRoleRepository.js';
 import { requireRole } from '../../../http/middlewares/requireRole.js';
+import { authorizePermissions } from '../../../security/http/middleware/authorizePermissions.middleware.js';
+
+// TK-117 (US-015 Escenario 3): solo `/extraction` migra a permiso fino (`stock:extract`,
+// ya sembrado tanto en ADMIN como en KITCHEN_STAFF — sin cambio de acceso real).
+// `/movements` y `/insumos/:id/restock` quedan deliberadamente en `requireRole('ADMIN')`:
+// el seed les asigna `stock:read`/`stock:restock` a KITCHEN_STAFF, pero abrir esas 2
+// rutas a ese permiso sí cambiaría el acceso real de hoy — decisión de producto
+// explícita del humano de NO hacerlo en TK-117. Si no se inyecta `roleRepository`,
+// cae al guard grueso anterior — nunca a "sin guard".
+function buildExtractionGuard(
+  isAuthRequired: boolean,
+  roleRepository?: IRoleRepository
+): ReturnType<typeof authorizePermissions | typeof requireRole>[] {
+  if (!isAuthRequired) return [];
+  return roleRepository ? [authorizePermissions(roleRepository, 'stock:extract')] : [requireRole('ADMIN', 'KITCHEN_STAFF')];
+}
 
 export function createStockRouter(
   stockRepository: IInsumoRepository & IRemanenteRepository & IStockUnitOfWork,
   stockMovementQueryRepository?: IStockMovementQueryRepository,
   isAuthRequired = true,
   locationRepository?: IStorageLocationRepository,
-  recipePreparationRepository?: IRecipePreparationRepository
+  recipePreparationRepository?: IRecipePreparationRepository,
+  roleRepository?: IRoleRepository
 ): Router {
   const router = Router();
 
@@ -29,6 +47,7 @@ export function createStockRouter(
   // el authMiddleware a nivel de mount en app.ts.
   const role = (...roles: string[]): ReturnType<typeof requireRole>[] =>
     isAuthRequired ? [requireRole(...roles)] : [];
+  const extractPermission = buildExtractionGuard(isAuthRequired, roleRepository);
   // args: (insumoRepository, unitOfWork, clock, idGenerator, locationRepository)
   // — el repo concreto satisface las 2 primeras interfaces.
   const useCase = new RecordExtractionUseCase(
@@ -54,7 +73,7 @@ export function createStockRouter(
   );
 
   // Extracción de bodega (US-014/TK-072): la ejecutan operarios de cocina y admins.
-  router.post('/extraction', ...role('ADMIN', 'KITCHEN_STAFF'), controller.recordExtraction);
+  router.post('/extraction', ...extractPermission, controller.recordExtraction);
   // Trazabilidad de movimientos (TK-050): dato administrativo — solo ADMIN.
   router.get('/movements', ...role('ADMIN'), controller.getMovementHistory);
   // Catálogo de insumos (TK-057): alta administrativa, listado para cualquier autenticado.

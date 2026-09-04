@@ -4,6 +4,7 @@ import { IRoleRepository } from '../../../../domain/security/repositories/IRoleR
 import { GetRolesUseCase } from '../../../../application/security/use-cases/GetRolesUseCase.js';
 import { CreateRoleUseCase } from '../../../../application/security/use-cases/CreateRoleUseCase.js';
 import { UpdateRolePermissionsUseCase } from '../../../../application/security/use-cases/UpdateRolePermissionsUseCase.js';
+import { authorizePermissions } from '../middleware/authorizePermissions.middleware.js';
 
 const createRoleSchema = z.object({
   name: z.string().min(2),
@@ -19,10 +20,10 @@ function mapPermission(p: { id: string; code: string; name: string; module: stri
   return { id: p.id, code: p.code, name: p.name, module: p.module, description: p.description };
 }
 
-function registerRoleQueryRoutes(router: Router, roleRepo: IRoleRepository): void {
+function registerRoleQueryRoutes(router: Router, roleRepo: IRoleRepository, manageRoles: ReturnType<typeof authorizePermissions>[]): void {
   const getRolesUseCase = new GetRolesUseCase(roleRepo);
 
-  router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
+  router.get('/', ...manageRoles, async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const roles = await getRolesUseCase.execute();
       res.json(roles.map((r) => ({
@@ -36,7 +37,7 @@ function registerRoleQueryRoutes(router: Router, roleRepo: IRoleRepository): voi
     }
   });
 
-  router.get('/permissions', async (_req: Request, res: Response, next: NextFunction) => {
+  router.get('/permissions', ...manageRoles, async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const permissions = await roleRepo.findAllPermissions();
       res.json(permissions.map(mapPermission));
@@ -46,11 +47,11 @@ function registerRoleQueryRoutes(router: Router, roleRepo: IRoleRepository): voi
   });
 }
 
-function registerRoleMutationRoutes(router: Router, roleRepo: IRoleRepository): void {
+function registerRoleMutationRoutes(router: Router, roleRepo: IRoleRepository, manageRoles: ReturnType<typeof authorizePermissions>[]): void {
   const createRoleUseCase = new CreateRoleUseCase(roleRepo);
   const updatePermissionsUseCase = new UpdateRolePermissionsUseCase(roleRepo);
 
-  router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+  router.post('/', ...manageRoles, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const parsed = createRoleSchema.parse(req.body);
       const role = await createRoleUseCase.execute(parsed);
@@ -65,7 +66,7 @@ function registerRoleMutationRoutes(router: Router, roleRepo: IRoleRepository): 
     }
   });
 
-  router.put('/:id/permissions', async (req: Request, res: Response, next: NextFunction) => {
+  router.put('/:id/permissions', ...manageRoles, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const parsed = updatePermissionsSchema.parse(req.body);
       await updatePermissionsUseCase.execute({ roleId: req.params.id, permissionIds: parsed.permissionIds });
@@ -75,7 +76,7 @@ function registerRoleMutationRoutes(router: Router, roleRepo: IRoleRepository): 
     }
   });
 
-  router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+  router.delete('/:id', ...manageRoles, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const role = await roleRepo.findRoleById(id);
@@ -91,13 +92,24 @@ function registerRoleMutationRoutes(router: Router, roleRepo: IRoleRepository): 
   });
 }
 
-function registerRoleRoutes(router: Router, roleRepo: IRoleRepository): void {
-  registerRoleQueryRoutes(router, roleRepo);
-  registerRoleMutationRoutes(router, roleRepo);
+function registerRoleRoutes(router: Router, roleRepo: IRoleRepository, manageRoles: ReturnType<typeof authorizePermissions>[]): void {
+  registerRoleQueryRoutes(router, roleRepo, manageRoles);
+  registerRoleMutationRoutes(router, roleRepo, manageRoles);
 }
 
-export function createRolesController(roleRepo: IRoleRepository): Router {
+/**
+ * TK-117 (AUDIT-SEC-002, US-015 Escenario 3): hasta este ticket, ninguna ruta de
+ * `/api/v1/roles` verificaba rol/permiso — solo autenticación (`authMiddleware` a
+ * nivel de mount en `app.ts`). Cualquier usuario logueado, incluido `KITCHEN_STAFF`,
+ * podía crear roles o reescribir los permisos de cualquier rol existente (incluido
+ * `ADMIN`). `manageRoles` exige `roles:manage`, el mismo permiso que ya expone el
+ * catálogo sembrado — sin cambio de acceso real hoy (solo `ADMIN` lo tiene), pero
+ * ahora un rol personalizado con `roles:manage` concedido explícitamente también
+ * podría gestionar roles, cerrando el hueco de diseño de `US-015`.
+ */
+export function createRolesController(roleRepo: IRoleRepository, isAuthRequired = true): Router {
   const router = Router();
-  registerRoleRoutes(router, roleRepo);
+  const manageRoles = isAuthRequired ? [authorizePermissions(roleRepo, 'roles:manage')] : [];
+  registerRoleRoutes(router, roleRepo, manageRoles);
   return router;
 }

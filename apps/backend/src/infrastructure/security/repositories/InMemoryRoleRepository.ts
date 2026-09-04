@@ -17,7 +17,10 @@ export class InMemoryRoleRepository implements IRoleRepository {
   ];
 
   constructor() {
-    // Seed default roles
+    // Seed default roles — espejo de `prisma/seed.ts` (TK-117): antes solo sembraba
+    // ADMIN, así que `authorizePermissions` resolvía KITCHEN_STAFF como rol inexistente
+    // (403 aunque el rol real sí tuviera los permisos) en cualquier test que usara los
+    // repos in-memory por defecto en vez de Postgres real.
     const adminRole = new Role({
       id: 'role-admin',
       name: 'ADMIN',
@@ -26,6 +29,17 @@ export class InMemoryRoleRepository implements IRoleRepository {
     });
     this.roles.set(adminRole.id, adminRole);
     this.rolePermissionsMap.set(adminRole.id, this.permissions.map((p) => p.id));
+
+    const kitchenPermissionCodes = ['stock:extract', 'stock:restock', 'stock:read', 'kitchen:recipe_prepare', 'kitchen:remanente_consume'];
+    const kitchenPermissions = this.permissions.filter((p) => kitchenPermissionCodes.includes(p.code));
+    const kitchenRole = new Role({
+      id: 'role-kitchen',
+      name: 'KITCHEN_STAFF',
+      description: 'Personal de Cocina',
+      permissions: kitchenPermissions,
+    });
+    this.roles.set(kitchenRole.id, kitchenRole);
+    this.rolePermissionsMap.set(kitchenRole.id, kitchenPermissions.map((p) => p.id));
   }
 
   async findAllRoles(): Promise<Role[]> {

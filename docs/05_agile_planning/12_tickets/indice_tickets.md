@@ -50,8 +50,9 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-071** | `shared` | **Bajo** | **Baja** | 2 SP | Depende de `TK-070-FE`. Reemplaza emoji sueltos por íconos lucide-react en Catálogo/Recetario. | 🟢 P2 - Media |
 | **TK-072** | `stock` | **Muy Alto** | **Alta** | 5 SP | Depende de `TK-003`, `TK-050`. Trazabilidad completa en extracciones de bodega (responsable, motivo, propósito y descarte directo). | 🔴 P0 - Crítica |
 | **TK-072-FE** | `stock` | **Muy Alto** | **Alta** | 3 SP | Depende de `TK-072`, `TK-007-F`. Interfaz táctil para extracciones con motivo y responsable. | 🔴 P0 - Crítica |
-| **TK-073** | `security` | **Alto** | **Alta** | 5 SP | Depende de `TK-002`. Dynamic RBAC: Modelos `Role`, `Permission`, `RolePermission`, endpoints y middleware `authorizePermissions`. 🟡 Parcial — CRUD hecho, `authorizePermissions` nunca se usa en ninguna ruta (código muerto). | 🟡 P1 - Alta |
-| **TK-073-FE** | `security` | **Alto** | **Alta** | 3 SP | Depende de `TK-073`. Interfaz táctil de administración de roles, matriz de permisos y autoredirección por perfiles. 🟡 Parcial — panel de administración hecho, autoredirección/ocultamiento por permiso sin implementar. | 🟡 P1 - Alta |
+| **TK-073** | `security` | **Alto** | **Alta** | 5 SP | Depende de `TK-002`. Dynamic RBAC: Modelos `Role`, `Permission`, `RolePermission`, endpoints y middleware `authorizePermissions`. ✅ Done (`authorizePermissions` conectado a rutas reales en `TK-117`). | 🟡 P1 - Alta |
+| **TK-073-FE** | `security` | **Alto** | **Alta** | 3 SP | Depende de `TK-073`. Interfaz táctil de administración de roles, matriz de permisos y autoredirección por perfiles. 🟡 Parcial — panel de administración hecho (ahora con efecto real, `TK-117`), autoredirección/ocultamiento por permiso sin implementar. | 🟡 P1 - Alta |
+| **TK-117** | `security` | **Alto** | **Crítica** | 5 SP | `US-015` Escenario 3: `authorizePermissions` conectado a rutas reales; corrige `AUDIT-SEC-002` F-1 crítico (`/api/v1/roles` sin ningún guard de rol/permiso). ✅ Done. | 🔴 P0 - Crítica |
 | **TK-074** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-003`. Cierra deuda del CRUD de sectores (`StorageLocation`): `requireRole('ADMIN')` por ruta, RFC 7807, flag `hasStock`. | 🟢 P2 - Media |
 | **TK-074-FE** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-074`. Destino de cocina dinámico en extracción + bloqueo de toggle/borrado de sector con existencias. | 🟢 P2 - Media |
 | **TK-096** | `stock` | **Muy Alto** | **Media** | 8 SP | Depende de `TK-060`, `TK-072`, `TK-074`. Stock multi-sector de bodega (`WarehouseStock` 1:N con FK a `StorageLocation`), sector obligatorio en alta/reabastecimiento, origen elegido en extracción, migración de datos. ✅ Done. | 🟢 P2 - Media |
@@ -177,6 +178,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-068** | N/A (Técnico) | Migración Visual del Backoffice al Design System v2.0.0 | `shared` | 3 | Should Have | [shared/frontend/TK-068.md](shared/frontend/TK-068.md) |
 | **TK-072-FE** | [US-014](../11_user_stories/stock/US-014.md) | Interfaz Táctil para Extracciones con Responsable y Motivo | `stock` | 3 | Must Have | [stock/frontend/TK-072-FE.md](stock/frontend/TK-072-FE.md) |
 | **TK-073-FE** | [US-015](../11_user_stories/security/US-015.md) | Frontend Dynamic RBAC UI & Autoredirection | `security` | 3 | Should Have | [security/frontend/TK-073-FE.md](security/frontend/TK-073-FE.md) |
+| **TK-117** | [US-015](../11_user_stories/security/US-015.md) | Conectar authorizePermissions a Rutas Reales + Cerrar /roles Sin Guard | `security` | 5 | Must Have | [security/backend/TK-117.md](security/backend/TK-117.md) |
 | **TK-074-FE** | [US-016](../11_user_stories/stock/US-016.md) | Frontend Storage Locations UI | `stock` | 3 | Should Have | [stock/frontend/TK-074-FE.md](stock/frontend/TK-074-FE.md) |
 | **TK-096-FE** | [US-025](../11_user_stories/stock/US-025.md) | Selector de Sub-Sector de Bodega y Desglose de Stock (Frontend) | `stock` | 5 | Should Have | [stock/frontend/TK-096-FE.md](stock/frontend/TK-096-FE.md) |
 | **TK-100-FE** | [US-014](../11_user_stories/stock/US-014.md) | Propagación Real de Errores y Aritmética Decimal en la Pantalla de Extracción (AUDIT-DEV-006 F-5/F-6) | `stock` | 3 | Should Have | [stock/frontend/TK-100-FE.md](stock/frontend/TK-100-FE.md) |
@@ -228,6 +230,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-007-B: Pantalla de Login por PIN](auth/frontend/TK-007-B.md)** (Frontend)
 *   **[TK-073: Backend Dynamic RBAC](security/backend/TK-073.md)** (Backend)
 *   **[TK-073-FE: Frontend Dynamic RBAC UI](security/frontend/TK-073-FE.md)** (Frontend)
+*   **[TK-117: Conectar authorizePermissions a Rutas Reales](security/backend/TK-117.md)** (Backend) — cierra `AUDIT-SEC-002` F-1 (crítico) y `US-015` Escenario 3.
 *   **[TK-077: Backend Admin PIN Recovery via Email Token & Magic Link](auth/backend/TK-077.md)** (Backend)
 *   **[TK-092: Resolución Fail-Safe de Rol de Usuario (AUDIT-SEC-001 F-1/F-2)](shared/backend/TK-092.md)** (Backend) — cierra la escalada de privilegios Crítica: usuarios creados por API dejan de autenticar como ADMIN.
 *   **[TK-093: Declaración Explícita de Rol por Ruta en Mutaciones Cocina/Stock (AUDIT-SEC-001 F-3)](shared/backend/TK-093.md)** (Backend)

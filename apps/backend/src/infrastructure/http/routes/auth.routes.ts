@@ -10,14 +10,16 @@ import { RequestAdminPinResetUseCase } from '../../../application/auth/use-cases
 import { ResetAdminPinUseCase } from '../../../application/auth/use-cases/ResetAdminPinUseCase.js';
 import { IUserRepository } from '../../../domain/auth/repositories/IUserRepository.js';
 import { IEmailService } from '../../../domain/auth/ports/IEmailService.js';
+import { IRoleRepository } from '../../../domain/security/repositories/IRoleRepository.js';
 import { ConsoleEmailService } from '../../notifications/ConsoleEmailService.js';
 import { createRateLimiter } from '../middlewares/rateLimiter.js';
 import { createAuthenticateJWTMiddleware } from '../middlewares/authenticateJWT.js';
-import { requireRole } from '../middlewares/requireRole.js';
+import { authorizePermissions } from '../../security/http/middleware/authorizePermissions.middleware.js';
 
 export function createAuthRouter(
   userRepository: IUserRepository,
   jwtSecret: string,
+  roleRepository: IRoleRepository,
   emailService?: IEmailService
 ): Router {
   const router = Router();
@@ -47,15 +49,19 @@ export function createAuthRouter(
   const loginLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10 });
 
   const authMiddleware = createAuthenticateJWTMiddleware(jwtSecret);
+  // TK-117 (US-015 Escenario 3): antes `requireRole('ADMIN')` fijo — sin cambio de
+  // acceso real hoy (KITCHEN_STAFF no tiene `users:manage`), pero un rol personalizado
+  // con `users:manage` concedido ahora también gestiona personal.
+  const manageUsers = authorizePermissions(roleRepository, 'users:manage');
 
   router.post('/login-pin', loginLimiter, controller.loginWithPin);
   router.post('/forgot-pin', loginLimiter, controller.forgotPin);
   router.post('/reset-pin', loginLimiter, controller.resetPin);
   router.post('/change-pin', authMiddleware, controller.changePin);
-  router.get('/users', authMiddleware, requireRole('ADMIN'), controller.listUsers);
-  router.post('/users', authMiddleware, requireRole('ADMIN'), controller.createUser);
-  router.put('/users/:id', authMiddleware, requireRole('ADMIN'), controller.updateUser);
-  router.patch('/users/:id/status', authMiddleware, requireRole('ADMIN'), controller.setUserStatus);
+  router.get('/users', authMiddleware, manageUsers, controller.listUsers);
+  router.post('/users', authMiddleware, manageUsers, controller.createUser);
+  router.put('/users/:id', authMiddleware, manageUsers, controller.updateUser);
+  router.patch('/users/:id/status', authMiddleware, manageUsers, controller.setUserStatus);
 
   return router;
 }

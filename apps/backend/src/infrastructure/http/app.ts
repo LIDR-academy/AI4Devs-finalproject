@@ -257,11 +257,11 @@ function mountApiRoutes(
   const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, recipePreparationRepo, reportRepo, roleRepo, locationRepo, settingsRepo, consumptionReasonRepo } = repos;
   const guard = isAuthRequired ? [authMiddleware] : [];
 
-  app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo, isAuthRequired, locationRepo, recipePreparationRepo));
-  app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo, isAuthRequired, recipePreparationRepo, stockRepo, locationRepo, consumptionReasonRepo, settingsRepo));
-  app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo, settingsRepo));
+  app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo, isAuthRequired, locationRepo, recipePreparationRepo, roleRepo));
+  app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo, isAuthRequired, recipePreparationRepo, stockRepo, locationRepo, consumptionReasonRepo, settingsRepo, roleRepo));
+  app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo, roleRepo, settingsRepo, isAuthRequired));
   app.use('/api/v1/recipes', ...guard, createRecipesRouter(recipeRepo, stockRepo));
-  app.use('/api/v1/roles', ...guard, createRolesController(roleRepo));
+  app.use('/api/v1/roles', ...guard, createRolesController(roleRepo, isAuthRequired));
   app.use('/api/v1/locations', ...guard, createLocationsController(locationRepo, isAuthRequired, stockRepo));
   app.use('/api/v1/settings', ...guard, createSettingsController(settingsRepo));
   // US-030: catálogo de motivos de consumo — lectura para cualquier autenticado,
@@ -302,7 +302,7 @@ export function createApp(options: AppOptions = {}): Express {
   // limiter mas estricto, aplicado despues de este en la cadena de middlewares.
   app.use('/api/v1', createRateLimiter(resolveRateLimitOptions(options.rateLimit)));
 
-  app.use('/api/v1/auth', createAuthRouter(repos.userRepo, repos.jwtSecret, options.emailService));
+  app.use('/api/v1/auth', createAuthRouter(repos.userRepo, repos.jwtSecret, repos.roleRepo, options.emailService));
   mountApiRoutes(app, repos, authMiddleware, isAuthRequired);
 
   // Middleware global de errores

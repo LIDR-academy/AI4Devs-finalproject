@@ -6,7 +6,7 @@ user_story: US-015
 status: MOSTLY_DONE
 ---
 
-> **Estado (2026-09-04, verificado en auditoría de documentación):** parcial — ver la nota detallada en `US-015.md`. Hecho: `RolesService` + panel de administración de roles/matriz de permisos (`RolesManagementPanel.tsx` en `/ajustes/roles`, como panel inline de `US-024`, no el modal que este ticket describía originalmente). Pendiente: autoredirección post-login por permiso y ocultamiento dinámico de acciones — el frontend sigue comparando `role === 'ADMIN'` a mano en vez de leer una lista de permisos real (que tampoco existe en el JWT — ver `TK-073`).
+> **Estado (2026-09-04, actualizado tras `TK-117`):** parcial — ver la nota detallada en `US-015.md`. Hecho: `RolesService` + panel de administración de roles/matriz de permisos (`RolesManagementPanel.tsx` en `/ajustes/roles`, como panel inline de `US-024`, no el modal que este ticket describía originalmente). Desde `TK-117`, ese panel gestiona permisos que **sí tienen efecto real** en el backend (antes de `TK-117` un rol creado ahí quedaba inutilizable). Pendiente: autoredirección post-login por permiso y ocultamiento dinámico de acciones — el frontend sigue comparando `role === 'ADMIN'` a mano en vez de leer una lista de permisos real (que tampoco existe en el JWT — ver `TK-073`).
 
 # 🎟️ Ticket Técnico: TK-073-FE — Frontend Dynamic RBAC UI
 

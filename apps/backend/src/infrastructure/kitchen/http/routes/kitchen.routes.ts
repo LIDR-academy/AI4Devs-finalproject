@@ -25,7 +25,9 @@ import { InMemoryShiftReconciliationRepository } from '../../repositories/InMemo
 import { InMemorySettingsRepository } from '../../../settings/repositories/InMemorySettingsRepository.js';
 
 import { IShiftReconciliationRepository } from '../../../../domain/kitchen/repositories/IShiftReconciliationRepository.js';
+import { IRoleRepository } from '../../../../domain/security/repositories/IRoleRepository.js';
 import { requireRole } from '../../../http/middlewares/requireRole.js';
+import { authorizePermissions } from '../../../security/http/middleware/authorizePermissions.middleware.js';
 
 interface PreparationCloseDeps {
   recipePreparationRepository?: IRecipePreparationRepository;
@@ -154,21 +156,29 @@ function mountReadRoutes(router: Router, controller: KitchenController, deps: Ki
   }
 }
 
-// TK-093 (AUDIT-SEC-001 F-3): cada ruta de mutación declara explícitamente sus roles
-// permitidos — no basta el authMiddleware heredado a nivel de mount (default-deny).
-function mountMutationRoutes(router: Router, controller: KitchenController, operators: RequestHandler[], deps: KitchenRouteDeps): void {
+interface MutationGuards {
+  recipePrepare: RequestHandler[];
+  remanenteConsume: RequestHandler[];
+}
+
+// TK-093 (AUDIT-SEC-001 F-3) / TK-117 (US-015 Escenario 3): cada ruta de mutación
+// declara explícitamente su permiso — no basta el authMiddleware heredado a nivel de
+// mount (default-deny). ADMIN y KITCHEN_STAFF tienen ambos permisos hoy (sin cambio de
+// acceso real); la separación importa para cuando un rol personalizado tenga solo uno.
+function mountMutationRoutes(router: Router, controller: KitchenController, guards: MutationGuards, deps: KitchenRouteDeps): void {
   if (deps.recipePreparationRepository && deps.stockUnitOfWork && deps.locationRepository) {
-    // US-028: cierre / abandono de preparación.
-    router.post('/recipe-preparations/:id/close', ...operators, controller.closePreparation);
-    router.post('/recipe-preparations/:id/abandon', ...operators, controller.abandonPreparation);
+    // US-028: cierre / abandono de preparación — parte del flujo de preparar receta.
+    router.post('/recipe-preparations/:id/close', ...guards.recipePrepare, controller.closePreparation);
+    router.post('/recipe-preparations/:id/abandon', ...guards.recipePrepare, controller.abandonPreparation);
   }
   if (deps.remanenteRepository) {
-    router.post('/remanentes/:id/consume', ...operators, controller.consumeRemanente);
-    router.post('/remanentes/:id/discard', ...operators, controller.discardRemanente);
-    router.post('/shift-reconciliation', ...operators, controller.performShiftReconciliation);
+    router.post('/remanentes/:id/consume', ...guards.remanenteConsume, controller.consumeRemanente);
+    router.post('/remanentes/:id/discard', ...guards.remanenteConsume, controller.discardRemanente);
+    // Conciliación de turno: ajusta cantidades de remanentes, mismo permiso que consumir/descartar.
+    router.post('/shift-reconciliation', ...guards.remanenteConsume, controller.performShiftReconciliation);
   }
   if (deps.recipeRepository && deps.stockUnitOfWork) {
-    router.post('/recipes/:id/consume', ...operators, controller.consumeRecipe);
+    router.post('/recipes/:id/consume', ...guards.recipePrepare, controller.consumeRecipe);
   }
 }
 
@@ -182,15 +192,25 @@ export function createKitchenRouter(
   stockUnitOfWork?: IStockUnitOfWork,
   locationRepository?: IStorageLocationRepository,
   consumptionReasonRepository?: IConsumptionReasonRepository,
-  settingsRepository?: ISystemSettingsRepository
+  settingsRepository?: ISystemSettingsRepository,
+  roleRepository?: IRoleRepository
 ): Router {
   const router = Router();
 
-  // Los operarios de cocina ejecutan estas acciones per PRD §2.2; cuando US-015/TK-073
-  // introduzca roles nuevos, sustituir por authorizePermissions('kitchen:...'). Cuando la
-  // auth está desactivada (tests de negocio, requireAuth:false) el guard de rol también
-  // se omite — mismo criterio que el authMiddleware a nivel de mount en app.ts.
-  const operators = isAuthRequired ? [requireRole('ADMIN', 'KITCHEN_STAFF')] : [];
+  // TK-117 (US-015 Escenario 3): permiso fino por acción — antes un único
+  // `requireRole('ADMIN', 'KITCHEN_STAFF')` para toda mutación. Cuando la auth está
+  // desactivada (tests de negocio, requireAuth:false) el guard se omite — mismo
+  // criterio que el authMiddleware a nivel de mount en app.ts. Sin `roleRepository`
+  // inyectado, cae al guard grueso anterior — nunca a "sin guard".
+  const fallback = (): RequestHandler[] => (isAuthRequired ? [requireRole('ADMIN', 'KITCHEN_STAFF')] : []);
+  const guards: MutationGuards = !isAuthRequired
+    ? { recipePrepare: [], remanenteConsume: [] }
+    : roleRepository
+      ? {
+          recipePrepare: [authorizePermissions(roleRepository, 'kitchen:recipe_prepare')],
+          remanenteConsume: [authorizePermissions(roleRepository, 'kitchen:remanente_consume')],
+        }
+      : { recipePrepare: fallback(), remanenteConsume: fallback() };
 
   const controller = buildKitchenController(
     remanenteQueryRepository,
@@ -205,7 +225,7 @@ export function createKitchenRouter(
 
   const deps: KitchenRouteDeps = { remanenteRepository, recipeRepository, recipePreparationRepository, stockUnitOfWork, locationRepository };
   mountReadRoutes(router, controller, deps);
-  mountMutationRoutes(router, controller, operators, deps);
+  mountMutationRoutes(router, controller, guards, deps);
 
   return router;
 }

@@ -12,7 +12,7 @@ Este documento contiene las especificaciones detalladas de las historias de usua
 *   **[US-010: Gestión Mínima de Personal (Alta y Bloqueo de Operarios)](auth/US-010.md)**
     *   *Descripción:* Permite a un Administrador dar de alta operarios y bloquear/reactivar cuentas existentes vía API, sin depender de un redeploy de código. ✅ Backend (`TK-049`) y Frontend (`TK-049-FE`) implementados.
 *   **[US-015: Gestión de Permisos y Roles Dinámicos (Dynamic RBAC)](security/US-015.md)** 🟡 Parcial
-    *   *Descripción:* Permite al Administrador crear roles dinámicos, configurar su matriz de permisos y autoredirigir a la pantalla de cocina o bodega al iniciar sesión. CRUD de roles/permisos implementado (`TK-073`/`TK-073-FE`); el JWT con permisos, la aplicación real de `authorizePermissions` y la autoredirección siguen sin implementar.
+    *   *Descripción:* Permite al Administrador crear roles dinámicos, configurar su matriz de permisos y autoredirigir a la pantalla de cocina o bodega al iniciar sesión. CRUD de roles/permisos implementado (`TK-073`/`TK-073-FE`); desde `TK-117`, `authorizePermissions` está conectado a rutas reales (un rol personalizado con permisos ya puede ejercerlos) y se cerró `AUDIT-SEC-002` F-1 (crítico: `/api/v1/roles` no tenía ningún guard). Pendiente real: JWT con permisos y autoredirección en frontend (Escenario 2).
 *   **[US-018: Recuperación de Acceso y Reseteo de PIN del Administrador por Email](auth/US-018.md)**
     *   *Descripción:* Permite al Administrador restablecer su PIN mediante un correo verificado y token temporal de 15 minutos en caso de olvido o bloqueo de cuenta.
 
