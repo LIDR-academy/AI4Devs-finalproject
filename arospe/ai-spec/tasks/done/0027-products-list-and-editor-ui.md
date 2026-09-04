@@ -1,9 +1,146 @@
 # [0027] Products — list screen and product editor (UI)
 
+> ## 🏁 Phase 7 closure — story CLOSED — 2026-09-04
+>
+> **Status: `done`.** Every phase of [workflow.md](../../../docs/workflow.md) has been completed and
+> passed:
+>
+> | Phase | Outcome |
+> | --- | --- |
+> | 1 — Three Amigos debate | This file (rewritten once; see the Phase 2 FAIL correction pass below) |
+> | 2 — INVEST validation + documentation check | **PASS**, after one correction round (see the block below) |
+> | 3 — TDD | Complete; full suite green, unscoped |
+> | 4 — Security audit (`appsec-auditor`) | **PASS** at round 3 of 3 |
+> | 5 — Code review (`code-reviewer`) | **Approved** at round 2 of 2 |
+> | 6 — Documentation sync (`docs-keeper`) | Complete |
+> | 7 — Closure | This record |
+>
+> Per [workflow.md Phase 7](../../../docs/workflow.md#phase-7--closure), `product-owner` has moved
+> this file with `git mv` from **`ai-spec/tasks/in-progress/`** to **`ai-spec/tasks/done/`**. This
+> note is the explicit record workflow.md's governance note requires (*no agent advances a task
+> without leaving a record of the reason*).
+>
+> **Link-integrity check performed as part of the same move**, per
+> [workflow.md's two-direction rule](../../../docs/workflow.md#link-integrity-check-on-every-stage-move).
+> `in-progress/` → `done/` is a **same-depth** move (both directories sit three levels below the repo
+> root), so **Direction 1 did not apply** — this file's own outbound relative links needed no
+> re-resolution, which was verified rather than assumed: all 60 relative targets in this file were
+> re-resolved against the filesystem with `realpath -m` from the new location, 0 broken, including the
+> `](../../../docs/…)` links and the `](../done/…)` sibling links (the latter now resolve back into
+> this file's own directory, which is still correct and was deliberately left unrewritten). **Direction
+> 2 was run in full** — a repository-wide grep for this file's basename re-pointed every inbound
+> `](…)` link from its old `in-progress/` path, computing each replacement from the citing file's own
+> directory depth; see the per-file list at the end of this block.
+>
+> **Nothing else in this file changed.** No decision, contract, scenario, test plan or open question
+> was edited by the move.
+>
+> **Inbound links re-pointed (Direction 2):**
+>
+> | Citing file | Old target | New target |
+> | --- | --- | --- |
+> | `ai-spec/tasks/0031-product-variants-editor-ui.md` (×5) | `in-progress/0027-…md` | `done/0027-…md` |
+> | `ai-spec/tasks/0063-blog-posts-list-editor-ui.md` (×6) | `in-progress/0027-…md` | `done/0027-…md` |
+> | `ai-spec/tasks/0076-translatable-content-retrofit-products-backend.md` (×2) | `in-progress/0027-…md` | `done/0027-…md` |
+> | `ai-spec/tasks/0077-product-editor-language-tabs-ui.md` (×3) | `in-progress/0027-…md` | `done/0027-…md` |
+> | `ai-spec/tasks/done/0021-wysiwyg-rich-text-editor-component.md` | `../in-progress/0027-…md` | `0027-…md` |
+> | `ai-spec/tasks/done/0026-product-sales-region-assignment-and-tax-resolution-backend.md` (×3) | `../in-progress/0027-…md` | `0027-…md` |
+> | `docs/api/routes.md` | `../../ai-spec/tasks/in-progress/0027-…md` | `../../ai-spec/tasks/done/0027-…md` |
+
+> ## ✅ Phase 2 PASS → entering Phase 3 (TDD) — 2026-09-03
+>
+> **Status: `in-progress`.** `code-reviewer` re-ran [Phase 2 INVEST validation and the
+> documentation-consistency check](../../../docs/workflow.md#phase-2--invest-validation-and-documentation-check)
+> against the rewritten story and returned **PASS**, after the single correction round recorded in the
+> **🔁 Phase 2 FAIL correction pass — 2026-09-03** block directly below
+> (findings **C1**, **C1 (secondary)**, **C3**, **C6**, **D1**, **D2**, plus the non-blocking items).
+> No further correction round was required.
+>
+> Per [workflow.md Phase 3 step 0](../../../docs/workflow.md#phase-3--tdd-mandatory-in-this-order),
+> `product-owner` has moved this file with `git mv` from `ai-spec/tasks/` to
+> **`ai-spec/tasks/in-progress/`** — the point at which implementation starts. This note is the
+> explicit record workflow.md's governance note requires (*no agent advances a task without leaving a
+> record of the reason*).
+>
+> **Link-integrity check performed as part of the same move**, per
+> [workflow.md's two-direction rule](../../../docs/workflow.md#link-integrity-check-on-every-stage-move).
+> This is the file's **first** move, so the depth changed (two directory levels below the repo root →
+> three) and **Direction 1 applied**: every `../../docs/…`, `../../app/…`, `../../routes/…` and
+> `../../tests/…` link in this file is now `../../../…`, every bare sibling-task link (a target of the
+> form `0076-*.md`, still in `ai-spec/tasks/`) gained a `../` prefix, and every `done/*.md` target
+> became `../done/*.md`. Every relative link target in this file was then re-resolved against the
+> filesystem with `realpath -m` (58 targets, 0 broken), and every
+> `#fragment` re-checked against a real heading in its target — which additionally caught one
+> **pre-existing** bad anchor, unrelated to the move: the two links to
+> `docs/workflow.md#phase-2--invest-validation` named a heading that does not exist and now point at
+> `#phase-2--invest-validation-and-documentation-check`. Direction 2 (inbound links to this file from
+> files that never moved) was swept across the whole repository in the same pass.
+>
+> **Nothing else in this file changed.** No decision, contract, scenario, test plan or open question
+> was edited by the move.
+
+> ## 🔁 Phase 2 FAIL correction pass — 2026-09-03
+>
+> **Status: still in the `new` stage.** `code-reviewer` ran [Phase 2 INVEST
+> validation](../../../docs/workflow.md#phase-2--invest-validation-and-documentation-check) and returned **FAIL**. This is the
+> rewrite pass [workflow.md's own return loop](../../../docs/workflow.md#phase-2--invest-validation-and-documentation-check)
+> requires (*"❌ Fails → returns to `product-owner` with the specific reason for the failure, for
+> rewriting"*), recorded here per its governance note that no agent advances a task without leaving an
+> explicit record of the reason. The story's Gherkin, its D-1…D-18 reasoning and its overall shape were
+> found sound; **every blocking finding was a contract-versus-shipped-code drift**, which is what
+> [**V-9**](#verified-findings) — written on 2026-08-18, when none of this story's dependencies existed
+> in code — now explains and is itself corrected for.
+>
+> **Every claim below was re-verified against the real files on disk before it was written, not taken
+> from the review report.**
+>
+> | Finding | What was wrong | Where it is fixed |
+> | --- | --- | --- |
+> | **C1** | The `ProductValidationRules` contract listed **six method names that do not exist** and qualified them *"entity-prefixed where ambiguous"* — the selective form [naming.md](../../../docs/conventions/naming.md#traits-and-their-methods) records as rejected. The aggregate `productRules()` was missing entirely. | [Interface contract](#interface-contract-consumed--reconciled-against-the-amended-dependencies) — real names, plus a ⚠️ on the two knock-ons deliberately left to 0076 |
+> | **C1 (secondary)** | `CreateProduct` / `UpdateProduct` appeared as `__invoke(...)` — literally elided, so **D-12** was not implementable from this file. | Same block — both signatures spelled out (10/11 positional params; `$featuredMediaId` and `$orderedGalleryMediaIds` **required with no default**; `$description` defaulted on Create only) |
+> | **C3** | **D-17** and the contract were built on `url()`-style **accessors** on `App\Models\Media` that **do not exist** — the model has only `casts()`, `uploadedBy()` and a `#[Scope] search()`, and reading `->avifUrl` returns `null` silently. | [D-17](#d-17--the-thumbnail-renders-picture-over-0019s-real-column-names), rewritten around the shipped call-site form (`Storage::disk('public')->url($media->path)`, as in `Gallery::toPayloadItem()` and `WysiwygEditor::insertImage()`) |
+> | **C6** | A security hand-off was **absent**: 0026's two-phase region validation (array bound alone, then `salesRegionIds.*`) appeared nowhere, and **D-12**'s own code block showed the forbidden combined shape. | New inherited obligation **7**, **D-12(b2)**, one new named test in `EditorTest.php`, and DoD hand-off item 5 |
+> | **D1** | Routes were placed in `routes/web.php` *"beside `users.index`"* — which moved out at task **0040**, and which [base-standards.md](../../../docs/conventions/base-standards.md#directory-structure) forbids: one `routes/<area>.php` per area, five shipped instances. | [Route registrations](#route-registrations), [D-2](#d-2--three-routes-in-a-new-routesproductsphp-two-of-them-onto-one-editor-component) and the Files table — a **new `routes/products.php`**, one `require` line in `web.php` |
+> | **D2** | The sidebar plan targeted a **dead code path**: **V-8**/**D-15** asserted `config/modules.php` does not exist and the sidebar is *"the static starter-kit list"*. Both false since task **0013**; `sidebar.blade.php` has no static module items to add one to. | [D-15](#d-15--sidebar-entry-one-configmodulesphp-entry-and-two-lang-leaves) rewritten around the real registry mechanism; Files table drops `sidebar.blade.php` and gains `config/modules.php` + both `navigation.php` files |
+>
+> **Also fixed, non-blocking:** the planned `tests/Feature/Products/AuthorizationTest.php` is renamed
+> **`ScreenAuthorizationTest.php`** (the shipped `ProductAuthorizationTest.php` already sits in that
+> folder); **V-9**'s *"nothing in this dependency chain exists in code yet"* is corrected (0019–0026 are
+> all closed); and the Definition of Done's quality-gate item now names all three gates in their
+> **unscoped** completion form rather than `pint --dirty` alone, per the two
+> [errors-log](../../../docs/errors-log.md#a-verification-record-that-lists-two-of-three-quality-gates-is-a-record-of-two-gates--2026-08-26)
+> entries about exactly that.
+>
+> **One thing raised but deliberately *not* decided in this pass**, so it is visible to Phase 2 rather
+> than discovered at Phase 4: [D-5](#d-5--three-selects-three-different-answers-to-the-null-desync-trap)
+> types `$status` as a `ProductStatus` enum, and task 0015's finding **F8** retyped the equivalent
+> `Users\Index::$status` to a plain string because Livewire's `EnumSynth` hydrates a forged backing
+> value into a `\ValueError` before validation runs. Flagged in place as a **Phase 3 verification
+> item**; D-5's never-`null` reasoning is untouched and still correct either way.
+>
+> **Deliberately not touched:** the existing *"⚠️ Correction, 2026-08-30"* blockquotes about
+> [0076](../0076-translatable-content-retrofit-products-backend.md)/[0077](../0077-product-editor-language-tabs-ui.md).
+> Neither story is implemented — `app/Models/Product.php` still carries scalar `name`/`description`
+> columns and no `product_translations` table exists — so this pass fixes the **original, pre-0076
+> contract** and leaves those blockquotes standing as forward-looking notes. Two of them are stale in
+> ways this pass created (0076's own quoting of the old `descriptionRules()`/`skuRules()` names, and its
+> *"a seventh obligation"* numbering); both are flagged in place as **0076's** to reconcile when it
+> lands, rather than edited from this file.
+>
+> ✅ **Ready for Phase 2 re-validation.** The file stays in `ai-spec/tasks/` (the `new` stage) until
+> Phase 2 actually passes.
+>
+> ⚠️ **Superseded 2026-09-03 — the two status statements in this block are historical.** *"Status:
+> still in the `new` stage"* (above) and *"the file stays in `ai-spec/tasks/`"* (immediately above)
+> were both true of this correction pass and are both false now: Phase 2 re-validation **passed** and
+> the file moved to `ai-spec/tasks/in-progress/`. They are left as written rather than rewritten, per
+> this project's audit-authored-page convention; the current status is the **✅ Phase 2 PASS →
+> entering Phase 3 (TDD)** block at the top of this file.
+
 > ⚠️ **This file predates Epic 5's translatable-content retrofit and has been amended, 2026-08-30, to stay accurate.** It was written on 2026-08-18 against a `products` table carrying scalar `name` and `description` columns and **no** slug or SEO fields at all. Two later Epic 5 stories change that, and both are Phase 1 text rather than shipped code:
 >
-> - **[0076 — Translatable content retrofit, Products backend](0076-translatable-content-retrofit-products-backend.md)** **drops `products.name` and `products.description` entirely** and moves them into a `product_translations` child table, one row per `(product, store language)`, read through `Product::translated('name')` / `translated('description')`. It also introduces **`slug`, `meta_title` and `meta_description` for the first time**, born on that child table and never on the parent, with `slug` unique per language (`UNIQUE(store_language_id, slug)` — 0076's **Q-2**, resolved 2026-08-30). `CreateProduct` / `UpdateProduct` gain three new parameters (0076 **D-18**), and 0076 ships `Product::scopeOrderByTranslatedName()` (its **D-14**) specifically so this story's list query does not have to invent a join.
-> - **[0077 — Product editor language tabs (UI)](0077-product-editor-language-tabs-ui.md)** adds one tab per active store language to the editor built here, so the **five** translatable fields are authored once per language while `sku`, category, `type`, `status`, `price`, `stock`, imagery and sales regions stay **outside** the tabs and render once — PRD Epic 5's own rule. It replaces this story's `public string $name` / `public string $description` with five parallel arrays keyed by store-language id, and adds a dedicated `App\Actions\Products\SetProductTranslation` action.
+> - **[0076 — Translatable content retrofit, Products backend](../0076-translatable-content-retrofit-products-backend.md)** **drops `products.name` and `products.description` entirely** and moves them into a `product_translations` child table, one row per `(product, store language)`, read through `Product::translated('name')` / `translated('description')`. It also introduces **`slug`, `meta_title` and `meta_description` for the first time**, born on that child table and never on the parent, with `slug` unique per language (`UNIQUE(store_language_id, slug)` — 0076's **Q-2**, resolved 2026-08-30). `CreateProduct` / `UpdateProduct` gain three new parameters (0076 **D-18**), and 0076 ships `Product::scopeOrderByTranslatedName()` (its **D-14**) specifically so this story's list query does not have to invent a join.
+> - **[0077 — Product editor language tabs (UI)](../0077-product-editor-language-tabs-ui.md)** adds one tab per active store language to the editor built here, so the **five** translatable fields are authored once per language while `sku`, category, `type`, `status`, `price`, `stock`, imagery and sales regions stay **outside** the tabs and render once — PRD Epic 5's own rule. It replaces this story's `public string $name` / `public string $description` with five parallel arrays keyed by store-language id, and adds a dedicated `App\Actions\Products\SetProductTranslation` action.
 >
 > **The amendments below are corrections, not a redesign.** This story's job is unchanged — the list, the routed editor, delete, the harness migration — and it does **not** grow the language-tabs UI, which is 0077's. What has been corrected here is every place this file asserts something that 0076/0077 make false. **0077 itself is scoped *out* of the list screen** (its own scope fence and **R-1**), so the list-side breaks are this file's to carry.
 >
@@ -34,33 +171,33 @@ Build the two screens the whole of Epic 2's product work has been feeding: a **p
 (thumbnail, name + SKU, price, colour-coded stock, a status badge that reads *Agotado* at zero stock,
 per-row edit/delete actions and a primary "Nuevo producto" button) and a **routed product editor**
 (name, SKU, category select, the required physical/virtual type control, the WYSIWYG description from
-[0021](done/0021-wysiwyg-rich-text-editor-component.md), a featured image and a gallery strip through
-[0020](done/0020-shared-media-gallery-modal-ui.md), and a searchable Sales Region multi-select from
-[0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) built on
-[0022](done/0022-searchable-multi-select-component.md)).
+[0021](../done/0021-wysiwyg-rich-text-editor-component.md), a featured image and a gallery strip through
+[0020](../done/0020-shared-media-gallery-modal-ui.md), and a searchable Sales Region multi-select from
+[0026](../done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) built on
+[0022](../done/0022-searchable-multi-select-component.md)).
 
 It is **frontend only**: no migration, no model, no action, no policy, no enum, no validation rule.
-Every one of those is consumed as already-shipped code from [0024](done/0024-products-core-crud-backend.md)
-(core CRUD), [0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) (region
-assignment) and [0023](done/0023-product-categories-backend.md) (the category taxonomy). This story is
+Every one of those is consumed as already-shipped code from [0024](../done/0024-products-core-crud-backend.md)
+(core CRUD), [0026](../done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) (region
+assignment) and [0023](../done/0023-product-categories-backend.md) (the category taxonomy). This story is
 where four separate stories' zero-call-site deliverables — `ProductPolicy`, `CreateProduct` /
 `UpdateProduct` / `DeleteProduct` / `SyncProductGallery`, `SyncProductSalesRegions` /
 `SearchSalesRegions`, and the two shared UI components — finally acquire a caller.
 
 > **Scope note — the grouping concept is gone.** The supranational Sales Region *grouping* entries
 > (Unión Europea, Internacional) were removed project-wide on 2026-08-18 (see
-> [0016](done/0016-sales-region-catalog-schema-and-seeder.md)'s scope-change amendment and
-> [0026 D10](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md)). The region picker
+> [0016](../done/0016-sales-region-catalog-schema-and-seeder.md)'s scope-change amendment and
+> [0026 D10](../done/0026-product-sales-region-assignment-and-tax-resolution-backend.md)). The region picker
 > on this screen therefore shows **only individual countries and Spain's fiscal sub-territories**, as
 > a flat list with no group headings, and nothing on this screen expands, infers or implies
 > membership of any kind.
 
 > **Scope note — variants are not on this screen.** Product variants (0028/0029) get their own
 > builder in story **0031**. This editor ships the product-level `price` / `stock` fields exactly as
-> [0024](done/0024-products-core-crud-backend.md) defines them. See
+> [0024](../done/0024-products-core-crud-backend.md) defines them. See
 > [OQ-9](#open-questions) for the one forward dependency (0029's OQ-3) that could change that later.
 
-> ⚠️ **Correction, 2026-08-30 — the editor's field list above is per-language for two of its entries, and gains three more.** The paragraph opens *"a **routed product editor** (name, SKU, category select, …, the WYSIWYG description …)"*, which reads as one name field and one description field. After [0076](0076-translatable-content-retrofit-products-backend.md) the editor's translatable set is **five** fields — `name`, `description`, `slug`, `meta_title`, `meta_description` — and after [0077](0077-product-editor-language-tabs-ui.md) each of them is authored **once per active store language**, inside language tabs. Everything else in that list (SKU, category select, the physical/virtual type control, the featured image, the gallery strip, the Sales Region multi-select) is non-translatable and renders **exactly once**, outside the tabs, per PRD Epic 5's *"shown once"* rule. **The routed-page shape, the delete flow and the harness migration are unaffected** — and the tabs themselves are 0077's to build, not this story's.
+> ⚠️ **Correction, 2026-08-30 — the editor's field list above is per-language for two of its entries, and gains three more.** The paragraph opens *"a **routed product editor** (name, SKU, category select, …, the WYSIWYG description …)"*, which reads as one name field and one description field. After [0076](../0076-translatable-content-retrofit-products-backend.md) the editor's translatable set is **five** fields — `name`, `description`, `slug`, `meta_title`, `meta_description` — and after [0077](../0077-product-editor-language-tabs-ui.md) each of them is authored **once per active store language**, inside language tabs. Everything else in that list (SKU, category select, the physical/virtual type control, the featured image, the gallery strip, the Sales Region multi-select) is non-translatable and renders **exactly once**, outside the tabs, per PRD Epic 5's *"shown once"* rule. **The routed-page shape, the delete flow and the harness migration are unaffected** — and the tabs themselves are 0077's to build, not this story's.
 
 ## Type
 frontend | fullstack (related_task_id: **0024** — products core CRUD backend, whose paired UI this is)
@@ -68,29 +205,29 @@ frontend | fullstack (related_task_id: **0024** — products core CRUD backend, 
 
 No schema change, no migration, no index decision, no new query shape beyond an explicit-column
 `select()` and two eager loads over tables 0024 and 0026 already designed. `database-expert` is
-therefore not convened, matching [0025](done/0025-product-categories-ui.md)'s precedent for the sibling
+therefore not convened, matching [0025](../done/0025-product-categories-ui.md)'s precedent for the sibling
 category screen.
 
 **Hard dependency chain, and it is longer than `related_task_id` suggests.** This story cannot start
-until **0019 → 0020 → 0021 → 0022 → 0023 → 0024 → [0024a](done/0024a-product-description-html-sanitization.md) → 0026**
+until **0019 → 0020 → 0021 → 0022 → 0023 → 0024 → [0024a](../done/0024a-product-description-html-sanitization.md) → 0026**
 are all closed. `related_task_id` correctly names the FE/BE pair (0024); the others are hard blockers
-from different pairs, exactly the situation [0025](done/0025-product-categories-ui.md)'s **F-1** records for
+from different pairs, exactly the situation [0025](../done/0025-product-categories-ui.md)'s **F-1** records for
 itself.
 
 > ⚠️ **0024a added to the chain on 2026-09-01**, when 0024 was split three ways. It owns
 > `symfony/html-sanitizer`, `config/html-sanitizer.php` and `SanitizeProductDescription`, and it is a
 > **hard** blocker for this story specifically because this screen renders `description` unescaped and
 > binds 0021's `WysiwygEditor` to it — which
-> [api/routes.md](../../docs/api/routes.md#applivewirecomponentswysiwygeditor--the-gallerys-first-real-consumer-and-the-second-routeless-gated-component)
+> [api/routes.md](../../../docs/api/routes.md#applivewirecomponentswysiwygeditor--the-gallerys-first-real-consumer-and-the-second-routeless-gated-component)
 > forbids until *"that column's own write path runs a server-side sanitizer first"*. The third split
-> story, [0024b](done/0024b-product-category-in-use-delete-guard.md) (the category in-use delete guard), is
+> story, [0024b](../done/0024b-product-category-in-use-delete-guard.md) (the category in-use delete guard), is
 > **not** in this chain — it blocks 0025, not this story.
 
 ## Three Amigos participants
 
 `product-owner` (lead) + `frontend-expert` (files and approach) + `frontend-qa` (test design), per
-[workflow.md](../../docs/workflow.md#phase-1--three-amigos-debate)'s
-[task classification rule](../../docs/workflow.md#task-classification-rule).
+[workflow.md](../../../docs/workflow.md#phase-1--three-amigos-debate)'s
+[task classification rule](../../../docs/workflow.md#task-classification-rule).
 
 Both specialists contributed in full, grounded in real reads of every dependency file. The
 coordinator then **re-read every dependency on disk after 0022 and 0026 were amended on 2026-08-18**
@@ -102,15 +239,15 @@ See [Provenance](#provenance) for exactly which role covered what.
 > **Amended 2026-08-19 — three of those findings came back answered.** The two blocking open questions
 > this story raised against its dependencies (**OQ-5** / **D-11** and **OQ-6** / **D-9a**) and the
 > transaction-boundary gap (**D-12b**) were carried upstream and settled by amendments to
-> [0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) (**D12**, **D13**, **D14**)
-> and [0024](done/0024-products-core-crud-backend.md) (**D-17**). All three are now **resolved with concrete
+> [0026](../done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) (**D12**, **D13**, **D14**)
+> and [0024](../done/0024-products-core-crud-backend.md) (**D-17**). All three are now **resolved with concrete
 > mechanisms**, recorded in **D-18** and folded into the decisions, tests and acceptance criteria they
 > touch. Nothing about them blocks Phase 3 any more.
 
 ## PRD coverage
 
-Derived from [PRD §2.2 Products](../../docs/PRD/PRD.md#22-products) and the
-[Design reference](../../docs/PRD/PRD.md#design-reference--the-dashboard-shell) section. This story
+Derived from [PRD §2.2 Products](../../../docs/PRD/PRD.md#22-products) and the
+[Design reference](../../../docs/PRD/PRD.md#design-reference--the-dashboard-shell) section. This story
 is the **screen half** of scenarios whose data half other stories already own:
 
 | PRD scenario / criterion | Owned here |
@@ -131,12 +268,12 @@ mechanics (0019/0020), and the WYSIWYG's own editing behaviour (0021).
 ## Gherkin
 
 Every scenario opens with a named business-role actor and carries exactly one `When`, per
-[gherkin-guidelines.md](../../docs/testing/frontend/gherkin-guidelines.md) rules 1 and 3.
+[gherkin-guidelines.md](../../../docs/testing/frontend/gherkin-guidelines.md) rules 1 and 3.
 
-> ⚠️ **Correction, 2026-08-30 — read every mention of a product's *name* or *description* below as "in one store language", and the editor scenarios as covering the **default** language's tab only.** The scenarios were written when a product had exactly one name and one description, so nothing in them names a language. They are **not struck** — every one still describes real behaviour — but three groups need reading with [0076](0076-translatable-content-retrofit-products-backend.md)/[0077](0077-product-editor-language-tabs-ui.md) in mind:
+> ⚠️ **Correction, 2026-08-30 — read every mention of a product's *name* or *description* below as "in one store language", and the editor scenarios as covering the **default** language's tab only.** The scenarios were written when a product had exactly one name and one description, so nothing in them names a language. They are **not struck** — every one still describes real behaviour — but three groups need reading with [0076](../0076-translatable-content-retrofit-products-backend.md)/[0077](../0077-product-editor-language-tabs-ui.md) in mind:
 >
 > - **The list scenarios** (*"the row shows the product's thumbnail, its name, its SKU…"*) render a name resolved for **one** language, which language being **[OQ-10](#open-questions)** — open, and a human's to answer.
-> - **The editor scenarios** — *"A product is created from the editor"*, *"Opening a product loads its stored values"*, and both **The product's description** scenarios — describe the **default store language's** tab. Their per-language counterparts (switching tabs, an untranslated tab opening empty, a blank tab writing no row, the slug/SEO refusals) are [0077's own Gherkin](0077-product-editor-language-tabs-ui.md) and are deliberately **not** duplicated here.
+> - **The editor scenarios** — *"A product is created from the editor"*, *"Opening a product loads its stored values"*, and both **The product's description** scenarios — describe the **default store language's** tab. Their per-language counterparts (switching tabs, an untranslated tab opening empty, a blank tab writing no row, the slug/SEO refusals) are [0077's own Gherkin](../0077-product-editor-language-tabs-ui.md) and are deliberately **not** duplicated here.
 > - **The delete scenarios** (*"The delete confirmation names 'Runner Pro'"*) name a product in one language too — see the `$deletingProductName` note under [Component public surfaces](#component-public-surfaces).
 >
 > **Nothing here needs a new scenario.** This story's Gherkin is about the list, the routed editor and delete; the language dimension is 0077's feature, and adding half of it here would duplicate a file that already covers it in full.
@@ -370,12 +507,14 @@ Feature: Deleting a product
 
 | Path | Change |
 | --- | --- |
-| `app/Livewire/Products/Index.php` | **New.** The list. Class-based per [base-standards.md](../../docs/conventions/base-standards.md#livewire-component-convention-class-based-not-single-file). |
-| `resources/views/livewire/products.blade.php` | **New.** The **flat** path — `App\Livewire\Products\Index` drops `.index` per the [`Index`-in-a-subfolder exception](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name). |
+| `app/Livewire/Products/Index.php` | **New.** The list. Class-based per [base-standards.md](../../../docs/conventions/base-standards.md#livewire-component-convention-class-based-not-single-file). |
+| `resources/views/livewire/products.blade.php` | **New.** The **flat** path — `App\Livewire\Products\Index` drops `.index` per the [`Index`-in-a-subfolder exception](../../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name). |
 | `app/Livewire/Products/Editor.php` | **New.** The create/edit screen (**D-1**: a routed page, not a modal). |
-| `resources/views/livewire/products/editor.blade.php` | **New.** The ordinary kebab-case mirror — note it sits one level *deeper* than the list's view; [naming.md](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name) already records that this asymmetry is expected. |
-| `routes/web.php` | **Modify.** Three `Route::livewire(...)` registrations inside the existing `auth`+`verified` group (**D-2**), **and** deletion of 0020's harness block (**D-14**). |
-| `resources/views/layouts/app/sidebar.blade.php` | **Modify** — one `flux:sidebar.item`, branching on whether [0013](done/0013-sidebar-module-gating-ui.md) has landed (**D-15**). |
+| `resources/views/livewire/products/editor.blade.php` | **New.** The ordinary kebab-case mirror — note it sits one level *deeper* than the list's view; [naming.md](../../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name) already records that this asymmetry is expected. |
+| `routes/products.php` | **New.** The area file, holding all three `Route::livewire(...)` registrations inside its own `['auth', 'verified']` group (**D-2**). One file per functional area is the convention ([base-standards.md](../../../docs/conventions/base-standards.md#directory-structure)); mirror [`routes/product-categories.php`](../../../routes/product-categories.php) exactly, including the aliased `use ... as ProductsIndex` / `as ProductEditor` imports. |
+| `routes/web.php` | **Modify.** Exactly two edits: one `require __DIR__.'/products.php';` line appended after the five existing `require`s, **and** deletion of 0020/0021's harness block (**D-14**). No route is declared inline here. |
+| `config/modules.php` | **Modify** — append one `items.products` entry (**D-15**), `permissions` exactly `['products.view']`. Data only; the reading component is not touched. |
+| `lang/en/navigation.php` + `lang/es/navigation.php` | **Modify** — one `items.products` leaf each, key-for-key identical (**D-15**). |
 | `lang/en/products.php` + `lang/es/products.php` | **Modify** (0024 creates them; 0026 and 0028 also extend them). Append an `index` group and an `editor` group. Key-for-key identical. |
 | `app/Livewire/Dev/MediaGalleryHarness.php`, `resources/views/livewire/dev/media-gallery-harness.blade.php` | **Delete** (**D-14**). Both files carry a comment naming this story as their expiry. |
 | `tests/Feature/Dev/MediaGalleryHarnessRouteTest.php` | **Delete** (**D-14**) — its subject no longer exists. |
@@ -385,7 +524,7 @@ Feature: Deleting a product
 | `tests/Feature/Products/IndexRenderingTest.php` | **New.** Markup-level assertions for the list. |
 | `tests/Feature/Products/EditorTest.php` | **New.** The largest file: the editor's save orchestration. |
 | `tests/Feature/Products/EditorRenderingTest.php` | **New.** Option-set and embedded-component markup guards. |
-| `tests/Feature/Products/AuthorizationTest.php` | **New.** Discharges 0026 **D-8**'s zero-call-site hand-off, and covers this story's own component-level gates as the **second** layer over 0024's self-authorizing actions. ⚠️ **Narrowed 2026-09-01**: this row used to name 0024 **D-15** too. That decision was **reversed** at 0024's split — `CreateProduct`/`UpdateProduct`/`DeleteProduct` now authorize themselves and `ProductPolicy` ships with real call sites, so there is no 0024 hand-off left to discharge here. |
+| `tests/Feature/Products/ScreenAuthorizationTest.php` | **New.** Discharges 0026 **D-8**'s zero-call-site hand-off, and covers this story's own component-level gates as the **second** layer over 0024's self-authorizing actions. ⚠️ **Narrowed 2026-09-01**: this row used to name 0024 **D-15** too. That decision was **reversed** at 0024's split — `CreateProduct`/`UpdateProduct`/`DeleteProduct` now authorize themselves and `ProductPolicy` ships with real call sites, so there is no 0024 hand-off left to discharge here. ⚠️ **Renamed 2026-09-03** from `AuthorizationTest.php`: [`tests/Feature/Products/ProductAuthorizationTest.php`](../../../tests/Feature/Products/ProductAuthorizationTest.php) already exists (0024's action-level gates plus the `SyncProductGallery` reachability assertion), and two near-identically-named authorization files in one folder is an ambiguity nobody can resolve from a failure name. `Screen`, not `Editor`, because the file covers **both** `Products\Index`'s and `Products\Editor`'s gates plus the per-row hints. |
 | `tests/Browser/Products/EditorJourneyTest.php` | **New.** The one comprehensive happy-path journey (**D-16** rationale). |
 | `tests/Browser/Products/IndexTest.php` | **New.** The list's real-DOM cases only. |
 | `tests/Unit/ArchitectureTest.php` | **Modify** — extend the existing scope fence to cover `App\Livewire\Products\*`, matching 0025 **D-9**. |
@@ -396,21 +535,22 @@ Feature: Deleting a product
 | --- | --- |
 | `database/migrations/*products*`, `app/Models/Product.php`, `app/Enums/Product*.php` | 0024 |
 | `app/Actions/Products/{Create,Update,Delete}Product.php`, `SyncProductGallery.php` | 0024 |
-| `app/Actions/Products/SanitizeProductDescription.php`, `config/html-sanitizer.php` | **[0024a](done/0024a-product-description-html-sanitization.md)** (split out of 0024 on 2026-09-01) — **a hard, blocking dependency of this story**, because this screen renders `description` unescaped and binds 0021's `WysiwygEditor` to it |
+| `app/Actions/Products/SanitizeProductDescription.php`, `config/html-sanitizer.php` | **[0024a](../done/0024a-product-description-html-sanitization.md)** (split out of 0024 on 2026-09-01) — **a hard, blocking dependency of this story**, because this screen renders `description` unescaped and binds 0021's `WysiwygEditor` to it |
 | `app/Concerns/ProductValidationRules.php`, `app/Policies/ProductPolicy.php` | 0024 (0026 extends the trait) |
 | `app/Actions/Products/{SyncProductSalesRegions,SearchSalesRegions,ResolveProductTaxRate}.php` | 0026 |
 | `app/Livewire/Media/Gallery.php`, `app/Livewire/Components/{WysiwygEditor,SearchableMultiSelect}.php` | 0020 / 0021 / 0022 |
 | `app/Actions/NormalizeForSearch.php`, `app/Exceptions/UnresolvedSelectionException.php` | 0022 |
 | `app/Livewire/ProductCategories/Index.php` and the categories screen | 0025 |
+| `resources/views/layouts/app/sidebar.blade.php`, `resources/views/components/sidebar-nav.blade.php` | 0013. ⚠️ **Added 2026-09-03** — this story's earlier draft listed the layout as **modified**. It is not: the sidebar renders `<x-sidebar-nav />` over `config/modules.php`, so a new module appends **data** and touches no template (**D-15**). |
 | `database/seeders/RolePermissionSeeder.php` | nobody — `products.*` is already seeded (0023 **D-8**) |
 | Any variant builder markup | 0031 |
 
 > **Sequential-implementation requirement.** This story writes `lang/en|es/products.php`, which 0024
 > creates and 0025/0026/0028 also extend, and it deletes files 0020 and 0021 own. Its Phase 3 work
 > must **never** be dispatched in the same batch as any of those stories, per the
-> [Parallel Agent File-Ownership Rule](../../docs/contracts.md#parallel-agent-file-ownership-rule).
+> [Parallel Agent File-Ownership Rule](../../../docs/contracts.md#parallel-agent-file-ownership-rule).
 
-> ⚠️ **Correction, 2026-08-30 — the sequential-implementation list is now longer, and five of the files above are also opened by [0077](0077-product-editor-language-tabs-ui.md).** Add **0076** and **0077** to the list of stories this one must never be batched with. 0077 modifies `app/Livewire/Products/Editor.php`, `resources/views/livewire/products/editor.blade.php`, `lang/{en,es}/products.php`, `tests/Feature/Products/EditorTest.php`, `tests/Feature/Products/EditorRenderingTest.php`, `tests/Feature/Products/AuthorizationTest.php` and `tests/Browser/Products/EditorJourneyTest.php` — every one of them created here.
+> ⚠️ **Correction, 2026-08-30 — the sequential-implementation list is now longer, and five of the files above are also opened by [0077](../0077-product-editor-language-tabs-ui.md).** Add **0076** and **0077** to the list of stories this one must never be batched with. 0077 modifies `app/Livewire/Products/Editor.php`, `resources/views/livewire/products/editor.blade.php`, `lang/{en,es}/products.php`, `tests/Feature/Products/EditorTest.php`, `tests/Feature/Products/EditorRenderingTest.php`, `tests/Feature/Products/AuthorizationTest.php` and `tests/Browser/Products/EditorJourneyTest.php` — every one of them created here.
 >
 > **Three things follow, and the third is the one worth planning for.** *(a)* This story still **creates** all of those files; 0077 extends them afterwards, so nothing moves out of the table above. *(b)* 0077 creates files this story does not name at all (`app/Actions/Products/SetProductTranslation.php`, three new test files, a browser test in `tests/Browser/Products/`) — they are its own and are not added here. *(c)* **`tests/Feature/Products/IndexQueryTest.php` will be red the moment 0076 lands and before this amendment's D-4 correction is implemented**, because the query it asserts on names a dropped column. 0077's **R-1** says so explicitly and forbids its own Phase 3 from "fixing" it — the fix is [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination) below, and it belongs to this story.
 
@@ -419,7 +559,7 @@ Feature: Deleting a product
 Everything below was re-read on disk on 2026-08-18, **after** 0022's and 0026's amendments. Where a
 name is uncertain it is flagged, not guessed.
 
-> ⚠️ **Correction, 2026-08-30 — six entries in the block below are falsified by [0076](0076-translatable-content-retrofit-products-backend.md), and two more arrive that this contract never listed.** The block is left intact as the 0024/0026-era contract and corrected here rather than rewritten in place, because most of it is still exactly right.
+> ⚠️ **Correction, 2026-08-30 — six entries in the block below are falsified by [0076](../0076-translatable-content-retrofit-products-backend.md), and two more arrive that this contract never listed.** The block is left intact as the 0024/0026-era contract and corrected here rather than rewritten in place, because most of it is still exactly right.
 >
 > | Entry as written | State after 0076 |
 > | --- | --- |
@@ -464,13 +604,73 @@ Product::category() / featuredImage() / gallery()
 App\Enums\ProductStatus                        // EXACTLY Active, Draft — this feeds the <select>
 App\Enums\ProductDisplayStatus                 // Active, Draft, OutOfStock — this feeds the BADGE only
 App\Enums\ProductType                          // Physical, Virtual — required, NO default anywhere
-App\Concerns\ProductValidationRules            // productNameRules, skuRules, productCategoryIdRules,
-                                               //   productTypeRules, productStatusRules, priceRules,
-                                               //   stockRules, descriptionRules, featuredMediaIdRules,
-                                               //   galleryMediaIdsRules  (entity-prefixed where ambiguous)
-App\Actions\Products\CreateProduct             // __invoke(...): Product — canonicalises SKU, sanitizes
-                                               //   description, and DELEGATES IMAGERY TO SyncProductGallery
-App\Actions\Products\UpdateProduct             // __invoke(Product, ...): Product — same, ->ignore()d unique
+App\Concerns\ProductValidationRules            // READ OFF THE SHIPPED FILE 2026-09-03. Every method
+                                               //   naming a PRODUCT field is entity-prefixed, with NO
+                                               //   exceptions — see the ⚠️ below:
+                                               // productRules(?string $productId = null): array
+                                               //     ^ the AGGREGATE: a field=>rules map keyed by the
+                                               //       COLUMN names (name, sku, product_category_id,
+                                               //       type, status, price, stock, description,
+                                               //       featured_media_id, gallery_media_ids, plus the
+                                               //       inline 'gallery_media_ids.*'). It is what the
+                                               //       two actions validate with. This screen's own
+                                               //       property names are camelCase, so Editor::save()
+                                               //       composes the per-field methods for its own
+                                               //       error bag rather than reusing this map verbatim
+                                               //       — the actions still run productRules() again
+                                               //       server-side either way (D-12).
+                                               // productNameRules()
+                                               // productSkuRules(?string $productId = null)
+                                               // productCategoryIdRules()
+                                               // productTypeRules()
+                                               // productStatusRules()          // 'nullable', NOT required
+                                               // productPriceRules()
+                                               // productStockRules()
+                                               // productDescriptionRules()
+                                               // productFeaturedMediaIdRules()
+                                               // productGalleryMediaIdsRules() // ['array', 'max:20']
+App\Actions\Products\CreateProduct             // canonicalises SKU, sanitizes description (0024a),
+                                               //   and DELEGATES IMAGERY TO SyncProductGallery.
+                                               // __invoke(
+                                               //     string $name,
+                                               //     string $sku,
+                                               //     ?string $productCategoryId,
+                                               //     ?string $type,
+                                               //     ?string $status,
+                                               //     mixed $price,
+                                               //     mixed $stock,
+                                               //     ?string $featuredMediaId,      // REQUIRED, no default
+                                               //     array $orderedGalleryMediaIds, // REQUIRED, no default
+                                               //     ?string $description = null,   // the ONE default
+                                               // ): Product
+App\Actions\Products\UpdateProduct             // same, with an ->ignore()d unique SKU rule.
+                                               // __invoke(
+                                               //     Product $product,
+                                               //     string $name,
+                                               //     string $sku,
+                                               //     ?string $productCategoryId,
+                                               //     ?string $type,
+                                               //     ?string $status,
+                                               //     mixed $price,
+                                               //     mixed $stock,
+                                               //     ?string $featuredMediaId,      // REQUIRED, no default
+                                               //     array $orderedGalleryMediaIds, // REQUIRED, no default
+                                               //     ?string $description,          // NO default here
+                                               // ): Product
+                                               // ⚠️ The two signatures differ in exactly one place and
+                                               //   it is deliberate: $description defaults on CREATE
+                                               //   (a new product genuinely starts empty) and must be
+                                               //   passed explicitly on UPDATE (omission there would
+                                               //   silently wipe an existing description). Both actions
+                                               //   deliberately refuse a default for the two imagery
+                                               //   parameters, for the same reason — see
+                                               //   docs/errors-log.md#an-actions-own-parameter-default-
+                                               //   reintroduced-the-omission-ambiguity-its-stricter-
+                                               //   collaborator-was-built-to-close--2026-09-01.
+                                               //   Editor::save() therefore ALWAYS passes all ten/eleven
+                                               //   arguments positionally; there is no "leave imagery
+                                               //   alone" call shape and inventing one is the bug that
+                                               //   entry records.
 App\Actions\Products\DeleteProduct             // __invoke(Product): bool
 App\Actions\Products\SyncProductGallery        // __invoke(Product $product, ?string $featuredMediaId,
                                                //   array $orderedGalleryMediaIds): void
@@ -512,11 +712,42 @@ App\Exceptions\UnresolvedSelectionException    // public readonly array $missing
 // From 0019 — the media COLUMNS are path/webp_path/avif_path, NOT url/webp_url/avif_url.
 Media                                          // id, title, description, path, webp_path, avif_path,
                                                //   width, height, size_bytes, uploaded_by
-                                               // URL-shaped values come from url()-style ACCESSORS (D-17)
+                                               // ⚠️ CORRECTED 2026-09-03, read off app/Models/Media.php:
+                                               //   there is NO url()/webpUrl()/avifUrl() ACCESSOR on this
+                                               //   model, and this contract used to claim one. The model
+                                               //   carries only casts(), uploadedBy() and a #[Scope]
+                                               //   search(). Every shipped consumer builds the URL AT THE
+                                               //   CALL SITE from the *_path column:
+                                               //     Storage::disk('public')->url($media->path)
+                                               //   — Gallery::toPayloadItem() (which is where the
+                                               //   {url, webpUrl, avifUrl} KEYS in 0020's dispatch payload
+                                               //   come from: they are payload keys, never model
+                                               //   attributes) and WysiwygEditor::insertImage(). This
+                                               //   story does the same. See D-17.
 ```
 
-**Six obligations inherited verbatim from the dependencies' own Definitions of Done** (three original,
-three added by the 2026-08-19 upstream amendments — see **D-18**), all non-negotiable:
+> ⚠️ **Correction, 2026-09-03 (Phase 2 FAIL, finding C1) — the `ProductValidationRules` line above used to
+> list six method names that do not exist** (`skuRules`, `priceRules`, `stockRules`, `descriptionRules`,
+> `featuredMediaIdRules`, `galleryMediaIdsRules`, qualified as *"entity-prefixed where ambiguous"*), and
+> omitted the aggregate `productRules()` entirely. The shipped trait prefixes **every** product-field
+> method uniformly, and the selective "where ambiguous" form the old text described is exactly what
+> [naming.md](../../../docs/conventions/naming.md#traits-and-their-methods) records as rejected: an
+> unprefixed `descriptionRules()` collides with `SalesRegionValidationRules::descriptionRules()`, and PHP
+> fatals the moment both traits are composed onto one class — which this editor does. The two
+> **un**prefixed methods in that file (`salesRegionIdsRules()`, `salesRegionIdRules()`) are correct as
+> they stand and are listed under *From 0026* below: they name the related Sales Region entity, not a
+> product field.
+>
+> **Two knock-ons, both deliberately left rather than silently patched.** *(a)* The 2026-08-30 0076
+> blockquote above still quotes the old names (`descriptionRules()`, `skuRules()`) in its own state-after
+> table. That blockquote is forward-looking text about an unimplemented story; reconciling it is
+> **0076's**, when it lands, and re-writing it here would edit another story's claim from this file.
+> *(b)* The same blockquote calls its own addition *"a seventh obligation"*; with obligation **7** below
+> now shipped, 0076's becomes the eighth. That renumbering is likewise 0076's.
+
+**Seven obligations inherited verbatim from the dependencies' own Definitions of Done** (three original,
+three added by the 2026-08-19 upstream amendments — see **D-18** — and one added 2026-09-03 by this
+story's own Phase 2 correction), all non-negotiable:
 
 1. **`Gate::authorize()` is the first statement of every method that mutates or discloses.** 0024
    **D-15** and 0026 **D-8** both ship their actions with no self-authorization; this story is where
@@ -524,12 +755,12 @@ three added by the 2026-08-19 upstream amendments — see **D-18**), all non-neg
 2. **Gate the routes with `can:products.view`, never `permission:products.view`** — Livewire 4's
    `PersistentMiddleware` allow-list carries Laravel's `Authorize` but not Spatie's
    `PermissionMiddleware`, so `permission:` would protect only the initial `GET`. See
-   [api/routes.md](../../docs/api/routes.md#usersindex--the-first-permission-gated-route).
+   [api/routes.md](../../../docs/api/routes.md#usersindex--the-first-permission-gated-route).
 3. **The id fed to `Rule::unique()->ignore()` must be server-authoritative** — `#[Locked]`, assigned
    from a value read back out of the database, never from a method argument. 0029's own note warns
    this trap is *worse* one story over; getting it wrong here turns a uniqueness check into a
    rename-any-product primitive. See
-   [security/livewire-authorization.md](../../docs/security/livewire-authorization.md).
+   [security/livewire-authorization.md](../../../docs/security/livewire-authorization.md).
 4. **`salesRegionIdRules()` is called with the persisted product's current region ids** — read from
    `$product->salesRegions` server-side, never from the request (0026 **D12**, hand-off item 3).
    Calling it with no argument on an *edit* re-introduces the bug D12 fixed; calling it with a
@@ -539,27 +770,68 @@ three added by the 2026-08-19 upstream amendments — see **D-18**), all non-neg
 6. **One `DB::transaction()` wraps the whole save** — the core-field write, the region sync and the
    gallery sync — opened *after* validation and after `resolveSelected()` (0026 **D13**, hand-off item
    4; **D-12b** below). Neither owning story can open it without reaching into the other's files.
+7. **The region-id array is validated in TWO sequential `Validator::make(...)->validate()` calls, never
+   one combined rule array** — `salesRegionIdsRules()` (the shape/bound) alone first, then
+   `salesRegionIds.*` against `salesRegionIdRules($preserved)` second. This is 0026's own
+   Definition-of-Done **hand-off item 5**, stated in `salesRegionIdsRules()`'s docblock in the shipped
+   trait and in [security/array-validation-bounds.md](../../../docs/security/array-validation-bounds.md).
+   The reason is measured, not theoretical: Laravel expands `field.*` against **every** submitted
+   element and runs each expanded rule regardless of whether the parent attribute's own rules already
+   failed, so a single combined `$this->validate([...])` pays one `Rule::exists()` query per submitted
+   id *before* `max:254` is ever consulted — 4,000 ids measured at 4,000 queries / 6.60 s, versus 0
+   queries / 0.00 s under the two-pass shape. `max:254` bounds what may **succeed**, never what a
+   request **costs**, and neither `list` nor either `bail` form gates it. This obligation is the
+   single easiest one in this list to lose, because the wrong shape is the *shorter* one, is what a
+   Livewire component's ordinary `$this->validate()` naturally produces, and passes every functional
+   test. See **D-12** for where the two calls sit in `save()`'s ordering.
 
 ### Route registrations
 
+> ⚠️ **Corrected 2026-09-03 (Phase 2 FAIL, finding D1) — these registrations do NOT go in `routes/web.php`.**
+> This block used to open *"`routes/web.php` — inside the existing auth+verified group, beside
+> `users.index`"*, which is wrong twice over: `users.index` moved out of `web.php` into its own
+> [`routes/users.php`](../../../routes/users.php) at **task 0040**, and
+> [base-standards.md](../../../docs/conventions/base-standards.md#directory-structure) mandates one
+> `routes/<area>.php` per functional area appended as a `require` line — a convention with **five**
+> shipped instances today (`settings.php`, `roles.php`, `users.php`, `sales-regions.php`,
+> `product-categories.php`). `web.php` declares only the app-wide `home`/`dashboard` routes, the five
+> `require`s, and 0020/0021's environment-gated harness block that **D-14** deletes.
+
 ```php
-// routes/web.php — inside the existing auth+verified group, beside users.index
-// `can:products.view`, not Spatie's `permission:` — Livewire 4's PersistentMiddleware
-// allowlist does not carry `permission:`, so every /livewire/update round-trip
-// (save(), deleteProduct(), the gallery's own methods, ...) would run unauthorized.
-// The finer abilities (create/update/delete) are authorized inside the components.
-// See docs/architecture/authorization.md.
-Route::livewire('products', ProductsIndex::class)
-    ->middleware(['can:products.view'])
-    ->name('products.index');
+// routes/products.php — a NEW area file. Mirror routes/product-categories.php exactly:
+// its own ['auth', 'verified'] group, and the component imports ALIASED, because `Index`
+// is ambiguous across six areas now and `Editor` will be ambiguous the moment a second
+// area has one (routes/roles.php, sales-regions.php and product-categories.php all alias).
+use App\Livewire\Products\Editor as ProductEditor;
+use App\Livewire\Products\Index as ProductsIndex;
+use Illuminate\Support\Facades\Route;
 
-Route::livewire('products/create', ProductEditor::class)
-    ->middleware(['can:products.view'])
-    ->name('products.create');
+Route::middleware(['auth', 'verified'])->group(function () {
+    // `can:products.view`, not Spatie's `permission:` — Livewire 4's PersistentMiddleware
+    // allowlist does not carry `permission:`, so every /livewire/update round-trip
+    // (save(), deleteProduct(), the gallery's own methods, ...) would run unauthorized.
+    // The finer abilities (create/update/delete) are authorized inside the components.
+    // Comment duplicated verbatim from the sibling area files by convention — a reader
+    // auditing one route file must not have to open another to learn why.
+    // See docs/architecture/authorization.md.
+    Route::livewire('products', ProductsIndex::class)
+        ->middleware(['can:products.view'])
+        ->name('products.index');
 
-Route::livewire('products/{product}/edit', ProductEditor::class)
-    ->middleware(['can:products.view'])
-    ->name('products.edit');
+    Route::livewire('products/create', ProductEditor::class)
+        ->middleware(['can:products.view'])
+        ->name('products.create');
+
+    Route::livewire('products/{product}/edit', ProductEditor::class)
+        ->middleware(['can:products.view'])
+        ->name('products.edit');
+});
+```
+
+```php
+// routes/web.php — the WHOLE of this story's addition to that file is one line,
+// appended after the five existing require statements.
+require __DIR__.'/products.php';
 ```
 
 **Verified:** `Route::livewire()` is a thin macro over `Route::get($uri, LivewirePageController::class)`
@@ -589,7 +861,7 @@ class Index extends Component
 }
 ```
 
-> ⚠️ **Correction, 2026-08-30 — `$deletingProductName` is fed from a column that no longer exists.** This is [0076's **R-1(b)**](0076-translatable-content-retrofit-products-backend.md), named there as this story's hand-off. The property is populated by `confirmDelete()` from `$target->name`, and after 0076 that read is `$target->translated('name', $languageId)`.
+> ⚠️ **Correction, 2026-08-30 — `$deletingProductName` is fed from a column that no longer exists.** This is [0076's **R-1(b)**](../0076-translatable-content-retrofit-products-backend.md), named there as this story's hand-off. The property is populated by `confirmDelete()` from `$target->name`, and after 0076 that read is `$target->translated('name', $languageId)`.
 >
 > **The property itself is unchanged** — still `#[Locked] public string $deletingProductName = ''`, still assigned server-side from a freshly-read row, and the never-`null` rule still binds it (`translated()` returns `null` for a product untranslated in both the requested and the default language, so the assignment must coalesce to `''`). What changes is one read, and **which language it reads is [OQ-10](#open-questions)** — the same unanswered question the list itself carries, and it should get the same answer, since a confirmation naming a product differently from the row above it is worse than either choice alone.
 >
@@ -649,7 +921,7 @@ class Editor extends Component
 }
 ```
 
-> ⚠️ **Correction, 2026-08-30 — `public string $name` and `public string $description` are removed by [0077](0077-product-editor-language-tabs-ui.md), and three more translatable fields join them.** This is the single largest change Epic 5 makes to this story's own surface, and it is recorded here rather than acted on: **0077 owns the replacement**, and this story still ships the two properties as written until 0077 lands on top of it.
+> ⚠️ **Correction, 2026-08-30 — `public string $name` and `public string $description` are removed by [0077](../0077-product-editor-language-tabs-ui.md), and three more translatable fields join them.** This is the single largest change Epic 5 makes to this story's own surface, and it is recorded here rather than acted on: **0077 owns the replacement**, and this story still ships the two properties as written until 0077 lands on top of it.
 >
 > **What 0077 replaces them with** (its **D-2**, revised to match 0071's shape): **five parallel arrays**, each `array<string, string>` keyed by **store-language id** —
 >
@@ -677,7 +949,7 @@ class Editor extends Component
 
 ## Tests to perform
 
-Levels chosen per [coverage-policy.md](../../docs/testing/frontend/coverage-policy.md): browser tests
+Levels chosen per [coverage-policy.md](../../../docs/testing/frontend/coverage-policy.md): browser tests
 only where the real-DOM/JS round trip is itself the risk, everything else at the cheaper component
 level. **The deliberate calibration is that this story does not re-run its dependencies' suites one
 layer up** — see [Deliberately not tested here](#deliberately-not-tested-here).
@@ -687,7 +959,7 @@ layer up** — see [Deliberately not tested here](#deliberately-not-tested-here)
 - [ ] The route resolves for a holder of `products.view` and is refused (403) without it.
 - [ ] `mount()` authorizes `viewAny` — proven by a direct `Livewire::test()` call as a denied actor,
       not merely by the route 403 (an HTTP test and a `Livewire::test()` test are **not** substitutes,
-      per [testing/backend](../../docs/testing/README.md)).
+      per [testing/backend](../../../docs/testing/README.md)).
 - [ ] The list renders every product with name, SKU, price and stock.
 - [ ] Ordering is deterministic (see **D-4**), asserted as an exact sequence, never `toContain`.
 - [ ] `confirmDelete()` populates `$deletingProductName` from the **database**, not from a row array.
@@ -709,13 +981,13 @@ layer up** — see [Deliberately not tested here](#deliberately-not-tested-here)
       the defect.
 - [ ] Pagination: page 2 returns the next page's rows and the total is correct.
 
-> ⛔ **Correction, 2026-08-30 — the first assertion above is written against a column that no longer exists, and this file goes red the moment [0076](0076-translatable-content-retrofit-products-backend.md) lands.** 0077's **R-1** names it by path and forbids its own Phase 3 from touching it: *"that is not this story's regression and must not be 'fixed' into it."* The fix is [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination)'s corrected query, and it belongs here.
+> ⛔ **Correction, 2026-08-30 — the first assertion above is written against a column that no longer exists, and this file goes red the moment [0076](../0076-translatable-content-retrofit-products-backend.md) lands.** 0077's **R-1** names it by path and forbids its own Phase 3 from touching it: *"that is not this story's regression and must not be 'fixed' into it."* The fix is [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination)'s corrected query, and it belongs here.
 >
 > The three cases become **five**, and the shape of the first one inverts:
 >
 > - [ ] The list query selects **explicit columns and never names `name`** — which after 0076 is not a `products` column at all. The `DB::listen()` capture stands; what it asserts on changes.
-> - [ ] **The ordering is by translated name for the chosen language, with the store default as the fallback**, asserted as an exact sequence over a fixture where the two orders genuinely differ — a product translated in the requested language, one translated only in the default, and two whose relative order flips between the two answers. **A fixture where both orders agree asserts nothing**, which is the same vacuous-coverage trap the [errors-log's `arch()` entry](../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18) records.
-> - [ ] ⚠️ **The eager load does not drag `description` onto the list** — the 0024 **R-9** obligation, now one table over. This is the assertion that makes [0076's **R-7**](0076-translatable-content-retrofit-products-backend.md) visible rather than silent: if `withTranslationsFor()` still loads whole translation rows, this **fails**, and the fix is 0070's rather than a local patch. **Write it even if it is expected to fail** — a recorded, escalated red is the outcome; quietly dropping the assertion is not.
+> - [ ] **The ordering is by translated name for the chosen language, with the store default as the fallback**, asserted as an exact sequence over a fixture where the two orders genuinely differ — a product translated in the requested language, one translated only in the default, and two whose relative order flips between the two answers. **A fixture where both orders agree asserts nothing**, which is the same vacuous-coverage trap the [errors-log's `arch()` entry](../../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18) records.
+> - [ ] ⚠️ **The eager load does not drag `description` onto the list** — the 0024 **R-9** obligation, now one table over. This is the assertion that makes [0076's **R-7**](../0076-translatable-content-retrofit-products-backend.md) visible rather than silent: if `withTranslationsFor()` still loads whole translation rows, this **fails**, and the fix is 0070's rather than a local patch. **Write it even if it is expected to fail** — a recorded, escalated red is the outcome; quietly dropping the assertion is not.
 > - [ ] The **N+1 guard**, unchanged in intent but now covering a third relation: 10 products with 10 distinct categories, 10 distinct featured images **and translations in two languages** must cost the same as 1. Distinct relations stay load-bearing.
 > - [ ] Pagination, unchanged.
 >
@@ -732,17 +1004,23 @@ layer up** — see [Deliberately not tested here](#deliberately-not-tested-here)
 - [ ] Every row action carries `data-test="edit-product-{id}"` / `data-test="delete-product-{id}"` on
       **both** the enabled and the disabled branch.
 - [ ] **Flux/Blaze regression guards**, all three already in
-      [errors-log.md](../../docs/errors-log.md): an *enabled* row action renders **no**
+      [errors-log.md](../../../docs/errors-log.md): an *enabled* row action renders **no**
       `data-flux-tooltip-content` element; the disabled branch's `cursor-not-allowed!` sits on the
       `flux:tooltip` wrapper and not on the button; every id in a `wire:*` argument went through
       `@js()`.
 - [ ] The empty state renders when there are no products, and the table does not.
 - [ ] A product with no featured image renders the agreed placeholder rather than a broken image
       (pending [OQ-2](#open-questions)).
+- [ ] **The thumbnail's three URLs are non-empty and distinct**, and each ends in the extension of the
+      column it was built from (**D-17**; added 2026-09-03). ⚠️ This is the assertion that catches the
+      exact defect Phase 2 finding **C3** was about: reading a nonexistent `->avifUrl` accessor off
+      `Media` yields `null` **silently**, so `<source srcset="">` renders, the page looks fine at a
+      glance, and only a non-empty assertion on each of the three attributes fails. Asserting "a
+      `<picture>` element is present" would pass with all three empty.
 
 ### `tests/Feature/Products/EditorTest.php` *(the largest file)*
 
-> ⚠️ **Correction, 2026-08-30 — every `name` and `description` assertion in this file retargets to the default store language's translation row**, per [0077](0077-product-editor-language-tabs-ui.md)'s own file table, which lists this file as one it modifies: *"every `name` / `description` assertion retargets to `names.{defaultId}` / `descriptions.{defaultId}`."* Concretely, *"a full valid payload creates exactly one product carrying every submitted value"* becomes **one product row plus one translation row in the default language**, and the name/description halves of it assert on the child table.
+> ⚠️ **Correction, 2026-08-30 — every `name` and `description` assertion in this file retargets to the default store language's translation row**, per [0077](../0077-product-editor-language-tabs-ui.md)'s own file table, which lists this file as one it modifies: *"every `name` / `description` assertion retargets to `names.{defaultId}` / `descriptions.{defaultId}`."* Concretely, *"a full valid payload creates exactly one product carrying every submitted value"* becomes **one product row plus one translation row in the default language**, and the name/description halves of it assert on the child table.
 >
 > **Most of this file is untouched**, which is the useful half of the correction: the type-required case (0024's most load-bearing invariant), every SKU case including the `->ignore()` and canonicalisation ones, the price/stock boundaries, the retarget test, all eight orchestration cases, the gallery `position` assertions and both authorization cases involve no translatable field and change in **no** way. `ProductSkuUniquenessTest.php` staying byte-identical is 0076's **D-7** stated as a review signal: *"a diff to that file signals something leaked across the wrong boundary."*
 >
@@ -797,6 +1075,17 @@ Orchestration — **the tests only this story can write**:
       **#11**). Without this test the whole `is_active` gate is one refactor away from being optional.
 - [ ] **Create passes `[]`**: a create submitting a deactivated region is refused exactly as it was
       before 0026 **D12** — the exemption has no create-path branch of its own.
+- [ ] 🔒 **An oversized `regionIds` submission issues ZERO `sales_regions` existence queries** —
+      obligation **7** / 0026 hand-off item 5 / **D-12(b2)**. Submit 300 ids (over
+      `salesRegionIdsRules()`'s `max:254`), count queries with `DB::listen()`, and assert the save is
+      refused with the **size** error and no per-element query ran at all. ⚠️ **This test is the whole
+      point of the two-call shape and cannot be replaced by a functional one**: a single combined
+      `$this->validate([... 'regionIds.*' => ...])` refuses the same submission with the same message
+      while issuing 300 queries first, so every behavioural assertion passes under both shapes. Pair it
+      with the positive case — a legal 254-id submission still validates every element — so the test
+      cannot be satisfied by simply never running the element rules. See
+      [security/array-validation-bounds.md](../../../docs/security/array-validation-bounds.md) for the
+      measured numbers this asserts against.
 - [ ] **A save that fails mid-flight leaves *nothing* partially written** — the single
       `DB::transaction()` of **D-12b** / 0026 **D13**, exercised by forcing `SyncProductSalesRegions`
       to throw on a save that also changes `name`, the featured image and the gallery order. Assert
@@ -839,25 +1128,33 @@ Orchestration — **the tests only this story can write**:
       and an actor without `media.view` still renders the editor page rather than a 403.
 - [ ] The description field carries the static lossy-sanitization notice (**D-13**).
 
-> ⚠️ **Correction, 2026-08-30 — two of the six cases above stop being singular once [0077](0077-product-editor-language-tabs-ui.md) lands.** The embedded-components case asserts *"one `components.wysiwyg-editor` bound to `description`"*; after 0077 there are **N**, one per active store language, each bound to its own `descriptions.{languageId}` leaf and each with a distinct `wire:key`. The lossy-sanitization notice is **one line above the tab strip**, not one per panel (see [D-13](#d-13--a-static-notice-that-formatting-is-lossy-no-dynamic-diff-warning)).
+> ⚠️ **Correction, 2026-08-30 — two of the six cases above stop being singular once [0077](../0077-product-editor-language-tabs-ui.md) lands.** The embedded-components case asserts *"one `components.wysiwyg-editor` bound to `description`"*; after 0077 there are **N**, one per active store language, each bound to its own `descriptions.{languageId}` leaf and each with a distinct `wire:key`. The lossy-sanitization notice is **one line above the tab strip**, not one per panel (see [D-13](#d-13--a-static-notice-that-formatting-is-lossy-no-dynamic-diff-warning)).
 >
-> ⚠️ **And a testing hazard this file inherits: page-global `assertSee` stops being safe on the editor.** Every label and helper line now appears N times, so a bare presence assertion cannot distinguish "rendered once, correctly" from "rendered three times because the loop is wrong". Scope by panel hook or use the `*In*` variants — this is the [`assertSee('0%')` matching inside `10%`](../../docs/testing/frontend/playwright-setup.md) trap in a new costume, and 0077's **R-9** records it.
+> ⚠️ **And a testing hazard this file inherits: page-global `assertSee` stops being safe on the editor.** Every label and helper line now appears N times, so a bare presence assertion cannot distinguish "rendered once, correctly" from "rendered three times because the loop is wrong". Scope by panel hook or use the `*In*` variants — this is the [`assertSee('0%')` matching inside `10%`](../../../docs/testing/frontend/playwright-setup.md) trap in a new costume, and 0077's **R-9** records it.
 >
 > **The other four cases are unaffected**: the status option set, the type placeholder, the category select and the `@can('viewAny', Media::class)` branch all concern non-translatable controls that still render exactly once. 0077 adds the *"rendered exactly once"* count assertion that turns "outside the tabs" into a checked property — it needs `data-test` hooks on the six non-translatable inputs that **this** story does not currently promise, which is worth adding here rather than leaving 0077 to retrofit.
 
-### `tests/Feature/Products/AuthorizationTest.php`
+### `tests/Feature/Products/ScreenAuthorizationTest.php`
 
 Discharges 0026 **D-8**'s hand-off explicitly, and covers this story's own component gates.
+
+> ⚠️ **Renamed 2026-09-03** from `AuthorizationTest.php`. `tests/Feature/Products/ProductAuthorizationTest.php`
+> already exists in that folder (0024's action-level gates and the `SyncProductGallery` reachability
+> assertion), and two files a character apart in the same directory make a failure name ambiguous.
+> `Screen`, not `Editor`, because this file covers `Products\Index`'s gates and per-row hints as well as
+> `Products\Editor`'s. Note the 2026-08-30 0077 blockquote under
+> [Files to create/modify](#files-to-createmodify) still names the old path in its list of files 0077
+> reopens; that is 0077's text to reconcile when it lands, deliberately not edited from here.
 
 > ⚠️ **Corrected 2026-09-01.** This section previously said it discharges **0024 D-15**'s hand-off
 > too, "so `ProductPolicy` stops being a zero-call-site policy". `ProductPolicy` is **not** a
 > zero-call-site policy any more:
-> [0024](done/0024-products-core-crud-backend.md)'s **D-15** was reversed at its split (its **C-1** — the
+> [0024](../done/0024-products-core-crud-backend.md)'s **D-15** was reversed at its split (its **C-1** — the
 > original decision rested on a false claim that `CreateUser`/`UpdateUser` contain no `Gate` call),
 > and its three write actions now authorize themselves. **What that changes here is the framing, not
 > the tests**: every case below is still required, now as *defence in depth plus the honest source of
 > the per-row hints* rather than as the only enforcement. See
-> [base-standards.md](../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)'s
+> [base-standards.md](../../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)'s
 > task-0017 blockquote — *"a component that authorizes as well is a layer, not a redundancy"*.
 
 - [ ] One allow/deny pair per component method that mutates or discloses, driven through
@@ -865,7 +1162,7 @@ Discharges 0026 **D-8**'s hand-off explicitly, and covers this story's own compo
 - [ ] A Super Admin passes every one of them via the `Gate::before` bypass.
 - [ ] The per-row `canEdit`/`canDelete` hints come from the **same** policy methods `save()` /
       `deleteProduct()` authorize against, so the disabled state cannot drift
-      ([authorization.md](../../docs/architecture/authorization.md#gateallows-in-a-list-query-is-a-ui-hint-not-a-layer)).
+      ([authorization.md](../../../docs/architecture/authorization.md#gateallows-in-a-list-query-is-a-ui-hint-not-a-layer)).
 
 ### `tests/Browser/Products/EditorJourneyTest.php`
 
@@ -890,7 +1187,7 @@ Plus the cases a `Livewire::test()` genuinely cannot reach:
       Users' `roleId` the type field has **no** safe fallback value to fall back to.
 - [ ] Typing `España` in the region picker narrows the live dropdown to Spain's fiscal sub-entries
       and does **not** offer España itself. This is explicitly **owed forward** by
-      [0022](done/0022-searchable-multi-select-component.md)'s own provenance note: 0022 proves the
+      [0022](../done/0022-searchable-multi-select-component.md)'s own provenance note: 0022 proves the
       mechanics against a test-only host, and named 0027 as the story that proves the real embedding
       with the real resolver.
 - [ ] A duplicate SKU refusal is **visible** next to the field, not merely present in the error bag.
@@ -919,8 +1216,8 @@ These are **existing tests being re-pointed**, not new coverage, and the migrati
 ### Deliberately not tested here
 
 Redundant-coverage discipline, per
-[what-not-to-test.md](../../docs/testing/qa/what-not-to-test.md) and
-[coverage-review-checklist.md](../../docs/testing/qa/coverage-review-checklist.md). This story proves
+[what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md) and
+[coverage-review-checklist.md](../../../docs/testing/qa/coverage-review-checklist.md). This story proves
 the **integration and wiring** points; it never re-derives a dependency's own covered logic:
 
 | Not tested here | Owner |
@@ -1008,10 +1305,19 @@ moved onto a real screen.
 - [ ] **The `dev/media-gallery-harness` route, component, view and gating test are gone**, and every
       browser assertion that ran against them runs against the real product editor instead — with no
       net loss of coverage.
+- [ ] **The three routes live in a new `routes/products.php`**, required from `routes/web.php` by one
+      appended line, with no route declared inline in `web.php` (**D-2**; added 2026-09-03).
+- [ ] **The sidebar entry is one `config/modules.php` item plus one leaf per locale**, its
+      `permissions` set-equal to the route's own `can:products.view`, and
+      `resources/views/layouts/app/sidebar.blade.php` is **untouched** (**D-15**; added 2026-09-03).
+      A role holding `products.view` sees the link; a role holding only `products.edit` does not.
+- [ ] **The region-id array is validated in two sequential calls**, and an oversized submission issues
+      zero per-element existence queries (obligation **7**, **D-12(b2)**; added 2026-09-03).
 - [ ] No migration, model, action, policy, enum, validation rule, factory, seeder or permission-catalog
-      change is added by this story.
+      change is added by this story. (`config/modules.php` and `lang/*/navigation.php` are **data**, not
+      any of those — the registry's whole design point.)
 
-> ⚠️ **Correction, 2026-08-30 — three criteria above are falsified by [0076](0076-translatable-content-retrofit-products-backend.md)/[0077](0077-product-editor-language-tabs-ui.md), and the last one holds only because of a distinction worth naming.**
+> ⚠️ **Correction, 2026-08-30 — three criteria above are falsified by [0076](../0076-translatable-content-retrofit-products-backend.md)/[0077](../0077-product-editor-language-tabs-ui.md), and the last one holds only because of a distinction worth naming.**
 >
 > - *"The list query selects explicit columns, **excludes `description`**, and eager-loads the category and featured image with no N+1"* → it still selects explicit columns and still must not drag a `description` onto the list, but `description` is **no longer a `products` column to exclude**; the obligation moves to the translation eager load ([D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination) note 3, and 0076's **R-7**). Add: **the ordering resolves a translated name for the chosen language with the store default as its fallback**, never `orderBy('name')`.
 > - *"The list renders thumbnail, **name** + SKU, price…"* → the name is resolved for one store language, which one being **[OQ-10](#open-questions)**.
@@ -1020,25 +1326,45 @@ moved onto a real screen.
 
 ## Definition of Done
 - [ ] Tests written and green, plus the **full** existing suite in a single isolated run, per
-      [contracts.md](../../docs/contracts.md)'s Full Test Suite Gate Rule. Note this story **deletes
+      [contracts.md](../../../docs/contracts.md)'s Full Test Suite Gate Rule. Note this story **deletes
       and re-points existing browser tests**, so the full-suite run is the only evidence that the
       harness migration lost nothing.
-- [ ] `vendor/bin/pint --dirty --format agent` clean and Larastan level 7 passing.
+- [ ] **All three quality gates run *unscoped*, and each one's result named in the closing record —
+      including "not run"**, per [base-standards.md](../../../docs/conventions/base-standards.md#quality-gates)'s
+      completion form. ⚠️ **Corrected 2026-09-03:** this item used to read *"`vendor/bin/pint --dirty
+      --format agent` clean and Larastan level 7 passing"*, which names the **iteration** form of gate 2
+      and folds gate 3 into gate 2's sentence. `--dirty` inspects only files with *uncommitted* changes,
+      so it becomes a no-op the moment the work is committed, and a gate absent from a record is a gate
+      that did not run — the two failures [errors-log.md](../../../docs/errors-log.md) records on
+      [2026-08-20](../../../docs/errors-log.md#both-of-this-projects-per-change-quality-gates-are-scoped-by-default-and-both-silently-passed--2026-08-20)
+      and [2026-08-26](../../../docs/errors-log.md#a-verification-record-that-lists-two-of-three-quality-gates-is-a-record-of-two-gates--2026-08-26).
+      Three clauses, never two:
+      ```bash
+      php artisan test                    # unscoped — not --filter (--parallel is an equally valid record)
+      vendor/bin/pint --format agent      # unscoped — not --dirty
+      vendor/bin/phpstan analyse          # Larastan level 7 per phpstan.neon — its own gate, named separately
+      ```
 - [ ] Code reviewed (code-reviewer).
 - [ ] No security findings (appsec-auditor). Point the audit at four things specifically: the
       `#[Locked]` placement on every id-carrying property (**D-8**), the `->ignore()` id's
       server-authoritative provenance, the `@js()` encoding of every id in a `wire:*` argument, and
       the fact that this screen renders **no** product description HTML at all (**D-13** scope fence)
       — 0024 **R-12** permits unescaped rendering, and this story deliberately does not use it.
-- [ ] Documentation updated (docs-keeper): `docs/api/routes.md` gains the three product routes and
-      **loses** the temporary harness route it recorded for 0020; `docs/architecture/authorization.md`
-      records that `ProductPolicy` now has call sites; `docs/conventions/naming.md`'s `Index`-exception
-      section can cite the real `Products\Index` / `Products\Editor` depth asymmetry rather than a
-      hypothetical one.
+- [ ] Documentation updated (docs-keeper): `docs/api/routes.md` gains the three product routes — as the
+      **fifth** permission-gated route family and the **sixth** per-area route file, so that page's
+      per-area-file count moves from five to six — and **loses** the temporary harness route it recorded
+      for 0020/0021; `docs/architecture/authorization.md` records that `ProductPolicy` now has call
+      sites, and that the sidebar registry's "append data, never behavior" claim held for a **fifth**
+      entry (`resources/views/layouts/app/sidebar.blade.php` untouched); `docs/conventions/naming.md`'s
+      `Index`-exception section can cite the real `Products\Index` / `Products\Editor` depth asymmetry
+      rather than a hypothetical one, and `docs/conventions/base-standards.md`'s `routes/` line gains
+      `products.php`.
 - [ ] **Hand-off discharged, not deferred**: this story closes 0024's hand-off item **(d)** (0024
       **D-17a** — pass the ordered array into `CreateProduct`/`UpdateProduct`, never call
-      `SyncProductGallery` directly), 0026 **D-8** plus its hand-off items **3** (0026 **D12**) and
-      **4** (0026 **D13**), 0022's "prove the real embedding" forward dependency, and 0020 **D16** /
+      `SyncProductGallery` directly), 0026 **D-8** plus its hand-off items **3** (0026 **D12**),
+      **4** (0026 **D13**) and **5** (the two-call region validation — obligation **7**,
+      **D-12(b2)**; added to this list 2026-09-03, it was missing), 0022's "prove the real embedding"
+      forward dependency, and 0020 **D16** /
       0021 **D13**'s harness expiry. Each is a checkbox in another story's Definition of Done; record
       explicitly which one this story satisfied. ⚠️ **0024 D-15 is no longer on this list** — it was
       reversed at 0024's 2026-09-01 split and the actions self-authorize, so this story's gates are a
@@ -1060,7 +1386,7 @@ moved onto a real screen.
 > - [ ] **[OQ-10](#open-questions) answered before Phase 3 starts** — which store language the list renders and orders by. This restores a blocking-question gate of exactly the shape the discharged OQ-5/OQ-6 bullet above used to carry, for the same reason: [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination)'s query and its ordering test's fixture are both unwritable without it.
 > - [ ] **The `docs-keeper` line widens.** Beyond the three product routes and the retired harness route, this story now also lands the app's **first consumer of a translated read on a list screen** — `docs/database/schema.md` and `docs/architecture/authorization.md` are 0076's to update, but the *screen*-side facts (which language a list resolves, and that the permission catalog stays at **42** across the whole Epic 5 product chain) belong in the pass this story runs.
 >
-> ⚠️ **And one caveat on the Full Test Suite Gate evidence:** if 0076 lands before this story's D-4 correction is implemented, `tests/Feature/Products/IndexQueryTest.php` is **already red** when this story starts. That red is 0076's hand-off, not a regression introduced here — record it as such rather than letting a green-suite requirement push someone into patching the wrong file, per the [deferred-findings rule](../../docs/errors-log.md#a-deferred-storys-findings-were-claims-about-a-tree-that-no-longer-existed-and-one-of-them-would-have-reopened-a-bug-in-this-log--2026-08-23).
+> ⚠️ **And one caveat on the Full Test Suite Gate evidence:** if 0076 lands before this story's D-4 correction is implemented, `tests/Feature/Products/IndexQueryTest.php` is **already red** when this story starts. That red is 0076's hand-off, not a regression introduced here — record it as such rather than letting a green-suite requirement push someone into patching the wrong file, per the [deferred-findings rule](../../../docs/errors-log.md#a-deferred-storys-findings-were-claims-about-a-tree-that-no-longer-existed-and-one-of-them-would-have-reopened-a-bug-in-this-log--2026-08-23).
 
 ## Documented functional decisions
 
@@ -1094,7 +1420,15 @@ is a deliberate divergence from the house pattern and needs its reasons stated.
 mirroring the prototype's `hidden` toggle — it reproduces the modal's remount problem while also
 giving up the URL.
 
-### D-2 — Three routes, two of them onto one `Editor` component
+### D-2 — Three routes in a new `routes/products.php`, two of them onto one `Editor` component
+
+**All three live in a new area file, `routes/products.php`, `require`d from `routes/web.php` by a
+single appended line** — not declared inline in `web.php`. ⚠️ **Corrected 2026-09-03 (Phase 2 FAIL,
+finding D1):** this decision, the [Route registrations](#route-registrations) block and the Files table
+all previously said `routes/web.php`. See that block's own correction note for why (task 0040 moved
+`users.index` out; `base-standards.md` mandates one file per area, with five shipped instances). Copy
+[`routes/product-categories.php`](../../../routes/product-categories.php)'s shape verbatim, including the
+aliased imports — nothing about the three registrations themselves changes.
 
 `products.create` and `products.edit` both resolve `App\Livewire\Products\Editor`; `mount()` takes an
 **optional** `?Product $product = null` and branches. Verified that `Route::livewire()` is a plain
@@ -1164,7 +1498,7 @@ Product::query()
   as [OQ-4](#open-questions) because pagination without search becomes uncomfortable past a few
   hundred products.
 
-> ⛔ **Correction, 2026-08-30 — the query above no longer runs. It names a dropped column twice, and this is the sharpest break Epic 5 makes in this file.** It is [0076's **R-1(a)**](0076-translatable-content-retrofit-products-backend.md), named there as this story's hand-off (its technical task 1) and explicitly **excluded** from 0077's scope, so nobody else fixes it.
+> ⛔ **Correction, 2026-08-30 — the query above no longer runs. It names a dropped column twice, and this is the sharpest break Epic 5 makes in this file.** It is [0076's **R-1(a)**](../0076-translatable-content-retrofit-products-backend.md), named there as this story's hand-off (its technical task 1) and explicitly **excluded** from 0077's scope, so nobody else fixes it.
 >
 > **What the code above says, and why each half fails.** `->select([… 'name', …])` names `products.name`, which 0076's second migration **drops**; an explicit column in a `select()` throws `QueryException: column not found` rather than quietly returning nothing, so this fails loudly on the first page load. `->orderBy('name')` fails the same way. There is no in-place patch — ordering by a value that now lives one table over, per language, with a fallback, is a join.
 >
@@ -1186,12 +1520,12 @@ Product::query()
 >
 > **Four things about that shape, three of them decisions and one of them a genuinely open question:**
 >
-> 1. ✅ **`$languageId` is resolved — the store default.** The scope takes `?string $storeLanguageId = null`, and per **[OQ-10](#open-questions)** (resolved 2026-08-30), every call site in this story passes the store default language explicitly. This was [0077's **Q-5**](0077-product-editor-language-tabs-ui.md), which that story raised and routed **here** — *"it belongs to the 0027 amendment, not to this story"*.
+> 1. ✅ **`$languageId` is resolved — the store default.** The scope takes `?string $storeLanguageId = null`, and per **[OQ-10](#open-questions)** (resolved 2026-08-30), every call site in this story passes the store default language explicitly. This was [0077's **Q-5**](../0077-product-editor-language-tabs-ui.md), which that story raised and routed **here** — *"it belongs to the 0027 amendment, not to this story"*.
 > 2. **The `id` tiebreak stops being a nicety.** The original bullet justified it because *"two products sharing a name (permitted — only `sku` is unique)"* would otherwise reshuffle between pages. That reasoning **strengthens**: 0076 **D-4** confirms product names carry no uniqueness in **any** scope, per-language included, *and* a product untranslated in the requested language now sorts by its **fallback** value — so ties are more common, not fewer. Keep it.
-> 3. ⚠️ **The eager load must not undo 0024 R-9.** `description` was excluded from the `select()` above deliberately, because a `MEDIUMTEXT` inline in the clustered index is what R-9 exists to keep off this list. After 0076 that column moved to `product_translations` — and `withTranslationsFor()` loads **whole translation rows with no column selection**, so the naive fix drags the description back onto every row of a paginated list, plus both SEO strings. **This is [0076's **R-7**](0076-translatable-content-retrofit-products-backend.md), the fix belongs to 0070** (an optional column list on the scope — 0076's technical task 4), and it is explicitly *"not to be patched locally"*. So: this story consumes the scope, and if 0070's column list has not landed by Phase 3, the regression is **recorded and escalated**, never absorbed. The `IndexQueryTest.php` assertion below is what makes it visible.
+> 3. ⚠️ **The eager load must not undo 0024 R-9.** `description` was excluded from the `select()` above deliberately, because a `MEDIUMTEXT` inline in the clustered index is what R-9 exists to keep off this list. After 0076 that column moved to `product_translations` — and `withTranslationsFor()` loads **whole translation rows with no column selection**, so the naive fix drags the description back onto every row of a paginated list, plus both SEO strings. **This is [0076's **R-7**](../0076-translatable-content-retrofit-products-backend.md), the fix belongs to 0070** (an optional column list on the scope — 0076's technical task 4), and it is explicitly *"not to be patched locally"*. So: this story consumes the scope, and if 0070's column list has not landed by Phase 3, the regression is **recorded and escalated**, never absorbed. The `IndexQueryTest.php` assertion below is what makes it visible.
 > 4. ✅ **`'category:id,name'` is broken too, by a *different* retrofit — and this same coordination pass
 >    fixes it, in writing, so the hand-off isn't lost.** `product_categories.name` is moved by
->    [0070](0070-translatable-content-mechanism-product-categories-backend.md), whose own **R-1** names
+>    [0070](../0070-translatable-content-mechanism-product-categories-backend.md), whose own **R-1** names
 >    this story as a casualty — 0076's **R-1** pointed at it explicitly to keep the two breaks from being
 >    conflated, and this note records that *this* pass is the one that closes both, on the same day, in
 >    the same file. The eager load becomes `->with(['category' => fn ($q) => $q->withTranslationsFor($languageId)])`
@@ -1205,7 +1539,7 @@ Product::query()
 
 ### D-5 — Three `<select>`s, three different answers to the null-desync trap
 
-[errors-log.md](../../docs/errors-log.md)'s 2026-08-16 entry is the single most relevant prior
+[errors-log.md](../../../docs/errors-log.md)'s 2026-08-16 entry is the single most relevant prior
 incident to this screen: a `null` Livewire property bound to a native `<select>` stringifies to
 `"null"`, matches no option, moves `selectedIndex` to `-1`, and the browser then settles on the first
 real option — so the user's click on that option produces **no** `change` event and the server never
@@ -1226,18 +1560,34 @@ DOM expects`) applies to all three selects here, but the *right* empty value dif
 with a default case (silently violates D-5). **Neither fails a `Livewire::test()`.** That is why this
 property gets its own browser test driven by real clicks (see the test plan).
 
+> ⚠️ **Noticed during the 2026-09-03 Phase 2 correction pass and flagged rather than decided —
+> `$status`'s enum *typing* has a shipped precedent against it that this table does not answer.**
+> [errors-log.md's 2026-08-24 update](../../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
+> records that `App\Livewire\Users\Index::$status` was retyped from a **typed enum** to
+> `public string $status = UserStatus::Inactive->value;` for a reason that applies verbatim here:
+> Livewire's `EnumSynth` hydrates a client-supplied backing value through `$type::from($value)`
+> **before** validation runs, so a tampered `status` becomes an unhandled `\ValueError` (a 500) rather
+> than a validation error (task 0015, finding **F8**). The **never-`null` half of this row is unaffected
+> and stays** — the shipped fix defaults to a real backing value (`ProductStatus::Draft->value`), never
+> `''`. **Phase 3 verification item, not a reversal here**: confirm the hydration behaviour against this
+> repo's installed Livewire, then either follow the Users precedent (`public string $status =
+> ProductStatus::Draft->value;`, cast with `ProductStatus::from()` after validation exactly as `$type`
+> already is) or record why this screen differs. It is raised now because the two selects would then
+> share one shape, and because `productStatusRules()`'s `nullable` + `Rule::enum()` is written to catch
+> a bad value that a typed property never lets reach it.
+
 **New markup rule this screen establishes:** the type select's placeholder `<option value="">` must
 carry **`disabled`** as well as `selected`, so it is genuinely unselectable. Users' `roleId` did not
 need this — "no role" is a coherent persisted state there — but "no type" is not a state a product may
 ever reach.
 
-> ⚠️ **Correction, 2026-08-30 — the three-row table above is now a *four*-row rule, and the fourth row is 5 × N leaves rather than one property.** The three selects and their reasoning are **unchanged and still correct**; what changes is the rule's reach. After [0077](0077-product-editor-language-tabs-ui.md) the editor's translatable state is five arrays keyed by store-language id, and **every one of their leaves is `wire:model`-bound**, so the never-`null` rule binds all of them:
+> ⚠️ **Correction, 2026-08-30 — the three-row table above is now a *four*-row rule, and the fourth row is 5 × N leaves rather than one property.** The three selects and their reasoning are **unchanged and still correct**; what changes is the rule's reach. After [0077](../0077-product-editor-language-tabs-ui.md) the editor's translatable state is five arrays keyed by store-language id, and **every one of their leaves is `wire:model`-bound**, so the never-`null` rule binds all of them:
 >
 > | Property | Declaration | Why this one |
 > | --- | --- | --- |
 > | the five translation arrays | `public array $names = [];` (and four siblings), each leaf a `string` with `''` meaning empty | Same rule, different shape. A language with no translation row hydrates to five `''`s, **never** `null` and — per 0077's **Q-1**, resolved — never from `translated()`'s fallback either. |
 >
-> ⚠️ **And a second, sharper hazard the original rule could not have anticipated: `''` must become `NULL` before it reaches the database.** [0077's **D-4**](0077-product-editor-language-tabs-ui.md) records this as the sharpest finding in its debate, and it is a collision between *this* table's rule and 0076's schema. The never-`null` rule requires `''` in the bound property; 0076 **D-6** ships `UNIQUE(store_language_id, slug)`, and MySQL permits unlimited `NULL`s in a unique index but **not** unlimited `''`s. So the first product saved with an empty slug stores `''` and succeeds, and the **second** dies on a `23000` reported as *"this slug is already taken"* — against a slug the administrator never typed and cannot see. It is invisible until the second row exists and invisible in every single-fixture test, and **its trigger is leaving a field blank**. 0077 converts at the action boundary, inside `SetProductTranslation`; nothing about that is this story's to build, but the two rules only look contradictory until you see where the conversion happens.
+> ⚠️ **And a second, sharper hazard the original rule could not have anticipated: `''` must become `NULL` before it reaches the database.** [0077's **D-4**](../0077-product-editor-language-tabs-ui.md) records this as the sharpest finding in its debate, and it is a collision between *this* table's rule and 0076's schema. The never-`null` rule requires `''` in the bound property; 0076 **D-6** ships `UNIQUE(store_language_id, slug)`, and MySQL permits unlimited `NULL`s in a unique index but **not** unlimited `''`s. So the first product saved with an empty slug stores `''` and succeeds, and the **second** dies on a `23000` reported as *"this slug is already taken"* — against a slug the administrator never typed and cannot see. It is invisible until the second row exists and invisible in every single-fixture test, and **its trigger is leaving a field blank**. 0077 converts at the action boundary, inside `SetProductTranslation`; nothing about that is this story's to build, but the two rules only look contradictory until you see where the conversion happens.
 >
 > **The three selects' own analysis stands verbatim**, including the plain-string `$type` and its placeholder rule — none of `type`, `status` or `product_category_id` is translatable.
 
@@ -1283,9 +1633,9 @@ presentation threshold, and one constant does not justify a config key).
 
 ### D-8 — Three `Gallery` instances on one page, and why they cannot collide
 
-> ⚠️ **Correction, 2026-08-30 — the arithmetic is wrong after [0077](0077-product-editor-language-tabs-ui.md); the *reasoning* is not.** The page mounts **2 + N** `Gallery` instances, not three, where N is the number of active store languages: the two direct embeds below, plus **one per `WysiwygEditor`**, and 0077 **D-1** mounts one editor per language simultaneously. At three store languages that is **five**.
+> ⚠️ **Correction, 2026-08-30 — the arithmetic is wrong after [0077](../0077-product-editor-language-tabs-ui.md); the *reasoning* is not.** The page mounts **2 + N** `Gallery` instances, not three, where N is the number of active store languages: the two direct embeds below, plus **one per `WysiwygEditor`**, and 0077 **D-1** mounts one editor per language simultaneously. At three store languages that is **five**.
 >
-> **The safety argument survives intact and needs no rework**, which is the point worth recording: 0021 **D5** derives its event name **per instance**, so it holds at any N — only the count in the table below is stale, which is the [stale-arithmetic failure mode](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13) at its most mechanical. The two literals here (`featured-image-selected`, `product-images-added`) stay distinct from each other and from every derived name.
+> **The safety argument survives intact and needs no rework**, which is the point worth recording: 0021 **D5** derives its event name **per instance**, so it holds at any N — only the count in the table below is stale, which is the [stale-arithmetic failure mode](../../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13) at its most mechanical. The two literals here (`featured-image-selected`, `product-images-added`) stay distinct from each other and from every derived name.
 >
 > **What genuinely changes is page weight, not correctness** (0077's **R-5**): each instance mounts and calls `Gate::authorize('viewAny', Media::class)`, so a three-language store pays five. 0077 owns the bounded-query-count test for it. **Do not "fix" this by rendering only the active language's panel** — `@if` instead of `x-show` tears down a `wire:ignore`d region and silently discards typed text, which is the whole subject of 0077 **D-1**.
 
@@ -1326,7 +1676,7 @@ Consequences the markup must honour:
 Phase 3; **it is now answered upstream.**
 
 **(a) `SyncProductGallery` writes `position` from the 0-based array index — confirmed by
-[0024 **D-17**](done/0024-products-core-crud-backend.md) (2026-08-19).** ✅ **Resolved; supersedes the
+[0024 **D-17**](../done/0024-products-core-crud-backend.md) (2026-08-19).** ✅ **Resolved; supersedes the
 open-question framing this section previously carried ([OQ-6](#open-questions)).**
 
 0024 **D-8** as originally written said two things that pull in opposite directions — *"assign on
@@ -1486,14 +1836,14 @@ mechanism** (see the resolution below, which is what Phase 3 implements):
 - (c) Amend 0026's `salesRegionIdRules()` to drop the `is_active` condition, relying on the picker to
   only ever *offer* assignable entries. **Not recommended** — it makes assignability a UI-only rule,
   which is exactly what
-  [livewire-authorization.md](../../docs/security/livewire-authorization.md) says a rule must never be.
+  [livewire-authorization.md](../../../docs/security/livewire-authorization.md) says a rule must never be.
 - (d) Silently drop the disabled id from the submitted set. **Excluded outright** — 0022 D12 and 0026
   D11 both forbid silent narrowing, and the user confirmed that decision on 2026-08-18.
 
 <a id="d-11-resolution"></a>
 #### ✅ Resolution — 0026 **D12** and **D13**, 2026-08-19
 
-[0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) accepted the finding and
+[0026](../done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) accepted the finding and
 amended its own validation rule. **`salesRegionIdRules()` now takes
 `array $preservedSalesRegionIds = []`**, and the per-element `exists` match became
 **`(is_active AND no children) OR id IN (preserved)`** — one rule, one error bag, the conditions still
@@ -1526,7 +1876,7 @@ Three constraints inherited verbatim from 0026 **D12**, each with a real failure
    query) for the product *this request is editing*. Taking it from a hidden field, from the picker's
    dehydrated selection, or from any `#[Locked]`-less property lets a caller declare any id
    "already assigned" and **turns the entire `is_active` / no-heading gate off**. 0026's revert-check
-   **#11** pins this, and this story's own `AuthorizationTest` re-pins it at the composition layer.
+   **#11** pins this, and this story's own `ScreenAuthorizationTest` re-pins it at the composition layer.
 2. **Calling `salesRegionIdRules()` with no argument on an edit re-introduces the exact bug D12 fixed.**
    The default `[]` exists for the *create* path only.
 3. **The OR is wrapped in its own nested group inside the rule** — that is 0026's code, not this
@@ -1556,11 +1906,11 @@ calls `SyncProductSalesRegions` itself. Calling `SyncProductGallery` directly as
 double-sync; calling neither would silently drop the imagery. Pinned here because both mistakes are
 one-line and neither errors.
 
-> ✅ **Confirmed 2026-08-19 by both owners.** [0024 **D-17a**](done/0024-products-core-crud-backend.md)
+> ✅ **Confirmed 2026-08-19 by both owners.** [0024 **D-17a**](../done/0024-products-core-crud-backend.md)
 > declares `SyncProductGallery` *"defined and owned exclusively by story 0024"* and its hand-off item
 > (d) instructs this story to *"pass the **ordered** gallery array into `CreateProduct` /
 > `UpdateProduct` and **never call `SyncProductGallery` directly**"*.
-> [0026 **D14**](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) reciprocally
+> [0026 **D14**](../done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) reciprocally
 > disclaims it — every remaining mention of the class in 0026 is an analogy or a hand-off sentence
 > about what 0027 composes, never a claim of ownership or a call site. The loose prose that produced
 > this finding has been reworded in 0026 itself. **This paragraph is no longer an inference; it is the
@@ -1568,7 +1918,7 @@ one-line and neither errors.
 
 **(b) ✅ The whole save is one transaction, and that boundary is *this* story's to own — now
 confirmed by both dependencies rather than asserted here.** Raised by this story as a gap; accepted
-and formally assigned to 0027 by [0026 **D13**](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md)
+and formally assigned to 0027 by [0026 **D13**](../done/0026-product-sales-region-assignment-and-tax-resolution-backend.md)
 (2026-08-19) as its Definition-of-Done hand-off item 4. 0026 weighed and **rejected** all three
 alternative homes for the boundary: inside `SyncProductSalesRegions` (it writes one table and cannot
 reach the core-field write), inside `UpdateProduct` (0024 must not learn that a region pivot exists,
@@ -1579,24 +1929,82 @@ compose**, so the boundary is unambiguously here.
 **The obligation, stated as code:**
 
 ```php
-// Editor::save() — authorize, then read $preserved, then validate, then resolve, THEN open the
-// transaction. A ValidationException must never travel through an open transaction (0026 D13).
+// Editor::save() — authorize, then read $preserved, then validate (in THREE calls, see (b2)),
+// then resolve, THEN open the transaction. A ValidationException must never travel through an
+// open transaction (0026 D13).
 Gate::authorize($this->productId === null ? 'create' : 'update', $product ?? Product::class);
 
-$preserved = $product?->salesRegions->pluck('id')->all() ?? [];
-$this->validate([/* ... 'regionIds.*' => $this->salesRegionIdRules($preserved) ... */]);
+$preserved = $product?->salesRegions->pluck('id')->all() ?? [];   // server-side, never the request
+
+// 1. The core fields, composed from ProductValidationRules' per-field methods.
+$this->validate([
+    'name'              => $this->productNameRules(),
+    'sku'               => $this->productSkuRules($this->productId),
+    'productCategoryId' => $this->productCategoryIdRules(),
+    'type'              => $this->productTypeRules(),
+    'status'            => $this->productStatusRules(),
+    'price'             => $this->productPriceRules(),
+    'stock'             => $this->productStockRules(),
+    'description'       => $this->productDescriptionRules(),
+    'featuredMediaId'   => $this->productFeaturedMediaIdRules(),
+    'galleryMediaIds'   => $this->productGalleryMediaIdsRules(),
+    'galleryMediaIds.*' => ['string', 'distinct', Rule::exists('media', 'id')],
+]);
+
+// 2. The region array's SHAPE AND BOUND, alone, in its own call. It must throw before a
+//    single per-element exists() query runs — obligation 7, 0026 hand-off item 5.
+Validator::make(
+    ['salesRegionIds' => $this->regionIds],
+    ['salesRegionIds' => $this->salesRegionIdsRules()],
+)->validate();
+
+// 3. Only now the per-element rules, provably against at most 254 elements.
+Validator::make(
+    ['salesRegionIds' => $this->regionIds],
+    ['salesRegionIds.*' => $this->salesRegionIdRules($preserved)],
+)->validate();
+
 $this->resolveOrFail($searchSalesRegions);            // D-10; rethrows as a ValidationException
 
 DB::transaction(function () use ($create, $update, $syncRegions, $product): void {
     // CreateProduct / UpdateProduct call SyncProductGallery internally (D-12a, 0024 D-17a),
-    // so the ordered gallery array is written inside this same boundary.
+    // so the ordered gallery array is written inside this same boundary. Both imagery
+    // arguments are ALWAYS passed — neither action gives them a default, deliberately.
     $saved = $product === null
-        ? $create(/* ..., $this->featuredMediaId, $this->galleryMediaIds */)
-        : $update($product, /* ..., $this->featuredMediaId, $this->galleryMediaIds */);
+        ? $create(/* ..., $this->featuredMediaId, $this->galleryMediaIds, $this->description */)
+        : $update($product, /* ..., $this->featuredMediaId, $this->galleryMediaIds, $this->description */);
 
     $syncRegions($saved, $this->regionIds);
 });
 ```
+
+**(b2) Steps 2 and 3 are two calls, and merging them into step 1 is the single cheapest way to
+reintroduce a denial-of-service vector this project has already measured.** ⚠️ **Added 2026-09-03
+(Phase 2 FAIL, finding C6)** — this decision previously showed one `$this->validate([...])` carrying
+`'regionIds.*'` inline, which is exactly the combined shape
+[security/array-validation-bounds.md](../../../docs/security/array-validation-bounds.md) and
+`salesRegionIdsRules()`'s own shipped docblock forbid. Laravel expands a `.*` wildcard against every
+element it was given and runs each expanded rule **regardless of whether the parent attribute's own
+rules already failed**, so the combined form pays one `Rule::exists()` query per submitted id before
+`max:254` is ever consulted — measured on this repo at 4,000 ids → 4,000 queries / 6.60 s, against
+0 queries / 0.00 s for the two-pass shape. `max:254` bounds what may **succeed**, not what a request
+**costs**; neither `list` nor either `bail` form changes that.
+
+Three notes that keep the shape from being "simplified" back:
+
+- **The accepted cost is two error bags rather than one.** An oversized submission surfaces the size
+  error alone, with no per-element errors — which is correct, since an oversized array has no
+  per-element errors worth showing. `array-validation-bounds.md` states this trade explicitly.
+- **This is not 0026 **D12**'s rejected delta-validation shape.** That rejected splitting ids into two
+  *different* rule sets by preserved/new. Both calls here use the identical per-element rules; only
+  the sequencing differs, so the `(is_active AND no children) OR id IN (preserved)` match still runs
+  against every submitted id.
+- **`$preserved` is read from the persisted product before any of this** and never from the request —
+  obligation 4. Passing a client-supplied array turns the `is_active` gate off entirely, which is
+  strictly worse than omitting the argument.
+- **This needs its own named test**, not merely a functional one: a `DB::listen()` counter asserting
+  that an oversized `regionIds` submission issues **zero** `sales_regions` existence queries. A
+  functional test passes under both shapes — that is precisely why the wrong one is easy to ship.
 
 **All three writers are inside it**, which is what both hand-offs require: `CreateProduct` /
 `UpdateProduct` (0024), `SyncProductGallery` (0024, reached *through* them — never called directly,
@@ -1610,11 +2018,14 @@ transaction of its own and swallows **no** exception, so it cannot commit past a
 `DB::transaction()` into a savepoint rather than an error — but it is emphatically **not** the
 guarantee anyone needs, which is why the outer boundary here is not optional.
 
-**Ordering is load-bearing:** authorize → read `$preserved` from the database → validate →
+**Ordering is load-bearing:** authorize → read `$preserved` from the database → validate the core
+fields → validate the region array's **shape** alone → validate the region array's **elements** →
 `resolveSelected()` → **open transaction** → create/update (which syncs the gallery) → sync regions.
-Everything that can fail on ordinary user input fails **before** a transaction is ever opened.
+Everything that can fail on ordinary user input fails **before** a transaction is ever opened, and
+the two region-validation steps are two separate `Validator::make(...)->validate()` calls in that
+order (**(b2)** above), never one.
 
-> ✅ **Correction, 2026-08-30 — the ordering above survives Epic 5 unchanged, and that is worth stating rather than leaving to inference**, because a reader meeting [0077](0077-product-editor-language-tabs-ui.md)'s save composition will assume it moved. It did not. 0077 **D-5** adopts this decision's ordering verbatim and **inserts two steps into it**: a payload-narrowing step and a per-language description sanitize, both **before** `validate()`, and the translation writes **inside** the existing transaction —
+> ✅ **Correction, 2026-08-30 — the ordering above survives Epic 5 unchanged, and that is worth stating rather than leaving to inference**, because a reader meeting [0077](../0077-product-editor-language-tabs-ui.md)'s save composition will assume it moved. It did not. 0077 **D-5** adopts this decision's ordering verbatim and **inserts two steps into it**: a payload-narrowing step and a per-language description sanitize, both **before** `validate()`, and the translation writes **inside** the existing transaction —
 >
 > authorize → read server state → **narrow the payload to the active languages** → **sanitize each language's description** → validate → `resolveSelected()` → **open transaction** → create/update (which writes the *default* language's translation and syncs the gallery) → **`SetProductTranslation` per engaged non-default language** → sync regions.
 >
@@ -1648,7 +2059,7 @@ than explaining a surprise afterwards.
 *Rejected:* detecting the loss and warning dynamically. It requires comparing pre- and
 post-sanitization HTML server-side and round-tripping a diff to the client, for an event that is rare
 and non-destructive to anything but formatting — real complexity for a marginal gain, and it would put
-a second consumer of the sanitizer's behaviour outside [0024a](done/0024a-product-description-html-sanitization.md)'s single call site.
+a second consumer of the sanitizer's behaviour outside [0024a](../done/0024a-product-description-html-sanitization.md)'s single call site.
 
 **Scope fence, and it is a security-relevant one:** this screen renders **no product description HTML
 at all** — not in the list, not in the editor (the WYSIWYG seeds itself client-side through `@js()`
@@ -1656,7 +2067,7 @@ per 0021 D9). There is no `{!! !!}` anywhere in either view. 0024 **R-12** says 
 *permits* unescaped rendering; this story deliberately does not exercise that permission, and Phase 4
 should verify the absence rather than the correctness of an escape.
 
-> ⚠️ **Correction, 2026-08-30 — the notice is one line above the tab strip, not one per language.** After [0077](0077-product-editor-language-tabs-ui.md) the editor renders N description fields, and the naive port of this decision renders N copies of the same sentence — visual noise that says nothing new on the second panel. 0077's **R-2(6)** makes the call: **one notice, above the strip**, since the statement is about the sanitizer and not about any one language. Still one translation key, still zero mechanism, still no dynamic diff.
+> ⚠️ **Correction, 2026-08-30 — the notice is one line above the tab strip, not one per language.** After [0077](../0077-product-editor-language-tabs-ui.md) the editor renders N description fields, and the naive port of this decision renders N copies of the same sentence — visual noise that says nothing new on the second panel. 0077's **R-2(6)** makes the call: **one notice, above the strip**, since the statement is about the sanitizer and not about any one language. Still one translation key, still zero mechanism, still no dynamic diff.
 >
 > ✅ **The security scope fence holds and gets *stronger*, which is the part worth not losing.** This screen still renders no description HTML anywhere; the WYSIWYG still seeds itself client-side. And 0076 **D-8** adds a **second sanitization layer** — a `saving` hook on `ProductTranslation` — so a description now reaches the column sanitized whichever write path it arrives by, including the direct-`SetTranslation` path this story never uses. Phase 4 should still verify the **absence** of an escape here rather than its correctness.
 
@@ -1702,7 +2113,7 @@ inside the WYSIWYG. Every harness assertion therefore has a home.
 degrades — the assertions now run against a real embedding, closing exactly the gap 0022's "honest
 limitation" note and 0020's own D16 describe.
 
-> ⚠️ **Correction, 2026-08-30 — step 2's permission list is incomplete once [0077](0077-product-editor-language-tabs-ui.md) lands, and step 3 gets a stronger proof for free.** Both are 0077's **R-2(7)**.
+> ⚠️ **Correction, 2026-08-30 — step 2's permission list is incomplete once [0077](../0077-product-editor-language-tabs-ui.md) lands, and step 3 gets a stronger proof for free.** Both are 0077's **R-2(7)**.
 >
 > - **Step 2 (fixture setup).** The migrated browser tests need `products.view` **and** `media.view`, as written — **and at least two active store languages seeded**. With one language the editor renders one panel, so the second `WysiwygEditor` never exists and any assertion reaching for it fails as what *looks* like a selector problem. This is the single likeliest cause of a confusing migration failure after the original permissions one, and it is worth writing into the fixture helper rather than each test.
 > - **Step 3 (the re-entrancy assertions).** They get **stronger**, not just re-pointed: 0021 **D5**'s derived event name now competes with two real literals **and N−1 sibling derived names**, where the harness gave it only a second copy of itself. That is the strongest form this assertion has ever had.
@@ -1714,32 +2125,69 @@ completed within this story, the harness **stays** and its deletion moves to a n
 Deleting it while letting the two files break, or deleting the files with their coverage, is not an
 acceptable outcome under any schedule pressure.
 
-### D-15 — Sidebar entry, branching on 0013
+### D-15 — Sidebar entry: one `config/modules.php` entry and two lang leaves
 
-Identical to 0025 **D-8** and 0039's own specification, and verified against the repo's *current*
-state: `config/modules.php` does not exist, `routes/web.php` carries one hardcoded gated route, and
-`resources/views/layouts/app/sidebar.blade.php` is still the static starter-kit list.
+> ⚠️ **Rewritten 2026-09-03 (Phase 2 FAIL, finding D2) — this decision was branching on a condition
+> that resolved eighteen stories ago, and its "expected" branch targeted a dead code path.** It used to
+> open: *"verified against the repo's current state: `config/modules.php` does not exist, `routes/web.php`
+> carries one hardcoded gated route, and `resources/views/layouts/app/sidebar.blade.php` is still the
+> static starter-kit list"*, and then offered an *if 0013 has **not** landed (expected)* branch writing a
+> hardcoded, **static and ungated** `<flux:sidebar.item>` into that view — *"a cosmetic leak only"*.
+> **Every clause of that is now false.** [0013](../done/0013-sidebar-module-gating-ui.md) landed;
+> `config/modules.php` exists and already carries `sales_regions` (task 0018) and `product_categories`
+> (story 0025); `sidebar.blade.php` renders `<x-sidebar-nav />` with **no** static module items at all,
+> so the hardcoded-item branch had nowhere to go. The "cosmetic leak" framing is moot along with it —
+> nothing here ships ungated, so there is no leak to accept, record or document. **That file is not
+> touched by this story**, which is the registry's own "append data, never behavior" claim holding for a
+> fifth entry in a row (0013 → 0018 → 0025 → this one).
 
-- *If [0013](done/0013-sidebar-module-gating-ui.md) has **not** landed (expected):* one
-  `<flux:sidebar.item icon="cube" :href="route('products.index')" :current="request()->routeIs('products.*')" wire:navigate>`,
-  with a comment noting it is scaffolding 0013's registry will absorb. **Static and ungated** — a
-  cosmetic leak only; access is refused by `can:products.view` on the route and re-checked in
-  `mount()`, exactly as
-  [api/routes.md](../../docs/api/routes.md#usersindex--the-first-permission-gated-route) already
-  documents for `users.index`. The caveat is recorded in the docs pass.
-- *If 0013 **has** landed:* add a `config/modules.php` entry keyed on `products.view` and do not touch
-  `sidebar.blade.php`.
+Three files, all data, none of them a component:
 
-`:current="request()->routeIs('products.*')"` is deliberate — it keeps the nav item highlighted on
-`products.create` and `products.edit`, which a bare `routeIs('products.index')` would not.
+```php
+// config/modules.php — append to `items`, mirroring the shipped sales_regions /
+// product_categories entries. No closures anywhere: this file must survive config:cache.
+'products' => [
+    'group' => 'platform',                  // see the placement note below
+    'label' => 'navigation.items.products', // a translation KEY, never copy
+    'icon' => 'cube',
+    'route' => 'products.index',
+    'current_when' => 'products.*',
+    'permissions' => ['products.view'],     // EXACTLY the route's own can: ability
+],
+```
 
-Placement follows whatever [OQ-1 of 0025](done/0025-product-categories-ui.md) settled; if a "Catalog"
-group has been created by then, Productos and Categorías belong in it together.
+```php
+// lang/en/navigation.php   'items' => [... 'products' => 'Products'],
+// lang/es/navigation.php   'items' => [... 'products' => 'Productos'],
+```
+
+Four rules come with the entry, all of them the registry's own and all test-pinned rather than
+conventional (see
+[architecture/authorization.md](../../../docs/architecture/authorization.md#the-second-half-of-a-module-gate-the-sidebar-registry)):
+
+- **`permissions` must be *exactly* the ability the route's `can:` enforces** — `['products.view']`,
+  never a broader set such as adding `products.edit`. `tests/Feature/Navigation/SidebarModuleGatingTest.php`
+  set-equates the two mechanically, so an entry can never advertise a screen the route then 403s.
+- **`current_when` is `'products.*'`, not `'products.index'`**, so the item stays highlighted on
+  `products.create` and `products.edit`. This is the one substantive line that survives from the old
+  decision's `:current=` reasoning.
+- **The registry key is the identifier three things share** — the config key, the
+  `lang/*/navigation.php` leaf, and the rendered `data-test="sidebar-link-products"` hook. `products`
+  is a single lowercase word, so no snake_case question arises here the way it did for `sales_regions`.
+- **Both lang files change in the same commit.** A missing leaf renders the raw key with a fully green
+  suite — `__()` returning its own key is not an error condition
+  ([naming.md](../../../docs/conventions/naming.md#translation-keys)).
+
+**Placement: `groups.platform`**, beside `product_categories`, which is where story 0025 put the
+sibling catalog screen. This supersedes the old decision's deferral to "whatever
+[OQ-1 of 0025](../done/0025-product-categories-ui.md) settled" — 0025 has shipped and settled it by
+landing in `platform`; a dedicated "Catalog" group for the two of them is a later, separate decision
+and is explicitly **not** this story's to make.
 
 ### D-16 — Every Flux/Blaze/encoding trap carried forward, plus one new one
 
 All four already-recorded traps recur verbatim on this screen; re-deriving any of them costs a Phase 5
-round. From [errors-log.md](../../docs/errors-log.md):
+round. From [errors-log.md](../../../docs/errors-log.md):
 
 1. **`@js()` on every id in a `wire:*` argument** — unconditional, UUIDs included.
 2. **A disabled row action is a written-out `@if`/`@else` with an explicit `<flux:tooltip>` wrapper** —
@@ -1761,21 +2209,68 @@ branches, so a browser test selects a row action identically whether it is enabl
 0020 **D13** establishes the shape, and the list thumbnail reuses it rather than inventing a second
 one:
 
-```blade
-<picture>
-    <source srcset="{{ $product->featuredImage->avifUrl }}" type="image/avif">
-    <source srcset="{{ $product->featuredImage->webpUrl }}" type="image/webp">
-    <img src="{{ $product->featuredImage->url }}" alt="{{ $product->featuredImage->title }}" loading="lazy">
-</picture>
+> ⚠️ **Corrected 2026-09-03 (Phase 2 FAIL, finding C3) — this decision was built on accessors that do
+> not exist, and the correction changes *where the URL is built*, not what is rendered.** It used to
+> quote a Blade snippet reading `$product->featuredImage->avifUrl` / `->webpUrl` / `->url` and to state
+> that *"the URL-shaped values come from `url()`-style **accessors** 0019 defines"*, closing with an
+> instruction to *"reconcile the exact accessor casing against 0019's shipped model in Phase 3"*. There
+> is no casing to reconcile: [`app/Models/Media.php`](../../../app/Models/Media.php) defines **no URL
+> accessor of any kind** — only `casts()`, `uploadedBy()` and a `#[Scope] search()`. Reading
+> `->avifUrl` off a `Media` model returns `null` (Eloquent finds no such attribute, accessor or cast),
+> silently, rendering an empty `srcset` rather than erroring. The half of the old note that **is**
+> correct and stays: the columns really are `path` / `webp_path` / `avif_path`, never `*_url` (**V-7**).
+
+**Every shipped consumer builds the URL at the call site**, and this story does the same rather than
+adding an accessor 0019 chose not to define. The two real instances, both verified on disk:
+
+```php
+// app/Livewire/Media/Gallery.php — toPayloadItem(), the source of 0020 D2's payload keys
+$disk = Storage::disk('public');
+'url' => $disk->url($media->path),
+'webpUrl' => $disk->url($media->webp_path),
+'avifUrl' => $disk->url($media->avif_path),
+
+// app/Livewire/Components/WysiwygEditor.php — insertImage()
+$this->dispatch('wysiwyg-insert-image', url: Storage::disk('public')->url($item->path), alt: $item->title);
 ```
 
-**Correction to the `frontend-expert` contribution, verified against 0019 on disk:** the `media` table's
-columns are **`path` / `webp_path` / `avif_path`**, not `url` / `webp_url` / `avif_url`. The
-URL-shaped values come from `url()`-style **accessors** 0019 defines. So the eager load selects the
-`*_path` columns (plus `id` and `title`) and the Blade reads the accessors — selecting `url` would
-fail with an unknown-column error, and selecting only `path` would make the accessors return wrong
-values for the two variants. **Reconcile the exact accessor casing against 0019's shipped model in
-Phase 3** — 0020 **D13** already flags the same uncertainty for itself.
+So `{url, webpUrl, avifUrl}` are **payload array keys**, never model attributes — which is exactly the
+confusion that produced the old text, since `$featuredPreview`'s documented shape
+(`{id,title,url,webpUrl,avifUrl}` under [Component public surfaces](#component-public-surfaces)) *is*
+correct: it holds 0020's dispatched payload, and the editor stores it verbatim.
+
+**What this story implements.** `Products\Index::products()` still returns a `LengthAwarePaginator`
+(**D-4**, unchanged), and maps its items with `->through()` into row arrays carrying a small
+`thumbnail` key built the same way. The Blade renders from that array rather than reaching into the
+model from the template — mirroring `toPayloadItem()`'s shape, and keeping the URL construction in one
+reviewable place per screen exactly as `Gallery` does:
+
+```php
+// inside products()'s ->through() mapping, for a product that has a featured image
+'thumbnail' => $product->featuredImage === null ? null : [
+    'url' => Storage::disk('public')->url($product->featuredImage->path),
+    'webpUrl' => Storage::disk('public')->url($product->featuredImage->webp_path),
+    'avifUrl' => Storage::disk('public')->url($product->featuredImage->avif_path),
+    'title' => $product->featuredImage->title,
+],
+```
+
+```blade
+@if ($product['thumbnail'])
+    <picture>
+        <source srcset="{{ $product['thumbnail']['avifUrl'] }}" type="image/avif">
+        <source srcset="{{ $product['thumbnail']['webpUrl'] }}" type="image/webp">
+        <img src="{{ $product['thumbnail']['url'] }}" alt="{{ $product['thumbnail']['title'] }}" loading="lazy">
+    </picture>
+@endif
+```
+
+Two consequences worth keeping. **The eager load's column list is unchanged and still load-bearing** —
+`featuredImage:id,title,path,webp_path,avif_path` (**D-4**): all three path columns must be selected,
+because each URL is built from its own column and there is nothing to derive one from another (0019's
+schema note forbids deriving a variant path by swapping an extension). And **`featuredImage` is
+nullable**, so the `null` branch is a real rendered state — a product with no featured image shows the
+placeholder, not a broken `<img>`.
 
 `loading="lazy"` on a paginated list; no width descriptors, because 0019 generates **format** variants,
 not **size** variants.
@@ -1789,9 +2284,9 @@ it costs this story; each is also folded into the decision it belongs to.
 
 | Finding (as raised here) | Answered by | Outcome for this story |
 | --- | --- | --- |
-| **OQ-5 / D-11 / R-1** — the `is_active` rule makes a legitimately-assigned product unsaveable | [0026 **D12**](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) | `salesRegionIdRules(array $preservedSalesRegionIds = [])`; the match becomes `(is_active AND no children) OR id IN (preserved)`. `Editor::save()` reads `$preserved` from the persisted product **before** validating and passes it in. See [the D-11 resolution](#d-11-resolution). |
-| **OQ-6 / D-9a / R-2** — is `position` the array index or `MAX(position)+1`? | [0024 **D-17**](done/0024-products-core-crud-backend.md) | Index, confirmed. `SyncProductGallery(Product, ?string, array $orderedGalleryMediaIds)` takes the **complete, ordered** array and rewrites `position` from its 0-based index in one transaction. The reorder buttons resubmit the full array; **no amendment to 0024's code was needed.** See **D-9a**. |
-| **D-12b / R-1's sibling** — nobody owned the transaction across the core write and the region sync | [0026 **D13**](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) (+ [0024 **D-17a**](done/0024-products-core-crud-backend.md) / [0026 **D14**](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) on ownership) | **This story owns it, explicitly.** One `DB::transaction()` wraps `CreateProduct`/`UpdateProduct` (which reaches `SyncProductGallery` internally) **and** `SyncProductSalesRegions`, opened after validation and after `resolveSelected()`. See **D-12b**. |
+| **OQ-5 / D-11 / R-1** — the `is_active` rule makes a legitimately-assigned product unsaveable | [0026 **D12**](../done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) | `salesRegionIdRules(array $preservedSalesRegionIds = [])`; the match becomes `(is_active AND no children) OR id IN (preserved)`. `Editor::save()` reads `$preserved` from the persisted product **before** validating and passes it in. See [the D-11 resolution](#d-11-resolution). |
+| **OQ-6 / D-9a / R-2** — is `position` the array index or `MAX(position)+1`? | [0024 **D-17**](../done/0024-products-core-crud-backend.md) | Index, confirmed. `SyncProductGallery(Product, ?string, array $orderedGalleryMediaIds)` takes the **complete, ordered** array and rewrites `position` from its 0-based index in one transaction. The reorder buttons resubmit the full array; **no amendment to 0024's code was needed.** See **D-9a**. |
+| **D-12b / R-1's sibling** — nobody owned the transaction across the core write and the region sync | [0026 **D13**](../done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) (+ [0024 **D-17a**](../done/0024-products-core-crud-backend.md) / [0026 **D14**](../done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) on ownership) | **This story owns it, explicitly.** One `DB::transaction()` wraps `CreateProduct`/`UpdateProduct` (which reaches `SyncProductGallery` internally) **and** `SyncProductSalesRegions`, opened after validation and after `resolveSelected()`. See **D-12b**. |
 
 **Superseded framings, marked rather than deleted**, per this project's convention:
 
@@ -1836,11 +2331,11 @@ below.
 - No third status case, no `agotado` string, no stored out-of-stock state — under any circumstance
   (0024 **D-7**).
 
-> ⚠️ **Correction, 2026-08-30 — *"No `slug`, no SEO fields, no translation scaffolding (Epic 5)"* now means something narrower than it did, and the difference matters.** When this fence was written, [0024's own scope fence](done/0024-products-core-crud-backend.md) said the same thing verbatim, and the product genuinely had **no** slug and **no** SEO fields anywhere — this story was declining to build UI for columns that did not exist.
+> ⚠️ **Correction, 2026-08-30 — *"No `slug`, no SEO fields, no translation scaffolding (Epic 5)"* now means something narrower than it did, and the difference matters.** When this fence was written, [0024's own scope fence](../done/0024-products-core-crud-backend.md) said the same thing verbatim, and the product genuinely had **no** slug and **no** SEO fields anywhere — this story was declining to build UI for columns that did not exist.
 >
-> **They exist now.** [0076](0076-translatable-content-retrofit-products-backend.md) introduces `slug`, `meta_title` and `meta_description` **for the first time in this project** (its **D-5**; the field set and `meta_description`'s width were confirmed by the human as its **Q-1**, 2026-08-30), created **directly on `product_translations`** and never on the parent — so they are translatable from birth, with `slug` unique **per store language** (`UNIQUE(store_language_id, slug)`, its **Q-2**, resolved the same day) and canonicalised in place by a model hook. There is no non-translated version of any of the three, and none is coming.
+> **They exist now.** [0076](../0076-translatable-content-retrofit-products-backend.md) introduces `slug`, `meta_title` and `meta_description` **for the first time in this project** (its **D-5**; the field set and `meta_description`'s width were confirmed by the human as its **Q-1**, 2026-08-30), created **directly on `product_translations`** and never on the parent — so they are translatable from birth, with `slug` unique **per store language** (`UNIQUE(store_language_id, slug)`, its **Q-2**, resolved the same day) and canonicalised in place by a model hook. There is no non-translated version of any of the three, and none is coming.
 >
-> **What the fence still forbids, unchanged:** this story adds no slug input, no SEO inputs, no language tabs, no translation state and no migration. **[0077](0077-product-editor-language-tabs-ui.md) owns the editor UI for all three**, alongside the per-language `name` and `description`, and it is the story that renders the slug's blur pre-fill affordance (0076 **D-6** assigns the affordance to *"0027's editor"* by name — but 0027 has no slug field, because the slug arrives in 0076, so **0077 adopts it**; see its **D-9**).
+> **What the fence still forbids, unchanged:** this story adds no slug input, no SEO inputs, no language tabs, no translation state and no migration. **[0077](../0077-product-editor-language-tabs-ui.md) owns the editor UI for all three**, alongside the per-language `name` and `description`, and it is the story that renders the slug's blur pre-fill affordance (0076 **D-6** assigns the affordance to *"0027's editor"* by name — but 0027 has no slug field, because the slug arrives in 0076, so **0077 adopts it**; see its **D-9**).
 >
 > **Read the fence as: this story ships no slug/SEO/translation *UI*.** Read it as "the product has no slug" and you will write a list query, a test fixture or a validation expectation against a schema that no longer matches.
 
@@ -1869,22 +2364,35 @@ Executed against this repository on 2026-08-18, during this debate.
   change/remove and `‹ ›` navigation. Supports **D-9(b)**.
 - **V-7 — `media`'s columns are `path`/`webp_path`/`avif_path`**, not `*_url` (0019's schema table).
   Corrects the `frontend-expert` contribution; see **D-17**.
-- **V-8 — The sidebar is still the static starter-kit list** and `config/modules.php` does not exist,
-  so **D-15**'s "0013 has not landed" branch is the live one today.
-- **V-9 — Nothing in this story's dependency chain exists in code yet.** `app/Livewire/` holds only
-  `Actions/`, `Settings/`, `Settings/TwoFactor/` and `Users/`; there is no `Products`, `Media`,
-  `Components` or `Dev` namespace, and `resources/views/livewire/` holds only `auth/`, `settings/` and
-  `users.blade.php`. This story's entire interface contract is **documented, not shipped**.
+- **V-8 — ⛔ *Falsified; re-verified 2026-09-03.*** As written on 2026-08-18 it said *"the sidebar is
+  still the static starter-kit list and `config/modules.php` does not exist, so **D-15**'s '0013 has not
+  landed' branch is the live one today"*. Both halves are false and have been since
+  [0013](../done/0013-sidebar-module-gating-ui.md) shipped: `config/modules.php` exists and carries five
+  items (including `sales_regions` and `product_categories`), and
+  `resources/views/layouts/app/sidebar.blade.php` renders `<x-sidebar-nav />` with no static module
+  items at all. **D-15** is rewritten accordingly; the branch this finding pointed at no longer exists.
+- **V-9 — ⛔ *Falsified; re-verified 2026-09-03.*** As written it said *"nothing in this story's
+  dependency chain exists in code yet — `app/Livewire/` holds only `Actions/`, `Settings/`,
+  `Settings/TwoFactor/` and `Users/` … this story's entire interface contract is **documented, not
+  shipped**"*. That was true on 2026-08-18 and is not true now: **0019 through 0026 are all closed**, so
+  `app/Livewire/` also holds `Media/`, `Components/`, `ProductCategories/`, `Roles/`, `SalesRegions/`
+  and `Dev/`, and every class this story consumes — `Product`, the three enums, `ProductPolicy`,
+  `ProductValidationRules`, the five `app/Actions/Products/*` classes, `Media\Gallery`,
+  `Components\WysiwygEditor`, `Components\SearchableMultiSelect` — is real, shipped code. **This is why
+  the [interface contract](#interface-contract-consumed--reconciled-against-the-amended-dependencies)
+  above is now read off disk rather than off sibling task files**, and why Phase 2's C1/C3 findings
+  (method names and accessors that never existed) were findable at all: the contract can be checked
+  against the code now, and must be. What remains genuinely unshipped is only Epic 5's 0068/0070/0076/0077.
 
 ### Dependencies
 
 Hard and blocking, in required order: **0019 → 0020 → 0021 → 0022 → 0023 → 0024 →
-[0024a](done/0024a-product-description-html-sanitization.md) → 0026 → 0027.**
+[0024a](../done/0024a-product-description-html-sanitization.md) → 0026 → 0027.**
 (0025 is not a blocker, but shipping it first gives the category screen the editor's empty-catalog
 link a destination — see [OQ-1](#open-questions). Nor is
-[0024b](done/0024b-product-category-in-use-delete-guard.md), which blocks 0025 rather than this story.)
+[0024b](../done/0024b-product-category-in-use-delete-guard.md), which blocks 0025 rather than this story.)
 
-> ⚠️ **0024a joined this chain on 2026-09-01** when [0024](done/0024-products-core-crud-backend.md) was split
+> ⚠️ **0024a joined this chain on 2026-09-01** when [0024](../done/0024-products-core-crud-backend.md) was split
 > three ways after a Phase 2 INVEST FAIL. It is small — a Composer dependency, a config file, one
 > action and one test file — but it is a **hard** blocker here: it owns `SanitizeProductDescription`,
 > without which this screen may not render `description` unescaped or bind `WysiwygEditor` to it.
@@ -1903,10 +2411,10 @@ nothing either way.
 
 > ⚠️ **Correction, 2026-08-30 — Epic 5 adds two stories to this picture, and the ordering between them and this one is a real decision rather than a detail.** Neither is a *blocker* in the "cannot start" sense; both change what this story ships.
 >
-> - **[0076](0076-translatable-content-retrofit-products-backend.md)** (backend retrofit) — if it lands **first**, this story is written against the corrected [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination) query from the outset and nothing is ever red. If it lands **second**, this story ships the original query and 0076's landing breaks `IndexQueryTest.php` until the correction is applied. **Either order works; the second costs a red suite in between**, and 0077's **R-1** requires that red to be recognised as 0076's hand-off rather than "fixed" by whoever meets it.
-> - **[0077](0077-product-editor-language-tabs-ui.md)** (the language tabs) is strictly **after** this story — it modifies files this one creates — and strictly after 0076, whose widened signatures it consumes.
+> - **[0076](../0076-translatable-content-retrofit-products-backend.md)** (backend retrofit) — if it lands **first**, this story is written against the corrected [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination) query from the outset and nothing is ever red. If it lands **second**, this story ships the original query and 0076's landing breaks `IndexQueryTest.php` until the correction is applied. **Either order works; the second costs a red suite in between**, and 0077's **R-1** requires that red to be recognised as 0076's hand-off rather than "fixed" by whoever meets it.
+> - **[0077](../0077-product-editor-language-tabs-ui.md)** (the language tabs) is strictly **after** this story — it modifies files this one creates — and strictly after 0076, whose widened signatures it consumes.
 >
-> ⚠️ **0076 also depends transitively on [0068](0068-store-languages-catalog-backend.md) (the store-language catalog) and [0070](0070-translatable-content-mechanism-product-categories-backend.md) (the translation mechanism)**, so the real chain past 0026 is **0068 → 0070 → 0076 → 0027-as-amended → 0077**. 0070 is the story that also breaks this file's **category** eager load ([D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination) note 4) — a break this amendment deliberately does **not** cover.
+> ⚠️ **0076 also depends transitively on [0068](../0068-store-languages-catalog-backend.md) (the store-language catalog) and [0070](../0070-translatable-content-mechanism-product-categories-backend.md) (the translation mechanism)**, so the real chain past 0026 is **0068 → 0070 → 0076 → 0027-as-amended → 0077**. 0070 is the story that also breaks this file's **category** eager load ([D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination) note 4) — a break this amendment deliberately does **not** cover.
 >
 > 🔴 **One resequencing option is cheaper than all of this and belongs to the coordinator, not here.** 0076's **R-4** records it: if 0076 is scheduled **before 0024 is implemented**, 0024 is amended so `name`/`description` are *never created* on `products` at all, the slug/SEO columns are born on the child table, and 0076's second migration and backfill disappear entirely. In that world this story is written once, correctly, and none of the corrections in this file are ever needed — *"cheaper to decide than to reverse."*
 
@@ -1955,7 +2463,7 @@ nothing either way.
   validation suite one layer up.
 - **R-10 — ⚠️ CLOSED 2026-09-01 (was: CI cannot open a database connection at all, citing 0024
   **V-1**).** Real when raised on 2026-08-18, and **fixed on 2026-08-26** by the task it spawned,
-  [`ci-database-connection-gap.md`](ci-database-connection-gap.md), which records a clean `866/866`
+  [`ci-database-connection-gap.md`](../ci-database-connection-gap.md), which records a clean `866/866`
   run against real MySQL. Verified at 0024's split: `phpunit.xml` pins `DB_CONNECTION=mysql`,
   `.env.example` sets it too, and `.github/workflows/tests.yml` runs a `mysql:8.4` service with
   job-level `DB_CONNECTION`/`DB_DATABASE`. **This story's Full Test Suite Gate evidence can come from
@@ -1972,13 +2480,13 @@ Nine were raised. **OQ-5 and OQ-6 were the two blocking ones; both are now ✅ r
 calls that can be answered any time before the markup is written.
 
 > ⚠️ **Correction, 2026-08-30 — ten were raised, eight remain open, and one of them blocks again.**
-> **OQ-10** below is new, carried here from [0077's **Q-5**](0077-product-editor-language-tabs-ui.md),
+> **OQ-10** below is new, carried here from [0077's **Q-5**](../0077-product-editor-language-tabs-ui.md),
 > and it is **not** in the "answer any time before the markup is written" class: [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination)'s
 > query cannot be written without it. The paragraph above stands for OQ-1 through OQ-9.
 
 - **✅ OQ-5 — *Resolved 2026-08-19; framing superseded, retained for history.*** ~~How does a save
   behave when the product carries an assignment to a since-deactivated Sales Region?~~
-  **Answered by [0026 **D12**](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md):**
+  **Answered by [0026 **D12**](../done/0026-product-sales-region-assignment-and-tax-resolution-backend.md):**
   a *preserved* assignment need only still **exist**; only *newly added* ids face the
   `is_active` + no-children match. Mechanically:
   `salesRegionIdRules(array $preservedSalesRegionIds = [])`, whose per-element `exists` becomes
@@ -1990,7 +2498,7 @@ calls that can be answered any time before the markup is written.
 
 - **✅ OQ-6 — *Resolved 2026-08-19; framing superseded, retained for history.*** ~~Does
   `SyncProductGallery` write `position` from the array index, or append with `MAX(position)+1`?~~
-  **Answered by [0024 **D-17**](done/0024-products-core-crud-backend.md): the 0-based array index.** The
+  **Answered by [0024 **D-17**](../done/0024-products-core-crud-backend.md): the 0-based array index.** The
   signature is confirmed as
   `__invoke(Product $product, ?string $featuredMediaId, array $orderedGalleryMediaIds): void`; the
   array is the complete, authoritative order, `position` is rewritten for every surviving row from its
@@ -2039,14 +2547,14 @@ calls that can be answered any time before the markup is written.
   this story pre-empting it.
 
 - **✅ OQ-10 — RESOLVED 2026-08-30, option (a) — the store default language.** *(This was [0077's
-  **Q-5**](0077-product-editor-language-tabs-ui.md), raised there and routed **here**: "it belongs to
+  **Q-5**](../0077-product-editor-language-tabs-ui.md), raised there and routed **here**: "it belongs to
   the 0027 amendment, not to this story." It was the one **blocking** question this amendment added —
   [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-and-real-pagination)'s corrected query and
   its ordering test's fixture can now be written.)* The human confirmed the store default for **all
   three** dependent sites at once — the list's row label, its ordering, and `$deletingProductName` —
   since a confirmation naming a product differently from the row above it would be worse than either
   choice alone.
-  After [0076](0076-translatable-content-retrofit-products-backend.md) a product has no single name:
+  After [0076](../0076-translatable-content-retrofit-products-backend.md) a product has no single name:
   `scopeOrderByTranslatedName(?string $storeLanguageId = null)` and every `translated('name', …)` read
   take a language, and something must supply one. The same answer should govern the row label, the
   ordering **and** `$deletingProductName`, since a confirmation naming a product differently from the
@@ -2056,7 +2564,7 @@ calls that can be answered any time before the markup is written.
   every entity always holds a default-language translation), so a list cell can never render blank,
   and it makes the list stable for every administrator regardless of who is looking at it.
   (b) The administrator's UI locale. Rejected as a recommendation by 0077 for a reason worth
-  repeating: it conflates the two i18n axes [0068](0068-store-languages-catalog-backend.md)'s own
+  repeating: it conflates the two i18n axes [0068](../0068-store-languages-catalog-backend.md)'s own
   opening table draws apart deliberately — the **interface** language (ES/EN, an administrator
   preference) and the **store content** languages (open-ended, a catalog property). It would also make
   two administrators see different orderings of the same page.
@@ -2072,17 +2580,17 @@ calls that can be answered any time before the markup is written.
 
 Phase 1 (Three Amigos) debate for Epic 2, run on 2026-08-18 with `frontend-expert` (files and
 approach) and `frontend-qa` (test design), per
-[workflow.md](../../docs/workflow.md#phase-1--three-amigos-debate). Derived from
-[PRD §2.2](../../docs/PRD/PRD.md#22-products) and the
-[Design reference](../../docs/PRD/PRD.md#design-reference--the-dashboard-shell) section, and grounded
-in full readings of [0019](done/0019-media-library-upload-and-conversions-backend.md),
-[0020](done/0020-shared-media-gallery-modal-ui.md), [0021](done/0021-wysiwyg-rich-text-editor-component.md),
-[0022](done/0022-searchable-multi-select-component.md), [0023](done/0023-product-categories-backend.md),
-[0024](done/0024-products-core-crud-backend.md), [0025](done/0025-product-categories-ui.md),
-[0026](done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) and
-[0029](0029-product-variants-backend.md), with
-[0006](done/0006-users-list-editor-ui.md) / `App\Livewire\Users\Index` as the list+row-action pattern
-and [0025](done/0025-product-categories-ui.md) as the most recent sibling screen.
+[workflow.md](../../../docs/workflow.md#phase-1--three-amigos-debate). Derived from
+[PRD §2.2](../../../docs/PRD/PRD.md#22-products) and the
+[Design reference](../../../docs/PRD/PRD.md#design-reference--the-dashboard-shell) section, and grounded
+in full readings of [0019](../done/0019-media-library-upload-and-conversions-backend.md),
+[0020](../done/0020-shared-media-gallery-modal-ui.md), [0021](../done/0021-wysiwyg-rich-text-editor-component.md),
+[0022](../done/0022-searchable-multi-select-component.md), [0023](../done/0023-product-categories-backend.md),
+[0024](../done/0024-products-core-crud-backend.md), [0025](../done/0025-product-categories-ui.md),
+[0026](../done/0026-product-sales-region-assignment-and-tax-resolution-backend.md) and
+[0029](../0029-product-variants-backend.md), with
+[0006](../done/0006-users-list-editor-ui.md) / `App\Livewire\Users\Index` as the list+row-action pattern
+and [0025](../done/0025-product-categories-ui.md) as the most recent sibling screen.
 
 **A note on how this document was produced, recorded because it affects how much weight each part
 carries.** An earlier run of this debate collected full contributions from both specialists; that run

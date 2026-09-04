@@ -233,7 +233,7 @@ Feature: Per-store-language content in the product editor
 
 ## Files to create/modify
 
-**Every file in the "Modify" table is [0027](0027-products-list-and-editor-ui.md)'s.** Per [contracts.md](../../docs/contracts.md#parallel-agent-file-ownership-rule)'s Parallel Agent File-Ownership Rule and 0027's own sequential-implementation note, this story's Phase 3 must **never** be dispatched in the same batch as 0021, 0024, 0025, 0026, 0028 or 0076.
+**Every file in the "Modify" table is [0027](done/0027-products-list-and-editor-ui.md)'s.** Per [contracts.md](../../docs/contracts.md#parallel-agent-file-ownership-rule)'s Parallel Agent File-Ownership Rule and 0027's own sequential-implementation note, this story's Phase 3 must **never** be dispatched in the same batch as 0021, 0024, 0025, 0026, 0028 or 0076.
 
 ### Modify
 
@@ -630,7 +630,7 @@ The hook family, **keyed by `{id}` per C-3**, each present on **every** branch o
 ### Dependencies
 
 - **[Story 0076](0076-translatable-content-retrofit-products-backend.md)** — hard, and **not implemented**. Supplies the widened `CreateProduct` / `UpdateProduct` signatures (**D-18**), `slugRules()` / `metaTitleRules()` / `metaDescriptionRules()`, the `product_translations` table and `scopeOrderByTranslatedName()`. Its **Q-1** and **Q-2** are both ✅ resolved (2026-08-30), so the five-field set and per-language slug uniqueness are settled inputs here rather than assumptions.
-- **[Story 0027](0027-products-list-and-editor-ui.md)** — hard, and **not implemented**. Supplies the `Editor` component and view this story modifies throughout. See **R-2**.
+- **[Story 0027](done/0027-products-list-and-editor-ui.md)** — hard, and **not implemented**. Supplies the `Editor` component and view this story modifies throughout. See **R-2**.
 - **[Story 0021](done/0021-wysiwyg-rich-text-editor-component.md)** — hard, and not implemented. Its **D9** is the constraint **D-1** is built around; consumed **unmodified**.
 - **[Story 0070](0070-translatable-content-mechanism-product-categories-backend.md)** — hard. `HasTranslations`, `SetTranslation`, `defaultStoreLanguage()`, consumed unmodified. Its **Q3** is answered in part here (**R-4**).
 - **[Story 0068](0068-store-languages-catalog-backend.md)** — hard. `StoreLanguage`, `scopeActive()`, `is_default`, `code`, `name`.
@@ -690,7 +690,7 @@ Per [contracts.md](../../docs/contracts.md#uncertainty-handling-rule)'s Uncertai
 
 Derived from this debate; **none are in scope for 0077**.
 
-1. **Amend [0027](0027-products-list-and-editor-ui.md)** for the eight falsified items in **R-2**, and — separately and first — for 0076's **R-1(a)/(b)** list-query break. Both amendments land in the same story file and must be written once, before either 0076 or 0077 implements.
+1. **Amend [0027](done/0027-products-list-and-editor-ui.md)** for the eight falsified items in **R-2**, and — separately and first — for 0076's **R-1(a)/(b)** list-query break. Both amendments land in the same story file and must be written once, before either 0076 or 0077 implements.
 2. **Verify the dotted `#[Modelable]` binding by execution** (**R-3(a)**) before any markup is written. It is the one assumption whose failure forces a redesign. ⚠️ **D-2's revision to five parallel arrays changes the path but not the question** — the binding is now `wire:model="descriptions.{{ $id }}"` rather than `translations.{{ $id }}.description`, one level shallower, which is *more* likely to work but is still unexecuted.
 2b. **Close the core-field authorization asymmetry D-17 leaves.** After this story the *translation* path self-authorizes at two layers while `CreateProduct` / `UpdateProduct` still self-authorize at none (0024's **D-15**, coordinator-confirmed at its **RQ-10**). That was a defensible call when the component was the only caller; **D-17** makes the same entity's *other* write path two-layer, so the asymmetry is now visible within one folder. Belongs to 0024/0076, not here.
 3. **Decide whether 0021 gains `setContent()` / `flush()` client hooks** (**D-1** option (d), **R-7**). Not needed by this story's chosen shape, but it is the fallback for **R-3(a)** and the remedy for the save-race — and it is 0021's file, so it is a coordination action.

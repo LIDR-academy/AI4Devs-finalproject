@@ -198,6 +198,35 @@ test('a role holding the related-but-different products.edit permission never se
 });
 
 // =====================================================================
+// Story 0027 — the products entry. Two generic Phase-4 guard tests already
+// cross-check the registry against the route for every entry with no edit
+// needed (see below); what is added here is the per-entry coverage those
+// generic checks cannot supply, mirroring story 0018's sales_regions and
+// story 0025's product_categories tests (code-reviewer, story 0027 Phase 5
+// review, finding F-3).
+// =====================================================================
+
+test('a role holding exactly products.view sees the Products entry under the Platform group', function () {
+    $this->actingAs(sidebarNavUserWith(['products.view']));
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('data-test="sidebar-group-platform"', false)
+        ->assertSee('data-test="sidebar-link-products"', false);
+});
+
+test('a role holding only the related-but-different products.edit permission never sees the Products entry', function () {
+    // routes/products.php gates products.index on exactly can:products.view.
+    $this->actingAs(sidebarNavUserWith(['products.edit']));
+
+    $response = $this->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('data-test="sidebar-link-dashboard"', false);
+    $response->assertDontSee('data-test="sidebar-link-products"', false);
+});
+
+// =====================================================================
 // Negative — an entry stays hidden without its own exact permission.
 // Anchored with an assertSee() on the always-visible Dashboard hook so the
 // assertion actually exercises the sidebar-nav component once it exists,

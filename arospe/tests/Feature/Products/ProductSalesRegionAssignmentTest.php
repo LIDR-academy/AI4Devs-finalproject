@@ -505,15 +505,10 @@ test('deleting an assigned sales region raises a QueryException 23000 and the re
 // =====================================================================
 // D8 -- SyncProductSalesRegions is unreachable from anywhere but its intended callers.
 //
-// NOTE, per the task file's own text: "Today, before 0027 exists, the assertion is simply that
-// nothing under app/ calls it at all." Because this test greps for the literal string
-// "SyncProductSalesRegions" rather than exercising the class, it needs no class to exist to run --
-// exactly the documented exception tests/Feature/Products/ProductAuthorizationTest.php already
-// carries for the identical SyncProductGallery reachability test ("this test does not depend on
-// SyncProductGallery existing yet... it is honestly a structural constraint expressed as a test
-// rather than something that fails red today"). This is the ONE test in this file that is expected
-// to PASS today rather than fail red -- every other test above fails with a class/method-not-found
-// error until the production code exists.
+// UPDATED by story 0027 (D-12): "Today, before 0027 exists, the assertion is simply that nothing
+// under app/ calls it at all" no longer holds -- 0027's Editor::save() is the intended caller D8
+// always named, discharging 0026's own hand-off item. App\Livewire\Products\Editor.php is
+// therefore now the one additional allowed file, alongside SyncProductSalesRegions.php itself.
 // =====================================================================
 
 function fileReferencesSyncProductSalesRegionsOutsideComments(string $path): bool
@@ -546,6 +541,7 @@ function fileReferencesSyncProductSalesRegionsOutsideComments(string $path): boo
 test('SyncProductSalesRegions is unreachable from anywhere under app/, database/ or routes/ but its own file', function () {
     $allowedFiles = array_filter([
         realpath(app_path('Actions/Products/SyncProductSalesRegions.php')),
+        realpath(app_path('Livewire/Products/Editor.php')),
     ]);
 
     $offenders = [];

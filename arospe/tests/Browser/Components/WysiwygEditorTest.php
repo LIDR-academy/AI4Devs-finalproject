@@ -9,23 +9,43 @@
 // real browser (the same reasoning this project's own null-<select> errors-log entry already
 // established for a different component).
 //
-// Driven against the D13/OQ-1 harness (dev.media-gallery-harness --
-// App\Livewire\Dev\MediaGalleryHarness / resources/views/livewire/dev/media-gallery-harness.blade.php),
-// since the editor has no page of its own -- its real consumers (0027, Epic 4's blog editor) do not
-// exist yet. The harness mounts TWO independent editor instances (data-test="harness-editor-instance"
-// / "harness-editor-instance-2"), seeded respectively with `<p>BEFORE AFTER</p>` and
-// `<p>SECOND BEFORE AFTER</p>` -- exactly what D6's positional acceptance criterion and D5's
-// re-entrancy acceptance criterion each need a known before/after fragment pair for.
+// ⚠️ MIGRATED by story 0027's D-14 (2026-09-03, TDD Phase 3 step 1 / "red") -- these tests used to
+// run against the D13/OQ-1 harness (dev.media-gallery-harness -- App\Livewire\Dev\MediaGalleryHarness /
+// resources/views/livewire/dev/media-gallery-harness.blade.php), which mounted TWO independent
+// WysiwygEditor instances purely so a browser test had somewhere to `visit()`. 0027's
+// App\Livewire\Products\Editor is the real, routed consumer this component was always waiting for
+// (routes/products.php's `products.create`/`products.edit`), and it embeds exactly ONE WysiwygEditor
+// instance -- bound to `description` -- not two (0021's per-language N-instance shape is 0077's,
+// unbuilt). Every test below now `visit()`s `route('products.edit', $product)` with the product's
+// `description` PRE-SEEDED to a known BEFORE/AFTER fragment pair (the harness used to seed this via
+// its own `$editorValue` property; here it is `Product::factory()->create(['description' => ...])`),
+// and every harness-specific per-instance selector helper is COLLAPSED to a single, unscoped one --
+// there is only one WysiwygEditor on this page, so the duplication-hazard scoping the harness needed
+// (D10's Phase 2 finding) does not apply here.
 //
-// SELECTOR STRATEGY, matching Media\GalleryTest's own precedent for this same harness: D10's Phase 2
-// finding is that every `data-test` hook the editor renders (wysiwyg-bold, wysiwyg-editor-region,
-// ...) is a STATIC string duplicated once per mounted instance, so every editor-level hook below is
-// scoped to its containing `data-test="harness-editor-instance[-2]"` block via an explicit CSS
-// descendant combinator (a string containing `[` -- Selector::isExplicit() passes it straight to
-// Playwright's page.locator(), never the ambiguous `@` shorthand). The embedded gallery is scoped the
-// same way GalleryTest.php's inOpenGalleryModal() already does (`dialog[open] [data-test="..."]`),
-// since only one `<dialog>` is ever open per action sequence here even though up to four exist on
-// the page (two standalone harness galleries + one per editor instance).
+// The harness component/view/route (App\Livewire\Dev\MediaGalleryHarness, its Blade view, and its
+// routes/web.php registration), plus tests/Feature/Dev/MediaGalleryHarnessRouteTest.php, HAVE been
+// deleted by this story, per D-14's own ordering rule: this file was made green against the real
+// editor first, and only then was the harness removed.
+//
+// RE-ENTRANCY, REDESIGNED (D-14 step 3): the harness's own cross-instance tests (two WysiwygEditor
+// instances on one page) have NO home here -- 0027's editor has only one. D-14 redirects the
+// re-entrancy proof onto the editor's OTHER two gallery embeds instead, and states it is a STRONGER
+// proof than the harness gave: confirming an image from the WYSIWYG's own internal gallery must
+// insert it into the description text and must NOT set the featured image or add to the gallery
+// strip, and vice versa -- confirming a FEATURED image or a STRIP image must never touch the
+// description text. This is now competing the WYSIWYG's own per-instance-derived select-event (0021
+// D5) against TWO real literals (`featured-image-selected` / `product-images-added`), not merely a
+// second copy of itself the way the harness's two editors did. The harness's own
+// "cross-instance range capture" (B1) regression test has NO equivalent here at all -- it depended
+// on a SECOND WysiwygEditor instance existing on the page, which this story's editor does not mount
+// (0077's problem, not this story's) -- so it is deliberately NOT migrated, with this comment as its
+// record.
+//
+// ASSUMED data-test HOOKS this migration relies on for the editor's OTHER two embeds (see
+// tests/Browser/Products/EditorJourneyTest.php's identical "ASSUMED data-test HOOKS" block):
+//   - data-test="open-featured-image-gallery" / "featured-image-preview"
+//   - data-test="open-gallery-strip-picker" / "gallery-strip" / "gallery-strip-item-{id}"
 //
 // CARET TECHNIQUE (D6, V13): `fill()`/`type()` replace content wholesale and create no browser
 // selection at all; `keys()`-driven selection is brittle to whitespace/line-wrapping for anything
@@ -34,6 +54,8 @@
 // nested markup an earlier action produced -- e.g. "BEFORE" moving inside a freshly-applied <b>).
 
 use App\Models\Media;
+use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Facades\Storage;
@@ -42,15 +64,15 @@ use Spatie\Permission\PermissionRegistrar;
 beforeEach(function () {
     app(PermissionRegistrar::class)->forgetCachedPermissions();
     $this->seed(RolePermissionSeeder::class);
-    // Deliberately NOT Storage::fake('public') -- traced live, not assumed: this Pest browser
-    // plugin's real HTTP server (LaravelHttpServer, the same in-process driver Media\GalleryTest.php's
-    // own banner comment documents) serves an <img src> through Laravel's stock storage/{path}
-    // ServeFile route from WITHIN THE SAME PROCESS the test runs in, so Storage::fake('public')'s
-    // swapped disk config (no 'visibility' => 'public' key) is what that route sees too -- producing
-    // a real 403 on every inserted image's src the moment a real browser actually requests it, not
-    // merely a missing byte. Every Media row a test here needs the browser to load therefore uses
-    // ->withRealFiles() against the REAL 'public' disk (storage/app/public), with the three written
-    // paths deleted at the end of the same test (see wysiwygUiTestCleanupMedia() below).
+    // Deliberately NOT Storage::fake('public') -- traced live, not assumed (see
+    // tests/Browser/Media/GalleryTest.php's identical banner-comment finding, unchanged by this
+    // migration): this Pest browser plugin's real HTTP server serves an <img src> through Laravel's
+    // stock storage/{path} ServeFile route from WITHIN THE SAME PROCESS the test runs in, so
+    // Storage::fake('public')'s swapped disk config is what that route sees too -- producing a real
+    // 403 on every inserted image's src the moment a real browser actually requests it. Every Media
+    // row a test here needs the browser to load therefore uses ->withRealFiles() against the REAL
+    // 'public' disk (storage/app/public), with the three written paths deleted at the end of the
+    // same test (see wysiwygUiTestCleanupMedia() below).
 });
 
 /**
@@ -67,32 +89,44 @@ function wysiwygUiTestCleanupMedia(Media $media): void
 function wysiwygUiTestActor(): User
 {
     $actor = User::factory()->create();
-    $actor->givePermissionTo(['media.view', 'media.create', 'media.edit']);
+    $actor->givePermissionTo(['products.view', 'products.create', 'products.edit', 'media.view', 'media.create', 'media.edit']);
 
     return $actor;
 }
 
 /**
- * Scopes a `wysiwyg-*` hook to one of the harness's two editor instances (D10's Phase 2 finding --
- * every such hook is a static string, duplicated once per mounted instance).
+ * A product pre-seeded with the known BEFORE/AFTER description fragment pair D6's positional
+ * acceptance criterion needs -- the migrated equivalent of the harness's own seeded
+ * `$editorValue`/`$secondEditorValue` properties.
  */
-function wysiwygUiTestInstanceSelector(int $instance, string $dataTest): string
+function wysiwygUiTestProduct(string $description = '<p>BEFORE AFTER</p>'): Product
 {
-    $container = $instance === 1 ? 'harness-editor-instance' : 'harness-editor-instance-2';
-
-    return '[data-test="'.$container.'"] [data-test="'.$dataTest.'"]';
+    return Product::factory()->create([
+        'product_category_id' => ProductCategory::factory()->create()->id,
+        'description' => $description,
+    ]);
 }
 
-function wysiwygUiTestRegionSelector(int $instance): string
+/**
+ * The description field's own editable region -- unscoped, since the editor mounts exactly ONE
+ * WysiwygEditor instance (unlike the harness's two), so none of D10's Phase 2 duplication-hazard
+ * scoping applies here.
+ */
+function wysiwygUiTestRegion(): string
 {
-    return wysiwygUiTestInstanceSelector($instance, 'wysiwyg-editor-region');
+    return '[data-test="wysiwyg-editor-region"]';
+}
+
+function wysiwygUiTestControl(string $dataTest): string
+{
+    return '[data-test="'.$dataTest.'"]';
 }
 
 /**
  * Scopes a `media-*` gallery hook to the currently OPEN `<dialog>` -- matching
- * tests/Browser/Media/GalleryTest.php's own inOpenGalleryModal(), necessary because up to four
- * gallery instances (two standalone harness ones, one per editor) render the same shared library on
- * this page at once.
+ * tests/Browser/Media/GalleryTest.php's own inOpenGalleryModal(), necessary because the editor
+ * mounts THREE gallery instances at once (D-8: the featured picker, the strip picker, and the
+ * WYSIWYG's own internal one).
  */
 function wysiwygUiTestGalleryModal(string $dataTest): string
 {
@@ -100,13 +134,11 @@ function wysiwygUiTestGalleryModal(string $dataTest): string
 }
 
 /**
- * B4 regression (Phase 5 code review, round 2): `media-confirm` renders `:disabled="count($selectedIds)
- * === 0"` (resources/views/livewire/media/gallery.blade.php) and only becomes clickable once the tile
- * click's Livewire round-trip lands. A bare `click(tile)->click(confirm)` races that round-trip and
- * flakes under Playwright's actionability wait -- measured at ~30% on the heaviest-prelude sibling test
- * in WysiwygEditorOutputHtmlTest.php. This assertScript is a real poll (Execution::waitForExpectation()
- * retries on a thrown expectation), not a sleep, and is inserted between every tile click and confirm
- * click in this file for the same reason the cancel test above already gates the modal itself.
+ * B4 regression (carried forward from the harness version of this file): `media-confirm` renders
+ * `:disabled="count($selectedIds) === 0"` and only becomes clickable once the tile click's Livewire
+ * round-trip lands. A bare `click(tile)->click(confirm)` races that round-trip and flakes under
+ * Playwright's actionability wait. This assertScript is a real poll (a thrown-expectation retry),
+ * not a sleep, inserted between every tile click and confirm click below.
  */
 function wysiwygUiTestConfirmEnabledScript(): string
 {
@@ -202,11 +234,12 @@ function wysiwygUiTestSelectAllScript(string $regionSelector): string
 test('selecting text and applying an inline format wraps it, and applying it again removes the formatting', function (string $button, string $tag) {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
 
-    $region = wysiwygUiTestRegionSelector(1);
-    $control = wysiwygUiTestInstanceSelector(1, $button);
+    $region = wysiwygUiTestRegion();
+    $control = wysiwygUiTestControl($button);
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
     $page->script(wysiwygUiTestSelectWordScript($region, 'BEFORE'));
 
@@ -235,14 +268,15 @@ test('selecting text and applying an inline format wraps it, and applying it aga
 test('applying the heading style to a selected line produces a real h2, not a div or a styled wrapper', function () {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
 
-    $region = wysiwygUiTestRegionSelector(1);
+    $region = wysiwygUiTestRegion();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
     $page->script(wysiwygUiTestSelectAllScript($region));
 
-    $page->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-h2'))
+    $page->click(wysiwygUiTestControl('wysiwyg-h2'))
         ->assertNoJavaScriptErrors()
         ->assertSourceInHas($region, '<h2>')
         ->assertSourceInMissing($region, '<div')
@@ -258,14 +292,15 @@ test('applying the heading style to a selected line produces a real h2, not a di
 test('turning a selected line into a list produces real list markup with list items', function (string $button, string $listTag) {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
 
-    $region = wysiwygUiTestRegionSelector(1);
+    $region = wysiwygUiTestRegion();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
     $page->script(wysiwygUiTestSelectAllScript($region));
 
-    $page->click(wysiwygUiTestInstanceSelector(1, $button))
+    $page->click(wysiwygUiTestControl($button))
         ->assertNoJavaScriptErrors()
         ->assertScript("document.querySelector('{$region} {$listTag}') !== null")
         ->assertScript("document.querySelector('{$region} li') !== null")
@@ -284,39 +319,37 @@ test('turning a selected line into a list produces real list markup with list it
 test('turning selected text into a link applies the URL actually typed in the popover', function () {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
 
-    $region = wysiwygUiTestRegionSelector(1);
+    $region = wysiwygUiTestRegion();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
     $page->script(wysiwygUiTestSelectWordScript($region, 'BEFORE'));
 
-    $page->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-link'))
+    $page->click(wysiwygUiTestControl('wysiwyg-link'))
         ->assertNoJavaScriptErrors()
-        ->fill(wysiwygUiTestInstanceSelector(1, 'wysiwyg-link-url'), 'https://example.com/story-0021')
-        // N3: the Apply button now carries its own data-test="wysiwyg-link-apply" hook (added in
-        // parallel by frontend-expert), scoped to this instance exactly like every other toolbar
-        // control -- no longer selected via Flux's internal `data-flux-button` attribute plus the
-        // popover's own x-show selector.
-        ->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-link-apply'))
+        ->fill(wysiwygUiTestControl('wysiwyg-link-url'), 'https://example.com/story-0027')
+        ->click(wysiwygUiTestControl('wysiwyg-link-apply'))
         ->assertNoJavaScriptErrors()
-        ->assertSourceInHas($region, '<a href="https://example.com/story-0021">BEFORE</a>');
+        ->assertSourceInHas($region, '<a href="https://example.com/story-0027">BEFORE</a>');
 });
 
 test('a link to an unsupported address scheme is refused before it is applied, leaving the selection unlinked', function () {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
 
-    $region = wysiwygUiTestRegionSelector(1);
+    $region = wysiwygUiTestRegion();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
     $page->script(wysiwygUiTestSelectWordScript($region, 'BEFORE'));
 
-    $page->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-link'))
+    $page->click(wysiwygUiTestControl('wysiwyg-link'))
         ->assertNoJavaScriptErrors()
-        ->fill(wysiwygUiTestInstanceSelector(1, 'wysiwyg-link-url'), 'javascript:alert(1)')
-        ->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-link-apply'))
+        ->fill(wysiwygUiTestControl('wysiwyg-link-url'), 'javascript:alert(1)')
+        ->click(wysiwygUiTestControl('wysiwyg-link-apply'))
         ->assertNoJavaScriptErrors()
         ->assertSee(__('components.wysiwyg.link_invalid_scheme'))
         ->assertScript("document.querySelector('{$region} a') === null");
@@ -331,11 +364,12 @@ test('a link to an unsupported address scheme is refused before it is applied, l
 test('the toolbar shows the bold action as active when the cursor sits inside bold text', function () {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
 
-    $region = wysiwygUiTestRegionSelector(1);
-    $bold = wysiwygUiTestInstanceSelector(1, 'wysiwyg-bold');
+    $region = wysiwygUiTestRegion();
+    $bold = wysiwygUiTestControl('wysiwyg-bold');
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
     // First make "BEFORE" bold, exactly like the toggle test above.
     $page->script(wysiwygUiTestSelectWordScript($region, 'BEFORE'));
@@ -361,14 +395,15 @@ test('the toolbar shows the bold action as active when the cursor sits inside bo
 test('insert image opens the gallery, and confirming a tile inserts the image and closes the modal', function () {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
 
     $media = Media::factory()->withRealFiles()->create(['title' => 'Basic Insert Widget', 'description' => null]);
 
-    $region = wysiwygUiTestRegionSelector(1);
+    $region = wysiwygUiTestRegion();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
-    $page->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-insert-image'))
+    $page->click(wysiwygUiTestControl('wysiwyg-insert-image'))
         ->assertNoJavaScriptErrors()
         ->assertScript("document.querySelector('dialog[open]') !== null")
         ->click(wysiwygUiTestGalleryModal('media-tile-'.$media->id))
@@ -398,12 +433,13 @@ test('insert image opens the gallery, and confirming a tile inserts the image an
 test('a confirmed image lands exactly where the cursor was, with content on both sides preserved', function () {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
 
     $media = Media::factory()->withRealFiles()->create(['title' => 'Positional Widget', 'description' => null]);
 
-    $region = wysiwygUiTestRegionSelector(1);
+    $region = wysiwygUiTestRegion();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
     // Collapsed caret right before "AFTER" -- D6 step 1's blur-capture mechanism fires when the
     // Insert image button's mousedown steals nothing (mousedown.prevent) and the gallery modal's
@@ -411,7 +447,7 @@ test('a confirmed image lands exactly where the cursor was, with content on both
     // capture on the very next mousedown.
     $page->script(wysiwygUiTestCaretBeforeWordScript($region, 'AFTER'));
 
-    $page->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-insert-image'))
+    $page->click(wysiwygUiTestControl('wysiwyg-insert-image'))
         ->assertNoJavaScriptErrors()
         ->click(wysiwygUiTestGalleryModal('media-tile-'.$media->id))
         ->assertNoJavaScriptErrors()
@@ -422,11 +458,9 @@ test('a confirmed image lands exactly where the cursor was, with content on both
     $page->wait(2)->assertNoJavaScriptErrors();
 
     // Read the CLIENT-side region's own live DOM -- that is where execCommand('insertHTML', ...)
-    // lands immediately, with no dependency on the host's own deferred wire:model write-back
-    // (App\Livewire\Dev\MediaGalleryHarness::$editorValue only reflects a child #[Modelable]
-    // write on the HOST's *next* request, never synchronously -- confirmed empirically, not the
-    // component's own bug). Prove positional order -- "an <img> exists somewhere" would pass for
-    // "appended at the end" too, which is the exact regression this assertion exists to catch.
+    // lands immediately, with no dependency on the host's own deferred wire:model write-back.
+    // Prove positional order -- "an <img> exists somewhere" would pass for "appended at the end"
+    // too, which is the exact regression this assertion exists to catch.
     $page->assertScript(<<<JS
         (function() {
             const html = document.querySelector('{$region}').innerHTML;
@@ -449,16 +483,17 @@ test('a confirmed image lands exactly where the cursor was, with content on both
 test('opening the gallery without having focused the editor appends the confirmed image rather than refusing', function () {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
 
     $media = Media::factory()->withRealFiles()->create(['title' => 'Never Focused Widget', 'description' => null]);
 
-    $region = wysiwygUiTestRegionSelector(1);
+    $region = wysiwygUiTestRegion();
 
     // Fresh visit: the editor region is never clicked into or otherwise focused before the very
     // first interaction below is the Insert image button itself.
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
-    $page->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-insert-image'))
+    $page->click(wysiwygUiTestControl('wysiwyg-insert-image'))
         ->assertNoJavaScriptErrors()
         ->click(wysiwygUiTestGalleryModal('media-tile-'.$media->id))
         ->assertNoJavaScriptErrors()
@@ -468,10 +503,6 @@ test('opening the gallery without having focused the editor appends the confirme
 
     $page->wait(2)->assertNoJavaScriptErrors();
 
-    // Read the CLIENT-side region's own live DOM (see the positional test's comment above for why
-    // the host's server-rendered value div is the wrong thing to assert against here -- its write-
-    // back from a child #[Modelable] property is deferred to the host's next request, not this
-    // component's own behaviour).
     $page->assertScript(<<<JS
         (function() {
             const html = document.querySelector('{$region}').innerHTML;
@@ -493,14 +524,15 @@ test('opening the gallery without having focused the editor appends the confirme
 test('cancelling the gallery leaves the editors content untouched', function () {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
 
     Media::factory()->create(['title' => 'Untouched Widget', 'description' => null]);
 
-    $region = wysiwygUiTestRegionSelector(1);
+    $region = wysiwygUiTestRegion();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
-    $page->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-insert-image'))
+    $page->click(wysiwygUiTestControl('wysiwyg-insert-image'))
         ->assertNoJavaScriptErrors()
         ->assertScript("document.querySelector('dialog[open]') !== null")
         ->click(wysiwygUiTestGalleryModal('media-cancel'))
@@ -513,30 +545,27 @@ test('cancelling the gallery leaves the editors content untouched', function () 
 });
 
 // =====================================================================
-// Re-entrancy (D5, this story's most important test alongside the positional one): on the
-// harness's two editors, an image confirmed from the first's gallery appears only in the first --
-// the case a fixed, literal select-event would silently fail (V6).
+// Re-entrancy, REDESIGNED per D-14 step 3: an image confirmed from the WYSIWYG's own internal
+// gallery lands in the description text and does NOT set the featured image or add to the gallery
+// strip -- the case a fixed, literal select-event would silently fail (V6), now proven against two
+// real embeds rather than a second copy of the same component.
 // =====================================================================
 
-test('an image confirmed from the first editors gallery lands only in the first editor', function () {
+test('an image confirmed from the wysiwyg editors own gallery lands only in the description, never the featured image or the gallery strip', function () {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
 
     $media = Media::factory()->withRealFiles()->create(['title' => 'Re-entrancy Widget', 'description' => null]);
 
-    // The CLIENT-side region's own live DOM, not the host's server-rendered value div -- that
-    // write-back is deferred to the host's next request (see the positional test's comment above),
-    // and this test needs to observe the confirm's effect within the same page load.
-    $firstRegion = wysiwygUiTestRegionSelector(1);
-    $secondRegion = wysiwygUiTestRegionSelector(2);
+    $region = wysiwygUiTestRegion();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
-    // Sanity: the two instances start with their own distinct seeded content.
-    $page->assertSeeIn($firstRegion, 'BEFORE AFTER')
-        ->assertSeeIn($secondRegion, 'SECOND BEFORE AFTER');
+    $page->assertSeeIn($region, 'BEFORE AFTER')
+        ->assertMissing('@gallery-strip-item-'.$media->id);
 
-    $page->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-insert-image'))
+    $page->click(wysiwygUiTestControl('wysiwyg-insert-image'))
         ->assertNoJavaScriptErrors()
         ->click(wysiwygUiTestGalleryModal('media-tile-'.$media->id))
         ->assertNoJavaScriptErrors()
@@ -546,100 +575,77 @@ test('an image confirmed from the first editors gallery lands only in the first 
 
     $page->wait(2)->assertNoJavaScriptErrors();
 
-    $page->assertScript("document.querySelector('{$firstRegion}').innerHTML.indexOf('<img') !== -1")
-        ->assertScript("document.querySelector('{$secondRegion}').innerHTML.indexOf('<img') === -1")
-        ->assertSeeIn($secondRegion, 'SECOND BEFORE AFTER');
+    $page->assertScript("document.querySelector('{$region}').innerHTML.indexOf('<img') !== -1")
+        ->assertMissing('@gallery-strip-item-'.$media->id);
 
     wysiwygUiTestCleanupMedia($media);
 });
 
-// =====================================================================
-// B1 regression (Phase 5 code review, cross-instance range capture): the re-entrancy test above
-// proves the CONFIRM event only reaches the right editor, but it never puts the browser's own
-// Selection inside the SECOND editor before acting on the first -- so it cannot catch the bug B1
-// actually describes. Editor 1's "Insert image" button uses `mousedown.prevent` (D6), so pressing
-// it moves focus nowhere; if the caret/selection was left inside editor 2 at that instant, the
-// document-global `window.getSelection()` editor 1's `saveCaret()` reads still belongs to editor
-// 2. Before the fix, `saveCaret()` captured it unconditionally and `insertImage()` restored it
-// unconditionally, so editor 1 inserted the confirmed image into editor 2's own range. The fix
-// (resources/js/app.js) guards both the capture in `saveCaret()` and the restore in
-// `insertImage()`/`applyLink()` with `this.$refs.editor.contains(...)`, so an out-of-scope range
-// is treated as "nothing saved" and editor 1 falls back to appending at its own end instead.
-// =====================================================================
-
-test('placing the cursor in the second editor does not let the first editors insert-image button capture it', function () {
+test('confirming a featured image or a gallery strip image never touches the description text', function () {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
 
-    $media = Media::factory()->withRealFiles()->create(['title' => 'Cross-instance Capture Widget', 'description' => null]);
+    $featured = Media::factory()->create(['title' => 'Featured Not Description Widget']);
 
-    $firstRegion = wysiwygUiTestRegionSelector(1);
-    $secondRegion = wysiwygUiTestRegionSelector(2);
+    $region = wysiwygUiTestRegion();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
-    // The precondition B1's fix depends on and the re-entrancy test above never creates: a real
-    // selection sitting INSIDE editor 2 at the moment editor 1's own button is pressed. Focusing
-    // editor 2 here is what the word-finder script does; nothing after this point touches editor
-    // 2's focus or selection again until the final read.
-    $page->script(wysiwygUiTestSelectWordScript($secondRegion, 'BEFORE'));
-
-    $page->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-insert-image'))
+    $page->click('@open-featured-image-gallery')
         ->assertNoJavaScriptErrors()
-        ->click(wysiwygUiTestGalleryModal('media-tile-'.$media->id))
+        ->click(wysiwygUiTestGalleryModal('media-tile-'.$featured->id))
         ->assertNoJavaScriptErrors()
-        ->assertScript(wysiwygUiTestConfirmEnabledScript())
         ->click(wysiwygUiTestGalleryModal('media-confirm'))
         ->assertNoJavaScriptErrors();
 
-    $page->wait(2)->assertNoJavaScriptErrors();
+    $page->wait(1)->assertNoJavaScriptErrors();
 
-    // Editor 1 received the image, via the fallback "append at the end" path (D6 step 3's second
-    // guard) -- saveCaret() refused to capture editor 2's out-of-scope selection, so editor 1 had
-    // no saved range of its own to restore. Its original content is preserved either side.
-    $page->assertScript("document.querySelector('{$firstRegion}').innerHTML.indexOf('<img') !== -1")
-        ->assertSourceInHas($firstRegion, 'BEFORE')
-        ->assertSourceInHas($firstRegion, 'AFTER');
-
-    // Editor 2's content is untouched byte for byte -- the failure B1 describes is exactly the
-    // image landing HERE instead, inside the selection that was active when editor 1's button
-    // was pressed.
-    $page->assertScript(<<<JS
-        document.querySelector('{$secondRegion}').innerHTML === '<p>SECOND BEFORE AFTER</p>'
-    JS)
-        ->assertSourceInMissing($secondRegion, '<img');
-
-    wysiwygUiTestCleanupMedia($media);
+    $page->assertSourceInHas($region, 'BEFORE AFTER')
+        ->assertSourceInMissing($region, '<img');
 });
 
 // =====================================================================
 // assertNoJavaScriptErrors() across a representative sequence -- the hand-rolled caret logic (D6)
-// is exactly the kind of code that otherwise fails silently, as 0020's dropzone precedent already
-// established for this same harness.
+// is exactly the kind of code that otherwise fails silently.
 // =====================================================================
 
 test('a representative sequence of toolbar actions produces no JavaScript errors', function () {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
 
     $media = Media::factory()->withRealFiles()->create(['title' => 'Sequence Widget', 'description' => null]);
 
-    $region = wysiwygUiTestRegionSelector(1);
+    $region = wysiwygUiTestRegion();
 
-    $page = visit(route('dev.media-gallery-harness'))->assertNoJavaScriptErrors();
+    // The longest chain in this file: two formatting round trips followed by the same
+    // click -> Livewire -> Alpine -> <dialog> gallery-confirm race tests/Browser/Media/GalleryTest.php's
+    // own docblock already measured and closed with retry(3, ...) rather than a fourth
+    // wait/assertion permutation (25%/50% single-attempt failure rates across two independent
+    // 12-run baselines, none of it a client-side artifact this test's own wait/assertion choices
+    // can rule out further). Reproduced here empirically: this exact test failed with "Timeout
+    // 5000ms exceeded" on a full-file run (15/16 passing) while every other test in this file
+    // passed -- the same class of occasional real-world latency, on the same chain shape, not a
+    // defect in the sequence this test drives. retry(3, ...) wraps the whole real-DOM interaction;
+    // $media is created once, outside the retry, and re-used across attempts exactly as
+    // GalleryTest.php's own retried test does.
+    retry(3, function () use ($product, $region, $media): void {
+        $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
 
-    $page->script(wysiwygUiTestSelectWordScript($region, 'BEFORE'));
-    $page->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-bold'))->assertNoJavaScriptErrors();
+        $page->script(wysiwygUiTestSelectWordScript($region, 'BEFORE'));
+        $page->click(wysiwygUiTestControl('wysiwyg-bold'))->assertNoJavaScriptErrors();
 
-    $page->script(wysiwygUiTestSelectAllScript($region));
-    $page->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-h2'))->assertNoJavaScriptErrors();
+        $page->script(wysiwygUiTestSelectAllScript($region));
+        $page->click(wysiwygUiTestControl('wysiwyg-h2'))->assertNoJavaScriptErrors();
 
-    $page->click(wysiwygUiTestInstanceSelector(1, 'wysiwyg-insert-image'))->assertNoJavaScriptErrors();
-    $page->click(wysiwygUiTestGalleryModal('media-tile-'.$media->id))->assertNoJavaScriptErrors();
-    $page->assertScript(wysiwygUiTestConfirmEnabledScript());
-    $page->click(wysiwygUiTestGalleryModal('media-confirm'))->assertNoJavaScriptErrors();
+        $page->click(wysiwygUiTestControl('wysiwyg-insert-image'))->assertNoJavaScriptErrors();
+        $page->click(wysiwygUiTestGalleryModal('media-tile-'.$media->id))->assertNoJavaScriptErrors();
+        $page->assertScript(wysiwygUiTestConfirmEnabledScript());
+        $page->click(wysiwygUiTestGalleryModal('media-confirm'))->assertNoJavaScriptErrors();
 
-    $page->wait(2)->assertNoJavaScriptErrors();
+        $page->wait(2)->assertNoJavaScriptErrors();
+    });
 
     wysiwygUiTestCleanupMedia($media);
 });

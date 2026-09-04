@@ -90,7 +90,7 @@ resources/
     partials/
 routes/                  web.php plus one file per area it requires (settings.php, roles.php,
                          users.php, sales-regions.php, product-categories.php,
-                         product-attribute-types.php)
+                         product-attribute-types.php, products.php)
 tests/
   Feature/
   Unit/
@@ -167,7 +167,7 @@ The environment is defined in `compose.yaml`. Bringing it up starts the followin
 ./vendor/bin/sail artisan migrate --seed
 ```
 
-**Seeding is required, not optional.** `RolePermissionSeeder` is the only source of the application's roles and permission catalog (two roles, 38 permissions), so the app cannot authorize anything until it has run — this holds on every environment, deployments included. Locally, `--seed` also creates a `test@example.com` / `password` fixture account; that fixture is created **only** in `local` and `testing`, never in staging or production.
+**Seeding is required, not optional.** `RolePermissionSeeder` is the only source of the application's roles and permission catalog (two roles, 42 permissions), so the app cannot authorize anything until it has run — this holds on every environment, deployments included. Locally, `--seed` also creates a `test@example.com` / `password` fixture account; that fixture is created **only** in `local` and `testing`, never in staging or production.
 
 Optionally, set `SUPER_ADMIN_EMAIL` in `.env` before seeding to bootstrap a Super Admin account. If it matches a registered, email-verified user, that user is granted the role; if it matches no account at all, the seeder creates one and emails a password-reset link so you can claim it. See [`docs/architecture/authorization.md`](docs/architecture/authorization.md#super-admin-bootstrap) for all five branches, including the two that abort with an operator-facing error.
 

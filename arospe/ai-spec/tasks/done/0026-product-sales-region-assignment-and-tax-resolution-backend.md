@@ -1194,7 +1194,7 @@ property of 0022's contract and worked around it entirely through D7's `resolveS
 That asymmetry is still required (see D7's resolution note) but is no longer load-bearing on its own.
 
 **D12 — Validation gates *newly added* ids, not *preserved* ones. — 2026-08-19 (bug found by story
-[0027](../0027-products-list-and-editor-ui.md) while building the picker, raised there as its OQ-5;
+[0027](0027-products-list-and-editor-ui.md) while building the picker, raised there as its OQ-5;
 supersedes the unconditional form of `salesRegionIdRules()` this story shipped at D3.)**
 
 *The bug.* `salesRegionIdRules()` applied `is_active = true` + no-children to **every** submitted
@@ -1250,7 +1250,7 @@ slug — is unchanged and still governs the newly-added branch.
 
 **D13 — Atomicity across the core-field write and the region sync is 0027's, and it is a hand-off, not
 an assumption. — 2026-08-19 (gap found by story
-[0027](../0027-products-list-and-editor-ui.md).)** Nothing in this story previously said the product's
+[0027](0027-products-list-and-editor-ui.md).)** Nothing in this story previously said the product's
 own update and its region sync must commit or fail together. Without a boundary, a `sync()` that throws
 after `UpdateProduct` has already committed leaves a renamed product wearing its **old** tax reach — a
 silently wrong tax outcome with a successful-looking save behind it.
@@ -1559,7 +1559,7 @@ most separable piece. **Open questions**: OQ-1 is now **resolved** (D10); OQ-2�
 be answered before Phase 3 the same way 0017's seven questions were resolved before its own.
 
 **Amended 2026-08-19** with three findings raised by story
-[0027](../0027-products-list-and-editor-ui.md) while building the product editor that consumes this
+[0027](0027-products-list-and-editor-ui.md) while building the product editor that consumes this
 story — **D12** (validation must exempt already-assigned ids, or a product holding a since-deactivated
 region becomes unsaveable; raised there as OQ-5), **D13** (no transaction spanned the core-field write
 and the region sync — assigned to 0027 as an explicit orchestration hand-off) and **D14** (an ownership

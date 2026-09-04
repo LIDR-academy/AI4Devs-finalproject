@@ -76,7 +76,7 @@
 >   amendment.** [0079](0079-blog-post-editor-language-tabs-ui.md) scripts it
 >   (*"The list shows each post's title in the store's default language"*), states it in its Expected
 >   outcome and pins it in its disposition table. **The store default**, consistent with
->   [0027's OQ-10](0027-products-list-and-editor-ui.md#open-questions), resolved the same way on
+>   [0027's OQ-10](done/0027-products-list-and-editor-ui.md#open-questions), resolved the same way on
 >   2026-08-30 for the Products list.
 > - **Which language the editor opens on — ✅ already answered by 0079.** The store default's tab
 >   (its Gherkin *"The default store language's tab is the one shown first"*, and its acceptance
@@ -940,7 +940,7 @@ Nothing about the data model changes: this story adds no table, column, migratio
 >
 > - [ ] **[OQ-10](#open-questions) ratified before Phase 3 starts** — which store language this
 >       screen's **taxonomy labels** resolve in. Adopted here as the store default by analogy with
->       [0027's own resolved OQ-10](0027-products-list-and-editor-ui.md#open-questions) and with
+>       [0027's own resolved OQ-10](done/0027-products-list-and-editor-ui.md#open-questions) and with
 >       0079's list decision, and recorded as an adoption rather than an independent ruling. It gates
 >       [D-4](#d-4--the-list-query-explicit-columns-two-eager-loads-real-pagination)'s corrected
 >       query, both filter dropdowns, the editor's category select, the tag chips **and**
@@ -1124,7 +1124,7 @@ for the create case, and one route name for two entry points).
 > ✅ **The ordering needs no change at all, and this file earns that.** It orders by
 > `created_at DESC, id ASC` and deliberately **not** `orderBy('title')` — see the paragraph below,
 > written before Epic 5 existed and correct for a different reason (0061 **D-10**: posts carry no
-> title uniqueness). So unlike [0027](0027-products-list-and-editor-ui.md), which needed a whole new
+> title uniqueness). So unlike [0027](done/0027-products-list-and-editor-ui.md), which needed a whole new
 > `scopeOrderByTranslatedName()` and a resolved OQ-10 before its ordering test could be written, and
 > unlike 0062/0025, whose `orderBy('name')` breaks outright — **this story's ordering survives the
 > retrofit untouched**, and 0078 ships no ordering scope for posts because none is needed. Do not
@@ -1276,7 +1276,7 @@ following the newer `SalesRegions\Index::$regions` precedent and 0060's **D-6**.
 > [OQ-10](#open-questions)** — the same answer as the list, since a confirmation naming a post
 > differently from the row the editor just clicked is worse than either choice alone.
 >
-> This is the exact shape [0027's `$deletingProductName`](0027-products-list-and-editor-ui.md) carries
+> This is the exact shape [0027's `$deletingProductName`](done/0027-products-list-and-editor-ui.md) carries
 > (0076's **R-1(b)**, named there as that story's hand-off). **Here it is named by nothing** — neither
 > 0078's **R-1(a)**, which lists three break sites, nor 0079's **R-1**, which adds a fourth. It is
 > found by reading this file rather than by following the upstream hand-offs, and it is recorded as
@@ -2042,7 +2042,7 @@ requiring PHP execution was verified and every such claim is flagged at its site
 >   `withTranslationsScoped()` helper is the plausible mistake — both screens live under Blog.
 > - **R-13 — `$deletingBlogPostTitle` is fed from a dropped column and *no upstream story names it*.**
 >   Recorded in the [D-6 correction](#d-6--every-wiremodel-bound-propertys-type-and-empty-value). It is
->   the same shape [0027's `$deletingProductName`](0027-products-list-and-editor-ui.md) carries, where
+>   the same shape [0027's `$deletingProductName`](done/0027-products-list-and-editor-ui.md) carries, where
 >   0076's **R-1(b)** *does* name it — here neither 0078's three-site R-1(a) nor 0079's four-site R-1
 >   does. Found by reading this file rather than by following a hand-off, which is precisely the
 >   failure mode a hand-off-driven amendment produces.
@@ -2136,7 +2136,7 @@ guessed. **None blocks Phase 2 review.**
   **(a) The store default _(recommended, adopted)_.** Three reasons, none of them novel. It is the one
   language guaranteed to resolve for every row (0070 **Q1(a)**: every entity always holds a
   default-language translation), so a cell or an option can never render blank for a *reachable
-  ordinary* reason. It is the answer [0027's OQ-10](0027-products-list-and-editor-ui.md#open-questions)
+  ordinary* reason. It is the answer [0027's OQ-10](done/0027-products-list-and-editor-ui.md#open-questions)
   received from the human on 2026-08-30 for the structurally identical question on the Products list —
   **and that resolution explicitly covered its `$deletingProductName` too**, on the reasoning that *a
   confirmation naming a record differently from the row above it is worse than either choice alone*,

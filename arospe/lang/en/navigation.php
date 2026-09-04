@@ -25,6 +25,7 @@ return [
         'roles' => 'Roles & permissions',
         'sales_regions' => 'Sales Regions',
         'product_categories' => 'Product categories',
+        'products' => 'Products',
     ],
 
 ];

@@ -57,8 +57,12 @@ class WysiwygEditor extends Component
      * through the same channel a forged client payload would use --
      * locking it would throw CannotUpdateLockedPropertyException on the
      * gallery's own legitimate close path. The shipped precedent this
-     * mirrors is App\Livewire\Dev\MediaGalleryHarness::$showSingle, which
-     * is public bool with no #[Locked] for the identical reason.
+     * mirrors is App\Livewire\Products\Editor::$showFeaturedGallery /
+     * $showStripGallery (story 0027), each public bool with no #[Locked]
+     * for the identical reason -- the story 0020/0021 temporary browser-test
+     * harness that originally established this pattern
+     * (App\Livewire\Dev\MediaGalleryHarness::$showSingle) was retired once
+     * 0027 supplied a real routed host page for both embedded galleries.
      */
     public bool $showGallery = false;
 
