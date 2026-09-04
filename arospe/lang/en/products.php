@@ -53,6 +53,15 @@ return [
         'delete_confirm_text' => 'Are you sure you want to delete ":name"? This cannot be undone.',
     ],
 
+    // Story 0029 -- variant combination/SKU refusal messages (D-15's six-key contract).
+    'variants' => [
+        'duplicate_combination' => 'This combination of attribute values already exists on this product.',
+        'derived_sku_taken' => 'The derived SKU :sku is already in use by another product or variant.',
+        'derived_sku_empty_segment' => 'The attribute value ":value" cannot be used to derive a SKU -- please rename it.',
+        'derived_sku_too_long' => 'The derived SKU would be longer than :max characters. Rename an attribute value or the product SKU to shorten it.',
+        'parent_sku_change_collides' => 'Changing the product SKU would create a duplicate SKU for one of its variants. No changes were saved.',
+    ],
+
     // Story 0027 -- the routed product editor.
     'editor' => [
         'title_create' => 'New product',
