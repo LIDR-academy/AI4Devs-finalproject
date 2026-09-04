@@ -51,7 +51,7 @@ export interface MovementHistoryFilters {
   endDate?: string;
 }
 
-interface StockByLocationEntry {
+export interface StockByLocationEntry {
   storageLocationId: string;
   storageLocationName: string;
   quantity: string;

@@ -2,9 +2,30 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import { WarehouseExtractionModal } from '../features/stock/components/WarehouseExtractionModal.js';
 
+// US-025: el saldo por sub-sector es obligatorio en la respuesta real de /stock/insumos
+// (ListInsumosUseCase) — sin él, el chequeo de stock por sector de origen (bugfix del
+// modal, ver "Sector de Bodega Origen") bloquearía toda extracción en estos tests.
 const INSUMOS_FIXTURE = [
-  { id: 'ins-1', name: 'Queso Mozzarella', unitOfMeasure: 'KG', warehouseStock: '10.000' },
-  { id: 'ins-2', name: 'Aceite de Oliva', unitOfMeasure: 'L', warehouseStock: '5.000' },
+  {
+    id: 'ins-1',
+    name: 'Queso Mozzarella',
+    unitOfMeasure: 'KG',
+    warehouseStock: '10.000',
+    stockByLocation: [
+      { storageLocationId: 'loc-seed-meat-fridge', storageLocationName: 'Heladera de Carnes', quantity: '10.000' },
+      { storageLocationId: 'loc-seed-dry', storageLocationName: 'Bodega de Secos', quantity: '10.000' },
+    ],
+  },
+  {
+    id: 'ins-2',
+    name: 'Aceite de Oliva',
+    unitOfMeasure: 'L',
+    warehouseStock: '5.000',
+    stockByLocation: [
+      { storageLocationId: 'loc-seed-meat-fridge', storageLocationName: 'Heladera de Carnes', quantity: '5.000' },
+      { storageLocationId: 'loc-seed-dry', storageLocationName: 'Bodega de Secos', quantity: '5.000' },
+    ],
+  },
 ];
 
 function stubFetchForExtractionModal(activeRemanentesByInsumoId: Record<string, unknown[]>) {
@@ -402,6 +423,58 @@ describe('TK-100-FE (AUDIT-DEV-006): errores reales del backend y aritmética de
     fireEvent.click(incBtn);
     fireEvent.click(incBtn);
     expect(qtyInput.value).toBe('2.5');
+  });
+
+  it('bugfix: el insumo tiene stock total pero NO en el sector de origen elegido — bloquea con mensaje claro, sin llamar a la red', async () => {
+    // Reproduce el caso reportado: "leche" con 10 L en Cámara de Congelados (no listada
+    // como origen aquí) y 0 L en Bodega de Secos (el sector auto-seleccionado). El
+    // dropdown de insumo mostraba "Stock Bodega: 10 L" sin indicar que ese sector no
+    // tenía nada, y el operario solo se enteraba tras un 422 confuso al confirmar.
+    let extractionCalled = false;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url.includes('/kitchen/remanentes-activos')) return { ok: true, status: 200, json: async () => [] };
+        if (url.includes('/recipes')) return { ok: true, status: 200, json: async () => [] };
+        if (url.includes('/locations')) {
+          return { ok: true, status: 200, json: async () => [{ id: 'loc-seed-dry', name: 'Bodega de Secos', type: 'WAREHOUSE', isActive: true }, { id: 'loc-seed-kitchen-prep', name: 'Mesa de Preparación', type: 'KITCHEN', isActive: true }] };
+        }
+        if (url.includes('/stock/insumos')) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => [
+              {
+                id: 'ins-leche',
+                name: 'leche',
+                unitOfMeasure: 'L',
+                warehouseStock: '10.000',
+                stockByLocation: [{ storageLocationId: 'loc-seed-freezer', storageLocationName: 'Cámara de Congelados', quantity: '10.000' }],
+              },
+            ],
+          };
+        }
+        if (url.includes('/stock/extraction')) {
+          extractionCalled = true;
+          return { ok: true, status: 201, json: async () => ({}) };
+        }
+        return { ok: true, status: 200, json: async () => ({}) };
+      })
+    );
+    const onSuccess = vi.fn();
+    render(<WarehouseExtractionModal isOpen={true} onClose={() => {}} onSuccess={onSuccess} />);
+
+    await waitFor(() => {
+      expect((screen.getByLabelText(/Sector de Bodega Origen/i) as HTMLSelectElement).value).toBe('loc-seed-dry');
+    });
+    // el aviso bajo el selector de sector ya deja ver que ahí no hay nada, antes de intentar
+    expect(await screen.findByText(/Disponible en este sector: 0\.000 L/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar Extracción/i }));
+
+    expect(await screen.findByText(/Stock insuficiente en este sector/i)).toBeInTheDocument();
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(extractionCalled).toBe(false);
   });
 
   it('F-6: escribir 0 en la cantidad no se auto-corrige a 0.5 y el submit lo rechaza', async () => {

@@ -243,4 +243,14 @@ inputs:
 - **Estado:**
   - Frontend 157 tests / build / lint limpios (0 warnings nuevos). Gates de diff (`check_ticket_code_quality`, `check_dead_code`, `check_ticket_duplication`, `check_inline_styles`, `check_native_alerts`) verdes.
   - **Épica ADR-003 cerrada** — `TK-102` a `TK-105-FE`, `US-026`/`US-027`/`US-028`/`US-029` todas ✅. Sin push — sigue programado para el 10-sep.
+
+### 2026-09-04 (cont.) - Bugfix: extracción de bodega no avisaba que el sector de origen no tenía el insumo (US-025)
+- **Hito:** el humano reportó en vivo un `422` confuso al extraer "leche" — el desplegable de insumo mostraba "Stock Bodega: 10 L" pero el sector de origen auto-seleccionado ("Bodega de Secos") tenía 0 L (los 10 L reales estaban en "Cámara de Congelados"). Verificado contra Postgres real: `WarehouseStock` confirma exactamente ese reparto.
+- **Diagnóstico:** no es un bug de datos ni del backend — la deducción atómica por `(insumo, sub-sector)` de `TK-098` es correcta (US-025, multi-sector). El bug es de UX en `WarehouseExtractionModal`: el selector de insumo mostraba el **total agregado** de bodega (`warehouseStock`) sin relación con el sub-sector de origen elegido, y `ListInsumosUseCase` ya devolvía el desglose por sector (`stockByLocation`) — el frontend simplemente lo descartaba al mapear la respuesta.
+- **Acciones Realizadas:**
+  - ✅ `StockByLocationEntry` exportado desde `stock.service.ts`; `WarehouseExtractionModal` conserva `stockByLocation` por insumo.
+  - ✅ El selector "Sector de Bodega Origen" ahora muestra un `hint` en vivo: "Disponible en este sector: X (total en bodega: Y)", recalculado al cambiar de insumo o de sector.
+  - ✅ Validación de cliente nueva en `extractionValidationError`: si el sector de origen elegido no alcanza para la cantidad solicitada, bloquea el submit con un mensaje claro **antes** de tocar la red (en vez de dejar que el operario descubra el 0 solo tras un 422).
+  - ✅ Test que reproduce el caso exacto reportado (insumo con stock total > 0 pero 0 en el sector auto-seleccionado) + fixtures de los tests existentes actualizadas con `stockByLocation` realista (antes vacío, lo que habría bloqueado silenciosamente cualquier extracción de prueba con la validación nueva).
+- **Estado:** Frontend 158 tests / build / lint limpios (0 warnings nuevos). Gates de diff verdes. Documentado como `TK-106-FE` (remediación técnica, C-DEV-006-4 — no cambia ninguna regla de negocio, solo corrige la UX para reflejar el modelo multi-sector ya vigente).
   - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).

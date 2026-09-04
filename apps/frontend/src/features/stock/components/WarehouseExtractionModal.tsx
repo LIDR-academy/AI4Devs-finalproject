@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Minus, PackageCheck, AlertTriangle } from 'lucide-react';
-import { StockService } from '../services/stock.service.js';
+import { StockService, StockByLocationEntry } from '../services/stock.service.js';
 import { KitchenService, RecipeItem, RemanenteFEFOItem } from '../../kitchen/services/kitchen.service.js';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
@@ -30,6 +30,16 @@ interface Insumo {
   name: string;
   stock: number;
   unit: string;
+  /** US-025: saldo por sub-sector — el total (`stock`) puede estar en un sector distinto
+      al elegido como origen; sin esto el operario no sabe por qué "hay stock" pero la
+      extracción falla con 422 (bug real reportado: leche 10L en Cámara de Congelados,
+      Bodega de Secos con 0). */
+  stockByLocation: StockByLocationEntry[];
+}
+
+function stockAtSector(insumo: Insumo | undefined, storageLocationId: string): DecimalQuantity {
+  const entry = insumo?.stockByLocation.find((l) => l.storageLocationId === storageLocationId);
+  return new DecimalQuantity(entry?.quantity ?? '0');
 }
 
 interface ExtractionSelectFieldsProps {
@@ -404,6 +414,13 @@ interface ExtractionFormProps {
   duplicateActiveRemanentes: RemanenteFEFOItem[];
 }
 
+function originSectorHint(p: ExtractionFormProps): string | undefined {
+  if (!p.selectedInsumoId || !p.fromStorageLocationId) return undefined;
+  const insumo = p.insumos.find((i) => i.id === p.selectedInsumoId);
+  const available = stockAtSector(insumo, p.fromStorageLocationId);
+  return `Disponible en este sector: ${available.toFixed(3)} ${insumo?.unit ?? ''} (total en bodega: ${insumo?.stock ?? 0} ${insumo?.unit ?? ''})`;
+}
+
 const ExtractionForm: React.FC<ExtractionFormProps> = (p) => (
   <form onSubmit={p.onSubmit} className="flex-column flex-gap-md">
     <StorageSectorSelect
@@ -411,6 +428,7 @@ const ExtractionForm: React.FC<ExtractionFormProps> = (p) => (
       label="Sector de Bodega Origen *"
       value={p.fromStorageLocationId}
       onChange={p.onFromStorageLocationIdChange}
+      hint={originSectorHint(p)}
     />
     <ExtractionSelectFields {...p} />
     <DuplicateRemanenteWarning activeRemanentes={p.duplicateActiveRemanentes} />
@@ -526,12 +544,25 @@ const stepQuantityUp = (prev: number): number => new DecimalQuantity(prev).add(Q
 const stepQuantityDown = (prev: number): number =>
   new DecimalQuantity(prev).subtractClamped(QTY_STEP).clampMin(QTY_MIN).toNumber();
 
-function extractionValidationError(s: ReturnType<typeof useExtractionFields>): string | null {
+// US-025: el total de bodega puede estar todo en OTRO sub-sector — valida contra el saldo
+// del sector de origen elegido, no contra el agregado (evita el 422 confuso; bug real
+// reportado: insumo con stock total > 0 pero 0 en el sector auto-seleccionado).
+function insufficientSectorStockError(insumo: Insumo | undefined, fromStorageLocationId: string, quantity: number): string | null {
+  const available = stockAtSector(insumo, fromStorageLocationId);
+  const requested = new DecimalQuantity(quantity || 0);
+  if (!requested.isGreaterThan(available.toFixed(6))) return null;
+  const unit = insumo?.unit ?? '';
+  return `Stock insuficiente en este sector para "${insumo?.name ?? 'el insumo'}". Solicitado: ${requested.toFixed(3)} ${unit}, disponible en este sector: ${available.toFixed(3)} ${unit}.`;
+}
+
+function extractionValidationError(s: ReturnType<typeof useExtractionFields>, activeInsumoId: string, insumos: Insumo[]): string | null {
   if (s.purpose === 'DIRECT_DISCARD' && !s.reason.trim()) return 'Debe especificar el motivo descriptivo del descarte directo.';
   if (s.purpose === 'RECIPE' && !s.selectedRecipeId) return 'Debe seleccionar la receta que va a preparar.';
   if (!s.fromStorageLocationId) return 'Debe seleccionar el sub-sector de bodega de origen.';
   if (!new DecimalQuantity(s.quantity || 0).isPositive()) return 'La cantidad a extraer debe ser mayor que cero.';
-  return null;
+
+  const insumo = insumos.find((i) => i.id === activeInsumoId);
+  return insufficientSectorStockError(insumo, s.fromStorageLocationId, s.quantity);
 }
 
 function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: () => void) {
@@ -541,7 +572,7 @@ function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: ()
 
   const handleIncrement = () => s.setQuantity(stepQuantityUp);
   const handleDecrement = () => s.setQuantity(stepQuantityDown);
-  const validationError = (): string | null => extractionValidationError(s);
+  const validationError = (): string | null => extractionValidationError(s, activeInsumoId, insumos);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -618,7 +649,15 @@ function useAvailableInsumos(isOpen: boolean): AvailableInsumosState {
     StockService.getInsumos()
       .then((items) => {
         if (cancelled) return;
-        setInsumos(items.map((i) => ({ id: i.id, name: i.name, stock: Number(i.warehouseStock), unit: i.unitOfMeasure })));
+        setInsumos(
+          items.map((i) => ({
+            id: i.id,
+            name: i.name,
+            stock: Number(i.warehouseStock),
+            unit: i.unitOfMeasure,
+            stockByLocation: i.stockByLocation ?? [],
+          }))
+        );
       })
       .catch((err) => {
         if (cancelled) return;

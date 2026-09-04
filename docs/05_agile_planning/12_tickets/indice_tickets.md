@@ -90,6 +90,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-104-FE** | `kitchen` | **Alto** | **Media** | 8 SP | Depende de `TK-104`, `TK-103-FE`. `US-028`: pantalla "Cerrar preparación" (sobrante + dónde + merma + motivo, cuadre visible, "envase sin abrir"). ✅ Done. | 🟢 P2 - Media |
 | **TK-105** | `reports` | **Medio** | **Baja** | 5 SP | Depende de `TK-104`, `TK-078`. `US-029`: reporte de mermas de preparación + consumo real vs teórico; `ConsumeRecipeUseCase` legacy pasa a emitir `CONSUMPTION_RECIPE`. ✅ Done. | 🟢 P2 - Media |
 | **TK-105-FE** | `reports` | **Bajo** | **Baja** | 3 SP | Depende de `TK-105`, `TK-078-FE`. `US-029`: panel de reporte de mermas de preparación + ajuste de umbral. ✅ Done. | 🟢 P2 - Media |
+| **TK-106-FE** | `stock` | **Alto** | **Muy Alta** | 2 SP | Depende de `TK-096-FE`. `US-025` — bug reportado en vivo: la extracción no avisaba que el sub-sector de origen no tenía el insumo (mostraba el total agregado). Aviso en vivo + validación de cliente. ✅ Done. | 🔴 P0 - Bug en vivo |
 
 ---
 
@@ -169,6 +170,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-103-FE** | [US-027](../11_user_stories/kitchen/US-027.md) | Extracción para Receta con Preparación + Tablero "Preparaciones en Curso" | `kitchen` | 5 | Should Have | [kitchen/frontend/TK-103-FE.md](kitchen/frontend/TK-103-FE.md) |
 | **TK-104-FE** | [US-028](../11_user_stories/kitchen/US-028.md) | Pantalla "Cerrar Preparación de Receta" | `kitchen` | 8 | Should Have | [kitchen/frontend/TK-104-FE.md](kitchen/frontend/TK-104-FE.md) |
 | **TK-105-FE** | [US-029](../11_user_stories/reports/US-029.md) | Panel de Reporte de Mermas de Preparación | `reports` | 3 | Should Have | [reports/frontend/TK-105-FE.md](reports/frontend/TK-105-FE.md) |
+| **TK-106-FE** | [US-025](../11_user_stories/stock/US-025.md) | Aviso de Stock por Sub-Sector en la Extracción de Bodega | `stock` | 2 | Must Have | [stock/frontend/TK-106-FE.md](stock/frontend/TK-106-FE.md) |
 | **TK-075-FE** | [US-017](../11_user_stories/settings/US-017.md) | Frontend System Settings & Branding UI | `settings` | 3 | Should Have | [settings/frontend/TK-075-FE.md](settings/frontend/TK-075-FE.md) |
 | **TK-077-FE** | [US-018](../11_user_stories/auth/US-018.md) | Modal Táctil y Pantalla de Recuperación de PIN de Administrador | `auth` | 3 | Should Have | [auth/frontend/TK-077-FE.md](auth/frontend/TK-077-FE.md) |
 | **TK-078-FE** | [US-019](../11_user_stories/reports/US-019.md) | Costo de Insumo y Valorización Monetaria en Dashboard | `reports` | 2 | Should Have | [reports/frontend/TK-078-FE.md](reports/frontend/TK-078-FE.md) |
@@ -212,6 +214,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-074-FE: Storage Locations UI](stock/frontend/TK-074-FE.md)** (Frontend) — destino de cocina dinámico en extracción + bloqueo de sector con existencias.
 *   **[TK-096: Stock Multi-Sector de Bodega](stock/backend/TK-096.md)** (Backend) — `WarehouseStock` 1:N real con FK a `StorageLocation`, sector obligatorio en alta/reabastecimiento, origen elegido en extracción con validación de saldo por sector, migración de `MAIN_WAREHOUSE`.
 *   **[TK-096-FE: Selector de Sub-Sector y Desglose de Stock](stock/frontend/TK-096-FE.md)** (Frontend) — selectores de sub-sector en alta/reabastecimiento/extracción + desglose por sector en el catálogo.
+*   **[TK-106-FE: Aviso de Stock por Sub-Sector en la Extracción de Bodega](stock/frontend/TK-106-FE.md)** (Frontend) — ✅ Done. Bug en vivo (`US-025`): la extracción mostraba el stock total agregado en vez del saldo del sub-sector de origen elegido, causando un `422` confuso cuando el insumo estaba en otro sector. Aviso en vivo + validación de cliente.
 *   **[TK-098: Integridad Transaccional y Decremento Atómico en Extracción](stock/backend/TK-098.md)** (Backend) — ✅ Done. Cierra `AUDIT-DEV-006` F-1/F-2 (Críticas): `withTransaction` para stock+remanente+movimiento y `UPDATE … WHERE quantity >= :q` contra sobreventa por concurrencia.
 *   **[TK-099: Reloj/ID Inyectados y Auditoría en Extracción](stock/backend/TK-099.md)** (Backend) — ✅ Done. Cierra `AUDIT-DEV-006` F-3/F-4/F-8/F-9: puertos `Clock`/`IdGenerator`, excepción de dominio para descarte, autoría solo-token. **F-7 → `TK-101`**.
 *   **[TK-100-FE: Propagación Real de Errores y Aritmética Decimal en Extracción](stock/frontend/TK-100-FE.md)** (Frontend) — ✅ Done. Cierra `AUDIT-DEV-006` F-5/F-6: elimina el fallback "modo demo" que fingía éxitos ante `422`/`500` (Guard 38); `DecimalQuantity` en el stepper (Guard 17).
