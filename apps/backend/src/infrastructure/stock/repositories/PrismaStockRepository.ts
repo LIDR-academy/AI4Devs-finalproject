@@ -1,9 +1,15 @@
-import { PrismaClient } from '../../../generated/prisma/client.js';
+import { PrismaClient, Prisma } from '../../../generated/prisma/client.js';
 import { Insumo } from '../../../domain/stock/entities/Insumo.js';
 import { Remanente, RemanenteStatusType } from '../../../domain/stock/entities/Remanente.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
 import { IRemanenteRepository, StockMovementRecord } from '../../../domain/stock/repositories/IRemanenteRepository.js';
+import {
+  ExtractionUnitOfWork,
+  IStockUnitOfWork,
+  WarehouseBalancesAfterDeduction,
+} from '../../../domain/stock/repositories/IStockUnitOfWork.js';
+import { InsufficientStockException } from '../../../domain/stock/errors/InsufficientStockException.js';
 
 type RawInsumo = {
   id: string;
@@ -12,6 +18,9 @@ type RawInsumo = {
   unitCost: { toString(): string } | null;
   warehouseStocks: { storageLocationId: string; quantity: { toString(): string } }[];
 };
+
+/** Cliente Prisma o cliente de transacción — los métodos de escritura aceptan cualquiera. */
+type StockDbClient = Prisma.TransactionClient;
 
 function toInsumo(raw: RawInsumo): Insumo {
   return new Insumo({
@@ -26,7 +35,7 @@ function toInsumo(raw: RawInsumo): Insumo {
   });
 }
 
-export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepository {
+export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepository, IStockUnitOfWork {
   constructor(private readonly prisma: PrismaClient) {}
 
   public async findById(id: string): Promise<Insumo | null> {
@@ -95,7 +104,71 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
   }
 
   public async saveRemanente(remanente: Remanente): Promise<void> {
-    await this.prisma.remanente.upsert({
+    await this.saveRemanenteOn(this.prisma, remanente);
+  }
+
+  public async recordMovement(movement: StockMovementRecord): Promise<void> {
+    await this.recordMovementOn(this.prisma, movement);
+  }
+
+  /**
+   * AUDIT-DEV-006 F-1/F-2: frontera transaccional de la extracción de bodega.
+   * Todas las escrituras (`deductStockAtAtomically` + `saveRemanente` + `recordMovement`)
+   * corren dentro de una única `$transaction` — cualquier excepción revierte por completo.
+   */
+  public async runExtraction<T>(work: (uow: ExtractionUnitOfWork) => Promise<T>): Promise<T> {
+    return this.prisma.$transaction(async (tx) => {
+      const uow: ExtractionUnitOfWork = {
+        deductStockAtAtomically: (insumoId, insumoName, storageLocationId, quantity) =>
+          this.deductStockAtAtomicallyOn(tx, insumoId, insumoName, storageLocationId, quantity),
+        saveRemanente: (remanente) => this.saveRemanenteOn(tx, remanente),
+        recordMovement: (movement) => this.recordMovementOn(tx, movement),
+      };
+      return work(uow);
+    });
+  }
+
+  private async deductStockAtAtomicallyOn(
+    client: StockDbClient,
+    insumoId: string,
+    insumoName: string,
+    storageLocationId: string,
+    quantity: DecimalQuantity
+  ): Promise<WarehouseBalancesAfterDeduction> {
+    const q = quantity.toDecimal();
+
+    // C-DEV-006-2: UPDATE condicional atómico — sin read-check-then-write.
+    const updated = await client.warehouseStock.updateMany({
+      where: { insumoId, storageLocationId, quantity: { gte: q } },
+      data: { quantity: { decrement: q } },
+    });
+
+    if (updated.count === 0) {
+      const line = await client.warehouseStock.findUnique({
+        where: { insumoId_storageLocationId: { insumoId, storageLocationId } },
+      });
+      const available = line ? new DecimalQuantity(line.quantity.toString()) : new DecimalQuantity('0');
+      throw new InsufficientStockException(insumoName, quantity.toString(), available.toString());
+    }
+
+    const [sectorLine, allLines] = await Promise.all([
+      client.warehouseStock.findUnique({
+        where: { insumoId_storageLocationId: { insumoId, storageLocationId } },
+      }),
+      client.warehouseStock.findMany({ where: { insumoId } }),
+    ]);
+
+    const remainingSectorStock = new DecimalQuantity((sectorLine?.quantity ?? 0).toString());
+    const remainingWarehouseStock = allLines.reduce(
+      (acc, l) => acc.add(new DecimalQuantity(l.quantity.toString())),
+      new DecimalQuantity('0')
+    );
+
+    return { remainingSectorStock, remainingWarehouseStock };
+  }
+
+  private async saveRemanenteOn(client: StockDbClient, remanente: Remanente): Promise<void> {
+    await client.remanente.upsert({
       where: { id: remanente.id },
       update: {
         currentQuantity: remanente.currentQuantity.toDecimal(),
@@ -115,8 +188,8 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
     });
   }
 
-  public async recordMovement(movement: StockMovementRecord): Promise<void> {
-    await this.prisma.stockMovement.create({
+  private async recordMovementOn(client: StockDbClient, movement: StockMovementRecord): Promise<void> {
+    await client.stockMovement.create({
       data: {
         id: movement.id,
         insumoId: movement.insumoId,

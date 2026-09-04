@@ -1,6 +1,10 @@
 import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
-import { IRemanenteRepository } from '../../../domain/stock/repositories/IRemanenteRepository.js';
 import { IStorageLocationRepository } from '../../../domain/stock/repositories/IStorageLocationRepository.js';
+import {
+  ExtractionUnitOfWork,
+  IStockUnitOfWork,
+  WarehouseBalancesAfterDeduction,
+} from '../../../domain/stock/repositories/IStockUnitOfWork.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 import { Remanente } from '../../../domain/stock/entities/Remanente.js';
 import { Insumo, UNCLASSIFIED_WAREHOUSE_LOCATION_ID } from '../../../domain/stock/entities/Insumo.js';
@@ -36,7 +40,7 @@ export interface ExtractionResponseDTO {
 export class RecordExtractionUseCase {
   constructor(
     private readonly insumoRepository: IInsumoRepository,
-    private readonly remanenteRepository: IRemanenteRepository,
+    private readonly unitOfWork: IStockUnitOfWork,
     private readonly locationRepository?: IStorageLocationRepository
   ) {}
 
@@ -50,6 +54,9 @@ export class RecordExtractionUseCase {
     const sector = await resolveWarehouseSector(this.locationRepository, fromStorageLocationId);
 
     const requestedQty = new DecimalQuantity(dto.quantity);
+    // Fail-fast opcional (C-DEV-006-2): mensaje temprano sin abrir transacción. La
+    // barrera real contra la sobreventa por concurrencia es el UPDATE condicional
+    // atómico dentro de `unitOfWork.runExtraction`.
     if (!insumo.hasSufficientStockAt(requestedQty, fromStorageLocationId)) {
       throw new InsufficientStockException(
         insumo.name,
@@ -64,27 +71,43 @@ export class RecordExtractionUseCase {
       return this.handleDirectDiscard(insumo, requestedQty, fromStorageLocationId, sector.name, dto);
     }
 
-    insumo.deductStockAt(requestedQty, fromStorageLocationId);
-    await this.insumoRepository.save(insumo);
+    return this.handleStockExtraction(insumo, requestedQty, fromStorageLocationId, sector.name, purpose, dto);
+  }
 
-    const remanenteId = `rem-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  private async handleStockExtraction(
+    insumo: Insumo,
+    requestedQty: DecimalQuantity,
+    fromStorageLocationId: string,
+    sectorName: string,
+    purpose: 'KITCHEN_STOCK' | 'RECIPE',
+    dto: RecordExtractionDTO
+  ): Promise<ExtractionResponseDTO> {
     const location = dto.toLocation || 'KITCHEN_FRIDGE';
+    const remanenteId = `rem-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const remanente = Remanente.createNew(remanenteId, insumo.id, requestedQty, location, 24);
-
-    await this.remanenteRepository.saveRemanente(remanente);
-
     const movementType = purpose === 'RECIPE' ? 'EXTRACTION_RECIPE' : 'EXTRACTION';
-    await this.remanenteRepository.recordMovement({
-      id: `mov-${Date.now()}`,
-      insumoId: insumo.id,
-      type: movementType,
-      quantity: requestedQty.toString(),
-      fromLoc: sector.name,
-      toLoc: location,
-      operatorId: dto.operatorId,
-      purpose,
-      reason: dto.reason,
-      recipeId: dto.recipeId,
+
+    const balances = await this.unitOfWork.runExtraction(async (uow: ExtractionUnitOfWork) => {
+      const after = await uow.deductStockAtAtomically(
+        insumo.id,
+        insumo.name,
+        fromStorageLocationId,
+        requestedQty
+      );
+      await uow.saveRemanente(remanente);
+      await uow.recordMovement({
+        id: `mov-${Date.now()}`,
+        insumoId: insumo.id,
+        type: movementType,
+        quantity: requestedQty.toString(),
+        fromLoc: sectorName,
+        toLoc: location,
+        operatorId: dto.operatorId,
+        purpose,
+        reason: dto.reason,
+        recipeId: dto.recipeId,
+      });
+      return after;
     });
 
     return {
@@ -93,8 +116,8 @@ export class RecordExtractionUseCase {
       insumoName: insumo.name,
       quantityExtracted: requestedQty.toString(),
       fromStorageLocationId,
-      remainingSectorStock: insumo.stockAt(fromStorageLocationId).toString(),
-      remainingWarehouseStock: insumo.warehouseStock.toString(),
+      remainingSectorStock: balances.remainingSectorStock.toString(),
+      remainingWarehouseStock: balances.remainingWarehouseStock.toString(),
       location: remanente.location,
       expirationDate: remanente.expirationDate.toISOString(),
       status: remanente.status,
@@ -112,19 +135,25 @@ export class RecordExtractionUseCase {
       throw new Error('El motivo es obligatorio para descarte directo desde bodega.');
     }
 
-    insumo.deductStockAt(requestedQty, fromStorageLocationId);
-    await this.insumoRepository.save(insumo);
-
-    await this.remanenteRepository.recordMovement({
-      id: `mov-${Date.now()}`,
-      insumoId: insumo.id,
-      type: 'DISCARD_DIRECT',
-      quantity: requestedQty.toString(),
-      fromLoc: sectorName,
-      toLoc: 'WASTE_BIN',
-      operatorId: dto.operatorId,
-      purpose: 'DIRECT_DISCARD',
-      reason: dto.reason,
+    const balances: WarehouseBalancesAfterDeduction = await this.unitOfWork.runExtraction(async (uow) => {
+      const after = await uow.deductStockAtAtomically(
+        insumo.id,
+        insumo.name,
+        fromStorageLocationId,
+        requestedQty
+      );
+      await uow.recordMovement({
+        id: `mov-${Date.now()}`,
+        insumoId: insumo.id,
+        type: 'DISCARD_DIRECT',
+        quantity: requestedQty.toString(),
+        fromLoc: sectorName,
+        toLoc: 'WASTE_BIN',
+        operatorId: dto.operatorId,
+        purpose: 'DIRECT_DISCARD',
+        reason: dto.reason,
+      });
+      return after;
     });
 
     return {
@@ -133,8 +162,8 @@ export class RecordExtractionUseCase {
       insumoName: insumo.name,
       quantityExtracted: requestedQty.toString(),
       fromStorageLocationId,
-      remainingSectorStock: insumo.stockAt(fromStorageLocationId).toString(),
-      remainingWarehouseStock: insumo.warehouseStock.toString(),
+      remainingSectorStock: balances.remainingSectorStock.toString(),
+      remainingWarehouseStock: balances.remainingWarehouseStock.toString(),
       location: 'WASTE_BIN',
       expirationDate: new Date().toISOString(),
       status: 'DISCARDED',

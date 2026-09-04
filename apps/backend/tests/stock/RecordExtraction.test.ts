@@ -230,4 +230,100 @@ describe('TK-003: Record Warehouse Extraction TDD Suite', () => {
     expect(after?.stockAt('loc-seed-freezer').toString()).toBe('8.000');
     expect(stockRepo.movements[0].fromLoc).toBe('Heladera de Carnes');
   });
+
+  // ─── TK-098 (AUDIT-DEV-006 F-1/F-2): integridad transaccional y decremento atómico ───
+
+  it('TK-098 F-1: si falla saveRemanente tras el débito, la transacción revierte por completo', async () => {
+    // Sabotea la 2ª escritura de `runExtraction`: el stock ya se debitó en memoria.
+    class FailingSaveRemanenteRepo extends InMemoryStockRepository {
+      async saveRemanente(): Promise<void> {
+        throw new Error('fallo simulado de persistencia del remanente');
+      }
+    }
+    const failingRepo = new FailingSaveRemanenteRepo();
+    failingRepo.seedInsumo(
+      new Insumo({
+        id: 'ins-rollback-1',
+        name: 'Queso Mozzarella',
+        unitOfMeasure: 'KG',
+        stockLines: [{ storageLocationId: 'loc-1', quantity: new DecimalQuantity('5.000') }],
+      })
+    );
+    const app = createApp({ stockRepository: failingRepo, requireAuth: false });
+
+    const response = await request(app)
+      .post('/api/v1/stock/extraction')
+      .send({ insumoId: 'ins-rollback-1', fromStorageLocationId: 'loc-1', quantity: '2.000' });
+
+    // ORACULO RED: el error no controlado se serializa como 500 RFC 7807
+    expect(response.status).toBe(500);
+
+    // ORACULO ESTADO: rollback total — stock intacto, 0 remanentes, 0 movimientos
+    const after = await failingRepo.findById('ins-rollback-1');
+    expect(after?.stockAt('loc-1').toString()).toBe('5.000');
+    expect(after?.warehouseStock.toString()).toBe('5.000');
+    expect(failingRepo.remanentes.size).toBe(0);
+    expect(failingRepo.movements.length).toBe(0);
+  });
+
+  it('TK-098 F-1: si falla recordMovement en descarte directo, la transacción revierte', async () => {
+    class FailingMovementRepo extends InMemoryStockRepository {
+      async recordMovement(): Promise<void> {
+        throw new Error('fallo simulado al registrar el movimiento');
+      }
+    }
+    const failingRepo = new FailingMovementRepo();
+    failingRepo.seedInsumo(
+      new Insumo({
+        id: 'ins-rollback-2',
+        name: 'Leche Entera',
+        unitOfMeasure: 'L',
+        stockLines: [{ storageLocationId: 'loc-1', quantity: new DecimalQuantity('4.000') }],
+      })
+    );
+    const app = createApp({ stockRepository: failingRepo, requireAuth: false });
+
+    const response = await request(app)
+      .post('/api/v1/stock/extraction')
+      .send({
+        insumoId: 'ins-rollback-2',
+        fromStorageLocationId: 'loc-1',
+        quantity: '1.500',
+        purpose: 'DIRECT_DISCARD',
+        reason: 'Empaque roto en bodega',
+      });
+
+    expect(response.status).toBe(500);
+    const after = await failingRepo.findById('ins-rollback-2');
+    expect(after?.stockAt('loc-1').toString()).toBe('4.000');
+    expect(failingRepo.movements.length).toBe(0);
+  });
+
+  it('TK-098 F-2: dos extracciones concurrentes del mismo sub-sector no sobrevenden el stock', async () => {
+    stockRepo.seedInsumo(
+      new Insumo({
+        id: 'ins-race-1',
+        name: 'Queso Mozzarella',
+        unitOfMeasure: 'KG',
+        stockLines: [{ storageLocationId: 'loc-1', quantity: new DecimalQuantity('3.000') }],
+      })
+    );
+    const app = createApp({ stockRepository: stockRepo, requireAuth: false });
+
+    const send = () =>
+      request(app)
+        .post('/api/v1/stock/extraction')
+        .send({ insumoId: 'ins-race-1', fromStorageLocationId: 'loc-1', quantity: '2.000' });
+
+    const [a, b] = await Promise.all([send(), send()]);
+    const statuses = [a.status, b.status].sort();
+
+    // Exactamente una gana (201) y la otra es rechazada por saldo (422) — nunca 201+201.
+    expect(statuses).toEqual([201, 422]);
+
+    const after = await stockRepo.findById('ins-race-1');
+    expect(after?.stockAt('loc-1').toString()).toBe('1.000');
+    expect(stockRepo.remanentes.size).toBe(1);
+    expect(stockRepo.movements.length).toBe(1);
+  });
 });

@@ -7,12 +7,13 @@ import { ListInsumosUseCase } from '../../../../application/stock/use-cases/List
 import { RestockInsumoUseCase } from '../../../../application/stock/use-cases/RestockInsumoUseCase.js';
 import { IInsumoRepository } from '../../../../domain/stock/repositories/IInsumoRepository.js';
 import { IRemanenteRepository } from '../../../../domain/stock/repositories/IRemanenteRepository.js';
+import { IStockUnitOfWork } from '../../../../domain/stock/repositories/IStockUnitOfWork.js';
 import { IStockMovementQueryRepository } from '../../../../domain/stock/repositories/IStockMovementQueryRepository.js';
 import { IStorageLocationRepository } from '../../../../domain/stock/repositories/IStorageLocationRepository.js';
 import { requireRole } from '../../../http/middlewares/requireRole.js';
 
 export function createStockRouter(
-  stockRepository: IInsumoRepository & IRemanenteRepository,
+  stockRepository: IInsumoRepository & IRemanenteRepository & IStockUnitOfWork,
   stockMovementQueryRepository?: IStockMovementQueryRepository,
   isAuthRequired = true,
   locationRepository?: IStorageLocationRepository
@@ -25,6 +26,7 @@ export function createStockRouter(
   const role = (...roles: string[]): ReturnType<typeof requireRole>[] =>
     isAuthRequired ? [requireRole(...roles)] : [];
   const useCase = new RecordExtractionUseCase(stockRepository, stockRepository, locationRepository);
+  // args: (insumoRepository, unitOfWork, locationRepository) — el repo concreto satisface las 3.
   const getMovementHistoryUseCase = stockMovementQueryRepository
     ? new GetStockMovementHistoryUseCase(stockMovementQueryRepository)
     : undefined;

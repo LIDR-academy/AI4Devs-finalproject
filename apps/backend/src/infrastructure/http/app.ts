@@ -16,6 +16,7 @@ import { InMemoryRecipeRepository } from '../recipes/repositories/InMemoryRecipe
 import { IUserRepository } from '../../domain/auth/repositories/IUserRepository.js';
 import { IInsumoRepository } from '../../domain/stock/repositories/IInsumoRepository.js';
 import { IRemanenteRepository } from '../../domain/stock/repositories/IRemanenteRepository.js';
+import { IStockUnitOfWork } from '../../domain/stock/repositories/IStockUnitOfWork.js';
 import { IStockMovementQueryRepository } from '../../domain/stock/repositories/IStockMovementQueryRepository.js';
 import { InMemoryStockMovementQueryRepository } from '../stock/repositories/InMemoryStockMovementQueryRepository.js';
 import { IRemanenteQueryRepository } from '../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
@@ -50,7 +51,7 @@ import { IEmailService } from '../../domain/auth/ports/IEmailService.js';
 export interface AppOptions {
   userRepository?: IUserRepository;
   emailService?: IEmailService;
-  stockRepository?: IInsumoRepository & IRemanenteRepository;
+  stockRepository?: IInsumoRepository & IRemanenteRepository & IStockUnitOfWork;
   stockMovementQueryRepository?: IStockMovementQueryRepository;
   remanenteQueryRepository?: IRemanenteQueryRepository;
   reportRepository?: IReportRepository;
@@ -161,7 +162,7 @@ function assertJwtSecretConfigured(options: AppOptions): void {
 interface AppRepositories {
   userRepo: IUserRepository;
   jwtSecret: string;
-  stockRepo: IInsumoRepository & IRemanenteRepository;
+  stockRepo: IInsumoRepository & IRemanenteRepository & IStockUnitOfWork;
   stockMovementQueryRepo: IStockMovementQueryRepository;
   remanenteQueryRepo: IRemanenteQueryRepository;
   reportRepo: IReportRepository;
@@ -174,7 +175,7 @@ interface AppRepositories {
 
 function buildQueryRepositories(
   options: AppOptions,
-  stockRepo: IInsumoRepository & IRemanenteRepository
+  stockRepo: IInsumoRepository & IRemanenteRepository & IStockUnitOfWork
 ) {
   const stockInMemory = stockRepo as InMemoryStockRepository;
   return {

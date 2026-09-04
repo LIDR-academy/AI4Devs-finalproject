@@ -5,8 +5,18 @@ import {
   IRemanenteRepository,
   StockMovementRecord,
 } from '../../../domain/stock/repositories/IRemanenteRepository.js';
+import {
+  ExtractionUnitOfWork,
+  IStockUnitOfWork,
+  WarehouseBalancesAfterDeduction,
+} from '../../../domain/stock/repositories/IStockUnitOfWork.js';
+import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
+import { InsufficientStockException } from '../../../domain/stock/errors/InsufficientStockException.js';
+import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
 
-export class InMemoryStockRepository implements IInsumoRepository, IRemanenteRepository {
+export class InMemoryStockRepository
+  implements IInsumoRepository, IRemanenteRepository, IStockUnitOfWork
+{
   public insumos: Map<string, Insumo> = new Map();
   public remanentes: Map<string, Remanente> = new Map();
   public movements: StockMovementRecord[] = [];
@@ -71,5 +81,69 @@ export class InMemoryStockRepository implements IInsumoRepository, IRemanenteRep
 
   async recordMovement(movement: StockMovementRecord): Promise<void> {
     this.movements.push({ ...movement, createdAt: movement.createdAt ?? new Date() });
+  }
+
+  /**
+   * AUDIT-DEV-006 F-1: fake de `IStockUnitOfWork`. Toma un snapshot (shallow — cada
+   * escritura reemplaza la entrada del `Map`, nunca la muta in place) y lo restaura
+   * ante cualquier excepción, replicando el rollback de `$transaction`.
+   */
+  async runExtraction<T>(work: (uow: ExtractionUnitOfWork) => Promise<T>): Promise<T> {
+    const snapshot = {
+      insumos: new Map(this.insumos),
+      remanentes: new Map(this.remanentes),
+      movements: [...this.movements],
+    };
+    try {
+      return await work(this);
+    } catch (error) {
+      this.insumos = snapshot.insumos;
+      this.remanentes = snapshot.remanentes;
+      this.movements = snapshot.movements;
+      throw error;
+    }
+  }
+
+  /**
+   * AUDIT-DEV-006 F-2: débito por línea sin read-check-then-write. Rechaza si el
+   * saldo del sector es insuficiente, reconstruye el agregado (no lo muta in place —
+   * así el snapshot shallow de `runExtraction` alcanza para revertir).
+   */
+  async deductStockAtAtomically(
+    insumoId: string,
+    insumoName: string,
+    storageLocationId: string,
+    quantity: DecimalQuantity
+  ): Promise<WarehouseBalancesAfterDeduction> {
+    const insumo = this.insumos.get(insumoId);
+    if (!insumo) {
+      throw new EntityNotFoundException('Insumo', insumoId);
+    }
+
+    const sectorStock = insumo.stockAt(storageLocationId);
+    if (!sectorStock.isGreaterThanOrEqualTo(quantity)) {
+      // Cubre también la línea inexistente: `stockAt` devuelve 0 y 0 < quantity (>0).
+      throw new InsufficientStockException(insumoName, quantity.toString(), sectorStock.toString());
+    }
+
+    const nextLines = insumo.stockLines.map((l) =>
+      l.storageLocationId === storageLocationId
+        ? { storageLocationId: l.storageLocationId, quantity: l.quantity.subtract(quantity) }
+        : l
+    );
+
+    const updated = new Insumo({
+      id: insumo.id,
+      name: insumo.name,
+      unitOfMeasure: insumo.unitOfMeasure,
+      unitCost: insumo.unitCost,
+      stockLines: nextLines,
+    });
+    this.insumos.set(insumoId, updated);
+
+    return {
+      remainingSectorStock: updated.stockAt(storageLocationId),
+      remainingWarehouseStock: updated.warehouseStock,
+    };
   }
 }
