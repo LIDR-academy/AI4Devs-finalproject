@@ -123,6 +123,41 @@ document.addEventListener('alpine:init', () => {
             this.activeStates.bold = document.queryCommandState('bold');
             this.activeStates.italic = document.queryCommandState('italic');
             this.activeStates.underline = document.queryCommandState('underline');
+
+            this.syncCodeLanguageFromCaret(selection);
+        },
+
+        // D-16bis fix: the language <select> now reflects whichever code block the caret is
+        // currently inside, exactly like the three bold/italic/underline buttons above already
+        // reflect the selection -- without this, moving the caret into an existing
+        // `<pre><code class="language-json">` block left the select showing whatever language was
+        // last picked (or the "plaintext" default), silently disagreeing with the block it was
+        // sitting in. Only ever WRITES `codeLanguage` while genuinely inside a code block; leaving
+        // one leaves the select showing whatever it last showed, since `codeLanguage` doubles as
+        // "the language the next INSERTED block will use" and there is no equivalent "not in a
+        // code block" state for a <select> the way `false` is for a boolean toolbar button.
+        syncCodeLanguageFromCaret(selection) {
+            const codeEl = this.closestCodeElement(selection.anchorNode);
+
+            if (!codeEl) {
+                return;
+            }
+
+            const language = (codeEl.className.match(/language-(\S+)/) || [])[1];
+
+            if (language && language !== this.codeLanguage) {
+                this.codeLanguage = language;
+            }
+        },
+
+        // Resolves the `<code class="language-x">` ancestor (if any) of a Selection/Range node
+        // that is genuinely inside THIS editor instance -- shared by syncCodeLanguageFromCaret()
+        // above and onEditorInput() below, which both need exactly this lookup.
+        closestCodeElement(node) {
+            const element = node && node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+            const codeEl = element && element.closest ? element.closest('code[class*="language-"]') : null;
+
+            return codeEl && this.$refs.editor.contains(codeEl) ? codeEl : null;
         },
 
         exec(command, value = null) {
@@ -204,18 +239,43 @@ document.addEventListener('alpine:init', () => {
             const selection = window.getSelection();
 
             if (selection && selection.rangeCount > 0) {
-                const anchor = selection.anchorNode;
-                const anchorElement = anchor && anchor.nodeType === Node.TEXT_NODE ? anchor.parentElement : anchor;
-                const codeEl = anchorElement && anchorElement.closest
-                    ? anchorElement.closest('code[class*="language-"]')
-                    : null;
+                const codeEl = this.closestCodeElement(selection.anchorNode);
 
-                if (codeEl && this.$refs.editor.contains(codeEl)) {
+                if (codeEl) {
                     this.highlightCodeElement(codeEl);
                 }
             }
 
             this.scheduleSync();
+        },
+
+        // Reads a code block's PLAIN SOURCE TEXT, treating a `<br>` as a single newline character --
+        // fixes a real bug (D-16bis): a bare `.textContent` read (what this method replaces
+        // everywhere below) silently DROPS every line break a `<br>` represents, since `.textContent`
+        // contributes nothing for a non-text node. Pressing Enter inside a code block used to
+        // therefore appear to do nothing at all -- the browser's own Enter-key handling inserted a
+        // line break, the very next `input` event's re-highlight read `.textContent` (which excluded
+        // it) and rewrote the block from that shorter, newline-free string, silently erasing the
+        // break that had just been typed. hljs's own highlighted output never introduces a `<br>`
+        // (a literal "\n" character survives inside its escaped text/span nodes instead, rendering
+        // correctly under `<pre>`'s own `white-space: pre`), so after the FIRST re-highlight of a
+        // block this case never recurs -- but the fix must still tolerate whatever a browser's native
+        // Enter handling inserts on the very first keystroke, and must not silently corrupt a
+        // pasted/hand-typed `<br>` from HTML-source mode either.
+        plainTextOf(node) {
+            let text = '';
+
+            node.childNodes.forEach((child) => {
+                if (child.nodeType === Node.TEXT_NODE) {
+                    text += child.textContent;
+                } else if (child.nodeName === 'BR') {
+                    text += '\n';
+                } else {
+                    text += this.plainTextOf(child);
+                }
+            });
+
+            return text;
         },
 
         // 'plaintext' (and any language hljs has no grammar registered for) is never passed to
@@ -239,7 +299,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             const offset = this.getCaretOffset(codeEl);
-            codeEl.innerHTML = hljs.highlight(codeEl.textContent, { language }).value;
+            codeEl.innerHTML = hljs.highlight(this.plainTextOf(codeEl), { language }).value;
 
             if (offset !== null) {
                 this.setCaretOffset(codeEl, offset);
@@ -257,17 +317,20 @@ document.addEventListener('alpine:init', () => {
                 const language = (codeEl.className.match(/language-(\S+)/) || [])[1] || 'plaintext';
 
                 if (this.isHighlightable(language)) {
-                    codeEl.innerHTML = hljs.highlight(codeEl.textContent, { language }).value;
+                    codeEl.innerHTML = hljs.highlight(this.plainTextOf(codeEl), { language }).value;
                 }
             });
         },
 
         // Character offset of the caret from the start of `container`'s own text, or `null` if the
-        // selection is not inside it at all. Built on a Range spanning [start of container, caret]
-        // and its own `.toString()` rather than walking text nodes by hand -- the Range's string
-        // form already collapses exactly the way `.textContent` does, which is what
-        // highlightCodeElement() above re-highlights FROM, so the two stay in the same coordinate
-        // space.
+        // selection is not inside it at all. Built on a Range spanning [start of container, caret],
+        // cloned and measured through plainTextOf() -- NEVER `.toString()`, which (like a bare
+        // `.textContent` read) silently counts a `<br>` as zero characters instead of one. That gap
+        // matters here specifically: the browser's own native Enter-key handling can insert a `<br>`
+        // BEFORE this method ever runs (the `input` event fires after the DOM already changed), so
+        // the caret can sit immediately after one at the exact moment this offset is captured.
+        // plainTextOf() is what highlightCodeElement() re-highlights FROM too, so the two stay in
+        // the same coordinate space.
         getCaretOffset(container) {
             const selection = window.getSelection();
 
@@ -285,7 +348,7 @@ document.addEventListener('alpine:init', () => {
             preCaretRange.selectNodeContents(container);
             preCaretRange.setEnd(range.startContainer, range.startOffset);
 
-            return preCaretRange.toString().length;
+            return this.plainTextOf(preCaretRange.cloneContents()).length;
         },
 
         // The inverse of getCaretOffset() above: walks `container`'s text nodes in document order,
@@ -326,17 +389,22 @@ document.addEventListener('alpine:init', () => {
         // The value this component ever hands to the server: a CLONE of the live editor with every
         // `<code>` element's children collapsed back to a single plain-text node, discarding the
         // `hljs-*` colouring spans highlightCodeElement()/highlightAllCodeBlocks() above insert.
-        // Reading `.textContent` off a `<code>` element already returns its plain text regardless of
-        // how many colouring spans are inside it, so re-assigning that same string as `.textContent`
-        // is enough to strip them -- this keeps config('html-sanitizer.allowed_elements') free of
-        // `<span class="hljs-*">` entirely: colouring is purely a live-editor/preview affordance,
-        // never part of what is persisted. The LIVE editor DOM itself is never touched here (this
-        // clones first), so the administrator's own colour view is undisturbed by every sync.
+        // Read through plainTextOf() rather than a bare `.textContent` -- a bare read (this method's
+        // own shape until the D-16bis newline fix) silently drops every `<br>`-represented line break
+        // a code block might still contain here, since `.textContent` counts a non-text node as
+        // nothing; a re-highlighted block never has one (see plainTextOf()'s own docblock), but this
+        // method also runs from toggleHtmlSource()'s IN branch before highlightAllCodeBlocks() has
+        // necessarily normalised everything. Re-assigning the extracted string as `.textContent`
+        // still collapses every colouring span into one plain-text node, exactly as before -- this
+        // keeps config('html-sanitizer.allowed_elements') free of `<span class="hljs-*">` entirely:
+        // colouring is purely a live-editor/preview affordance, never part of what is persisted. The
+        // LIVE editor DOM itself is never touched here (this clones first), so the administrator's
+        // own colour view is undisturbed by every sync.
         buildCleanValue() {
             const clone = this.$refs.editor.cloneNode(true);
 
             clone.querySelectorAll('code').forEach((codeEl) => {
-                codeEl.textContent = codeEl.textContent;
+                codeEl.textContent = this.plainTextOf(codeEl);
             });
 
             return clone.innerHTML;
