@@ -249,7 +249,11 @@ function resolveUnitOfMeasure(selectedInsumoId: string, insumos: Insumo[]): stri
   return UNIT_BY_INSUMO_ID[selectedInsumoId] ?? 'KG';
 }
 
-function buildLocalRemanenteFromExtraction(selectedInsumoId: string, insumos: Insumo[], result: Awaited<ReturnType<typeof StockService.recordExtraction>>) {
+function buildLocalRemanenteFromExtraction(
+  selectedInsumoId: string,
+  insumos: Insumo[],
+  result: Awaited<ReturnType<typeof StockService.recordExtraction>> & { remanenteId: string }
+) {
   return {
     id: result.remanenteId,
     insumoId: result.insumoId,
@@ -381,8 +385,10 @@ async function performExtraction(args: PerformExtractionArgs) {
     recipeId: selectedRecipeId || undefined,
   });
 
-  if (purpose !== 'DIRECT_DISCARD' && result.remanenteId) {
-    KitchenService.addLocalRemanente(buildLocalRemanenteFromExtraction(activeInsumoId, insumos, result));
+  if (purpose !== 'DIRECT_DISCARD' && result.remanenteId !== null) {
+    KitchenService.addLocalRemanente(
+      buildLocalRemanenteFromExtraction(activeInsumoId, insumos, { ...result, remanenteId: result.remanenteId })
+    );
   }
   onSuccess();
   onClose();

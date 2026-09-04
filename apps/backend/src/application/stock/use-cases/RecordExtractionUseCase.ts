@@ -10,6 +10,9 @@ import { Remanente } from '../../../domain/stock/entities/Remanente.js';
 import { Insumo, UNCLASSIFIED_WAREHOUSE_LOCATION_ID } from '../../../domain/stock/entities/Insumo.js';
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
 import { InsufficientStockException } from '../../../domain/stock/errors/InsufficientStockException.js';
+import { DiscardReasonRequiredException } from '../../../domain/stock/errors/DiscardReasonRequiredException.js';
+import { Clock } from '../../../domain/shared/Clock.js';
+import { IdGenerator } from '../../../domain/shared/IdGenerator.js';
 import { resolveWarehouseSector } from './resolveWarehouseSector.js';
 
 export interface RecordExtractionDTO {
@@ -25,7 +28,8 @@ export interface RecordExtractionDTO {
 }
 
 export interface ExtractionResponseDTO {
-  remanenteId: string;
+  /** `null` en `DIRECT_DISCARD` — el descarte no crea remanente en cocina (AUDIT-DEV-006 F-9). */
+  remanenteId: string | null;
   insumoId: string;
   insumoName: string;
   quantityExtracted: string;
@@ -41,6 +45,8 @@ export class RecordExtractionUseCase {
   constructor(
     private readonly insumoRepository: IInsumoRepository,
     private readonly unitOfWork: IStockUnitOfWork,
+    private readonly clock: Clock,
+    private readonly idGenerator: IdGenerator,
     private readonly locationRepository?: IStorageLocationRepository
   ) {}
 
@@ -83,8 +89,14 @@ export class RecordExtractionUseCase {
     dto: RecordExtractionDTO
   ): Promise<ExtractionResponseDTO> {
     const location = dto.toLocation || 'KITCHEN_FRIDGE';
-    const remanenteId = `rem-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const remanente = Remanente.createNew(remanenteId, insumo.id, requestedQty, location, 24);
+    const remanente = Remanente.createNew(
+      this.idGenerator.next('rem'),
+      insumo.id,
+      requestedQty,
+      location,
+      24,
+      this.clock.now()
+    );
     const movementType = purpose === 'RECIPE' ? 'EXTRACTION_RECIPE' : 'EXTRACTION';
 
     const balances = await this.unitOfWork.runExtraction(async (uow: ExtractionUnitOfWork) => {
@@ -96,7 +108,7 @@ export class RecordExtractionUseCase {
       );
       await uow.saveRemanente(remanente);
       await uow.recordMovement({
-        id: `mov-${Date.now()}`,
+        id: this.idGenerator.next('mov'),
         insumoId: insumo.id,
         type: movementType,
         quantity: requestedQty.toString(),
@@ -132,7 +144,7 @@ export class RecordExtractionUseCase {
     dto: RecordExtractionDTO
   ): Promise<ExtractionResponseDTO> {
     if (!dto.reason || dto.reason.trim().length === 0) {
-      throw new Error('El motivo es obligatorio para descarte directo desde bodega.');
+      throw new DiscardReasonRequiredException();
     }
 
     const balances: WarehouseBalancesAfterDeduction = await this.unitOfWork.runExtraction(async (uow) => {
@@ -143,7 +155,7 @@ export class RecordExtractionUseCase {
         requestedQty
       );
       await uow.recordMovement({
-        id: `mov-${Date.now()}`,
+        id: this.idGenerator.next('mov'),
         insumoId: insumo.id,
         type: 'DISCARD_DIRECT',
         quantity: requestedQty.toString(),
@@ -157,7 +169,7 @@ export class RecordExtractionUseCase {
     });
 
     return {
-      remanenteId: '',
+      remanenteId: null,
       insumoId: insumo.id,
       insumoName: insumo.name,
       quantityExtracted: requestedQty.toString(),
@@ -165,7 +177,7 @@ export class RecordExtractionUseCase {
       remainingSectorStock: balances.remainingSectorStock.toString(),
       remainingWarehouseStock: balances.remainingWarehouseStock.toString(),
       location: 'WASTE_BIN',
-      expirationDate: new Date().toISOString(),
+      expirationDate: this.clock.now().toISOString(),
       status: 'DISCARDED',
     };
   }

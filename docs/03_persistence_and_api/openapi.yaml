@@ -1075,6 +1075,10 @@ components:
       properties:
         remanenteId:
           type: string
+          nullable: true
+          description: >-
+            null for purpose=DIRECT_DISCARD — a direct discard debits warehouse
+            stock without creating a kitchen remanente (AUDIT-DEV-006 F-9).
         insumoId:
           type: string
         insumoName:

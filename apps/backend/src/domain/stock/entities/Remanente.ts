@@ -27,9 +27,11 @@ export class Remanente {
     insumoId: string,
     quantity: DecimalQuantity,
     location: string = 'KITCHEN_FRIDGE',
-    hoursToExpire: number = 24
+    hoursToExpire: number = 24,
+    // AUDIT-DEV-006 F-3: instante de creación inyectable. Por defecto el reloj real
+    // (compatibilidad con `vi.setSystemTime` en los tests de dominio existentes).
+    now: Date = new Date()
   ): Remanente {
-    const now = new Date();
     const expirationDate = new Date(now.getTime() + hoursToExpire * 60 * 60 * 1000);
 
     return new Remanente({

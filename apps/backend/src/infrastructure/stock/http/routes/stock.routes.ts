@@ -8,6 +8,8 @@ import { RestockInsumoUseCase } from '../../../../application/stock/use-cases/Re
 import { IInsumoRepository } from '../../../../domain/stock/repositories/IInsumoRepository.js';
 import { IRemanenteRepository } from '../../../../domain/stock/repositories/IRemanenteRepository.js';
 import { IStockUnitOfWork } from '../../../../domain/stock/repositories/IStockUnitOfWork.js';
+import { systemClock } from '../../../shared/systemClock.js';
+import { cryptoIdGenerator } from '../../../shared/cryptoIdGenerator.js';
 import { IStockMovementQueryRepository } from '../../../../domain/stock/repositories/IStockMovementQueryRepository.js';
 import { IStorageLocationRepository } from '../../../../domain/stock/repositories/IStorageLocationRepository.js';
 import { requireRole } from '../../../http/middlewares/requireRole.js';
@@ -25,8 +27,15 @@ export function createStockRouter(
   // el authMiddleware a nivel de mount en app.ts.
   const role = (...roles: string[]): ReturnType<typeof requireRole>[] =>
     isAuthRequired ? [requireRole(...roles)] : [];
-  const useCase = new RecordExtractionUseCase(stockRepository, stockRepository, locationRepository);
-  // args: (insumoRepository, unitOfWork, locationRepository) — el repo concreto satisface las 3.
+  // args: (insumoRepository, unitOfWork, clock, idGenerator, locationRepository)
+  // — el repo concreto satisface las 2 primeras interfaces.
+  const useCase = new RecordExtractionUseCase(
+    stockRepository,
+    stockRepository,
+    systemClock,
+    cryptoIdGenerator,
+    locationRepository
+  );
   const getMovementHistoryUseCase = stockMovementQueryRepository
     ? new GetStockMovementHistoryUseCase(stockMovementQueryRepository)
     : undefined;

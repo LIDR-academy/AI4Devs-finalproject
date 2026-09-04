@@ -12,7 +12,8 @@ export interface ExtractionRequest {
 }
 
 export interface ExtractionResult {
-  remanenteId: string;
+  /** `null` en DIRECT_DISCARD — el descarte no crea remanente (AUDIT-DEV-006 F-9). */
+  remanenteId: string | null;
   insumoId: string;
   insumoName: string;
   quantityExtracted: string;

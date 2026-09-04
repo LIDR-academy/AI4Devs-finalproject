@@ -85,7 +85,10 @@ export class StockController {
     try {
       const parsedBody = recordExtractionSchema.parse(req.body);
       const userObj = (req as unknown as { user?: { id: string } }).user;
-      const operatorId = userObj?.id || parsedBody.operatorId;
+      // AUDIT-DEV-006 F-8: con autenticación activa la autoría SIEMPRE sale del token
+      // (US-014 §Decisiones) — el `operatorId` del body se ignora. Solo se acepta del
+      // body cuando no hay usuario autenticado (tests de negocio con requireAuth:false).
+      const operatorId = userObj?.id ?? parsedBody.operatorId;
       const result = await this.recordExtractionUseCase.execute({
         ...parsedBody,
         operatorId,

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { RecordExtractionUseCase } from './RecordExtractionUseCase.js';
 import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
 import {
@@ -11,6 +11,21 @@ import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuan
 import { StockMovementRecord } from '../../../domain/stock/repositories/IRemanenteRepository.js';
 import { Remanente } from '../../../domain/stock/entities/Remanente.js';
 import { InsufficientStockException } from '../../../domain/stock/errors/InsufficientStockException.js';
+import { DiscardReasonRequiredException } from '../../../domain/stock/errors/DiscardReasonRequiredException.js';
+import { Clock } from '../../../domain/shared/Clock.js';
+import { IdGenerator } from '../../../domain/shared/IdGenerator.js';
+
+const FIXED_NOW = new Date('2026-02-01T12:00:00.000Z');
+const fixedClock: Clock = { now: () => FIXED_NOW };
+
+class SequentialIdGenerator implements IdGenerator {
+  private readonly counters = new Map<string, number>();
+  next(prefix: string): string {
+    const n = (this.counters.get(prefix) ?? 0) + 1;
+    this.counters.set(prefix, n);
+    return `${prefix}-${n}`;
+  }
+}
 
 /**
  * TDD unitario del caso de uso (Guard 21: co-locado en src/application/). Ejercita la
@@ -76,7 +91,7 @@ describe('RecordExtractionUseCase (unitario)', () => {
   beforeEach(() => {
     insumoRepo = new FakeInsumoRepository();
     uow = new RecordingUnitOfWork();
-    useCase = new RecordExtractionUseCase(insumoRepo, uow);
+    useCase = new RecordExtractionUseCase(insumoRepo, uow, fixedClock, new SequentialIdGenerator());
     insumoRepo.seed(
       new Insumo({
         id: 'ins-1',
@@ -197,11 +212,20 @@ describe('RecordExtractionUseCase (unitario)', () => {
       expect(uow.movements[0].purpose).toBe('DIRECT_DISCARD');
       expect(uow.movements[0].reason).toBe('Empaque roto');
 
-      expect(result.remanenteId).toBe('');
+      // AUDIT-DEV-006 F-9: null, no cadena vacía centinela
+      expect(result.remanenteId).toBeNull();
       expect(result.location).toBe('WASTE_BIN');
       expect(result.status).toBe('DISCARDED');
       expect(result.remainingSectorStock).toBe('7.250');
       expect(result.remainingWarehouseStock).toBe('19.500');
+      // AUDIT-DEV-006 F-3: expirationDate del descarte viene del Clock inyectado
+      expect(result.expirationDate).toBe(FIXED_NOW.toISOString());
+    });
+
+    it('AUDIT-DEV-006 F-4: sin motivo lanza DiscardReasonRequiredException (400), no un Error crudo', async () => {
+      await expect(
+        useCase.execute({ insumoId: 'ins-1', fromStorageLocationId: 'loc-1', quantity: '1.000', purpose: 'DIRECT_DISCARD' })
+      ).rejects.toBeInstanceOf(DiscardReasonRequiredException);
     });
   });
 
@@ -218,12 +242,21 @@ describe('RecordExtractionUseCase (unitario)', () => {
     expect(uow.deductArgs[0].storageLocationId).toBe('loc-seed-unclassified');
   });
 
-  it('el remanenteId sigue el formato rem-<timestamp>-<sufijo> y su remanente lo comparte', async () => {
-    const spy = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+  it('AUDIT-DEV-006 F-3: ids de remanente y movimiento vienen del IdGenerator inyectado, únicos por llamada', async () => {
+    const r1 = await useCase.execute({ insumoId: 'ins-1', fromStorageLocationId: 'loc-1', quantity: '1.000' });
+    const r2 = await useCase.execute({ insumoId: 'ins-1', fromStorageLocationId: 'loc-1', quantity: '1.000' });
+
+    expect(r1.remanenteId).toBe('rem-1');
+    expect(r2.remanenteId).toBe('rem-2');
+    expect(r1.remanenteId).not.toBe(r2.remanenteId);
+    expect(uow.movements.map((m) => m.id)).toEqual(['mov-1', 'mov-2']);
+    expect(uow.savedRemanentes[0].id).toBe(r1.remanenteId);
+  });
+
+  it('AUDIT-DEV-006 F-3: expirationDate del remanente = clock.now() + 24h', async () => {
     const result = await useCase.execute({ insumoId: 'ins-1', fromStorageLocationId: 'loc-1', quantity: '1.000' });
-    spy.mockRestore();
-    // sufijo = Math.floor(0.5 * 1000) = 500 — mata el mutante aritmético del multiplicador
-    expect(result.remanenteId).toMatch(/^rem-\d+-500$/);
-    expect(uow.savedRemanentes[0].id).toBe(result.remanenteId);
+    const expected = new Date(FIXED_NOW.getTime() + 24 * 60 * 60 * 1000).toISOString();
+    expect(result.expirationDate).toBe(expected);
+    expect(uow.savedRemanentes[0].expirationDate.toISOString()).toBe(expected);
   });
 });
