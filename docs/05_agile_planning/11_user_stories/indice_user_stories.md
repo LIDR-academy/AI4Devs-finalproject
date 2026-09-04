@@ -36,8 +36,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Las áreas de cocina (heladera, mesa de prep, línea) pasan a ser filas de `StorageLocation` (`type = KITCHEN`); el destino de cocina en la extracción se elige del catálogo y `Remanente.location` pasa a FK. Prerrequisito de ADR-003, cierra deuda de `TK-074-FE`. 📝 Draft.
 
 ### ⚙️ Configuración (`/settings/`)
-*   **[US-017: Configuración General del Restaurante y Parámetros FEFO](settings/US-017.md)**
-    *   *Descripción:* Permite configurar el nombre del restaurante, moneda, umbrales de alerta crítica y parámetros operativos.
+*   **[US-017: Configuración General del Restaurante y Parámetros FEFO](settings/US-017.md)** ✅
+    *   *Descripción:* Permite configurar el nombre del restaurante, moneda, umbrales de alerta crítica y parámetros operativos. `TK-110` cerró el hueco donde el umbral de alerta crítica no tenía efecto real.
 
 ### 📖 Catálogo (`/catalog/`)
 *   **[US-012: Gestión de Catálogo Maestro (Alta de Insumos y Recetas)](catalog/US-012.md)**

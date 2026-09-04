@@ -14,11 +14,13 @@ import { IStorageLocationRepository } from '../../../../domain/stock/repositorie
 import { IRecipeRepository } from '../../../../domain/recipes/repositories/IRecipeRepository.js';
 import { IRecipePreparationRepository } from '../../../../domain/kitchen/repositories/IRecipePreparationRepository.js';
 import { IConsumptionReasonRepository } from '../../../../domain/kitchen/repositories/IConsumptionReasonRepository.js';
+import { ISystemSettingsRepository } from '../../../../domain/settings/repositories/ISystemSettingsRepository.js';
 import { systemClock } from '../../../shared/systemClock.js';
 import { cryptoIdGenerator } from '../../../shared/cryptoIdGenerator.js';
 
 import { PerformShiftReconciliationUseCase } from '../../../../application/kitchen/use-cases/PerformShiftReconciliationUseCase.js';
 import { InMemoryShiftReconciliationRepository } from '../../repositories/InMemoryShiftReconciliationRepository.js';
+import { InMemorySettingsRepository } from '../../../settings/repositories/InMemorySettingsRepository.js';
 
 import { IShiftReconciliationRepository } from '../../../../domain/kitchen/repositories/IShiftReconciliationRepository.js';
 import { requireRole } from '../../../http/middlewares/requireRole.js';
@@ -79,9 +81,14 @@ function buildKitchenController(
   reconciliationRepository?: IShiftReconciliationRepository,
   recipePreparationRepository?: IRecipePreparationRepository,
   closeDeps: PreparationCloseDeps = {},
-  consumptionReasonRepository?: IConsumptionReasonRepository
+  consumptionReasonRepository?: IConsumptionReasonRepository,
+  settingsRepository?: ISystemSettingsRepository
 ): KitchenController {
   const reconciliationRepo = reconciliationRepository ?? new InMemoryShiftReconciliationRepository();
+  // US-017 Escenario 2 / TK-110: umbral de alerta crítica FEFO configurable — sin repo
+  // explícito (tests de negocio), cae al default 24h del repo InMemory (mismo comportamiento
+  // de antes del fix).
+  const settingsRepo = settingsRepository ?? new InMemorySettingsRepository();
   const preparationClose = buildPreparationCloseUseCases({ ...closeDeps, recipePreparationRepository });
   const reasonDependent = buildReasonDependentUseCases(
     remanenteRepository,
@@ -90,7 +97,7 @@ function buildKitchenController(
     consumptionReasonRepository
   );
   return new KitchenController(
-    new GetActiveRemanentesUseCase(remanenteQueryRepository),
+    new GetActiveRemanentesUseCase(remanenteQueryRepository, settingsRepo),
     reasonDependent.consume,
     remanenteRepository ? new DiscardRemanenteUseCase(remanenteRepository) : undefined,
     // US-029: consumo ad-hoc dentro de runAdhocConsumption (C-DEV-006-1) — necesita el
@@ -116,7 +123,8 @@ export function createKitchenRouter(
   recipePreparationRepository?: IRecipePreparationRepository,
   stockUnitOfWork?: IStockUnitOfWork,
   locationRepository?: IStorageLocationRepository,
-  consumptionReasonRepository?: IConsumptionReasonRepository
+  consumptionReasonRepository?: IConsumptionReasonRepository,
+  settingsRepository?: ISystemSettingsRepository
 ): Router {
   const router = Router();
 
@@ -135,7 +143,8 @@ export function createKitchenRouter(
     reconciliationRepository,
     recipePreparationRepository,
     { stockUnitOfWork, locationRepository },
-    consumptionReasonRepository
+    consumptionReasonRepository,
+    settingsRepository
   );
 
   // Lectura de la lista FEFO: abierta a cualquier usuario autenticado (dato operativo,

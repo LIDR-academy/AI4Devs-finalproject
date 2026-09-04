@@ -7,6 +7,8 @@ import {
   ActiveRemanenteDTO,
   IRemanenteQueryRepository,
 } from '../../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
+import { ISystemSettingsRepository } from '../../../domain/settings/repositories/ISystemSettingsRepository.js';
+import { SystemSettings } from '../../../domain/settings/entities/SystemSettings.js';
 
 describe('TK-004: FEFO Active Remanentes Query TDD Suite', () => {
   let queryRepo: InMemoryRemanenteQueryRepository;
@@ -165,7 +167,7 @@ describe('GetActiveRemanentesUseCase — cálculo de hoursRemaining / isCritical
     vi.useRealTimers();
   });
 
-  function makeUseCase(items: Partial<ActiveRemanenteDTO>[]) {
+  function makeUseCase(items: Partial<ActiveRemanenteDTO>[], criticalAlertHours = 24) {
     const repo: IRemanenteQueryRepository = {
       findActiveRemanentes: async () =>
         items.map((it) => ({
@@ -183,7 +185,21 @@ describe('GetActiveRemanentesUseCase — cálculo de hoursRemaining / isCritical
           createdAt: FIXED_NOW,
         })),
     };
-    return new GetActiveRemanentesUseCase(repo);
+    const settingsRepo: ISystemSettingsRepository = {
+      getSettings: async () =>
+        new SystemSettings({
+          id: 'default',
+          restaurantName: 'Test',
+          currencySymbol: '$',
+          criticalAlertHours,
+          defaultRemanenteHours: 24,
+          varianceTolerancePercent: 5,
+          idleTimeoutMinutes: 15,
+          preparationWasteAlertPercent: 5,
+        }),
+      saveSettings: async () => {},
+    };
+    return new GetActiveRemanentesUseCase(repo, settingsRepo);
   }
 
   it('hoursRemaining = (expiración − ahora) en horas, redondeado a 1 decimal', async () => {
@@ -214,5 +230,18 @@ describe('GetActiveRemanentesUseCase — cálculo de hoursRemaining / isCritical
     expect(critico.isCriticalAlert).toBe(true);
     expect(limite.isCriticalAlert).toBe(false);
     expect(holgado.isCriticalAlert).toBe(false);
+  });
+
+  // US-017 Escenario 2 / TK-110: el umbral es el que configuró el admin en SystemSettings,
+  // no un hardcode — antes de este fix, isCriticalAlert siempre comparaba contra 24 sin
+  // importar lo que el admin hubiera guardado.
+  it('usa el umbral configurado en SystemSettings.criticalAlertHours, no un hardcode de 24h (US-017 Escenario 2)', async () => {
+    const useCase = makeUseCase(
+      [{ id: 'r18h', expirationDate: new Date(FIXED_NOW.getTime() + 18 * 60 * 60 * 1000) }],
+      12 // umbral configurado a 12h (en vez del default 24h)
+    );
+    const [rem] = await useCase.execute();
+    // Con el umbral en 12h, un remanente con 18h restantes deja de ser crítico.
+    expect(rem.isCriticalAlert).toBe(false);
   });
 });

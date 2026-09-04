@@ -56,8 +56,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-074-FE** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-074`. Destino de cocina dinámico en extracción + bloqueo de toggle/borrado de sector con existencias. | 🟢 P2 - Media |
 | **TK-096** | `stock` | **Muy Alto** | **Media** | 8 SP | Depende de `TK-060`, `TK-072`, `TK-074`. Stock multi-sector de bodega (`WarehouseStock` 1:N con FK a `StorageLocation`), sector obligatorio en alta/reabastecimiento, origen elegido en extracción, migración de datos. ✅ Done. | 🟢 P2 - Media |
 | **TK-096-FE** | `stock` | **Alto** | **Media** | 5 SP | Depende de `TK-096`, `TK-074-FE`. Selectores de sub-sector en alta/reabastecimiento/extracción + desglose de stock por sector en el catálogo. ✅ Done. | 🟢 P2 - Media |
-| **TK-075** | `settings` | **Medio** | **Media** | 3 SP | Depende de `TK-001`. API de Configuración General del Restaurante (`SystemSettings`). | 🟢 P2 - Media |
-| **TK-075-FE** | `settings` | **Medio** | **Media** | 3 SP | Depende de `TK-075`. Modal de Configuración General y branding dinámico en header. | 🟢 P2 - Media |
+| **TK-075** | `settings` | **Medio** | **Media** | 3 SP | Depende de `TK-001`. API de Configuración General del Restaurante (`SystemSettings`). ✅ Done (status corregido en `TK-110` — estaba implementado desde hace varios tickets, el doc había quedado en `BACKLOG`). | 🟢 P2 - Media |
+| **TK-075-FE** | `settings` | **Medio** | **Media** | 3 SP | Depende de `TK-075`. Modal de Configuración General y branding dinámico en header. ✅ Done (status corregido en `TK-110`, mismo motivo). | 🟢 P2 - Media |
 | **TK-077** | `auth` | **Alto** | **Alta** | 5 SP | Depende de `TK-002`. Recuperación de Acceso y Reseteo de PIN del Administrador por Email. | 🟡 P1 - Alta |
 | **TK-077-FE** | `auth` | **Alto** | **Alta** | 3 SP | Depende de `TK-077`. Modal Táctil y Pantalla de Recuperación de PIN de Administrador. | 🟡 P1 - Alta |
 | **TK-078** | `reports` | **Alto** | **Media** | 3 SP | Depende de `TK-057`, `TK-010`. Costeo de insumos y valorización monetaria de mermas — cierra el gap del KPI financiero #1 del PRD. | 🟡 P1 - Alta |
@@ -97,6 +97,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-108-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-108`, `TK-107-FE`. `US-004`: modal de motivo al consumir (reemplaza el toque directo). ✅ Done. | 🟡 P1 - Alta |
 | **TK-109** | `kitchen` | **Alto** | **Alta** | 5 SP | Depende de `TK-107`. `US-008`: motivo obligatorio en varianza negativa de conciliación de turno + fix de bug (superávit no sincronizaba el remanente). ✅ Done. | 🟡 P1 - Alta |
 | **TK-109-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-109`, `TK-107-FE`. `US-008`: selector de motivo por línea con varianza negativa en el wizard de cierre de turno. ✅ Done. | 🟡 P1 - Alta |
+| **TK-110** | `kitchen` | **Bajo** | **Baja** | 2 SP | `US-017`: umbral de alerta crítica FEFO leía un `24` hardcodeado en vez de `SystemSettings.criticalAlertHours` — remediación técnica (C-DEV-006-4). ✅ Done. | 🟢 P2 - Media |
 
 ---
 
@@ -182,6 +183,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-108-FE** | [US-004](../11_user_stories/kitchen/US-004.md) | Modal de Motivo al Consumir un Remanente | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-108-FE.md](kitchen/frontend/TK-108-FE.md) |
 | **TK-109** | [US-008](../11_user_stories/kitchen/US-008.md) | Motivo en Varianza Negativa + Fix de Superávit | `kitchen` | 5 | Should Have | [kitchen/backend/TK-109.md](kitchen/backend/TK-109.md) |
 | **TK-109-FE** | [US-008](../11_user_stories/kitchen/US-008.md) | Selector de Motivo por Línea en Cierre de Turno | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-109-FE.md](kitchen/frontend/TK-109-FE.md) |
+| **TK-110** | [US-017](../11_user_stories/settings/US-017.md) | Umbral de Alerta Crítica FEFO Ignoraba SystemSettings | `kitchen` | 2 | Should Have | [kitchen/backend/TK-110.md](kitchen/backend/TK-110.md) |
 | **TK-106-FE** | [US-025](../11_user_stories/stock/US-025.md) | Aviso de Stock por Sub-Sector en la Extracción de Bodega | `stock` | 2 | Must Have | [stock/frontend/TK-106-FE.md](stock/frontend/TK-106-FE.md) |
 | **TK-075-FE** | [US-017](../11_user_stories/settings/US-017.md) | Frontend System Settings & Branding UI | `settings` | 3 | Should Have | [settings/frontend/TK-075-FE.md](settings/frontend/TK-075-FE.md) |
 | **TK-077-FE** | [US-018](../11_user_stories/auth/US-018.md) | Modal Táctil y Pantalla de Recuperación de PIN de Administrador | `auth` | 3 | Should Have | [auth/frontend/TK-077-FE.md](auth/frontend/TK-077-FE.md) |
