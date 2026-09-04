@@ -225,6 +225,45 @@ function wysiwygUiTestSelectAllScript(string $regionSelector): string
     JS;
 }
 
+/**
+ * JS (D-16bis): places a collapsed caret at the very START of the FIRST `<pre><code>` block's own
+ * text -- which the block must already carry SOME content (this project's D6/D9-adjacent Chromium
+ * quirk, confirmed empirically: `execCommand('insertText', ...)` on a Range anchored inside a
+ * genuinely EMPTY inline element inserts the character as a preceding SIBLING of that element
+ * instead of inside it, even when the Range is built against an explicitly-appended empty text
+ * node; anchored inside an existing non-empty text node, it behaves exactly as expected) -- then
+ * types `$text` one character at a time via `document.execCommand('insertText', ...)`. That is a
+ * real DOM text mutation that fires a native `input` event per character exactly like keyboard
+ * typing does, so this exercises `onEditorInput()`'s live-colouring path on every single keystroke
+ * (never one bulk mutation). Kept as one script() call, mirroring this file's own established
+ * D6/V13 technique of building caret/selection state via a `Range` rather than driving Playwright's
+ * own keyboard input -- there is no existing use of this plugin's `keys()`/`type()` methods against
+ * a contenteditable region anywhere in this project to build on instead.
+ */
+function wysiwygUiTestTypeIntoCodeBlockScript(string $regionSelector, string $text): string
+{
+    $jsonText = json_encode($text);
+
+    return <<<JS
+        (function() {
+            const region = document.querySelector('{$regionSelector}');
+            const code = region.querySelector('pre code');
+            const textNode = code.firstChild;
+            region.focus();
+            const range = document.createRange();
+            range.setStart(textNode, 0);
+            range.collapse(true);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            Array.from({$jsonText}).forEach((character) => {
+                document.execCommand('insertText', false, character);
+            });
+        })()
+    JS;
+}
+
 // =====================================================================
 // Applying an inline text format wraps the selection, and re-applying it removes the wrap --
 // Gherkin's two "inline_format" Scenario Outlines (bold/italic/underline), collapsed into one
@@ -394,9 +433,11 @@ test('clicking the link button opens the popover and a real click does not immed
 // =====================================================================
 // Insert code: wrapping a selection (or nothing, at a collapsed caret) in
 // <pre><code class="language-{lang}">, followed by an empty paragraph so the caret always has
-// somewhere to land after the block. Never syntax-highlighted inside this admin editor -- that is
-// this feature's own deliberate scope (highlighting applies only where the description is later
-// RENDERED, never inside the WYSIWYG itself), so no colouring assertion belongs here.
+// somewhere to land after the block. These tests assert the RAW text each language produces --
+// deliberately picking selections/languages hljs.highlight() leaves untouched (an unmatched word
+// under a `php` grammar, an empty string) so the assertions stay about the insertion shape itself,
+// not about hljs's own tokenisation. Live COLOURING (D-16bis) is covered separately, further down
+// this file, by a case chosen specifically to exercise it.
 // =====================================================================
 
 test('inserting a code block wraps the current selection in pre/code carrying the chosen language class', function () {
@@ -438,7 +479,12 @@ test('inserting a code block with nothing selected produces an empty pre/code bl
 // re-parsed as HTML -- the same safe-insertion shape insertImage()'s `alt` already relies on
 // (App\Actions\Products\SanitizeProductDescription is a SEPARATE, server-side authoritative check;
 // this proves the CLIENT-side insertion path itself never lets a `<`/`>` in selected text become a
-// real element).
+// real element). This selection's language (`javascript`) DOES get live-coloured (D-16bis) --
+// "if" and "c" both match hljs's own javascript grammar -- so the expected shape below is the
+// full, real `hljs.highlight()` output for this exact string (verified directly against the
+// installed highlight.js version, not guessed), rather than the earlier tests' deliberately
+// hljs-inert selections. hljs escapes `&`/`<`/`>` in its own output exactly like the raw-text
+// insertion path already did, so the safety property under test is unaffected by colouring.
 test('code inserted from a selection containing angle brackets renders as literal text, not markup', function () {
     $actor = wysiwygUiTestActor();
     $this->actingAs($actor);
@@ -453,7 +499,10 @@ test('code inserted from a selection containing angle brackets renders as litera
     $page->select('@wysiwyg-code-language', 'javascript')
         ->click(wysiwygUiTestControl('wysiwyg-insert-code'))
         ->assertNoJavaScriptErrors()
-        ->assertSourceInHas($region, '<pre><code class="language-javascript">if (a &lt; b) { c(); }</code></pre>')
+        ->assertSourceInHas(
+            $region,
+            '<pre><code class="language-javascript"><span class="hljs-keyword">if</span> (a &lt; b) { <span class="hljs-title function_">c</span>(); }</code></pre>'
+        )
         // The negative half: if the "&lt;" text had been re-parsed as a real "<" instead of
         // staying literal, a real (and, per the sanitizer's own allow-list, unsupported) element
         // boundary would exist here -- assert its absence directly rather than only the positive
@@ -830,4 +879,168 @@ test('a representative sequence of toolbar actions produces no JavaScript errors
     });
 
     wysiwygUiTestCleanupMedia($media);
+});
+
+// =====================================================================
+// Live syntax colouring & Preview mode (D-16bis) -- an explicit revision of this story's earlier
+// "display-only highlighting" decision: code is now coloured LIVE, per keystroke, inside the editor
+// itself, and a third Preview mode (alongside Edit/HTML source in the same toolbar panel) shows a
+// read-only rendering of the whole description. What is ever SYNCED to the server stays plain,
+// uncoloured code text throughout -- colouring is a purely client-side rendering affordance
+// (resources/js/app.js's buildCleanValue()).
+// =====================================================================
+
+test('typing inside a code block colours it live, per keystroke, while the caret survives every re-colour', function () {
+    $actor = wysiwygUiTestActor();
+    $this->actingAs($actor);
+    $product = wysiwygUiTestProduct();
+
+    $region = wysiwygUiTestRegion();
+
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
+
+    // A PHP code block wrapping the selected word "BEFORE" -- the exact shape "inserting a code
+    // block wraps the current selection" above already proves insertCodeBlock() itself produces.
+    // The block therefore already carries text (never an EMPTY <code>) before any typing happens,
+    // which the typing helper's own docblock explains is required for
+    // execCommand('insertText', ...) to land inside the block at all.
+    $page->script(wysiwygUiTestSelectWordScript($region, 'BEFORE'));
+    $page->select('@wysiwyg-code-language', 'php')
+        ->click(wysiwygUiTestControl('wysiwyg-insert-code'))
+        ->assertNoJavaScriptErrors()
+        ->assertSourceInHas($region, '<pre><code class="language-php">BEFORE</code></pre>');
+
+    // Typed at the very START of "BEFORE": "echo" alone is a recognised PHP keyword; "$x"
+    // immediately after it is a recognised PHP variable -- together they exercise BOTH a mid-word
+    // state (no colouring is expected until "echo" is complete: hljs.highlight('ech', {language:
+    // 'php'}) is verified to stay plain) and a colour BOUNDARY the caret must cross correctly (the
+    // 5th and 6th keystrokes land immediately after an already-coloured span, not inside a plain
+    // run of text) -- a broken caret restore would scramble the character order or drop keystrokes
+    // (e.g. typing into "BEFORE" itself, or reordering around it), which the exact final shape
+    // below -- "echo$x" immediately followed by the UNTOUCHED original "BEFORE" -- would not
+    // tolerate.
+    $page->script(wysiwygUiTestTypeIntoCodeBlockScript($region, 'echo$x'));
+
+    $page->assertNoJavaScriptErrors()
+        ->assertSourceInHas(
+            $region,
+            '<pre><code class="language-php"><span class="hljs-keyword">echo</span><span class="hljs-variable">$xBEFORE</span></code></pre>'
+        );
+
+    // scheduleSync()'s own 400ms debounce (D9) has not necessarily flushed $wire.set('value', ...)
+    // the instant the last keystroke's script() call returns -- a bounded, documented wait (this
+    // file's own established `->wait()` carve-out, docs/testing/frontend/playwright-setup.md)
+    // before Save, never a longer one racing Playwright::$timeout.
+    $page->wait(1);
+
+    // The colouring is undone before it is ever synced to the server -- Save and reload proves the
+    // PERSISTED value is plain code text, never the hljs-* spans the editor showed live.
+    $page->click('Save')
+        ->assertNoJavaScriptErrors()
+        ->assertUrlIs(route('products.index'));
+
+    expect($product->fresh()->description)
+        ->toContain('<pre><code class="language-php">echo$xBEFORE</code></pre>')
+        ->not->toContain('hljs-');
+});
+
+// =====================================================================
+// A code block already present when the editor mounts (i.e. seeded in `$value` from the database)
+// is coloured immediately, not only once the administrator starts editing it -- D-16bis's own
+// init()-time highlightAllCodeBlocks() call.
+// =====================================================================
+
+test('a code block already present in the description is coloured as soon as the editor mounts', function () {
+    $actor = wysiwygUiTestActor();
+    $this->actingAs($actor);
+    $product = wysiwygUiTestProduct('<pre><code class="language-php">echo$x</code></pre>');
+
+    $region = wysiwygUiTestRegion();
+
+    visit(route('products.edit', $product))
+        ->assertNoJavaScriptErrors()
+        ->assertSourceInHas(
+            $region,
+            '<pre><code class="language-php"><span class="hljs-keyword">echo</span><span class="hljs-variable">$x</span></code></pre>'
+        );
+});
+
+// =====================================================================
+// Preview mode: a third, read-only view alongside Edit/HTML source in the same toolbar panel,
+// showing exactly how the description will render -- including the SAME live colouring the editor
+// itself already shows, since previewHtml is a snapshot of the editor's own current markup.
+// Toggling it a second time returns to the normal Edit view.
+// =====================================================================
+
+test('the preview toggle shows a read-only, coloured rendering and hides the editor, and toggling again returns to Edit', function () {
+    $actor = wysiwygUiTestActor();
+    $this->actingAs($actor);
+    $product = wysiwygUiTestProduct('<p><b>BEFORE</b> AFTER</p><pre><code class="language-php">echo$x</code></pre>');
+
+    $region = wysiwygUiTestRegion();
+    $preview = wysiwygUiTestControl('wysiwyg-preview');
+    $previewToggle = wysiwygUiTestControl('wysiwyg-preview-toggle');
+
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
+
+    $page->assertVisible($region)
+        ->assertMissing($preview);
+
+    $page->click($previewToggle)
+        ->assertNoJavaScriptErrors()
+        ->assertVisible($preview)
+        ->assertMissing($region)
+        // The formatting toolbar is meaningless while nothing is editable -- hidden along with the
+        // editor itself (the same `x-show="!htmlSourceMode && !previewMode"` group the HTML-source
+        // toggle already hides).
+        ->assertMissing(wysiwygUiTestControl('wysiwyg-bold'))
+        ->assertSourceInHas($preview, '<b>BEFORE</b>')
+        ->assertSourceInHas($preview, '<span class="hljs-keyword">echo</span><span class="hljs-variable">$x</span>');
+
+    $page->click($previewToggle)
+        ->assertNoJavaScriptErrors()
+        ->assertVisible($region)
+        ->assertMissing($preview);
+});
+
+// =====================================================================
+// Mutual exclusivity between Preview and HTML source (D-16bis): only one of the three modes is ever
+// open at once, and switching directly from one to the other commits/refreshes correctly rather
+// than leaving stale content behind.
+// =====================================================================
+
+test('switching directly from Preview to HTML source, and back to Preview, shows the current content in each', function () {
+    $actor = wysiwygUiTestActor();
+    $this->actingAs($actor);
+    $product = wysiwygUiTestProduct('<p>BEFORE AFTER</p>');
+
+    $region = wysiwygUiTestRegion();
+    $preview = wysiwygUiTestControl('wysiwyg-preview');
+    $source = wysiwygUiTestControl('wysiwyg-html-source');
+    $previewToggle = wysiwygUiTestControl('wysiwyg-preview-toggle');
+    $sourceToggle = wysiwygUiTestControl('wysiwyg-html-source-toggle');
+
+    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
+
+    $page->click($previewToggle)->assertNoJavaScriptErrors()->assertVisible($preview);
+
+    // Switching directly to HTML source (without first returning to Edit) closes Preview and shows
+    // the editable source textarea instead -- never both, never neither.
+    $page->click($sourceToggle)
+        ->assertNoJavaScriptErrors()
+        ->assertVisible($source)
+        ->assertMissing($preview)
+        ->assertMissing($region)
+        ->assertValue($source, '<p>BEFORE AFTER</p>');
+
+    $page->fill($source, '<p>REPLACED</p>');
+
+    // Switching directly to Preview from HTML source commits the edit made there first (mirroring
+    // toggleHtmlSource()'s own OUT transition), so Preview reflects it rather than stale content
+    // from before the source-mode edit.
+    $page->click($previewToggle)
+        ->assertNoJavaScriptErrors()
+        ->assertVisible($preview)
+        ->assertMissing($source)
+        ->assertSourceInHas($preview, '<p>REPLACED</p>');
 });

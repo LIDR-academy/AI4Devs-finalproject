@@ -201,16 +201,17 @@ test('all eight toolbar controls render with their data-test hook and aria-label
 });
 
 // =====================================================================
-// The two new controls: the code-block insert button (plus its language <select>) and the
-// HTML-source toggle button. Both carry a real aria-label like every button above.
+// The three new controls: the code-block insert button (plus its language <select>), the
+// HTML-source toggle button and the Preview toggle button (D-16bis). All three carry a real
+// aria-label like every button above.
 // =====================================================================
 
-test('the insert-code button and the html-source toggle button render with their data-test hook and aria-label', function () {
+test('the insert-code, html-source toggle and preview toggle buttons render with their data-test hook and aria-label', function () {
     $this->actingAs(wysiwygEditorRenderingTestActor());
 
     $html = Livewire::test(WysiwygEditor::class)->html();
 
-    foreach (['wysiwyg-insert-code', 'wysiwyg-html-source-toggle'] as $hook) {
+    foreach (['wysiwyg-insert-code', 'wysiwyg-html-source-toggle', 'wysiwyg-preview-toggle'] as $hook) {
         expect($html)->toContain('data-test="'.$hook.'"');
         expect(wysiwygEditorControlHasAriaLabel($html, $hook))->toBeTrue("Expected [{$hook}] to carry a real aria-label.");
     }
@@ -254,13 +255,13 @@ test('the code-language select offers exactly config allowed_code_languages, eac
 // the Link button, itself inside the toolbar element) -- verified empirically, not assumed, via
 // `php artisan tinker` against the real rendered HTML. They are stripped out by name before
 // counting, since they are not toolbar ACTION buttons in D10's sense; what remains is exactly the
-// eleven controls the toolbar's whole action set now carries -- D10's original eight (Bold,
+// twelve controls the toolbar's whole action set now carries -- D10's original eight (Bold,
 // Italic, Underline, H2, bullet list, numbered list, link, "Insert image"), plus the code-block
-// language <select>, the "Insert code" button and the HTML-source toggle button added alongside
-// config('html-sanitizer.allowed_code_languages').
+// language <select>, the "Insert code" button, the HTML-source toggle button (added alongside
+// config('html-sanitizer.allowed_code_languages')) and the Preview toggle button (D-16bis).
 // =====================================================================
 
-test('the toolbar region renders exactly eleven wysiwyg controls and no others', function () {
+test('the toolbar region renders exactly twelve wysiwyg controls and no others', function () {
     $this->actingAs(wysiwygEditorRenderingTestActor());
 
     $html = Livewire::test(WysiwygEditor::class)->html();
@@ -273,7 +274,7 @@ test('the toolbar region renders exactly eleven wysiwyg controls and no others',
         $toolbarHtml
     );
 
-    expect(substr_count($toolbarHtml, 'data-test="wysiwyg-'))->toBe(11);
+    expect(substr_count($toolbarHtml, 'data-test="wysiwyg-'))->toBe(12);
 });
 
 // =====================================================================
@@ -307,6 +308,24 @@ test('the html-source textarea renders hidden by default, with no wire:model of 
     expect(wysiwygEditorElementHasAttributeNamed($html, 'wysiwyg-html-source', 'x-cloak'))->toBeTrue();
     expect(wysiwygEditorElementHasAttributeNamed($html, 'wysiwyg-html-source', 'wire:model'))->toBeFalse();
     expect(wysiwygEditorElementHasAttributeNamed($html, 'wysiwyg-html-source', 'contenteditable'))->toBeFalse();
+});
+
+// =====================================================================
+// Test 2c (D-16bis) -- the Preview pane renders alongside the editable region and the HTML-source
+// textarea, hidden by default (x-show="previewMode" plus x-cloak, mirroring the html-source
+// textarea's own pattern above). It carries a real aria-label and no wire:model of its own --
+// `previewHtml` is written client-side only, via Alpine's `x-html`, never through Livewire.
+// =====================================================================
+
+test('the preview pane renders hidden by default, with a real aria-label and no wire:model of its own', function () {
+    $this->actingAs(wysiwygEditorRenderingTestActor());
+
+    $html = Livewire::test(WysiwygEditor::class)->html();
+
+    expect($html)->toContain('data-test="wysiwyg-preview"');
+    expect(wysiwygEditorControlHasAriaLabel($html, 'wysiwyg-preview'))->toBeTrue();
+    expect(wysiwygEditorElementHasAttributeNamed($html, 'wysiwyg-preview', 'x-cloak'))->toBeTrue();
+    expect(wysiwygEditorElementHasAttributeNamed($html, 'wysiwyg-preview', 'wire:model'))->toBeFalse();
 });
 
 // =====================================================================
@@ -378,6 +397,7 @@ test('the other toolbar buttons render enabled regardless of media permissions',
         'wysiwyg-link',
         'wysiwyg-insert-code',
         'wysiwyg-html-source-toggle',
+        'wysiwyg-preview-toggle',
     ];
 
     foreach ($nonImageHooks as $hook) {
