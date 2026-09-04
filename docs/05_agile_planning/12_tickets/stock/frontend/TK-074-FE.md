@@ -3,13 +3,13 @@ ticket: TK-074-FE
 title: Frontend — Dynamic Storage Locations Selector & Management UI
 epic: Inventario y Bodega
 user_story: US-016
-status: PARTIAL
+status: done
 points: 3
 ---
 
 # 🎟️ Ticket Técnico: TK-074-FE — Frontend Storage Locations UI
 
-> **Estado (2026-09-03):** Tarea 2 ✅ — `LocationsManagementModal` deshabilita desactivar/eliminar de un sector con `hasStock` y traduce el `409` (implementado junto a `TK-096-FE`, commit `fbbcc2a`). Tarea 1 (destino de cocina dinámico en el modal de extracción) **pendiente**: los valores `KITCHEN_FRIDGE`/`KITCHEN_PREP`/`KITCHEN_LINE` fluyen a `Remanente.location` y al tablero FEFO; sustituirlos por sectores dinámicos necesita su propio análisis de compatibilidad y queda fuera de esta tanda.
+> **Estado (2026-09-04, corregido — ambas tareas ya estaban completas):** Tarea 2 ✅ — `LocationsManagementModal` deshabilita desactivar/eliminar de un sector con `hasStock` y traduce el `409` (implementado junto a `TK-096-FE`, commit `fbbcc2a`). **Tarea 1 (destino de cocina dinámico) también ✅** — se dio por pendiente por error de seguimiento: `TK-102-FE` (US-026, ya implementado) reemplazó el `<select>` de destino por `StorageSectorSelect` con `areaType="KITCHEN"`, que puebla desde `GET /api/v1/locations` filtrado a `type=KITCHEN && isActive` (`fetchActiveKitchenAreas()`), sin ningún literal hardcodeado. Verificado: cero referencias a `KITCHEN_FRIDGE/PREP/LINE` como opciones de UI en todo el frontend (los únicos restantes son defaults/fixtures de backend y `resolveKitchenArea.ts`, un shim de compatibilidad legado deliberado, no UI). Cubierto por el test `TK-102-FE (US-026): envía toStorageLocationId con el id del área de cocina elegida del catálogo` en `WarehouseExtractionModal.test.tsx` (13/13 verde). Este ticket se cierra sin código nuevo — la corrección fue puramente de documentación.
 
 ## 🎯 Objetivo
 `LocationsService` y `LocationsManagementModal.tsx` **ya existen**. Falta: (a) que el desplegable de **destino de cocina** del modal de extracción se pueble dinámicamente desde `GET /api/v1/locations` (`type = KITCHEN`, activos) en vez de los literales `KITCHEN_FRIDGE/PREP/LINE` hardcodeados; (b) que `LocationsManagementModal` deshabilite el toggle de actividad y el borrado de un sector con `hasStock: true` mostrando el motivo, y traduzca el `409` del backend.

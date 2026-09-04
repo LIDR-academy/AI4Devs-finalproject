@@ -26,8 +26,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Permite a un Administrador sumar stock a un insumo existente cuando llega una entrega nueva del proveedor. ✅ Backend (`TK-060`) y Frontend (`TK-060-FE`) implementados.
 *   **[US-014: Trazabilidad Completa en Extracciones](stock/US-014.md)**
     *   *Descripción:* Permite especificar el propósito (`KITCHEN_STOCK`, `RECIPE`, `DIRECT_DISCARD`), motivo y responsable en las extracciones de bodega. ✅ Backend (`TK-072`) y Frontend (`TK-072-FE`) implementados.
-*   **[US-016: Definición de Sectores de Almacenamiento](stock/US-016.md)**
-    *   *Descripción:* Permite configurar y administrar los sectores físicos reales del restaurante (cámaras frías, bodegas secas, mesas de preparación). 🚧 CRUD y pantalla de gestión existentes; pendiente cablear desplegables dinámicos y `requireRole('ADMIN')` (`TK-074` / `TK-074-FE`).
+*   **[US-016: Definición de Sectores de Almacenamiento](stock/US-016.md)** ✅ Done
+    *   *Descripción:* Permite configurar y administrar los sectores físicos reales del restaurante (cámaras frías, bodegas secas, mesas de preparación). CRUD, `requireRole('ADMIN')` y ambos desplegables dinámicos (origen de bodega y destino de cocina, este último cerrado en `TK-102-FE`) implementados (`TK-074` / `TK-074-FE`).
 *   **[US-025: Depósito de Insumos en Sub-Sector de Bodega y Stock Multi-Sector](stock/US-025.md)**
     *   *Descripción:* Al dar de alta o reabastecer un insumo se indica el sub-sector físico de bodega donde queda depositado; el stock se rastrea por par `(insumo, sub-sector)` y la extracción exige elegir el sector de origen validando su saldo. 📋 Spec aprobada — pendiente `TK-096` / `TK-096-FE`.
 *   **[US-021: Advertencia de Apertura Duplicada al Extraer Insumo](stock/US-021.md)** ✅
