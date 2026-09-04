@@ -35,6 +35,20 @@ return [
         'insert_image' => 'Insertar imagen',
         'insert_image_confirm' => 'Insertar imagen',
         'insert_image_not_allowed' => 'No tienes permiso para insertar imágenes.',
+
+        'insert_code' => 'Insertar bloque de código',
+        'code_language_plaintext' => 'Texto plano',
+        'code_language_php' => 'PHP',
+        'code_language_html' => 'HTML',
+        'code_language_css' => 'CSS',
+        'code_language_javascript' => 'JavaScript',
+        'code_language_json' => 'JSON',
+        'code_language_sql' => 'SQL',
+        'code_language_bash' => 'Bash',
+        'code_language_xml' => 'XML',
+
+        'toggle_html_source' => 'Editar código HTML',
+        'html_source_label' => 'Código HTML',
     ],
 
     /*

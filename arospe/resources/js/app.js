@@ -37,6 +37,21 @@ document.addEventListener('alpine:init', () => {
         linkUrl: '',
         linkError: '',
 
+        // The HTML-source toggle's own state: when true, `$refs.editor` (the contenteditable
+        // region) and the formatting toolbar are hidden, and `htmlSource` -- a plain <textarea>,
+        // never itself contenteditable -- shows/edits the region's raw markup instead. `htmlSource`
+        // is populated ONLY at the moment of toggling INTO source mode (toggleHtmlSource() below)
+        // and is written back into `$refs.editor.innerHTML` ONLY at the moment of toggling back OUT
+        // -- there is no live two-way sync while source mode is open, matching D9's "sync at
+        // defined points only" rule for the contenteditable region itself.
+        htmlSourceMode: false,
+        htmlSource: '',
+
+        // The code-block insert control's own state: the toolbar <select> this is bound to lists
+        // exactly config('html-sanitizer.allowed_code_languages') (passed in from Blade, D-16 --
+        // the two lists cannot drift because one is the source of the other).
+        codeLanguage: 'plaintext',
+
         syncTimeoutId: null,
 
         init() {
@@ -206,6 +221,60 @@ document.addEventListener('alpine:init', () => {
             document.execCommand('createLink', false, url);
             this.scheduleSync();
             this.linkPopoverOpen = false;
+        },
+
+        // Switches the editable region between the normal contenteditable view and a plain
+        // <textarea> showing/editing `$refs.editor.innerHTML` verbatim as text. Reading and writing
+        // `.innerHTML` is what this project's own D9 rule already relies on for the initial
+        // server-rendered seed ({!! $value !!}); this reuses exactly that mechanism at a second,
+        // administrator-triggered point rather than inventing a new one. Setting `.innerHTML` from
+        // a string never EXECUTES any markup in it (browsers do not run <script> content assigned
+        // this way), so toggling back out with an administrator's pasted markup is inert in this
+        // browser tab regardless of what it contains -- the authoritative check remains
+        // App\Actions\Products\SanitizeProductDescription on save, exactly as it already is for
+        // every other insertion path in this file. Toggling OUT syncs immediately (not the
+        // debounced scheduleSync()) since this is a deliberate, discrete edit, not a keystroke.
+        toggleHtmlSource() {
+            if (this.htmlSourceMode) {
+                this.$refs.editor.innerHTML = this.htmlSource;
+                this.htmlSourceMode = false;
+                this.refreshActiveStates();
+                this.$wire.set('value', this.$refs.editor.innerHTML);
+
+                return;
+            }
+
+            this.htmlSource = this.$refs.editor.innerHTML;
+            this.htmlSourceMode = true;
+        },
+
+        // Inserts an empty `<pre><code class="language-{codeLanguage}">` block at the caret (or
+        // wrapping the current selection's text, if any), followed by an empty paragraph so the
+        // caret always has somewhere to land AFTER the block -- without it, a `<pre>` landing as
+        // the region's last child leaves no way to click past it to keep typing prose, the same
+        // "no exit" trap a block-level insertion at the end of a contenteditable region always
+        // risks. Built via createElement + .textContent (never a template string interpolating the
+        // selected text into HTML), so a selection containing `<`/`&`/`>` is rendered as literal
+        // code text rather than being re-parsed as markup -- the identical safe-insertion shape
+        // insertImage() below already uses for `alt`.
+        insertCodeBlock() {
+            this.$refs.editor.focus();
+
+            const selection = window.getSelection();
+            const selectedText = selection && this.$refs.editor.contains(selection.anchorNode)
+                ? selection.toString()
+                : '';
+
+            const code = document.createElement('code');
+            code.className = 'language-' + this.codeLanguage;
+            code.textContent = selectedText;
+
+            const pre = document.createElement('pre');
+            pre.appendChild(code);
+
+            document.execCommand('insertHTML', false, pre.outerHTML + '<p><br></p>');
+
+            this.scheduleSync();
         },
 
         // D6 steps 4-6, the server -> client delivery this method is the target of: a scoped

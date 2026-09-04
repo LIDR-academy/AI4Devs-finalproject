@@ -5,6 +5,7 @@ namespace App\Livewire\Components;
 use App\Actions\Auth\LogRefusedPrivilegedAttempt;
 use App\Models\Media;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Modelable;
 use Livewire\Attributes\On;
@@ -12,10 +13,12 @@ use Livewire\Component;
 
 /**
  * Story 0021 -- a reusable, content-agnostic rich-text editor whose toolbar
- * carries exactly eight actions (Bold, Italic, Underline, H2, bullet list,
- * numbered list, link, "Insert image"). Its output is HTML that 0024's
- * server-side sanitizer accepts on write; this component performs no
- * client-side sanitization of its own -- see D2 in
+ * carries Bold, Italic, Underline, H2, bullet list, numbered list, link,
+ * "Insert image", "Insert code" and an HTML-source toggle (the last two
+ * added later, alongside config('html-sanitizer.allowed_code_languages')
+ * and its class-value-constrained `<code>` allow-list entry). Its output is
+ * HTML that 0024's server-side sanitizer accepts on write; this component
+ * performs no client-side sanitization of its own -- see D2 in
  * ai-spec/tasks/in-progress/0021-wysiwyg-rich-text-editor-component.md for
  * the exact tag set every toolbar action may emit.
  *
@@ -134,6 +137,24 @@ class WysiwygEditor extends Component
     public function mount(): void
     {
         $this->galleryEvent = 'wysiwyg-image-selected-'.$this->getId();
+    }
+
+    /**
+     * The code-block language `<select>`'s option list -- exactly
+     * config('html-sanitizer.allowed_code_languages'), so the editor can
+     * never offer a language App\Actions\Products\SanitizeProductDescription
+     * would then strip from `<code class="language-...">` on save. Reads
+     * config() directly rather than duplicating the list as a class
+     * constant: one array, one source of truth, matching how
+     * SanitizeProductDescription itself reads the same key.
+     *
+     * @return list<string>
+     */
+    #[Computed]
+    public function codeLanguages(): array
+    {
+        /** @var list<string> */
+        return config('html-sanitizer.allowed_code_languages', []);
     }
 
     /**

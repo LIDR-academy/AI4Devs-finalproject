@@ -35,6 +35,20 @@ return [
         'insert_image' => 'Insert image',
         'insert_image_confirm' => 'Insert image',
         'insert_image_not_allowed' => 'You do not have permission to insert images.',
+
+        'insert_code' => 'Insert code block',
+        'code_language_plaintext' => 'Plain text',
+        'code_language_php' => 'PHP',
+        'code_language_html' => 'HTML',
+        'code_language_css' => 'CSS',
+        'code_language_javascript' => 'JavaScript',
+        'code_language_json' => 'JSON',
+        'code_language_sql' => 'SQL',
+        'code_language_bash' => 'Bash',
+        'code_language_xml' => 'XML',
+
+        'toggle_html_source' => 'Edit HTML source',
+        'html_source_label' => 'HTML source',
     ],
 
     /*

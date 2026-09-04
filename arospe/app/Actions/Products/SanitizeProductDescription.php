@@ -5,6 +5,7 @@ namespace App\Actions\Products;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerAction;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
+use Symfony\Component\HtmlSanitizer\Visitor\AttributeSanitizer\AttributeSanitizerInterface;
 
 /**
  * Sanitize a product description's HTML against the allow-list in
@@ -72,6 +73,59 @@ class SanitizeProductDescription
         foreach ($allowedElements as $element => $allowedAttributes) {
             $config = $config->allowElement($element, $allowedAttributes);
         }
+
+        // `class` on `code` is not a free-form attribute: this anonymous sanitizer constrains it
+        // to exactly `language-<allowed_code_languages entry>` (a finite enumeration, not a
+        // regex-shaped allow-anything-that-matches rule) before the value ever reaches the DOM
+        // this action returns. An out-of-list value is DROPPED (sanitizeAttribute returning null
+        // removes only that one attribute, per the library's own DomVisitor -- verified by reading
+        // it rather than assumed), never rejects the whole element: `<code class="evil">text</code>`
+        // survives as `<code>text</code>`, matching this file's "unwrap, don't destroy legitimate
+        // content" philosophy for everything else. Defined here, not as a named class elsewhere in
+        // app/, so this action remains the ONLY class in app/ that imports symfony/html-sanitizer
+        // at all -- the import above is this file's alone.
+        /** @var list<string> $allowedCodeLanguages */
+        $allowedCodeLanguages = array_values(array_map(
+            fn (mixed $language): string => (string) $language,
+            (array) config('html-sanitizer.allowed_code_languages', []),
+        ));
+
+        $config = $config->withAttributeSanitizer(new class($allowedCodeLanguages) implements AttributeSanitizerInterface
+        {
+            /**
+             * @param  list<string>  $allowedCodeLanguages
+             */
+            public function __construct(private readonly array $allowedCodeLanguages) {}
+
+            /**
+             * @return list<string> never null -- the interface's own return type is nullable
+             *                      (null would mean "supports every element"), which this sanitizer never needs; the
+             *                      `?` stays because it is the interface's own signature, not a choice made here.
+             */
+            // @phpstan-ignore return.unusedType
+            public function getSupportedElements(): ?array
+            {
+                return ['code'];
+            }
+
+            /**
+             * @return list<string> never null, for the identical reason getSupportedElements()
+             *                      above states.
+             */
+            // @phpstan-ignore return.unusedType
+            public function getSupportedAttributes(): ?array
+            {
+                return ['class'];
+            }
+
+            public function sanitizeAttribute(string $element, string $attribute, string $value, HtmlSanitizerConfig $config): ?string
+            {
+                return in_array($value, array_map(
+                    fn (string $language): string => 'language-'.$language,
+                    $this->allowedCodeLanguages,
+                ), true) ? $value : null;
+            }
+        });
 
         // Phase 4 audit finding F-1: `default_action` ('block') keeps a blocked element's TEXT
         // CONTENT by design, which is correct for an ordinary wrapper tag but wrong for a

@@ -58,6 +58,14 @@
         PHP SYNTAX ERROR that breaks the ENTIRE compiled view, not just this button's disabled state.
         The same family as the already-documented tooltip-presence and cursor-not-allowed traps
         (docs/errors-log.md) -- do not "simplify" this back into a single conditional attribute. --}}
+        {{-- The whole formatting group (everything through the "Insert image" button) is wrapped
+        in a `display: contents` element hidden via `x-show` while the HTML-source view is open --
+        every command here acts on `$refs.editor`'s live selection, which is meaningless (and, for
+        insertCodeBlock()/insertImage(), actively wrong) while that region is hidden and a <textarea>
+        holds focus instead. `class="contents"` rather than a plain wrapper `<div>` so this toggle
+        adds no extra flex item to the parent toolbar's own `flex flex-wrap` layout -- every child
+        below still participates in that layout directly. --}}
+        <div class="contents" x-show="!htmlSourceMode">
         @if ($disabled)
             <flux:button
                 variant="ghost"
@@ -300,6 +308,74 @@
                 />
             </flux:tooltip>
         @endcan
+
+        <flux:separator vertical class="mx-1 h-6" />
+
+        {{-- The code-block insert control: a language <select> (populated from
+        config('html-sanitizer.allowed_code_languages') -- the exact same list the sanitizer
+        constrains `class` against, so the editor can never offer a language the server would then
+        strip on save) plus a button that wraps the current selection (or inserts an empty block)
+        in `<pre><code class="language-{lang}">`. Syntax colouring is deliberately NOT applied here
+        -- the code stays plain text in the editor, per this feature's own D-X (display-only
+        highlighting): a highlighting LIBRARY runs only wherever the description is later
+        RENDERED, never inside this admin editor, so this toolbar adds no new script dependency. --}}
+        @if ($disabled)
+            <flux:select disabled data-test="wysiwyg-code-language" class="w-auto">
+                <flux:select.option value="plaintext">{{ __('components.wysiwyg.code_language_plaintext') }}</flux:select.option>
+            </flux:select>
+            <flux:button
+                variant="ghost"
+                size="sm"
+                icon="code-bracket"
+                aria-label="{{ __('components.wysiwyg.insert_code') }}"
+                data-test="wysiwyg-insert-code"
+                disabled
+            />
+        @else
+            <flux:select x-model="codeLanguage" data-test="wysiwyg-code-language" class="w-auto">
+                @foreach ($this->codeLanguages as $language)
+                    <flux:select.option value="{{ $language }}">{{ __('components.wysiwyg.code_language_'.$language) }}</flux:select.option>
+                @endforeach
+            </flux:select>
+            <flux:button
+                variant="ghost"
+                size="sm"
+                icon="code-bracket"
+                aria-label="{{ __('components.wysiwyg.insert_code') }}"
+                data-test="wysiwyg-insert-code"
+                x-on:mousedown.prevent="insertCodeBlock()"
+                class="cursor-pointer!"
+            />
+        @endif
+        </div>
+
+        <flux:separator vertical class="mx-1 h-6" />
+
+        {{-- The HTML-source toggle is deliberately OUTSIDE the `x-show="!htmlSourceMode"` group
+        above -- it is the one control that must stay reachable WHILE source mode is open, or
+        there would be no way back to the normal view. `aria-pressed` mirrors the three inline
+        formatting buttons' own pattern (D10) rather than inventing a new state-reflection shape. --}}
+        @if ($disabled)
+            <flux:button
+                variant="ghost"
+                size="sm"
+                icon="code-bracket-square"
+                aria-label="{{ __('components.wysiwyg.toggle_html_source') }}"
+                data-test="wysiwyg-html-source-toggle"
+                disabled
+            />
+        @else
+            <flux:button
+                variant="ghost"
+                size="sm"
+                icon="code-bracket-square"
+                aria-label="{{ __('components.wysiwyg.toggle_html_source') }}"
+                data-test="wysiwyg-html-source-toggle"
+                x-on:mousedown.prevent="toggleHtmlSource()"
+                x-bind:aria-pressed="htmlSourceMode ? 'true' : 'false'"
+                class="cursor-pointer!"
+            />
+        @endif
     </div>
 
     {{-- D9: the app's first wire:ignore region -- Livewire must never diff/re-render this subtree,
@@ -310,6 +386,7 @@
     documented consequence (D9) a consumer must know rather than a bug. --}}
     <div
         x-ref="editor"
+        x-show="!htmlSourceMode"
         wire:ignore
         contenteditable="{{ $disabled ? 'false' : 'true' }}"
         role="textbox"
@@ -321,8 +398,26 @@
         data-placeholder="{{ $placeholder !== '' ? $placeholder : __('components.wysiwyg.placeholder') }}"
         x-on:input="onEditorInput()"
         x-on:blur="onEditorBlur()"
-        class="wysiwyg-editor-region min-h-40 rounded-b-lg border border-t-0 border-zinc-200 p-3 text-sm outline-hidden focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-accent-foreground dark:border-zinc-700 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_h2]:text-lg [&_h2]:font-semibold [&_a]:underline"
+        class="wysiwyg-editor-region min-h-40 rounded-b-lg border border-t-0 border-zinc-200 p-3 text-sm outline-hidden focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-accent-foreground dark:border-zinc-700 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_h2]:text-lg [&_h2]:font-semibold [&_a]:underline [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-zinc-100 [&_pre]:p-2 [&_pre]:font-mono [&_pre]:text-xs dark:[&_pre]:bg-zinc-800"
     >{!! $value !!}</div>
+
+    {{-- The HTML-source view: a plain <textarea>, never itself contenteditable, so nothing in this
+    region is subject to the wire:ignore'd editor's own concerns (D9) -- it is populated and read
+    back purely through Alpine's `x-model`, with no `wire:model` of its own at all. `wire:ignore` on
+    the wrapper anyway, defensively: this element is not part of the component's normal server-
+    rendered output once mounted (it starts empty, per `htmlSource`'s own initial value), so there
+    is nothing for a Livewire re-render to legitimately touch here either. --}}
+    <div wire:ignore>
+        <textarea
+            x-show="htmlSourceMode"
+            x-cloak
+            x-model="htmlSource"
+            aria-label="{{ __('components.wysiwyg.html_source_label') }}"
+            data-test="wysiwyg-html-source"
+            spellcheck="false"
+            class="min-h-40 w-full rounded-b-lg border border-t-0 border-zinc-200 p-3 font-mono text-xs outline-hidden focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-accent-foreground dark:border-zinc-700"
+        ></textarea>
+    </div>
 
     {{-- D4: the editor embeds the gallery itself, single-select, per-instance-unique select-event
     (D5). @can-wrapped per 0020 D12 -- a user lacking media.view never mounts a child that would

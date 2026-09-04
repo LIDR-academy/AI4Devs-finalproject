@@ -16,10 +16,13 @@
 //
 // The allow-list is deliberately EXACTLY the WYSIWYG toolbar's own tag set (see
 // App\Livewire\Components\WysiwygEditor / PRD §2.2 — Bold, Italic, Underline, H2, bullet list,
-// numbered list, link, insert image) plus <p>/<br>, the block/line structure any contenteditable
-// emits. Do NOT add a tag here because the sanitizer stripped something a user pasted — if the
-// toolbar cannot produce it, its presence in a submission means the input did not come from the
-// toolbar (D-16).
+// numbered list, link, insert image, insert code, HTML-source toggle) plus <p>/<br>, the
+// block/line structure any contenteditable emits. Do NOT add a tag here because the sanitizer
+// stripped something a user pasted — if the toolbar cannot produce it, its presence in a
+// submission means the input did not come from the toolbar (D-16). `pre`/`code` are the one
+// exception to "toolbar output only", by design: the HTML-source toggle deliberately lets an
+// administrator type or paste arbitrary markup, and this allow-list — not the toolbar — is what
+// decides what of it survives a save.
 return [
 
     /*
@@ -49,6 +52,33 @@ return [
         'img' => ['src', 'alt'],
         'p' => [],
         'br' => [],
+        // Code blocks (the WYSIWYG's "insert code" control and its HTML-source toggle -- both
+        // added alongside this pair). `code`'s `class` is NOT a free-form attribute: App\Actions\
+        // Products\SanitizeProductDescription registers a custom AttributeSanitizerInterface that
+        // constrains it to exactly `language-<allowed_code_languages entry>` before this allow-
+        // list is ever consulted, so allowing `class` here does not open a general class-injection
+        // hole -- every other value is stripped, not merely unrecognised. `pre` carries no `class`
+        // of its own; the language lives on the inner `<code>` only, matching highlight.js's own
+        // convention (the display-side library this markup is written for).
+        'pre' => [],
+        'code' => ['class'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowed code-block languages
+    |--------------------------------------------------------------------------
+    |
+    | The exact, closed set of `language-*` values `code`'s `class` attribute may carry, enforced
+    | by the custom attribute sanitizer in App\Actions\Products\SanitizeProductDescription — not a
+    | regex constraint, a finite enumeration, so a value can only ever be one of these or nothing.
+    | Kept as a top-level array (data, not behavior) per this file's own no-closures rule, and
+    | shared with the WYSIWYG toolbar's language <select> (App\Livewire\Components\WysiwygEditor)
+    | so the two lists cannot drift — the editor can never offer a language the sanitizer would
+    | then strip on save.
+    */
+    'allowed_code_languages' => [
+        'plaintext', 'php', 'html', 'css', 'javascript', 'json', 'sql', 'bash', 'xml',
     ],
 
     /*
