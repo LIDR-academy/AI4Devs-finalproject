@@ -10,8 +10,18 @@ set -e
 export PRISMA_QUERY_ENGINE_LIBRARY="$(find node_modules/.pnpm -name 'libquery_engine-linux-musl-openssl-3.0.x.so.node' | head -1)"
 export PRISMA_SCHEMA_ENGINE_BINARY="$(find node_modules/.pnpm -name 'schema-engine-linux-musl-openssl-3.0.x' | head -1)"
 
-echo "Aplicando esquema de base de datos (prisma db push)..."
-apps/backend/node_modules/.bin/prisma db push --schema=apps/backend/prisma/schema.prisma --config=apps/backend/prisma.config.ts --accept-data-loss
+# Guard 25 / TK-097: SIEMPRE `migrate deploy` — nunca `db push`. Los archivos de
+# `prisma/migrations/` llevan el backfill seguro de cada cambio de esquema (ej. la
+# migración 20260903230000 re-apunta las filas MAIN_WAREHOUSE al sector semilla antes
+# de imponer la FK NOT NULL); `db push --accept-data-loss` los saltaría y borraría datos.
+# TK-071 lo había parcheado a `db push` por drift migrations<->schema; TK-094 cerró esa
+# causa raíz (check_migration_schema_parity.sh verde), así que esto vuelve a ser seguro.
+#
+# Si `migrate deploy` falla en una BD que se venía gestionando con `db push` (su
+# _prisma_migrations no registra migraciones cuyos cambios YA están aplicados), hacer
+# UNA sola vez, por cada una: prisma migrate resolve --applied <migración>.
+echo "Aplicando migraciones de base de datos pendientes (prisma migrate deploy)..."
+apps/backend/node_modules/.bin/prisma migrate deploy --schema=apps/backend/prisma/schema.prisma --config=apps/backend/prisma.config.ts
 
 
 
