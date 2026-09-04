@@ -228,6 +228,52 @@ describe('TK-096-FE: WarehouseExtractionModal — Sub-sector de bodega de origen
     expect(capturedBody).toMatchObject({ fromStorageLocationId: 'loc-seed-dry' });
   });
 
+  it('TK-103-FE (US-027): modo RECIPE exige receta y envía plannedPortions + recipeId', async () => {
+    let capturedBody: Record<string, unknown> | null = null;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url.includes('/kitchen/remanentes-activos')) return { ok: true, status: 200, json: async () => [] };
+        if (url.includes('/kitchen/recipe-preparations')) return { ok: true, status: 200, json: async () => [] };
+        if (url.includes('/recipes')) return { ok: true, status: 200, json: async () => [{ id: 'rec-pizza', name: 'Pizza Margarita', category: 'Pizzas', ingredients: [] }] };
+        if (url.includes('/locations')) {
+          return { ok: true, status: 200, json: async () => [
+            { id: 'loc-seed-dry', name: 'Bodega de Secos', type: 'WAREHOUSE', isActive: true },
+            { id: 'loc-seed-kitchen-prep', name: 'Mesa de Preparación', type: 'KITCHEN', isActive: true },
+          ] };
+        }
+        if (url.includes('/stock/insumos')) return { ok: true, status: 200, json: async () => INSUMOS_FIXTURE };
+        if (url.includes('/stock/extraction')) {
+          capturedBody = JSON.parse(init?.body as string);
+          return { ok: true, status: 201, json: async () => ({
+            remanenteId: 'rem-x', recipePreparationId: 'prep-1', insumoId: 'ins-1', insumoName: 'Queso Mozzarella',
+            quantityExtracted: '1.000', fromStorageLocationId: 'loc-seed-dry', remainingSectorStock: '9.000',
+            remainingWarehouseStock: '9.000', location: 'Mesa de Preparación', expirationDate: new Date().toISOString(), status: 'ACTIVE',
+          }) };
+        }
+        return { ok: true, status: 200, json: async () => ({}) };
+      })
+    );
+
+    const onSuccess = vi.fn();
+    render(<WarehouseExtractionModal isOpen={true} onClose={() => {}} onSuccess={onSuccess} />);
+
+    await waitFor(() => expect((screen.getByLabelText(/Sector de Bodega Origen/i) as HTMLSelectElement).value).toBe('loc-seed-dry'));
+    fireEvent.change(screen.getByLabelText(/Propósito \/ Motivo/i), { target: { value: 'RECIPE' } });
+
+    // sin receta seleccionada → el submit se bloquea con validación de cliente
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar Extracción/i }));
+    expect(await screen.findByText(/seleccionar la receta que va a preparar/i)).toBeInTheDocument();
+    expect(onSuccess).not.toHaveBeenCalled();
+
+    fireEvent.change(await screen.findByLabelText(/Seleccionar Receta Destino/i), { target: { value: 'rec-pizza' } });
+    fireEvent.change(screen.getByLabelText(/Porciones Planificadas/i), { target: { value: '6' } });
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar Extracción/i }));
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(capturedBody).toMatchObject({ purpose: 'RECIPE', recipeId: 'rec-pizza', plannedPortions: 6 });
+  });
+
   it('TK-102-FE (US-026): envía toStorageLocationId con el id del área de cocina elegida del catálogo', async () => {
     let capturedBody: Record<string, unknown> | null = null;
     vi.stubGlobal(

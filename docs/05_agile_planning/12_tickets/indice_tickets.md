@@ -85,7 +85,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-102** | `stock` | **Alto** | **Media** | 8 SP | Depende de `TK-074`, `TK-096`. `US-026` / ADR-003: áreas de cocina como `StorageLocation` type=KITCHEN; `Remanente.location` String → FK; destino de cocina del catálogo en la extracción; migración Prisma. Prerrequisito de la trazabilidad de preparación. 📝 Draft. | 🟢 P2 - Media |
 | **TK-102-FE** | `stock` | **Medio** | **Media** | 5 SP | Depende de `TK-102`, `TK-074-FE`. `US-026`: desplegable de destino de cocina dinámico + gestión de áreas KITCHEN. Cierra deuda de `TK-074-FE`. ✅ Done (`d0eb145`). | 🟢 P2 - Media |
 | **TK-103** | `kitchen` | **Alto** | **Media** | 8 SP | Depende de `TK-102`, `TK-072`, `TK-069`. `US-027` / ADR-003: agregado `RecipePreparation`, apertura automática al extraer con `purpose=RECIPE`, `recipeId` obligatorio, tablero de preparaciones abiertas. ✅ Done (`e4b6777`, verificado contra Postgres real incl. rollback). | 🟢 P2 - Media |
-| **TK-103-FE** | `kitchen` | **Medio** | **Media** | 5 SP | Depende de `TK-103`, `TK-102-FE`. `US-027`: receta obligatoria + porciones planificadas en el modal de extracción; tablero "Preparaciones en curso". 📝 Draft. | 🟢 P2 - Media |
+| **TK-103-FE** | `kitchen` | **Medio** | **Media** | 5 SP | Depende de `TK-103`, `TK-102-FE`. `US-027`: receta obligatoria + porciones planificadas en el modal de extracción; tablero "Preparaciones en curso". ✅ Done. | 🟢 P2 - Media |
 | **TK-104** | `kitchen` | **Muy Alto** | **Media** | 13 SP | Depende de `TK-103`, `TK-102`, `TK-101`. `US-028` / ADR-003: cierre y abandono de preparación — consumo por cuadre, sobrante con ubicación (área de cocina o bodega si "intacto"), merma con motivo, todo en una transacción (C-DEV-006-1). 📝 Draft. | 🟢 P2 - Media |
 | **TK-104-FE** | `kitchen` | **Alto** | **Media** | 8 SP | Depende de `TK-104`, `TK-103-FE`. `US-028`: pantalla "Cerrar preparación" (sobrante + dónde + merma + motivo, cuadre visible, "envase sin abrir"). 📝 Draft. | 🟢 P2 - Media |
 | **TK-105** | `reports` | **Medio** | **Baja** | 5 SP | Depende de `TK-104`, `TK-078`. `US-029` (diferible): reporte de mermas de preparación + consumo real vs teórico; `ConsumeRecipeUseCase` legacy pasa a emitir `CONSUMPTION_RECIPE`. 📝 Draft. | 🟢 P2 - Media |
@@ -235,7 +235,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-007-C: Consumo de Recetas](kitchen/frontend/TK-007-C.md)** (Frontend)
 *   **[TK-007-D: Formulario Conciliación](kitchen/frontend/TK-007-D.md)** (Frontend)
 *   **[TK-103: Agregado `RecipePreparation` + Apertura al Extraer para Receta](kitchen/backend/TK-103.md)** (Backend) — ✅ Done. `US-027` / `ADR-003`: cierra el lazo abierto entre extracción para receta y preparación real; `recipeId` obligatorio en modo RECIPE.
-*   **[TK-103-FE: Extracción para Receta + Tablero de Preparaciones en Curso](kitchen/frontend/TK-103-FE.md)** (Frontend) — 📝 Draft. `US-027`.
+*   **[TK-103-FE: Extracción para Receta + Tablero de Preparaciones en Curso](kitchen/frontend/TK-103-FE.md)** (Frontend) — ✅ Done. `US-027`.
 *   **[TK-104: Cierre y Abandono de Preparación de Receta](kitchen/backend/TK-104.md)** (Backend) — 📝 Draft. `US-028` / `ADR-003`: consumo por cuadre, sobrante con ubicación (área de cocina o bodega si "intacto"), merma con motivo, todo en una transacción (C-DEV-006-1). Responde a "¿qué pasó con lo que sobró, dónde se guardó?".
 *   **[TK-104-FE: Pantalla "Cerrar Preparación de Receta"](kitchen/frontend/TK-104-FE.md)** (Frontend) — 📝 Draft. `US-028`.
 

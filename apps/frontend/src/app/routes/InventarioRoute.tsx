@@ -9,6 +9,7 @@ import { DiscardModal } from '../../features/kitchen/components/DiscardModal.js'
 import { RecipeSelectorModal } from '../../features/kitchen/components/RecipeSelectorModal.js';
 import { ShiftReconciliationWizard } from '../../features/kitchen/components/ShiftReconciliationWizard.js';
 import { FEFOInventoryHealthBar } from '../../features/kitchen/components/FEFOInventoryHealthBar.js';
+import { OpenPreparationsPanel } from '../../features/kitchen/components/OpenPreparationsPanel.js';
 import { LocationFilterTabs, LocationFilter } from '../../features/kitchen/components/LocationFilterTabs.js';
 import { useAppShell } from '../session.js';
 import styles from './InventarioRoute.module.css';
@@ -176,6 +177,8 @@ export const InventarioRoute: React.FC = () => {
         onExtract={() => modals.setIsExtractionOpen(true)}
         onPrepareRecipe={() => modals.setIsRecipeOpen(true)}
       />
+      {/* US-027: preparaciones de receta abiertas — el panel se auto-oculta si no hay ninguna. */}
+      <OpenPreparationsPanel reloadKey={remanentes.length} />
       <KitchenBoardTitle />
       <LocationFilterTabs activeLocation={activeLocation} onLocationSelect={setActiveLocation} counts={counts} />
       <main>

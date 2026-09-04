@@ -4,7 +4,7 @@ id: TK-103-FE
 related_story: US-027
 points: 5
 type: frontend
-status: draft
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/kitchen/US-027.md
   - docs/02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md
@@ -30,3 +30,8 @@ En el modal de extracción: receta obligatoria en modo RECIPE, campo "porciones 
 1. Test de componente: receta obligatoria en RECIPE bloquea submit; `plannedPortions` viaja en el POST; el tablero lista solo `OPEN`.
 2. Sin regresiones frontend; sin código muerto / estilos inline nuevos.
 3. **Commit:** `feat(kitchen): recipe extraction with preparation + open-preparations board (TK-103-FE)`.
+
+## 📌 Notas de implementación
+*   `RecipeSelect` conserva la opción vacía `-- Seleccionar Receta --`; la obligatoriedad se valida en `extractionValidationError` y se muestra en el `ErrorBanner` del modal (Guard 38), no con `required` nativo (que dispararía el popup del navegador).
+*   `OpenPreparationsPanel` se monta en `InventarioRoute` (tablero de cocina) tras la rejilla Acciones|Estado, con auto-ocultado si no hay preparaciones `OPEN`; `reloadKey` se ata a `remanentes.length`. El botón "Cerrar preparación" solo se renderiza si el padre pasa `onClosePreparation` (lo hará TK-104-FE).
+*   `ExtractionResult` (front) lleva marcadores `jscpd:ignore` — es un espejo deliberado de `ExtractionResponseDTO` (back); paquetes separados sin tipo compartido, `openapi.yaml` es la SSoT.

@@ -8,6 +8,10 @@ import { ModalFooterActions } from '../../../shared/components/ModalFooterAction
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 import { mapToUserFriendlyError } from '../../../shared/utils/errorMessageMapper.js';
 import { DecimalQuantity } from '../../../shared/domain/DecimalQuantity.js';
+import {
+  RecipePreparationsService,
+  RecipePreparationSummary,
+} from '../../kitchen/services/recipePreparations.service.js';
 import { StorageSectorSelect } from './StorageSectorSelect.js';
 import styles from './WarehouseExtractionModal.module.css';
 
@@ -41,6 +45,10 @@ interface ExtractionSelectFieldsProps {
   recipes: { id: string; name: string }[];
   selectedRecipeId: string;
   onRecipeIdChange: (id: string) => void;
+  plannedPortions: number;
+  onPlannedPortionsChange: (n: number) => void;
+  recipePreparationId: string;
+  onRecipePreparationIdChange: (id: string) => void;
 }
 
 interface InsumoPurposeSelectProps {
@@ -95,25 +103,113 @@ const InsumoPurposeSelect: React.FC<InsumoPurposeSelectProps> = ({
   </>
 );
 
-const RecipeDestinationField: React.FC<{ recipes: { id: string; name: string }[]; selectedRecipeId: string; onRecipeIdChange: (id: string) => void }> = ({
-  recipes,
-  selectedRecipeId,
-  onRecipeIdChange,
-}) => (
+interface RecipeDestinationFieldProps {
+  recipes: { id: string; name: string }[];
+  selectedRecipeId: string;
+  onRecipeIdChange: (id: string) => void;
+  plannedPortions: number;
+  onPlannedPortionsChange: (n: number) => void;
+  recipePreparationId: string;
+  onRecipePreparationIdChange: (id: string) => void;
+}
+
+// US-027: al elegir una receta, ofrece "añadir a una preparación en curso" si hay alguna abierta.
+function useOpenPreparationsForRecipe(recipeId: string) {
+  const [openPreps, setOpenPreps] = useState<RecipePreparationSummary[]>([]);
+  React.useEffect(() => {
+    if (!recipeId) {
+      setOpenPreps([]);
+      return;
+    }
+    let cancelled = false;
+    RecipePreparationsService.list('OPEN')
+      .then((all) => {
+        if (!cancelled) setOpenPreps(all.filter((p) => p.recipeId === recipeId));
+      })
+      .catch(() => {
+        if (!cancelled) setOpenPreps([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [recipeId]);
+  return openPreps;
+}
+
+const RecipeSelect: React.FC<{ recipes: { id: string; name: string }[]; value: string; onChange: (id: string) => void }> = ({ recipes, value, onChange }) => (
   <div>
-    <label htmlFor="select-recipe-extraction" className="form-label">
-      Seleccionar Receta Destino:
-    </label>
-    <select value={selectedRecipeId} onChange={(e) => onRecipeIdChange(e.target.value)} className="input-touch" id="select-recipe-extraction">
-      <option value="">-- Seleccionar Receta (Opcional) --</option>
+    <label htmlFor="select-recipe-extraction" className="form-label">Seleccionar Receta Destino *:</label>
+    {/* US-027: la receta es obligatoria en modo RECIPE — validado en extractionValidationError
+        (mismo patrón que el motivo de descarte), no con `required` nativo, para mostrar el
+        ErrorBanner del modal en vez del popup del navegador (Guard 38). */}
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="input-touch" id="select-recipe-extraction">
+      <option value="">-- Seleccionar Receta --</option>
       {recipes.map((r) => (
-        <option key={r.id} value={r.id}>
-          {r.name}
+        <option key={r.id} value={r.id}>{r.name}</option>
+      ))}
+    </select>
+  </div>
+);
+
+const PlannedPortionsInput: React.FC<{ value: number; onChange: (n: number) => void }> = ({ value, onChange }) => (
+  <div>
+    <label htmlFor="input-planned-portions" className="form-label">Porciones Planificadas:</label>
+    <input
+      type="number"
+      min="1"
+      step="1"
+      value={value}
+      onChange={(e) => {
+        const parsed = Number(e.target.value);
+        onChange(Number.isFinite(parsed) && parsed >= 1 ? Math.trunc(parsed) : 1);
+      }}
+      className="input-touch"
+      id="input-planned-portions"
+    />
+  </div>
+);
+
+const OpenPreparationSelect: React.FC<{ openPreps: RecipePreparationSummary[]; value: string; onChange: (id: string) => void }> = ({ openPreps, value, onChange }) => (
+  <div>
+    <label htmlFor="select-open-preparation" className="form-label">Añadir a Preparación en Curso (opcional):</label>
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="input-touch" id="select-open-preparation">
+      <option value="">-- Nueva preparación --</option>
+      {openPreps.map((p) => (
+        <option key={p.id} value={p.id}>
+          {p.plannedPortions} porciones · abierta {new Date(p.openedAt).toLocaleTimeString()}
         </option>
       ))}
     </select>
   </div>
 );
+
+const RecipeDestinationField: React.FC<RecipeDestinationFieldProps> = ({
+  recipes,
+  selectedRecipeId,
+  onRecipeIdChange,
+  plannedPortions,
+  onPlannedPortionsChange,
+  recipePreparationId,
+  onRecipePreparationIdChange,
+}) => {
+  const openPreps = useOpenPreparationsForRecipe(selectedRecipeId);
+  return (
+    <>
+      <RecipeSelect
+        recipes={recipes}
+        value={selectedRecipeId}
+        onChange={(id) => {
+          onRecipeIdChange(id);
+          onRecipePreparationIdChange('');
+        }}
+      />
+      <PlannedPortionsInput value={plannedPortions} onChange={onPlannedPortionsChange} />
+      {openPreps.length > 0 && (
+        <OpenPreparationSelect openPreps={openPreps} value={recipePreparationId} onChange={onRecipePreparationIdChange} />
+      )}
+    </>
+  );
+};
 
 const DiscardReasonField: React.FC<{ reason: string; onReasonChange: (r: string) => void }> = ({ reason, onReasonChange }) => (
   <div>
@@ -156,11 +252,23 @@ const ExtractionSelectFields: React.FC<ExtractionSelectFieldsProps> = ({
   recipes,
   selectedRecipeId,
   onRecipeIdChange,
+  plannedPortions,
+  onPlannedPortionsChange,
+  recipePreparationId,
+  onRecipePreparationIdChange,
 }) => (
   <>
     <InsumoPurposeSelect insumos={insumos} selectedInsumoId={selectedInsumoId} onInsumoChange={onInsumoChange} purpose={purpose} onPurposeChange={onPurposeChange} />
     {purpose === 'RECIPE' && (
-      <RecipeDestinationField recipes={recipes} selectedRecipeId={selectedRecipeId} onRecipeIdChange={onRecipeIdChange} />
+      <RecipeDestinationField
+        recipes={recipes}
+        selectedRecipeId={selectedRecipeId}
+        onRecipeIdChange={onRecipeIdChange}
+        plannedPortions={plannedPortions}
+        onPlannedPortionsChange={onPlannedPortionsChange}
+        recipePreparationId={recipePreparationId}
+        onRecipePreparationIdChange={onRecipePreparationIdChange}
+      />
     )}
     {purpose === 'DIRECT_DISCARD' ? (
       <DiscardReasonField reason={reason} onReasonChange={onReasonChange} />
@@ -282,6 +390,10 @@ interface ExtractionFormProps {
   recipes: { id: string; name: string }[];
   selectedRecipeId: string;
   onRecipeIdChange: (id: string) => void;
+  plannedPortions: number;
+  onPlannedPortionsChange: (n: number) => void;
+  recipePreparationId: string;
+  onRecipePreparationIdChange: (id: string) => void;
   quantity: number;
   onIncrement: () => void;
   onDecrement: () => void;
@@ -292,59 +404,19 @@ interface ExtractionFormProps {
   duplicateActiveRemanentes: RemanenteFEFOItem[];
 }
 
-const ExtractionForm: React.FC<ExtractionFormProps> = ({
-  insumos,
-  selectedInsumoId,
-  onInsumoChange,
-  purpose,
-  onPurposeChange,
-  location,
-  onLocationChange,
-  fromStorageLocationId,
-  onFromStorageLocationIdChange,
-  reason,
-  onReasonChange,
-  recipes,
-  selectedRecipeId,
-  onRecipeIdChange,
-  quantity,
-  onIncrement,
-  onDecrement,
-  onQuantityChange,
-  onSubmit,
-  onCancel,
-  isSubmitting,
-  duplicateActiveRemanentes,
-}) => (
-  <form onSubmit={onSubmit} className="flex-column flex-gap-md">
+const ExtractionForm: React.FC<ExtractionFormProps> = (p) => (
+  <form onSubmit={p.onSubmit} className="flex-column flex-gap-md">
     <StorageSectorSelect
       id="select-from-sector-extraction"
       label="Sector de Bodega Origen *"
-      value={fromStorageLocationId}
-      onChange={onFromStorageLocationIdChange}
+      value={p.fromStorageLocationId}
+      onChange={p.onFromStorageLocationIdChange}
     />
-    <ExtractionSelectFields
-      insumos={insumos}
-      selectedInsumoId={selectedInsumoId}
-      onInsumoChange={onInsumoChange}
-      purpose={purpose}
-      onPurposeChange={onPurposeChange}
-      location={location}
-      onLocationChange={onLocationChange}
-      reason={reason}
-      onReasonChange={onReasonChange}
-      recipes={recipes}
-      selectedRecipeId={selectedRecipeId}
-      onRecipeIdChange={onRecipeIdChange}
-    />
-
-    <DuplicateRemanenteWarning activeRemanentes={duplicateActiveRemanentes} />
-
-    <QuantityStepper quantity={quantity} onIncrement={onIncrement} onDecrement={onDecrement} onChange={onQuantityChange} />
-
-    <ExtractionNoteBanner purpose={purpose} />
-
-    <ModalFooterActions onCancel={onCancel} confirmLabel="Confirmar Extracción" submittingLabel="Procesando..." isSubmitting={isSubmitting} />
+    <ExtractionSelectFields {...p} />
+    <DuplicateRemanenteWarning activeRemanentes={p.duplicateActiveRemanentes} />
+    <QuantityStepper quantity={p.quantity} onIncrement={p.onIncrement} onDecrement={p.onDecrement} onChange={p.onQuantityChange} />
+    <ExtractionNoteBanner purpose={p.purpose} />
+    <ModalFooterActions onCancel={p.onCancel} confirmLabel="Confirmar Extracción" submittingLabel="Procesando..." isSubmitting={p.isSubmitting} />
   </form>
 );
 
@@ -366,13 +438,15 @@ interface PerformExtractionArgs {
   purpose: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD';
   reason: string;
   selectedRecipeId: string;
+  plannedPortions: number;
+  recipePreparationId: string;
   insumos: Insumo[];
   onSuccess: () => void;
   onClose: () => void;
 }
 
 async function performExtraction(args: PerformExtractionArgs) {
-  const { activeInsumoId, quantity, location, fromStorageLocationId, purpose, reason, selectedRecipeId, insumos, onSuccess, onClose } = args;
+  const { activeInsumoId, quantity, location, fromStorageLocationId, purpose, reason, selectedRecipeId, plannedPortions, recipePreparationId, insumos, onSuccess, onClose } = args;
   const result = await StockService.recordExtraction({
     insumoId: activeInsumoId,
     quantity: quantity.toString(),
@@ -382,6 +456,9 @@ async function performExtraction(args: PerformExtractionArgs) {
     purpose,
     reason: reason.trim() || undefined,
     recipeId: selectedRecipeId || undefined,
+    // US-027: solo relevantes en modo RECIPE.
+    plannedPortions: purpose === 'RECIPE' ? plannedPortions : undefined,
+    recipePreparationId: purpose === 'RECIPE' && recipePreparationId ? recipePreparationId : undefined,
   });
 
   if (purpose !== 'DIRECT_DISCARD' && result.remanenteId !== null) {
@@ -425,6 +502,8 @@ function useExtractionFields() {
   const [reason, setReason] = useState('');
   const [recipes, setRecipes] = useState<{ id: string; name: string }[]>([]);
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
+  const [plannedPortions, setPlannedPortions] = useState(1);
+  const [recipePreparationId, setRecipePreparationId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -437,7 +516,8 @@ function useExtractionFields() {
   return {
     selectedInsumoId, setSelectedInsumoId, quantity, setQuantity, purpose, setPurpose,
     location, setLocation, fromStorageLocationId, setFromStorageLocationId, reason, setReason,
-    recipes, selectedRecipeId, setSelectedRecipeId, isSubmitting, setIsSubmitting, error, setError,
+    recipes, selectedRecipeId, setSelectedRecipeId, plannedPortions, setPlannedPortions,
+    recipePreparationId, setRecipePreparationId, isSubmitting, setIsSubmitting, error, setError,
   };
 }
 
@@ -448,6 +528,7 @@ const stepQuantityDown = (prev: number): number =>
 
 function extractionValidationError(s: ReturnType<typeof useExtractionFields>): string | null {
   if (s.purpose === 'DIRECT_DISCARD' && !s.reason.trim()) return 'Debe especificar el motivo descriptivo del descarte directo.';
+  if (s.purpose === 'RECIPE' && !s.selectedRecipeId) return 'Debe seleccionar la receta que va a preparar.';
   if (!s.fromStorageLocationId) return 'Debe seleccionar el sub-sector de bodega de origen.';
   if (!new DecimalQuantity(s.quantity || 0).isPositive()) return 'La cantidad a extraer debe ser mayor que cero.';
   return null;
@@ -472,7 +553,9 @@ function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: ()
     try {
       await performExtraction({
         activeInsumoId, quantity: s.quantity, location: s.location, fromStorageLocationId: s.fromStorageLocationId,
-        purpose: s.purpose, reason: s.reason, selectedRecipeId: s.selectedRecipeId, insumos, onSuccess, onClose,
+        purpose: s.purpose, reason: s.reason, selectedRecipeId: s.selectedRecipeId,
+        plannedPortions: s.plannedPortions, recipePreparationId: s.recipePreparationId,
+        insumos, onSuccess, onClose,
       });
     } catch (err) {
       console.error('[WarehouseExtractionModal] Error registrando la extraccion de bodega:', err);
@@ -496,6 +579,10 @@ function useExtractionForm(insumos: Insumo[], onSuccess: () => void, onClose: ()
     recipes: s.recipes,
     selectedRecipeId: s.selectedRecipeId,
     onRecipeIdChange: s.setSelectedRecipeId,
+    plannedPortions: s.plannedPortions,
+    onPlannedPortionsChange: s.setPlannedPortions,
+    recipePreparationId: s.recipePreparationId,
+    onRecipePreparationIdChange: s.setRecipePreparationId,
     quantity: s.quantity,
     onIncrement: handleIncrement,
     onDecrement: handleDecrement,

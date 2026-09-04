@@ -10,11 +10,18 @@ export interface ExtractionRequest {
   purpose?: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD';
   reason?: string;
   recipeId?: string;
+  /** US-027: modo RECIPE — porciones planificadas y preparación en curso opcional. */
+  plannedPortions?: number;
+  recipePreparationId?: string;
 }
 
+/* jscpd:ignore-start — espejo deliberado del contrato de respuesta (ExtractionResponseDTO en
+   el backend). openapi.yaml es la SSoT; front y back son paquetes separados sin tipo compartido. */
 export interface ExtractionResult {
   /** `null` en DIRECT_DISCARD — el descarte no crea remanente (AUDIT-DEV-006 F-9). */
   remanenteId: string | null;
+  /** US-027: id de la preparación de receta abierta/reutilizada (solo modo RECIPE). */
+  recipePreparationId?: string;
   insumoId: string;
   insumoName: string;
   quantityExtracted: string;
@@ -25,6 +32,7 @@ export interface ExtractionResult {
   expirationDate: string;
   status: string;
 }
+/* jscpd:ignore-end */
 
 export interface StockMovementHistoryItem {
   id: string;
