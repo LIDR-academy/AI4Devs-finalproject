@@ -227,9 +227,16 @@ const NegativeVarianceReasonSelect: React.FC<{
 const ReconciliationItemRow: React.FC<ReconciliationItemRowProps> = ({ item, physicalQuantity, reasonId, reasons, onQuantityChange, onReasonChange }) => {
   const theo = parseFloat(item.currentQuantity);
   const { diff, isCritical } = getVarianceInfo(theo, physicalQuantity);
+  // TK-115-FE: misma condición que hasMissingReason en computeVarianceFlags — sin
+  // lógica de detección nueva, solo el resaltado visual de la fila.
+  const isPendingReason = diff < 0 && !reasonId;
 
   return (
-    <div className={`flex-column reconciliation-item-row${isCritical ? ` ${styles['reconciliation-row--critical']}` : ''}`}>
+    <div
+      className={`flex-column reconciliation-item-row${isCritical ? ` ${styles['reconciliation-row--critical']}` : ''}${
+        isPendingReason ? ` ${styles['reconciliation-row--pending-reason']}` : ''
+      }`}
+    >
       <div className="flex-between gap-3">
         <ReconciliationItemInfo item={item} diff={diff} isCritical={isCritical} />
         <ReconciliationQuantityControls itemId={item.id} physicalQuantity={physicalQuantity} onQuantityChange={onQuantityChange} />

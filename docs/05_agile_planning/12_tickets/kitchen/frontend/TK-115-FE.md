@@ -4,7 +4,7 @@ id: TK-115-FE
 related_story: US-031
 points: 1
 type: frontend
-status: draft
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/shared/US-031.md
   - docs/02_architecture_design/05_ui_ux_design_system.md
@@ -31,4 +31,7 @@ Fusión selectiva del mockup `04_shift_reconciliation.html` (Stitch) — `US-031
 4. **Commit:** `feat(kitchen): full-bleed highlight for reconciliation rows pending a reason (TK-115-FE)`.
 
 ## 📌 Notas de implementación
-*   Pendiente de implementación.
+*   `ShiftReconciliationWizard.module.css`: nueva `.reconciliation-row--pending-reason` (`margin-inline`/`padding-inline` negativos-compensados para sangrado edge-to-edge dentro de la lista de conciliación, `color-mix` sobre `--color-danger` al 5%/20% para fondo/borde) — independiente de `.reconciliation-row--critical` (una fila puede tener ambas).
+*   `ReconciliationItemRow`: `isPendingReason = diff < 0 && !reasonId` — misma condición ya usada por `computeVarianceFlags`/`hasMissingReason`, sin lógica de detección nueva.
+*   1 test nuevo: la fila tiene la clase con varianza negativa sin motivo, la pierde al elegir un motivo válido (`classNameStrategy: 'non-scoped'` de Vitest permite verificar el nombre de clase literal).
+*   Sin regresiones: 185 tests frontend (184→185), build/lint verdes (0 warnings/errores nuevos).

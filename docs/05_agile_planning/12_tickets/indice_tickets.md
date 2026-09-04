@@ -103,7 +103,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-112-FE** | `kitchen` | **Medio** | **Alta** | 3 SP | `US-026`: pestañas de filtro por área de cocina (`LocationFilterTabs`) filtraban por literales legados que dejaron de coincidir con `Remanente.location` desde `TK-102-FE` — bug confirmado en vivo (0 resultados en toda pestaña de área). ✅ Done. | 🔴 P0 - Crítica |
 | **TK-113-FE** | `auth` | **Bajo** | **Baja** | 2 SP | `US-031`: chips de operario reciente (`localStorage`, device-local) en `PinLoginModal` — fusión selectiva de mockup Stitch. ✅ Done. | 🟢 P2 - Media |
 | **TK-114-FE** | `kitchen` | **Bajo** | **Baja** | 2 SP | `US-031`: botón circular de acción rápida junto a la barra de Salud FEFO. ⚪ No aplica — ya implementado (`ActionButton` de `US-023`/`TK-086-FE` en `AccionesEstadoGrid`), cerrado sin código. | 🟢 P2 - Media |
-| **TK-115-FE** | `kitchen` | **Bajo** | **Baja** | 1 SP | `US-031`: resaltado full-bleed de fila con varianza negativa pendiente de motivo en `ShiftReconciliationWizard`. 📝 Draft. | 🟢 P3 - Baja |
+| **TK-115-FE** | `kitchen` | **Bajo** | **Baja** | 1 SP | `US-031`: resaltado full-bleed de fila con varianza negativa pendiente de motivo en `ShiftReconciliationWizard`. ✅ Done. | 🟢 P3 - Baja |
 | **TK-116-FE** | `stock` | **Medio** | **Baja** | 3 SP | `US-031`: barra de herramientas acoplada (búsqueda/filtro/vista grid-lista, persistida por dispositivo) en el catálogo de bodega. 📝 Draft. | 🟢 P2 - Media |
 
 ---

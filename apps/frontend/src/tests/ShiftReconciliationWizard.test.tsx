@@ -112,6 +112,29 @@ describe('TK-007-D: ShiftReconciliationWizard Component Suite', () => {
     expect(submitBtn).not.toBeDisabled();
   });
 
+  it('TK-115-FE: la fila con varianza negativa sin motivo tiene el resaltado full-bleed, y lo pierde al elegir un motivo', async () => {
+    render(
+      <ShiftReconciliationWizard
+        isOpen={true}
+        remanentes={mockRemanentes}
+        operatorId="user-op-1"
+        onClose={vi.fn()}
+        onSuccess={vi.fn()}
+      />
+    );
+
+    const inputPhys = screen.getByDisplayValue('1');
+    fireEvent.change(inputPhys, { target: { value: '0.8' } }); // varianza negativa, no crítica
+
+    const row = inputPhys.closest('.reconciliation-item-row');
+    expect(row).toHaveClass('reconciliation-row--pending-reason');
+
+    await waitFor(() => expect(screen.getByText('Error de manipulación')).toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText(/Motivo de la Varianza Negativa/i), { target: { value: 'reason-1' } });
+
+    expect(row).not.toHaveClass('reconciliation-row--pending-reason');
+  });
+
   it('varianza positiva no exige motivo — no muestra el selector', async () => {
     render(
       <ShiftReconciliationWizard
