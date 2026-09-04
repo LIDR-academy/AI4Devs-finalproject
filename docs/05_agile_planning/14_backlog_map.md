@@ -268,5 +268,6 @@ graph TD
 | **🛠️ Shared (`shared`)** | [US-022: Sistema FEFO Día/Noche](11_user_stories/shared/US-022.md) | N/A | [TK-081-FE](12_tickets/shared/frontend/TK-081-FE.md) → [082](12_tickets/shared/frontend/TK-082-FE.md) → [083](12_tickets/shared/frontend/TK-083-FE.md) → [084](12_tickets/shared/frontend/TK-084-FE.md) | ✅ Done |
 | **🛠️ Shared (`shared`)** | [US-023: Navegación por Rutas y Shell FEFO](11_user_stories/shared/US-023.md) | N/A | ✅ [TK-085-FE](12_tickets/shared/frontend/TK-085-FE.md) → [086](12_tickets/shared/frontend/TK-086-FE.md) → [087](12_tickets/shared/frontend/TK-087-FE.md) → [088](12_tickets/shared/frontend/TK-088-FE.md) | ✅ Done |
 | **🛠️ Shared (`shared`)** | [US-024: Contenido de Ruta Inline](11_user_stories/shared/US-024.md) | N/A | ✅ [TK-089-FE](12_tickets/shared/frontend/TK-089-FE.md) → [090](12_tickets/shared/frontend/TK-090-FE.md) | ✅ Done |
+| **📦 Bodega (`stock`)** | [US-014](11_user_stories/stock/US-014.md) · [US-025](11_user_stories/stock/US-025.md) — remediación [AUDIT-DEV-006](../audits/AUDIT-DEV-006-warehouse-extraction-quality-report.md) | [TK-098: Integridad Transaccional + Decremento Atómico](12_tickets/stock/backend/TK-098.md) → [TK-099: Reloj/ID + Auditoría](12_tickets/stock/backend/TK-099.md) | [TK-100-FE: Propagación de Errores + Aritmética Decimal](12_tickets/stock/frontend/TK-100-FE.md) | 📋 Approved Spec |
 
 
