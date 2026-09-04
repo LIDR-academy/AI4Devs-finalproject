@@ -4,7 +4,7 @@ id: TK-102-FE
 related_story: US-026
 points: 5
 type: frontend
-status: draft
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/stock/US-026.md
   - docs/02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md
