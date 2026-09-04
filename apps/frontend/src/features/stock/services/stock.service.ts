@@ -4,6 +4,8 @@ import { DecimalQuantity } from '../../../shared/domain/DecimalQuantity.js';
 export interface ExtractionRequest {
   insumoId: string;
   quantity: number | string;
+  /** US-025: sub-sector de bodega de origen — obligatorio. */
+  fromStorageLocationId: string;
   toLocation?: string;
   purpose?: 'KITCHEN_STOCK' | 'RECIPE' | 'DIRECT_DISCARD';
   reason?: string;
@@ -15,6 +17,8 @@ export interface ExtractionResult {
   insumoId: string;
   insumoName: string;
   quantityExtracted: string;
+  fromStorageLocationId: string;
+  remainingSectorStock: string;
   remainingWarehouseStock: string;
   location: string;
   expirationDate: string;
@@ -38,11 +42,18 @@ export interface MovementHistoryFilters {
   endDate?: string;
 }
 
+export interface StockByLocationEntry {
+  storageLocationId: string;
+  storageLocationName: string;
+  quantity: string;
+}
+
 export interface InsumoItem {
   id: string;
   name: string;
   unitOfMeasure: string;
   warehouseStock: string;
+  stockByLocation?: StockByLocationEntry[];
   unitCost?: string | null;
 }
 
@@ -51,16 +62,22 @@ export interface CreateInsumoDTO {
   unitOfMeasure: string;
   initialWarehouseStock?: string;
   unitCost?: string;
+  /** US-025: sub-sector de bodega donde queda depositado el stock inicial. */
+  storageLocationId: string;
 }
 
 export interface RestockInsumoDTO {
   quantity: number | string;
+  /** US-025: sub-sector de bodega al que se suma la cantidad recibida. */
+  storageLocationId: string;
 }
 
 export interface RestockInsumoResult {
   insumoId: string;
   insumoName: string;
+  storageLocationId: string;
   quantityAdded: string;
+  newSectorStock: string;
   newWarehouseStock: string;
 }
 
@@ -117,6 +134,8 @@ export class StockService {
       insumoId: data.insumoId,
       insumoName: item.name,
       quantityExtracted: new DecimalQuantity(data.quantity.toString()).toFixed(3),
+      fromStorageLocationId: data.fromStorageLocationId,
+      remainingSectorStock: nextStock.toFixed(3),
       remainingWarehouseStock: nextStock.toFixed(3),
       location: data.toLocation || 'KITCHEN_FRIDGE',
       expirationDate: expirationDate.toISOString(),

@@ -19,7 +19,7 @@ interface NewLocationFormProps {
   setError: (msg: string | null) => void;
 }
 
-const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated, setError }) => {
+function useNewLocationForm(onCreated: () => void, setError: (msg: string | null) => void) {
   const [name, setName] = useState('');
   const [type, setType] = useState<'WAREHOUSE' | 'KITCHEN'>('KITCHEN');
   const [description, setDescription] = useState('');
@@ -28,7 +28,6 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated, setError }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-
     setIsSubmitting(true);
     setError(null);
     try {
@@ -37,67 +36,48 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated, setError }
       setDescription('');
       onCreated();
     } catch (err) {
-      const friendly = mapToUserFriendlyError(err);
-      setError(friendly.message);
+      setError(mapToUserFriendlyError(err).message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  return { name, setName, type, setType, description, setDescription, isSubmitting, handleSubmit };
+}
+
+const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated, setError }) => {
+  const f = useNewLocationForm(onCreated, setError);
   return (
-    <form onSubmit={handleSubmit} className={`card-dashboard flex-column flex-gap-xs mb-2 ${styles['p-4']}`}>
+    <form onSubmit={f.handleSubmit} className={`card-dashboard flex-column flex-gap-xs mb-2 ${styles['p-4']}`}>
       <h4 className="flex-gap-xs text-primary-color fs-md fw-bold m-0">
         <Plus size={18} /> Registrar Nuevo Sector Físico
       </h4>
-
       <div className={`metrics-grid ${styles['location-form-grid']}`}>
         <div>
           <label htmlFor="location-name" className="form-label">
             Nombre Sector
           </label>
-          <input
-            id="location-name"
-            type="text"
-            required
-            placeholder="Ej. Cámara Congelados 2"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="input-touch w-full"
-          />
+          <input id="location-name" type="text" required placeholder="Ej. Cámara Congelados 2" value={f.name} onChange={(e) => f.setName(e.target.value)} className="input-touch w-full" />
         </div>
         <div>
           <label htmlFor="location-type" className="form-label">
             Tipo de Sector
           </label>
-          <select
-            id="location-type"
-            value={type}
-            onChange={(e) => setType(e.target.value as 'WAREHOUSE' | 'KITCHEN')}
-            className="input-touch w-full"
-          >
+          <select id="location-type" value={f.type} onChange={(e) => f.setType(e.target.value as 'WAREHOUSE' | 'KITCHEN')} className="input-touch w-full">
             <option value="WAREHOUSE">Bodega (Warehouse)</option>
             <option value="KITCHEN">Cocina (Kitchen Area)</option>
           </select>
         </div>
       </div>
-
       <div>
         <label htmlFor="location-desc" className="form-label">
           Descripción / Ubicación
         </label>
-        <input
-          id="location-desc"
-          type="text"
-          placeholder="Ej. Sector frío del fondo"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="input-touch w-full"
-        />
+        <input id="location-desc" type="text" placeholder="Ej. Sector frío del fondo" value={f.description} onChange={(e) => f.setDescription(e.target.value)} className="input-touch w-full" />
       </div>
-
-      <button type="submit" disabled={isSubmitting} className="btn-touch btn-primary w-full mt-1">
+      <button type="submit" disabled={f.isSubmitting} className="btn-touch btn-primary w-full mt-1">
         <Plus size={20} />
-        {isSubmitting ? 'Guardando...' : 'Crear Sector'}
+        {f.isSubmitting ? 'Guardando...' : 'Crear Sector'}
       </button>
     </form>
   );
@@ -109,6 +89,56 @@ interface LocationsListProps {
   onDeleteLocation: (id: string, name: string) => void;
 }
 
+const HAS_STOCK_HINT = 'El sector tiene existencias asociadas';
+
+const LocationRowInfo: React.FC<{ loc: StorageLocationDto }> = ({ loc }) => (
+  <div className="flex-gap-xs">
+    <MapPin size={18} className={loc.isActive ? 'text-primary-color' : 'text-secondary-color'} />
+    <div>
+      <span className="text-primary-color fw-bold fs-md d-block">
+        {loc.name} {!loc.isActive && '(Inactivo)'}
+      </span>
+      <span className="text-secondary-color fs-sm">{loc.description || 'Sin descripción'}</span>
+    </div>
+  </div>
+);
+
+const LocationRowActions: React.FC<{
+  loc: StorageLocationDto;
+  onToggleActive: (loc: StorageLocationDto) => void;
+  onDeleteLocation: (id: string, name: string) => void;
+}> = ({ loc, onToggleActive, onDeleteLocation }) => {
+  const blockDeactivate = !!loc.isActive && !!loc.hasStock;
+  const toggleTitle = blockDeactivate ? HAS_STOCK_HINT : loc.isActive ? 'Desactivar Sector' : 'Activar Sector';
+  return (
+    <div className="flex-gap-xs">
+      <span className={`${styles['location-badge']} ${loc.type === 'WAREHOUSE' ? styles['location-badge--warehouse'] : styles['location-badge--kitchen']}`}>
+        {loc.type === 'WAREHOUSE' ? 'BODEGA' : 'COCINA'}
+      </span>
+      <button
+        type="button"
+        className={`btn-touch ${styles['btn-compact-icon-sm']} ${loc.isActive ? 'btn-secondary' : 'btn-primary'}`}
+        onClick={() => onToggleActive(loc)}
+        disabled={blockDeactivate}
+        aria-disabled={blockDeactivate}
+        title={toggleTitle}
+      >
+        <Power size={16} />
+      </button>
+      <button
+        type="button"
+        className={`btn-touch btn-danger ${styles['btn-compact-icon-sm']}`}
+        onClick={() => onDeleteLocation(loc.id, loc.name)}
+        disabled={!!loc.hasStock}
+        aria-disabled={!!loc.hasStock}
+        title={loc.hasStock ? HAS_STOCK_HINT : 'Eliminar Sector'}
+      >
+        <Trash2 size={16} />
+      </button>
+    </div>
+  );
+};
+
 const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive, onDeleteLocation }) => {
   return (
     <div>
@@ -118,41 +148,8 @@ const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive
       <div className={`flex-column flex-gap-xs ${styles['locations-list-scroll']}`}>
         {locations.map((loc) => (
           <div key={loc.id} className={`flex-between ${styles['location-row']}${loc.isActive ? '' : ` ${styles['location-row--inactive']}`}`}>
-            <div className="flex-gap-xs">
-              <MapPin size={18} className={loc.isActive ? 'text-primary-color' : 'text-secondary-color'} />
-              <div>
-                <span className="text-primary-color fw-bold fs-md d-block">
-                  {loc.name} {!loc.isActive && '(Inactivo)'}
-                </span>
-                <span className="text-secondary-color fs-sm">
-                  {loc.description || 'Sin descripción'}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex-gap-xs">
-              <span className={`${styles['location-badge']} ${loc.type === 'WAREHOUSE' ? styles['location-badge--warehouse'] : styles['location-badge--kitchen']}`}>
-                {loc.type === 'WAREHOUSE' ? 'BODEGA' : 'COCINA'}
-              </span>
-
-              <button
-                type="button"
-                className={`btn-touch ${styles['btn-compact-icon-sm']} ${loc.isActive ? 'btn-secondary' : 'btn-primary'}`}
-                onClick={() => onToggleActive(loc)}
-                title={loc.isActive ? 'Desactivar Sector' : 'Activar Sector'}
-              >
-                <Power size={16} />
-              </button>
-
-              <button
-                type="button"
-                className={`btn-touch btn-danger ${styles['btn-compact-icon-sm']}`}
-                onClick={() => onDeleteLocation(loc.id, loc.name)}
-                title="Eliminar Sector"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
+            <LocationRowInfo loc={loc} />
+            <LocationRowActions loc={loc} onToggleActive={onToggleActive} onDeleteLocation={onDeleteLocation} />
           </div>
         ))}
       </div>
@@ -160,54 +157,54 @@ const LocationsList: React.FC<LocationsListProps> = ({ locations, onToggleActive
   );
 };
 
-export const LocationsManagementModal: React.FC<LocationsManagementModalProps> = ({ isOpen, onClose }) => {
+function useLocationsManager(isOpen: boolean) {
   const [locations, setLocations] = useState<StorageLocationDto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [locationToDelete, setLocationToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const loadLocations = useCallback(async () => {
     try {
-      const data = await LocationsService.fetchLocations();
-      setLocations(data);
+      setLocations(await LocationsService.fetchLocations());
     } catch (err) {
-      const friendly = mapToUserFriendlyError(err);
-      setError(friendly.message);
+      setError(mapToUserFriendlyError(err).message);
     }
   }, []);
 
-
   useEffect(() => {
-    if (isOpen) {
-      loadLocations();
-    }
+    if (isOpen) loadLocations();
   }, [isOpen, loadLocations]);
 
-  if (!isOpen) return null;
-
-  const handleToggleActive = async (loc: StorageLocationDto) => {
+  const toggleActive = async (loc: StorageLocationDto) => {
     setError(null);
     try {
       await LocationsService.updateLocation(loc.id, { isActive: !loc.isActive });
       loadLocations();
     } catch (err) {
-      const friendly = mapToUserFriendlyError(err);
-      setError(friendly.message);
+      setError(mapToUserFriendlyError(err).message);
     }
   };
 
-  const handleConfirmDeleteLocation = async () => {
+  const confirmDelete = async () => {
     if (!locationToDelete) return;
     setError(null);
     try {
       await LocationsService.deleteLocation(locationToDelete.id);
       loadLocations();
     } catch (err) {
-      const friendly = mapToUserFriendlyError(err);
-      setError(friendly.message);
+      setError(mapToUserFriendlyError(err).message);
     } finally {
       setLocationToDelete(null);
     }
   };
+
+  return { locations, error, setError, loadLocations, locationToDelete, setLocationToDelete, toggleActive, confirmDelete };
+}
+
+export const LocationsManagementModal: React.FC<LocationsManagementModalProps> = ({ isOpen, onClose }) => {
+  const m = useLocationsManager(isOpen);
+  const { error, locationToDelete } = m;
+
+  if (!isOpen) return null;
 
   return (
     <Modal size="lg">
@@ -218,12 +215,12 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
       />
       <div className="flex-column flex-gap-md mt-4">
         {error && <ErrorBanner message={error} />}
-        <NewLocationForm onCreated={loadLocations} setError={setError} />
+        <NewLocationForm onCreated={m.loadLocations} setError={m.setError} />
 
         <LocationsList
-          locations={locations}
-          onToggleActive={handleToggleActive}
-          onDeleteLocation={(id, name) => setLocationToDelete({ id, name })}
+          locations={m.locations}
+          onToggleActive={m.toggleActive}
+          onDeleteLocation={(id, name) => m.setLocationToDelete({ id, name })}
         />
 
         <div className="modal-footer-actions justify-end no-margin-top">
@@ -237,8 +234,8 @@ export const LocationsManagementModal: React.FC<LocationsManagementModalProps> =
         isOpen={locationToDelete !== null}
         title="Eliminar Sector"
         message={`¿Confirmas eliminar el sector "${locationToDelete?.name}"? Esta acción no se puede deshacer.`}
-        onConfirm={handleConfirmDeleteLocation}
-        onCancel={() => setLocationToDelete(null)}
+        onConfirm={m.confirmDelete}
+        onCancel={() => m.setLocationToDelete(null)}
       />
     </Modal>
   );

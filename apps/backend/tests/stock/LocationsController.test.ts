@@ -95,6 +95,12 @@ describe('Storage Locations API — RBAC por ruta (TK-074, patrón TK-093)', () 
       .send({ name: 'Lomo Vacuno', unitOfMeasure: 'KG', initialWarehouseStock: '10.000', storageLocationId: 'loc-seed-meat-fridge' });
     expect(created.status).toBe(201);
 
+    const list = await request(app).get('/api/v1/locations');
+    const meatFridge = list.body.find((l: { id: string }) => l.id === 'loc-seed-meat-fridge');
+    expect(meatFridge.hasStock).toBe(true);
+    const drySector = list.body.find((l: { id: string }) => l.id === 'loc-seed-dry');
+    expect(drySector.hasStock).toBe(false);
+
     const del = await request(app).delete('/api/v1/locations/loc-seed-meat-fridge');
     expect(del.status).toBe(409);
     expect(del.body).toHaveProperty('title', 'LocationHasStockException');

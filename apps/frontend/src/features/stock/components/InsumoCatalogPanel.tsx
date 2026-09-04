@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Search, Truck } from 'lucide-react';
+import { Package, Search, Truck, ChevronRight, ChevronDown } from 'lucide-react';
 import { StockService, InsumoItem } from '../services/stock.service.js';
 import { CreateInsumoModal } from './CreateInsumoModal.js';
 import { RestockInsumoModal } from './RestockInsumoModal.js';
@@ -52,32 +52,64 @@ interface InsumoTableRowProps {
   canManage: boolean;
 }
 
-const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock, canManage }) => (
-  <tr>
-    <td className="text-primary-color font-mono">{item.id}</td>
-    <td className="fw-semibold">{item.name}</td>
-    <td>
-      <span className="neutral-badge">
-        {item.unitOfMeasure}
-      </span>
-    </td>
-    <td className="text-success-color fw-semibold">
-      {item.warehouseStock} {item.unitOfMeasure}
-    </td>
-    <td className="text-right">
-      {canManage && (
-        <button
-          type="button"
-          onClick={() => onRestock(item)}
-          className={`btn-touch btn-secondary flex-center flex-gap-xs ${styles['btn-table-action']}`}
-        >
-          <Truck size={16} />
-          Reabastecer
-        </button>
+const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock, canManage }) => {
+  const [expanded, setExpanded] = useState(false);
+  const breakdown = item.stockByLocation ?? [];
+
+  return (
+    <>
+      <tr>
+        <td className="text-primary-color font-mono">{item.id}</td>
+        <td className="fw-semibold">{item.name}</td>
+        <td>
+          <span className="neutral-badge">{item.unitOfMeasure}</span>
+        </td>
+        <td className="text-success-color fw-semibold">
+          {breakdown.length > 0 && (
+            <button
+              type="button"
+              className={styles['stock-disclosure']}
+              aria-expanded={expanded}
+              aria-controls={`stock-breakdown-${item.id}`}
+              onClick={() => setExpanded((v) => !v)}
+            >
+              {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </button>
+          )}
+          {item.warehouseStock} {item.unitOfMeasure}
+        </td>
+        <td className="text-right">
+          {canManage && (
+            <button
+              type="button"
+              onClick={() => onRestock(item)}
+              className={`btn-touch btn-secondary flex-center flex-gap-xs ${styles['btn-table-action']}`}
+            >
+              <Truck size={16} />
+              Reabastecer
+            </button>
+          )}
+        </td>
+      </tr>
+      {expanded && breakdown.length > 0 && (
+        <tr id={`stock-breakdown-${item.id}`}>
+          <td colSpan={5}>
+            <dl className={styles['stock-breakdown']}>
+              {breakdown.map((s) => (
+                <div key={s.storageLocationId} className={styles['stock-breakdown-row']}>
+                  <dt>{s.storageLocationName}</dt>
+                  <dd>
+                    {s.quantity} {item.unitOfMeasure}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </td>
+        </tr>
       )}
-    </td>
-  </tr>
-);
+    </>
+  );
+};
 
 interface InsumoTableProps {
   insumos: InsumoItem[];
@@ -93,7 +125,7 @@ const InsumoTable: React.FC<InsumoTableProps> = ({ insumos, onRestock, canManage
           <th>ID Insumo</th>
           <th>Nombre Insumo</th>
           <th>Unidad Medida</th>
-          <th>Stock en Bodega Principal</th>
+          <th>Stock en Bodega (total)</th>
           <th></th>
         </tr>
       </thead>

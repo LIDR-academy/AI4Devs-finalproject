@@ -5,6 +5,7 @@ import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ModalFooterActions } from '../../../shared/components/ModalFooterActions.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import { StorageSectorSelect } from './StorageSectorSelect.js';
 
 interface RestockInsumoModalProps {
   isOpen: boolean;
@@ -17,19 +18,50 @@ interface RestockFormFieldsProps {
   insumo: InsumoItem;
   quantity: string;
   onQuantityChange: (value: string) => void;
+  storageLocationId: string;
+  onStorageLocationIdChange: (value: string) => void;
   error: string | null;
 }
 
-const RestockFormFields: React.FC<RestockFormFieldsProps> = ({ insumo, quantity, onQuantityChange, error }) => (
+const RestockFormFields: React.FC<RestockFormFieldsProps> = ({
+  insumo,
+  quantity,
+  onQuantityChange,
+  storageLocationId,
+  onStorageLocationIdChange,
+  error,
+}) => (
   <>
     <p className="text-secondary-color mb-4 fs-md">
-      {insumo.name} — stock actual:{' '}
+      {insumo.name} — stock total en bodega:{' '}
       <strong>
         {insumo.warehouseStock} {insumo.unitOfMeasure}
       </strong>
     </p>
 
+    {(insumo.stockByLocation ?? []).length > 0 && (
+      <dl className="text-secondary-color fs-sm mb-4">
+        {(insumo.stockByLocation ?? []).map((s) => (
+          <div key={s.storageLocationId} className="flex-between">
+            <dt>{s.storageLocationName}</dt>
+            <dd>
+              {s.quantity} {insumo.unitOfMeasure}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    )}
+
     {error && <ErrorBanner message={error} />}
+
+    <div className="mb-4">
+      <StorageSectorSelect
+        id="restock-sector-select"
+        label="Sub-sector de Bodega destino *"
+        value={storageLocationId}
+        onChange={onStorageLocationIdChange}
+      />
+    </div>
 
     <label htmlFor="restock-quantity-input" className="form-label">
       Cantidad Recibida ({insumo.unitOfMeasure}):
@@ -50,6 +82,7 @@ const RestockFormFields: React.FC<RestockFormFieldsProps> = ({ insumo, quantity,
 
 function useRestockForm(insumo: InsumoItem | null, onSuccess: () => void, onClose: () => void) {
   const [quantity, setQuantity] = useState('');
+  const [storageLocationId, setStorageLocationId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,11 +95,15 @@ function useRestockForm(insumo: InsumoItem | null, onSuccess: () => void, onClos
       setError('La cantidad a reabastecer debe ser un numero positivo.');
       return;
     }
+    if (!storageLocationId) {
+      setError('Debe seleccionar el sub-sector de bodega destino.');
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
     try {
-      await StockService.restockInsumo(insumo.id, { quantity });
+      await StockService.restockInsumo(insumo.id, { quantity, storageLocationId });
       setQuantity('');
       onSuccess();
       onClose();
@@ -77,7 +114,7 @@ function useRestockForm(insumo: InsumoItem | null, onSuccess: () => void, onClos
     }
   };
 
-  return { quantity, setQuantity, isSubmitting, error, handleSubmit };
+  return { quantity, setQuantity, storageLocationId, setStorageLocationId, isSubmitting, error, handleSubmit };
 }
 
 export const RestockInsumoModal: React.FC<RestockInsumoModalProps> = ({ isOpen, insumo, onClose, onSuccess }) => {
@@ -94,7 +131,14 @@ export const RestockInsumoModal: React.FC<RestockInsumoModalProps> = ({ isOpen, 
       />
 
       <form onSubmit={form.handleSubmit}>
-        <RestockFormFields insumo={insumo} quantity={form.quantity} onQuantityChange={form.setQuantity} error={form.error} />
+        <RestockFormFields
+          insumo={insumo}
+          quantity={form.quantity}
+          onQuantityChange={form.setQuantity}
+          storageLocationId={form.storageLocationId}
+          onStorageLocationIdChange={form.setStorageLocationId}
+          error={form.error}
+        />
         <ModalFooterActions
           onCancel={onClose}
           confirmLabel="Confirmar Reabastecimiento"

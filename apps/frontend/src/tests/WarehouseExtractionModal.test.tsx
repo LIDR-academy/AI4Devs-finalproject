@@ -22,6 +22,16 @@ function stubFetchForExtractionModal(activeRemanentesByInsumoId: Record<string, 
       if (url.includes('/stock/insumos')) {
         return { ok: true, status: 200, json: async () => INSUMOS_FIXTURE };
       }
+      if (url.includes('/locations')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => [
+            { id: 'loc-seed-meat-fridge', name: 'Heladera de Carnes', type: 'WAREHOUSE', isActive: true },
+            { id: 'loc-2', name: 'Refrigerador Cocina', type: 'KITCHEN', isActive: true },
+          ],
+        };
+      }
       return { ok: true, status: 200, json: async () => ({}) };
     })
   );
@@ -157,5 +167,63 @@ describe('TK-080-FE: WarehouseExtractionModal — Advertencia de Apertura Duplic
     });
 
     resolveIns2Check?.();
+  });
+});
+
+describe('TK-096-FE: WarehouseExtractionModal — Sub-sector de bodega de origen (US-025)', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('carga los sub-sectores de bodega (type WAREHOUSE) y auto-selecciona el primero', async () => {
+    stubFetchForExtractionModal({});
+    render(<WarehouseExtractionModal isOpen={true} onClose={() => {}} onSuccess={() => {}} />);
+
+    await waitFor(() => {
+      const select = screen.getByLabelText(/Sector de Bodega Origen/i) as HTMLSelectElement;
+      expect(select.value).toBe('loc-seed-meat-fridge');
+    });
+    // el sector de cocina no debe aparecer como opción de origen
+    expect(screen.queryByRole('option', { name: 'Refrigerador Cocina' })).not.toBeInTheDocument();
+  });
+
+  it('envía fromStorageLocationId en el POST /stock/extraction', async () => {
+    let capturedBody: Record<string, unknown> | null = null;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url.includes('/kitchen/remanentes-activos')) return { ok: true, status: 200, json: async () => [] };
+        if (url.includes('/recipes')) return { ok: true, status: 200, json: async () => [] };
+        if (url.includes('/locations')) {
+          return { ok: true, status: 200, json: async () => [{ id: 'loc-seed-dry', name: 'Bodega de Secos', type: 'WAREHOUSE', isActive: true }] };
+        }
+        if (url.includes('/stock/insumos')) return { ok: true, status: 200, json: async () => INSUMOS_FIXTURE };
+        if (url.includes('/stock/extraction')) {
+          capturedBody = JSON.parse(init?.body as string);
+          return {
+            ok: true,
+            status: 201,
+            json: async () => ({
+              remanenteId: 'rem-x', insumoId: 'ins-1', insumoName: 'Queso Mozzarella', quantityExtracted: '1.000',
+              fromStorageLocationId: 'loc-seed-dry', remainingSectorStock: '9.000', remainingWarehouseStock: '9.000',
+              location: 'KITCHEN_FRIDGE', expirationDate: new Date().toISOString(), status: 'ACTIVE',
+            }),
+          };
+        }
+        return { ok: true, status: 200, json: async () => ({}) };
+      })
+    );
+
+    const onSuccess = vi.fn();
+    render(<WarehouseExtractionModal isOpen={true} onClose={() => {}} onSuccess={onSuccess} />);
+
+    await waitFor(() => {
+      expect((screen.getByLabelText(/Sector de Bodega Origen/i) as HTMLSelectElement).value).toBe('loc-seed-dry');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar Extracción/i }));
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(capturedBody).toMatchObject({ fromStorageLocationId: 'loc-seed-dry' });
   });
 });

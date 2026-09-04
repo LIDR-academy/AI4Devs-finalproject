@@ -73,13 +73,12 @@ async function applyLocationUpdate(
 }
 
 function buildHandlers(locationRepo: IStorageLocationRepository, insumoRepo?: IInsumoRepository) {
-  const getLocationsUseCase = new GetLocationsUseCase(locationRepo);
+  const getLocationsUseCase = new GetLocationsUseCase(locationRepo, insumoRepo);
   const createLocationUseCase = new CreateLocationUseCase(locationRepo);
 
   const list = async (_req: Request, res: Response, next: NextFunction) => {
     try {
-      const locations = await getLocationsUseCase.execute();
-      res.json(locations.map(mapLocation));
+      res.json(await getLocationsUseCase.execute());
     } catch (err) {
       next(err);
     }

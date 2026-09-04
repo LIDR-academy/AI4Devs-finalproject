@@ -1,2 +1,33 @@
 .insumo-catalog-panel { padding: var(--space-6); color: var(--text-primary); }
 .btn-table-action { min-height: 36px; padding: 6px var(--space-3); font-size: 0.8rem; display: inline-flex; }
+
+.stock-disclosure {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0;
+  margin-right: var(--space-2);
+  vertical-align: middle;
+  display: inline-flex;
+  min-width: 24px;
+  min-height: 24px;
+  align-items: center;
+  justify-content: center;
+}
+
+.stock-breakdown {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+}
+
+.stock-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2xs) 0;
+}
+
+.stock-breakdown-row dt { font-weight: var(--fw-semibold); }
+.stock-breakdown-row dd { margin: 0; }

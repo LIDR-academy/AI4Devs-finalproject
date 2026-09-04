@@ -6,6 +6,14 @@ export interface StorageLocationDto {
   type: 'WAREHOUSE' | 'KITCHEN';
   description?: string;
   isActive: boolean;
+  /** US-025: el sector tiene existencias asociadas (no se puede borrar ni desactivar). */
+  hasStock?: boolean;
+}
+
+/** Sub-sectores de bodega activos, para los selectores de alta/reabastecimiento/extracción (US-025). */
+export async function fetchActiveWarehouseSectors(): Promise<StorageLocationDto[]> {
+  const all = await LocationsService.fetchLocations();
+  return all.filter((l) => l.type === 'WAREHOUSE' && l.isActive);
 }
 
 export const LocationsService = {
