@@ -36,7 +36,7 @@ combination on a product**, and **a SKU namespace that spans both `products.sku`
 >    types' values, created in one call. This **reverses** the scope fence that previously deferred
 >    it, and it partially answers **[OQ-5](#open-questions)** (the generator: yes; the
 >    `product_product_attribute_type` declaration table: still no). Specified as
->    **[D-18](#d-18----moved-to-0029b0029b-product-variant-combination-generator-backendmd-2026-09-04)**, now **[0029b](../0029b-product-variant-combination-generator-backend.md)**.
+>    **[D-18](#d-18----moved-to-0029b0029b-product-variant-combination-generator-backendmd-2026-09-04)**, now **[0029b](0029b-product-variant-combination-generator-backend.md)**.
 >
 > The classification does **not** change — see [Type](#type) for the reasoning, which is stated rather
 > than asserted because "creates hundreds of rows" reads like a database question and is not one here.
@@ -51,8 +51,8 @@ combination on a product**, and **a SKU namespace that spans both `products.sku`
 > | Story | Scope |
 > | --- | --- |
 > | **0029** *(this file)* | the core: two tables, `ProductVariant`, the derived SKU, the combination hash, read-time image inheritance, the three single-variant actions, and the retrofits to 0024's shipped code (`productSkuRules()`, `CreateProduct`/`UpdateProduct`) and to 0028's `SyncProductAttributeValues` **rename** branch |
-> | **[0029a](../0029a-attribute-in-use-delete-guards-backend.md)** | the two **D-10** in-use guards against 0028's shipped delete paths — extracted per **R-K**'s own long-standing recommendation |
-> | **[0029b](../0029b-product-variant-combination-generator-backend.md)** | the **D-18** cartesian generator — the cleanest cut of the three: purely additive on top of `CreateProductVariant`, no schema, no shared file |
+> | **[0029a](0029a-attribute-in-use-delete-guards-backend.md)** | the two **D-10** in-use guards against 0028's shipped delete paths — extracted per **R-K**'s own long-standing recommendation |
+> | **[0029b](0029b-product-variant-combination-generator-backend.md)** | the **D-18** cartesian generator — the cleanest cut of the three: purely additive on top of `CreateProductVariant`, no schema, no shared file |
 >
 > **The eight doc-consistency defects fixed in this file**, each verified against the real shipped
 > code rather than taken on the reviewer's word: (1) `productSkuRules()` does not exist — the shipped method
@@ -89,7 +89,7 @@ database-expert: **yes**
 > indexes and a `restrictOnDelete()` FK contract inherited from 0028. **0029a** and **0029b** are both
 > `includes database-expert: no` — neither adds a table, column, index or FK. The 2026-08-19
 > blockquote that argued that point by point for the *generator* moved with the generator to
-> **[0029b](../0029b-product-variant-combination-generator-backend.md)**, where it is that story's own
+> **[0029b](0029b-product-variant-combination-generator-backend.md)**, where it is that story's own
 > classification argument; it is reproduced there rather than summarised. The rest of this blockquote
 > is retained as the record of that reasoning:
 >
@@ -301,9 +301,9 @@ Feature: Managing variants requires the products permission
 
 > 🟠 **Two Gherkin features moved out of this file on 2026-09-04**, with the split. *"Generating every
 > attribute combination at once"* (eight scenarios) is now
-> **[0029b](../0029b-product-variant-combination-generator-backend.md)**'s, and *"Attribute values in use
+> **[0029b](0029b-product-variant-combination-generator-backend.md)**'s, and *"Attribute values in use
 > by variants cannot be removed"* (three scenarios) is now
-> **[0029a](../0029a-attribute-in-use-delete-guards-backend.md)**'s. The authorization scenario that used
+> **[0029a](0029a-attribute-in-use-delete-guards-backend.md)**'s. The authorization scenario that used
 > to sit at the tail of the second feature is **rewritten and kept here**, expanded from one
 > abstract *"authorization is evaluated"* line into three concrete per-action ones — because **D-12**
 > is now a real decision (the actions self-authorize) rather than a hand-off, so this story finally
@@ -1371,7 +1371,7 @@ per-variant has to be explicit, the same lesson `base-standards.md` draws from `
 `Product`, this cascade stops firing (a soft delete is an `UPDATE`), leaving variants live under a
 trashed parent.
 
-🟠 **The two in-use blocks moved to [0029a](../0029a-attribute-in-use-delete-guards-backend.md) on
+🟠 **The two in-use blocks moved to [0029a](0029a-attribute-in-use-delete-guards-backend.md) on
 2026-09-04.** This section used to specify both of them — the type-level guard 0028's **D7** built the
 `DeleteProductAttributeType` seam for, and the per-value guard in `SyncProductAttributeValues`' delete
 branch that 0028's D7 did **not** anticipate — together with their two count queries, the
@@ -1581,7 +1581,7 @@ others. This table is the contract.
 | `price` / `stock` / `featuredMediaId` | `CreateProductVariant`, `UpdateProductVariant` (validation) | the ordinary per-field rules of **D-16** |
 
 🟠 **The seventh key, `attributeTypeIds`, moved to
-[0029b](../0029b-product-variant-combination-generator-backend.md) on 2026-09-04**, with the generator
+[0029b](0029b-product-variant-combination-generator-backend.md) on 2026-09-04**, with the generator
 that throws on it. **This story throws on exactly six keys** — `attributeValueIds`, `combination`,
 `sku`, `price`, `stock`, `featuredMediaId` — and no others; 0029b adds a seventh of its own and
 inherits all four rules below unchanged.
@@ -1627,7 +1627,7 @@ entity-prefixed** per 0024's naming trap — a variant editor composing this alo
 | `variantStockRules()` | `stock` | `['required', 'integer', 'min:0']` — 0024's `stockRules()` verbatim; `min:0` is the app-level statement of the invariant **D-6** deliberately kept out of the DDL |
 | ✅ `variantFeaturedMediaIdRules()` | `featuredMediaId` | `['nullable', 'string', Rule::exists('media', 'id')]` — **the method 0031 OQ-3(b) is missing**, added exactly as it recommended |
 
-🟠 **Two further methods moved to [0029b](../0029b-product-variant-combination-generator-backend.md) on
+🟠 **Two further methods moved to [0029b](0029b-product-variant-combination-generator-backend.md) on
 2026-09-04** — `variantAttributeTypeIdsRules()` and `variantAttributeTypeIdRules()`, which only the
 generator calls. **This trait ships five methods here**; 0029b appends the other two to the same
 trait (an append, never a second trait — the same "extend, never recreate" rule the `lang/` files
@@ -1723,7 +1723,7 @@ Four notes, each of which a reviewer will otherwise raise:
   naming the length. Ten axes on one variant is already nonsense; the number is deliberately generous
   so it never refuses a legitimate catalog and never becomes the *reason* a variant is rejected.
 - 🟠 The `max:5` note that sat here, about the type-id array's own bound and how it interacts with the
-  batch cap, moved to **[0029b](../0029b-product-variant-combination-generator-backend.md)** with the two
+  batch cap, moved to **[0029b](0029b-product-variant-combination-generator-backend.md)** with the two
   methods it describes.
 
 ### D-17 — Action signatures and named relations
@@ -1850,7 +1850,7 @@ Do not add a public `syncValues()` / `attachValue()` / `detachValue()` surface, 
 reasoning `base-standards.md` gives for keeping the behaviour on `User::delete()` and every call site
 on instances.
 
-### D-18 — 🟠 MOVED to [0029b](../0029b-product-variant-combination-generator-backend.md) (2026-09-04)
+### D-18 — 🟠 MOVED to [0029b](0029b-product-variant-combination-generator-backend.md) (2026-09-04)
 
 The cartesian combination generator — `GenerateProductVariantCombinations`, its summary-array return
 shape, its skip/refuse outcome semantics, the savepoint transaction shape, the `MAX_COMBINATIONS`
@@ -1882,12 +1882,12 @@ roll back only its own savepoint. 0029b runs strictly after this story reaches P
 - ~~No cartesian-product "generate all combinations" bulk builder unless **OQ-5** says otherwise.~~
   ~~**Reversed 2026-08-19** — the generator **is** in scope now.~~ 🟠 **Re-fenced 2026-09-04 by the
   three-way split**: the generator is **out of this story** and is
-  **[0029b](../0029b-product-variant-combination-generator-backend.md)**. It is not deferred or cancelled
+  **[0029b](0029b-product-variant-combination-generator-backend.md)**. It is not deferred or cancelled
   — it is a sibling story that ships on top of this one. The `product_product_attribute_type`
   **declaration table** is still out of scope in *all three* (OQ-5a's surviving half), and the
   generator's *UI* remains **0031**'s.
 - 🟠 **No in-use delete guard against 0028's attribute types or values** — that is
-  **[0029a](../0029a-attribute-in-use-delete-guards-backend.md)**. This story ships the
+  **[0029a](0029a-attribute-in-use-delete-guards-backend.md)**. This story ships the
   `restrictOnDelete()` FK that makes the guards necessary and tests the FK's own behaviour; it does
   **not** ship the message in front of it, the two count queries,
   `ProductAttributeType::variantUsageCount()`, or the wiring of 0028's `$deletingTypeUsageCount`
@@ -1926,26 +1926,26 @@ roll back only its own savepoint. 0029b runs strictly after this story reaches P
 | `app/Actions/Products/CreateProductVariant.php` | Owns the transaction, the read-back of ids **and value strings** (**V-10**), the ordered derivation, the combination check *then* the SKU check (**D-4.5**), the locking pre-check, the pivot write and the hash. Existing `app/Actions/Products/` subfolder (0024, 0028) |
 | `app/Actions/Products/UpdateProductVariant.php` | `price`/`stock`/`featured_media_id`/`position` only — **never** the pivot, the hash, **or the SKU** (**D-13**, **D-4.3**). The SKU changes only through **D-4.6**'s cascades, which this action is not one of |
 | `app/Actions/Products/DeleteProductVariant.php` | Thin today; exists as the single seam Epic 3's "a variant referenced by orders cannot be deleted" guard bolts onto — 0023 **D-10** / 0024's `DeleteProduct` reasoning |
-| ~~`app/Actions/Products/GenerateProductVariantCombinations.php`~~ 🟠 **MOVED to [0029b](../0029b-product-variant-combination-generator-backend.md), 2026-09-04.** *(row retained struck through so the cut is visible in the diff rather than silent)* | **Was, 2026-08-19 (D-18).** The cartesian generator: one outer transaction, one pre-read of the product's existing `combination_hash` values, then one `CreateProductVariant` call per new combination (its transaction becomes a savepoint, so a per-row refusal does not destroy the batch). Owns `MAX_COMBINATIONS = 200` (**D-18.5**), the empty-type refusal, the iteration order (**D-18.6**) and the summary array shape (**D-18.1**). **It re-implements nothing** — not the derivation, not the hash, not the collision check; a second copy of any of those is the defect **R-L** names |
-| `app/Concerns/ProductVariantValidationRules.php` | `<Noun>ValidationRules` per [naming.md](../../../docs/conventions/naming.md#traits-and-their-methods). Flat, single-concern, `use`s no other trait. **Entity-prefixed leaf methods** where a name would collide — 0024's naming trap is live here, because a variant editor composing this alongside `ProductValidationRules` fatals on a duplicate method. **No `skuRules()`/`productSkuRules()` and no variant SKU rule at all** — the variant SKU is derived, so there is no input to validate (**D-4.3**); the product-side `productSkuRules()` stays in 0024's trait. **Written out in full in [D-16](#d-16--productvariantvalidationrules-written-out-in-full): five methods** — `variantCombinationRules()`, `variantCombinationValueRules()`, `variantPriceRules()`, `variantStockRules()`, `variantFeaturedMediaIdRules()`. 🟠 The two `attributeTypeIds` methods **appended to this same trait by [0029b](../0029b-product-variant-combination-generator-backend.md)**, never a second trait. 🔴 **Every consumer validates the id array in TWO passes** — [D-16.1](#d-161----the-two-id-arrays-must-be-validated-in-two-passes-never-one-combined-rule-array) |
+| ~~`app/Actions/Products/GenerateProductVariantCombinations.php`~~ 🟠 **MOVED to [0029b](0029b-product-variant-combination-generator-backend.md), 2026-09-04.** *(row retained struck through so the cut is visible in the diff rather than silent)* | **Was, 2026-08-19 (D-18).** The cartesian generator: one outer transaction, one pre-read of the product's existing `combination_hash` values, then one `CreateProductVariant` call per new combination (its transaction becomes a savepoint, so a per-row refusal does not destroy the batch). Owns `MAX_COMBINATIONS = 200` (**D-18.5**), the empty-type refusal, the iteration order (**D-18.6**) and the summary array shape (**D-18.1**). **It re-implements nothing** — not the derivation, not the hash, not the collision check; a second copy of any of those is the defect **R-L** names |
+| `app/Concerns/ProductVariantValidationRules.php` | `<Noun>ValidationRules` per [naming.md](../../../docs/conventions/naming.md#traits-and-their-methods). Flat, single-concern, `use`s no other trait. **Entity-prefixed leaf methods** where a name would collide — 0024's naming trap is live here, because a variant editor composing this alongside `ProductValidationRules` fatals on a duplicate method. **No `skuRules()`/`productSkuRules()` and no variant SKU rule at all** — the variant SKU is derived, so there is no input to validate (**D-4.3**); the product-side `productSkuRules()` stays in 0024's trait. **Written out in full in [D-16](#d-16--productvariantvalidationrules-written-out-in-full): five methods** — `variantCombinationRules()`, `variantCombinationValueRules()`, `variantPriceRules()`, `variantStockRules()`, `variantFeaturedMediaIdRules()`. 🟠 The two `attributeTypeIds` methods **appended to this same trait by [0029b](0029b-product-variant-combination-generator-backend.md)**, never a second trait. 🔴 **Every consumer validates the id array in TWO passes** — [D-16.1](#d-161----the-two-id-arrays-must-be-validated-in-two-passes-never-one-combined-rule-array) |
 | `database/factories/ProductVariantFactory.php` | `product_id => Product::factory()` so a bare `->create()` stands alone. **The SKU must be derived, not faked**: default to `app(DeriveVariantSku::class)($product->sku, [$segment])` with a short unique `bothify()` segment, **never** `fake()->unique()->word()` (~1000-row `OverflowException`) and never a free-text SKU — a factory that writes an underived SKU makes **D-4.3**'s global consistency test unusable (**FP13**). States: `withCombination(array $valueIds)` (derives from the real values, in **D-4.2** order), `withOwnImage()`, `inheritingImage()`, `outOfStock()` |
 | `tests/**` | Phase 3, `backend-qa` — see [Tests to perform](#tests-to-perform) |
 
 ### Modifies — including two other stories' **already-shipped** code
 
-🟠 **2026-09-04: two rows removed to [0029a](../0029a-attribute-in-use-delete-guards-backend.md)** (`DeleteProductAttributeType`, `ProductAttributeType`) and one narrowed to a single branch (`SyncProductAttributeValues`). One row is now a **verification-only** no-op (`ProductAttributeValue::type()`, Phase 2 defect 3), one had the wrong method name (`ProductValidationRules`, defect 1), and `AttributeTypes\Index` moved out too. **These files are shipped code in `done/`, not specs** — see the V-15/V-P correction under [Verified environment findings](#verified-environment-findings).
+🟠 **2026-09-04: two rows removed to [0029a](0029a-attribute-in-use-delete-guards-backend.md)** (`DeleteProductAttributeType`, `ProductAttributeType`) and one narrowed to a single branch (`SyncProductAttributeValues`). One row is now a **verification-only** no-op (`ProductAttributeValue::type()`, Phase 2 defect 3), one had the wrong method name (`ProductValidationRules`, defect 1), and `AttributeTypes\Index` moved out too. **These files are shipped code in `done/`, not specs** — see the V-15/V-P correction under [Verified environment findings](#verified-environment-findings).
 
 | Path | What & why |
 | --- | --- |
 | `app/Concerns/ProductValidationRules.php` **(0024's SHIPPED file)** | 🟠 **Method name corrected 2026-09-04 (Phase 2 defect 1): it is `productSkuRules(?string $productId = null)`, not `skuRules()`.** It gains a second uniqueness rule, `Rule::unique(ProductVariant::class, 'sku')` — the **model-class** form, matching the shipped body's own `Rule::unique(Product::class, 'sku')`, and placed **outside** the existing `$productId === null` ternary with **no** `->ignore()` on either branch. **No `?string $productVariantId` parameter is added**; the signature is unchanged. Still required after the derived-SKU amendment: an admin-typed **product** SKU is the only remaining way a human can claim a string in this namespace (collision case **(a)**). See the correction box at the end of **D-4.7** for the shipped body |
 | `app/Actions/Products/CreateProduct.php` **(0024's file)** | Gains the locking pre-check across both tables, in the fixed lock order (**D-4.5**). Without it, "a product claiming a variant's derived SKU" is unguarded |
 | `app/Actions/Products/UpdateProduct.php` **(0024's file)** | The same pre-check, **plus the re-derivation cascade** (**D-4.6**): a change to `products.sku` re-derives every one of that product's variants in the same transaction, re-checks each new value, and aborts the whole update on any collision. This is the single largest retrofit this story makes to another story's code |
-| `app/Actions/Products/SyncProductAttributeValues.php` **(0028's SHIPPED file)** | Its **rename branch** must re-derive the SKU of every variant built on a renamed value (**D-4.6**), same transaction, all-or-nothing. 🔴 **This is now the ONLY edit this story makes to that file** — the delete-branch in-use guard moved to [0029a](../0029a-attribute-in-use-delete-guards-backend.md). 🔴 **And the branch does not fire model events, which changes how the cascade must be written** — see [D-4.6.1](#d-461----the-rename-branch-is-a-query-builder-mass-update-so-the-cascade-cannot-be-hooked) |
+| `app/Actions/Products/SyncProductAttributeValues.php` **(0028's SHIPPED file)** | Its **rename branch** must re-derive the SKU of every variant built on a renamed value (**D-4.6**), same transaction, all-or-nothing. 🔴 **This is now the ONLY edit this story makes to that file** — the delete-branch in-use guard moved to [0029a](0029a-attribute-in-use-delete-guards-backend.md). 🔴 **And the branch does not fire model events, which changes how the cascade must be written** — see [D-4.6.1](#d-461----the-rename-branch-is-a-query-builder-mass-update-so-the-cascade-cannot-be-hooked) |
 | `app/Models/Product.php` **(0024's file)** | Gains one method: `variants(): HasMany`, ordered `position ASC, sku ASC` (**D-8**) |
-| ~~`app/Actions/Products/DeleteProductAttributeType.php`~~ · ~~`SyncProductAttributeValues.php` (delete branch)~~ · ~~`app/Models/ProductAttributeType.php`~~ | 🟠 **All three MOVED to [0029a](../0029a-attribute-in-use-delete-guards-backend.md), 2026-09-04** — the type-level in-use guard, the per-value in-use guard in the delete branch, and `variantUsageCount()`. Rows retained struck through so the cut is visible |
+| ~~`app/Actions/Products/DeleteProductAttributeType.php`~~ · ~~`SyncProductAttributeValues.php` (delete branch)~~ · ~~`app/Models/ProductAttributeType.php`~~ | 🟠 **All three MOVED to [0029a](0029a-attribute-in-use-delete-guards-backend.md), 2026-09-04** — the type-level in-use guard, the per-value in-use guard in the delete branch, and `variantUsageCount()`. Rows retained struck through so the cut is visible |
 | `app/Models/ProductAttributeValue.php` **(0028's SHIPPED file)** | Gains **exactly one** method: `variants(): BelongsToMany` through the pivot. 🟠 **Corrected 2026-09-04 (Phase 2 defect 3):** this row also claimed the story would *"name 0028's unnamed value→type relation `type(): BelongsTo`"*. `type()` **already exists**, named, typed and PHPDoc'd, with its foreign key passed explicitly. Nothing to add — verify only |
-| ~~`App\Livewire\Products\AttributeTypes\Index` (0028's file)~~ | 🟠 **MOVED to [0029a](../0029a-attribute-in-use-delete-guards-backend.md), 2026-09-04** — `$deletingTypeUsageCount`'s real query belongs with the guard it renders for. This story touches **no** Livewire component at all, which restores the scope fence exactly |
-| `lang/en/products.php`, `lang/es/products.php` | **Extend, never recreate** — 0024 creates this file (its **R-13** hand-off; 0028 was already amended the same way). New keys: `products.variants.duplicate_combination`; `products.variants.derived_sku_taken` (**must interpolate the derived `:sku` and name the conflicting record** — a derived SKU cannot be retyped, so a bare "already taken" leaves the administrator with no action, **D-4.5**); `products.variants.derived_sku_empty_segment` (naming the offending attribute value) and `products.variants.derived_sku_too_long` (**D-4.4**); `products.variants.parent_sku_change_collides` (**D-4.6**, naming the variant); 🟠 **`products.variants.value_in_use` / `type_in_use` moved to [0029a](../0029a-attribute-in-use-delete-guards-backend.md)** and the three `products.variants.generate.*` keys to [0029b](../0029b-product-variant-combination-generator-backend.md), 2026-09-04 — each key ships in the story that throws it, so no story adds a key nothing reads. Key-for-key identical in both locales |
+| ~~`App\Livewire\Products\AttributeTypes\Index` (0028's file)~~ | 🟠 **MOVED to [0029a](0029a-attribute-in-use-delete-guards-backend.md), 2026-09-04** — `$deletingTypeUsageCount`'s real query belongs with the guard it renders for. This story touches **no** Livewire component at all, which restores the scope fence exactly |
+| `lang/en/products.php`, `lang/es/products.php` | **Extend, never recreate** — 0024 creates this file (its **R-13** hand-off; 0028 was already amended the same way). New keys: `products.variants.duplicate_combination`; `products.variants.derived_sku_taken` (**must interpolate the derived `:sku` and name the conflicting record** — a derived SKU cannot be retyped, so a bare "already taken" leaves the administrator with no action, **D-4.5**); `products.variants.derived_sku_empty_segment` (naming the offending attribute value) and `products.variants.derived_sku_too_long` (**D-4.4**); `products.variants.parent_sku_change_collides` (**D-4.6**, naming the variant); 🟠 **`products.variants.value_in_use` / `type_in_use` moved to [0029a](0029a-attribute-in-use-delete-guards-backend.md)** and the three `products.variants.generate.*` keys to [0029b](0029b-product-variant-combination-generator-backend.md), 2026-09-04 — each key ships in the story that throws it, so no story adds a key nothing reads. Key-for-key identical in both locales |
 | `tests/Unit/ArchitectureTest.php` | One `expect()` **per namespace, never `expect([...])`** — that form is disjunctive and this repo has shipped one vacuous arch rule that way already (0024 **V-7**) |
 
 ### Explicitly **not** touched
@@ -2125,7 +2125,7 @@ longer be chosen to collide — it has to be *arranged* to collide.
       actually being taken.
 
 🟠 **`tests/Feature/Products/GenerateProductVariantCombinationsTest.php` (fifteen cases) moved to
-[0029b](../0029b-product-variant-combination-generator-backend.md) on 2026-09-04**, with the generator.
+[0029b](0029b-product-variant-combination-generator-backend.md) on 2026-09-04**, with the generator.
 
 
 **Feature — `tests/Feature/Products/ProductVariantReferentialIntegrityTest.php`**
@@ -2146,7 +2146,7 @@ proof of 0028's **D4** mandate in the whole codebase.
       pivot rows with it, and leaves the media and attribute-value rows intact.
 
 🟠 **`tests/Feature/Products/DeleteProductAttributeTypeTest.php` (six cases) moved to
-[0029a](../0029a-attribute-in-use-delete-guards-backend.md) on 2026-09-04**, with the guards it tests.
+[0029a](0029a-attribute-in-use-delete-guards-backend.md) on 2026-09-04**, with the guards it tests.
 
 
 **Feature — `tests/Feature/Products/ProductVariantAuthorizationTest.php`** 🟠 *(new 2026-09-04, **D-12.1**)*
@@ -2293,7 +2293,7 @@ that renders a refusal invisible on screen. **Every refusal test must assert the
 three `sku` refusals must additionally assert the **translation key**, since the bag key alone cannot
 tell them apart. **R-F**'s combination-vs-SKU mislabelling is the same trap with the stakes named.
 
-🟠 **FP18 and FP19 moved to [0029b](../0029b-product-variant-combination-generator-backend.md) on
+🟠 **FP18 and FP19 moved to [0029b](0029b-product-variant-combination-generator-backend.md) on
 2026-09-04** — both are generator-specific false passes (asserting only the created count; asserting
 only that no duplicate was created). **FP20** and **FP21** below are new with this pass.
 
@@ -2371,9 +2371,9 @@ inheriting variants show, while a variant with its own image is untouched.
 🟠 **Two paragraphs moved out of this section on 2026-09-04**, with the split. The cartesian
 generator's whole outcome — *"8 variants created, 2 already existed"*, the skip-without-touching rule,
 the by-name refusal, the batch cap — is now
-**[0029b](../0029b-product-variant-combination-generator-backend.md)**'s expected outcome, and the two
+**[0029b](0029b-product-variant-combination-generator-backend.md)**'s expected outcome, and the two
 attribute in-use blocks 0028 designed seams for are now
-**[0029a](../0029a-attribute-in-use-delete-guards-backend.md)**'s. What this story delivers toward both:
+**[0029a](0029a-attribute-in-use-delete-guards-backend.md)**'s. What this story delivers toward both:
 the pivot table and its `restrictOnDelete()` FK (which is what makes 0029a's guards necessary and its
 counts possible), and `CreateProductVariant` with its per-call transaction (which is what lets 0029b
 run a batch of them as savepoints).
@@ -2451,7 +2451,7 @@ Nothing is user-visible yet: the builder that consumes all of this is story **00
       (**FP20**), a `Super Admin` bypass test and a refusal-logging assertion for each. No new
       permission string, no `ProductVariantPolicy`, no `ProductPolicy` edit.
 🟠 *(Three cartesian-generation acceptance criteria moved to*
-*[0029b](../0029b-product-variant-combination-generator-backend.md) on 2026-09-04.)*
+*[0029b](0029b-product-variant-combination-generator-backend.md) on 2026-09-04.)*
 
 - [ ] **A variant with no own featured image resolves to the parent's at read time** — proven by a test
       that changes the parent's image and observes the variant follow it — while
@@ -2460,7 +2460,7 @@ Nothing is user-visible yet: the builder that consumes all of this is story **00
       independently** when an attribute value or type in use by a variant is deleted — driven by raw
       `DB::table(...)->delete()`, since no application path exists here.
       🟠 *The message-carrying in-use guards in front of that FK, and 0028's
-      `$deletingTypeUsageCount`, are [0029a](../0029a-attribute-in-use-delete-guards-backend.md)'s
+      `$deletingTypeUsageCount`, are [0029a](0029a-attribute-in-use-delete-guards-backend.md)'s
       acceptance criteria, not this story's.*
 - [ ] Authorization is expressed through `ProductPolicy` against the **parent product**, with both an
       allow and a deny test per ability; no new permission string and no `RolePermissionSeeder` change.
@@ -2556,14 +2556,14 @@ Nothing is user-visible yet: the builder that consumes all of this is story **00
       **closed rather than re-debated**. **(b)** Every one of this story's bag keys is **unbound on
       0031's screen**, so all of them must be rendered explicitly or three of four refusals are
       invisible while every backend test is green (0031 **D-8**). **(c) The generator now exists**, 🟠 **but it is
-      [0029b](../0029b-product-variant-combination-generator-backend.md)'s, not this story's, since
+      [0029b](0029b-product-variant-combination-generator-backend.md)'s, not this story's, since
       2026-09-04** — which converts 0031's **D-3** scope fence and its **OQ-2b** into a shippable UI
       decision against a *sibling* story. Note the name: 0031 calls the action
       `GenerateProductVariants`, and what ships is **`GenerateProductVariantCombinations`**. **(d)** A generator UI must render the
       `created`/`skipped`/`refused` summary as a result table, and inherits the pagination consequence
       0031's own OQ-2 flagged (a capped batch is still up to `MAX_COMBINATIONS` rows arriving at once).
 - [ ] 🟠 **The savepoint gap-lock probe moved to
-      [0029b](../0029b-product-variant-combination-generator-backend.md)** on 2026-09-04, with the batch
+      [0029b](0029b-product-variant-combination-generator-backend.md)** on 2026-09-04, with the batch
       that raises the question. Nothing in this story nests a savepoint inside another transaction, so
       it has no occasion to run it.
 - [ ] 🟠 **Cross-reference sweep for the split**: every mention of the generator or of the two
@@ -2640,8 +2640,8 @@ Several decisions would be wrong without them.
   **shipped** code rather than an amendment to a sibling spec — the reason this file's own Modifies
   rows had to be verified against the real files, and the reason three of them were wrong.
 - 🟠 **Two stories now depend on this one and did not exist before 2026-09-04:**
-  **[0029a](../0029a-attribute-in-use-delete-guards-backend.md)** (the attribute in-use delete guards)
-  and **[0029b](../0029b-product-variant-combination-generator-backend.md)** (the cartesian generator).
+  **[0029a](0029a-attribute-in-use-delete-guards-backend.md)** (the attribute in-use delete guards)
+  and **[0029b](0029b-product-variant-combination-generator-backend.md)** (the cartesian generator).
   Both are hard-blocked on this story reaching Phase 7. 0029a additionally edits
   `SyncProductAttributeValues`, which this story also edits (a different branch), so the order is
   strictly **0029 → 0029a**. 0029b shares no file with either and could run in parallel with 0029a;
@@ -2719,8 +2719,8 @@ Several decisions would be wrong without them.
   | Story | What it carries | Why it is a clean cut |
   | --- | --- | --- |
   | **0029** *(this file)* | two tables, `ProductVariant`, the derived SKU + its re-derivation cascades, the combination hash, read-time image inheritance, three self-authorizing actions, the 0024 retrofit | the irreducible core: everything here shares the two tables and the derived column, and nothing in it is independently shippable |
-  | **[0029a](../0029a-attribute-in-use-delete-guards-backend.md)** | the two **D-10** in-use guards against 0028's shipped delete paths | **R-K named this cut itself**, from the day it was written. Independently valuable (0028's screen stops 500-ing on an everyday gesture), independently testable, and it needs from this story only the pivot table's existence |
-  | **[0029b](../0029b-product-variant-combination-generator-backend.md)** | the **D-18** cartesian generator | **the cleanest of the three.** Purely additive on `CreateProductVariant`: no schema, no index, no shared file, re-implements nothing. Removing it changes no contract here. It is also the piece that was added *after* R-K was last assessed |
+  | **[0029a](0029a-attribute-in-use-delete-guards-backend.md)** | the two **D-10** in-use guards against 0028's shipped delete paths | **R-K named this cut itself**, from the day it was written. Independently valuable (0028's screen stops 500-ing on an everyday gesture), independently testable, and it needs from this story only the pivot table's existence |
+  | **[0029b](0029b-product-variant-combination-generator-backend.md)** | the **D-18** cartesian generator | **the cleanest of the three.** Purely additive on `CreateProductVariant`: no schema, no index, no shared file, re-implements nothing. Removing it changes no contract here. It is also the piece that was added *after* R-K was last assessed |
 
   **What the cut costs, stated rather than glossed.** R-K's own 2026-08-18 note observed that the
   derived-SKU amendment *"costs R-K's cleanest cut line half its cleanliness"*, because **D-4.6**'s
@@ -2741,7 +2741,7 @@ Several decisions would be wrong without them.
   rejected: it would ship a `product_variants` table whose SKU uniqueness is enforced in one
   direction only, which is **V-5**'s executed collision left deliberately open.
 
-🟠 **R-O, R-P and R-Q moved to [0029b](../0029b-product-variant-combination-generator-backend.md)
+🟠 **R-O, R-P and R-Q moved to [0029b](0029b-product-variant-combination-generator-backend.md)
 on 2026-09-04** — the generator's lock-hold window, the skipped/refused conflation, and the three
 refusals sharing the `sku` bag key at batch scale. **R-F** stays here (it is `CreateProductVariant`'s
 own two-unique-index disambiguation), and so does the `sku`-key half of R-Q's concern, which **FP17**
@@ -2845,8 +2845,8 @@ Of what remains here, **OQ-2 must be answered before Phase 3** (a one-line `->nu
 backfill later), and **OQ-17** shares its timing for the same reason (`string(128)` now versus an
 `ALTER`). **OQ-13**–**OQ-16** and **OQ-18** are action code and are revisitable at moderate cost.
 **OQ-12 is now answered** (see below). **OQ-7 moved to
-[0029a](../0029a-attribute-in-use-delete-guards-backend.md)** and **OQ-19**–**OQ-21** to
-[0029b](../0029b-product-variant-combination-generator-backend.md)**, each with the decision it belongs
+[0029a](0029a-attribute-in-use-delete-guards-backend.md)** and **OQ-19**–**OQ-21** to
+[0029b](0029b-product-variant-combination-generator-backend.md)**, each with the decision it belongs
 to. **Nine open questions remain in this file** — OQ-2, OQ-3, OQ-4, OQ-6, OQ-8, OQ-9, OQ-10, OQ-11 and
 the OQ-13–OQ-18 group's five live members — none of which blocks Phase 2.
 
@@ -2900,7 +2900,7 @@ recreate)?
 declaration table: still no.**
 
 > The PO split this question, which had always bundled two separable things. **The cartesian generator
-> ships** — 🟠 **in [0029b](../0029b-product-variant-combination-generator-backend.md) since the
+> ships** — 🟠 **in [0029b](0029b-product-variant-combination-generator-backend.md) since the
 > 2026-09-04 split, not in this story** — as `GenerateProductVariantCombinations`
 > (**[D-18](#d-18--the-cartesian-combination-generator)**), reversing the scope fence that deferred
 > it. **The `product_product_attribute_type` declaration table does not** — OQ-5a's other half stands
@@ -2934,7 +2934,7 @@ both of which read as a declared axis set plus a cartesian generator.
 Active)? **Recommended: no** (**D-9**) — `stock = 0` already expresses it and already drives 0024's
 badge. Recorded so the omission is a decision.
 
-**OQ-7 — 🟠 MOVED to [0029a](../0029a-attribute-in-use-delete-guards-backend.md) (2026-09-04),** with
+**OQ-7 — 🟠 MOVED to [0029a](0029a-attribute-in-use-delete-guards-backend.md) (2026-09-04),** with
 the type-level in-use block it asks about.
 
 **OQ-8 — Amend 0028 with `unique(['id','product_attribute_type_id'])`** so the one-value-per-type
@@ -3048,7 +3048,7 @@ because 0031 owns the reorder control and should warn on it.
 ---
 
 🟠 **OQ-19, OQ-20 and OQ-21 moved to
-[0029b](../0029b-product-variant-combination-generator-backend.md) on 2026-09-04** — the batch cap's
+[0029b](0029b-product-variant-combination-generator-backend.md) on 2026-09-04** — the batch cap's
 constant, whether a generated variant takes the parent's price, and whether the generator should be
 reachable for a subset of a product's axes. All three are questions *about the generator*, and none
 of them has a schema cost, so moving them costs this story nothing. **One coupling survives the move
@@ -3173,7 +3173,7 @@ items mattered. All three were raised, and two were failures rather than observa
 | Item this section flagged | Phase 2 verdict |
 | --- | --- |
 | **Size (R-K)** | **FAIL on INVEST "Small".** R-K's self-assessment was **stale** — dated 2026-08-18, about the derived-SKU amendment only, and never re-run after the 2026-08-19 generator addition *reversed a scope fence*. Resolved by a three-way split; see the rewritten **R-K** |
-| **OQ-5** | Unchanged as a scope boundary. Its generator half is now [0029b](../0029b-product-variant-combination-generator-backend.md)'s; the declaration-table half is still fenced out of all three stories |
+| **OQ-5** | Unchanged as a scope boundary. Its generator half is now [0029b](0029b-product-variant-combination-generator-backend.md)'s; the declaration-table half is still fenced out of all three stories |
 | **DIS-3** | **The deferral it warned about was rejected.** **D-12.1** decides authorization here rather than handing it to 0031, so this story adds three *authorizing* actions rather than three more ungated ones. DIS-3's actual ask — a project-level decision plus an `ArchitectureTest` assertion — is untouched and still open |
 
 **Plus eight doc-consistency defects**, each verified against the real shipped code rather than

@@ -29,6 +29,7 @@ other rows and then persists, rather than one a user supplies.
 - [The review question](#the-review-question)
 - [Related: re-loading a relation does not re-read the key it resolves through](#related-re-loading-a-relation-does-not-re-read-the-key-it-resolves-through)
 - [What the remediation introduced: a retried transaction is a retry-safe unit, or it is a lost update](#what-the-remediation-introduced-a-retried-transaction-is-a-retry-safe-unit-or-it-is-a-lost-update)
+- [Second confirming instance: a generator's own outer transaction — `attempts` fires only at nesting level 1](#second-confirming-instance-a-generators-own-outer-transaction--attempts-fires-only-at-nesting-level-1)
 - [Confirmed safe: `causedByConcurrencyError()` matches a message, not a class](#confirmed-safe-causedbyconcurrencyerror-matches-a-message-not-a-class)
 
 ## The rule
@@ -428,6 +429,54 @@ here because this story is where the two halves first pull against each other.
 >   reintroduce the silent lost update this section documents. Closing that half needs the
 >   key-passing shape at `Editor::save()`, not a flag.
 
+## Second confirming instance: a generator's own outer transaction — `attempts` fires only at nesting level 1
+
+**Corrected 2026-09-05 (story 0029b, `appsec-auditor`'s Phase 4 pass).** The [What the remediation
+introduced](#what-the-remediation-introduced-a-retried-transaction-is-a-retry-safe-unit-or-it-is-a-lost-update)
+section above states — and the R-1 closure block repeats — that `App\Livewire\Products\Editor::save()`
+is *"the only shipped caller"* opening an outer `DB::transaction()` around these actions, and that
+*"`Editor::save()`'s outer transaction makes both retained `attempts: 3` inert on the shipped path."*
+Read together, both sentences imply `Editor::save()` is this domain's **only** outer transaction. That
+stopped being true the moment `App\Actions\Products\GenerateProductVariantCombinations` shipped: it
+opens its **own** outer `DB::transaction(attempts: 3)`, entirely independent of `Editor::save()`,
+wrapping a loop of `CreateProductVariant` calls whose own `DB::transaction(attempts: 3)` becomes a
+savepoint under it — the identical nesting shape `Editor::save()` already produces over
+`CreateProduct`/`UpdateProduct`. Both sentences are kept above as the record of what this page
+asserted, per this project's audit-authored-page convention, rather than silently rewritten.
+
+Two things follow, and neither is a new *mechanism* — both are the already-documented
+nested-`attempts`-is-inert rule confirmed on a second, independent call path, which is why this fact
+belongs on this page rather than in [errors-log.md](../errors-log.md) (whose own 2026-08-19 entry
+records the rule that a repeated instance of an already-documented mistake stays off the log and on the
+relevant page instead):
+
+1. **The generator's own transaction is retry-safe by the rule this page already states above.** Every
+   mutable accumulator it writes — the `created`/`skipped`/`refused` summary, the pre-read
+   `combination_hash` set, the per-combination loop state — is created **fresh inside the closure** on
+   every attempt. Unlike the `UpdateProduct` hazard documented above, there is no Eloquent model
+   mutated *outside* the closure for a retry to silently no-op against.
+2. **`CreateProductVariant`'s own `attempts: 3` is silently inert when invoked from inside the
+   generator's transaction**, for the identical reason it is already inert when `CreateProduct`/
+   `UpdateProduct` run inside `Editor::save()`'s: `Illuminate\Database\Concerns\ManagesTransactions
+   ::transaction()` only enters its retry loop when `$this->transactions === 1` on the connection — at
+   any deeper nesting level, `handleTransactionException()` converts a concurrency exception straight
+   to a rethrow, never retrying. Verified against the trait itself rather than assumed from the
+   `Editor::save()` case alone.
+
+**The general rule this page now states outright, generalized past both instances**: `DB::transaction($fn,
+attempts: N)`'s retry only ever fires for the **outermost** transaction on the connection — a callee's
+own `attempts` value is inert the moment *anything* wraps it, regardless of which class opened the
+outer transaction, how many call frames sit in between, or whether the outer transaction itself
+requested a retry.
+
+⚠️ **For a future caller.** Before adding `attempts: N` to any `DB::transaction()` in this domain,
+first determine whether it can ever run nested under another one already carrying `attempts` (or ever
+will) — an inert `attempts` is not itself a bug, but a `DB::transaction()` that *assumes* its own retry
+will fire when an enclosing one already suppresses it is the same lost-update shape documented above,
+arriving through nesting rather than through a badly-scoped closure. **Story 0031's future integration
+of the generator into `Editor::save()` must not add its own `attempts:` to that outer transaction
+without first re-deriving this analysis** — see the epic-2 decision digest's Story 0029b entry.
+
 ## Confirmed safe: `causedByConcurrencyError()` matches a message, not a class
 
 Worth recording because the obvious mental model is wrong and the safety here is contingent rather
@@ -460,7 +509,27 @@ either. **The rule for the next story: a transaction with `attempts: N` must not
 whose message can carry user-controlled text**, or an ordinary validation refusal silently becomes
 three times the work — and, with a mutating closure like the one above, three times the damage.
 
-_Last updated: 2026-09-04 (second re-audit, same day) — **this page's own remaining ❌ is now ✅**, and
+_Last updated: 2026-09-05 — Story 0029b (Product variant combination generator — backend). **Corrected
+this page's own stale claim, in place, per the audit-authored-page convention**: the
+[What the remediation introduced](#what-the-remediation-introduced-a-retried-transaction-is-a-retry-safe-unit-or-it-is-a-lost-update)
+section's "`Editor::save()`, the only shipped caller" framing implied `Editor::save()` was this
+domain's *only* outer transaction — false as of this story, which ships
+`App\Actions\Products\GenerateProductVariantCombinations` as a second, independent outer
+`DB::transaction(attempts: 3)`, with `CreateProductVariant`'s own transaction nesting under it as a
+savepoint exactly as it already does under `Editor::save()`. Added
+[Second confirming instance: a generator's own outer transaction — `attempts` fires only at nesting level 1](#second-confirming-instance-a-generators-own-outer-transaction--attempts-fires-only-at-nesting-level-1),
+generalizing the mechanism this page already carried (verified against
+`Illuminate\Database\Concerns\ManagesTransactions`: the retry loop only fires when
+`$this->transactions === 1`) into a rule this domain's next transaction author must check before
+adding `attempts:` to anything — explicitly including story 0031's future `Editor::save()` integration
+of this generator. Deliberately **not** a new `errors-log.md` entry, per this project's own precedent
+(a repeated instance of an already-documented mistake stays on the relevant page, not the log) and per
+this story's own scope fence against duplicating findings already closed by story 0029. **Verified as
+unchanged rather than assumed:** every other section on this page — the derived-`sku`/`combination_hash`
+sections, the relation-reload finding and the `causedByConcurrencyError()` confirmed-safe note are all
+untouched by this story's diff._
+
+_Previously: 2026-09-04 (second re-audit, same day) — **this page's own remaining ❌ is now ✅**, and
 the correction is the entry: the status banner and the
 [What the remediation introduced](#what-the-remediation-introduced-a-retried-transaction-is-a-retry-safe-unit-or-it-is-a-lost-update)
 section both still said ❌ OPEN after `UpdateProduct` had already dropped its `attempts: 3`, which is

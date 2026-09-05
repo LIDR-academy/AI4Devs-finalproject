@@ -81,4 +81,35 @@ trait ProductVariantValidationRules
     {
         return ['nullable', 'string', Rule::exists('media', 'id')];
     }
+
+    /**
+     * Get the validation rules used to validate the generator's selected
+     * attribute-type array itself (0029b, D-G8 pass 1 -- shape and bound
+     * ALONE, no rule that touches the database). `max:5` is a sanity bound
+     * one level up from the batch cap (D-G5): five types of four values
+     * each is already 1,024 combinations, so the cap is what actually
+     * refuses that.
+     *
+     * @return array<int, ValidationRule|array<mixed>|string>
+     */
+    protected function variantAttributeTypeIdsRules(): array
+    {
+        return ['required', 'array', 'min:1', 'max:5'];
+    }
+
+    /**
+     * Get the validation rules used to validate each submitted attribute
+     * type id (0029b, D-G8 pass 2). `Rule::exists()` here is a first pass,
+     * never the authority -- the generator's own value-set read is what
+     * actually decides the cartesian product. `uuid` bounds each element's
+     * own length/format before it ever reaches a query binding -- max:5
+     * bounds how MANY ids may be submitted, not how large any one of them
+     * is.
+     *
+     * @return array<int, ValidationRule|array<mixed>|string>
+     */
+    protected function variantAttributeTypeIdRules(): array
+    {
+        return ['string', 'uuid', 'distinct', Rule::exists('product_attribute_types', 'id')];
+    }
 }
