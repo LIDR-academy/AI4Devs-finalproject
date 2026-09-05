@@ -343,6 +343,12 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-050-FE: Panel de Auditoría de Movimientos](stock/frontend/TK-050-FE.md)** (Frontend)
 *   **[TK-060: Reabastecimiento de Bodega](stock/backend/TK-060.md)** (Backend) — sin esto, un insumo agotado en bodega quedaba inutilizable para siempre.
 *   **[TK-060-FE: Panel de Reabastecimiento](stock/frontend/TK-060-FE.md)** (Frontend)
+*   **[TK-119: Escaneo de Código de Barras en Extracción de Bodega](stock/backend/TK-119.md)** (Backend) — `US-032`, `Insumo.barcode` + endpoint de búsqueda; sin match, solo `ADMIN` completa el alta.
+*   **[TK-119-FE: Escaneo de Código de Barras (Frontend)](stock/frontend/TK-119-FE.md)** (Frontend) — `US-032`; decisión de librería de escaneo pendiente (Guard 24).
+
+### 🍳 Cocina (`kitchen/`) — Post-MVP
+*   **[TK-120: Registro de Temperatura de Refrigeración](kitchen/backend/TK-120.md)** (Backend) — `US-033`, entidad `TemperatureLog` nueva; registro manual, sin sensor; solo advierte fuera de rango FDA, nunca bloquea.
+*   **[TK-120-FE: Registro de Temperatura (Frontend)](kitchen/frontend/TK-120-FE.md)** (Frontend) — `US-033`; panel de registro accesible desde Inventario + histórico solo-`ADMIN` en Reportes.
 
 ### 📖 Catálogo (`catalog/`) — Post-MVP
 *   **[TK-057: Gestión de Catálogo Maestro (Alta de Insumos y Recetas)](catalog/backend/TK-057.md)** (Backend) — cierra además la deuda de `TK-008` (`POST /api/catalog/recipes` nunca implementado). **Superseded parcialmente por `TK-069`** (las recetas se movieron a su propio módulo).

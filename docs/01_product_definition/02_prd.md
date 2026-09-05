@@ -1,6 +1,6 @@
 ---
 document: prd
-version: 1.0.0
+version: 1.1.0
 status: approved
 inputs:
   - docs/01_product_definition/01_product_discovery.md
@@ -42,6 +42,8 @@ inputs:
    - [US-020: Indicador TRR Real en el Dashboard de Reportes](#us-020-indicador-trr-real-en-el-dashboard-de-reportes)
    - [US-021: Advertencia de Apertura Duplicada al Extraer Insumo](#us-021-advertencia-de-apertura-duplicada-al-extraer-insumo)
    - [US-025: Depósito de Insumos en Sub-Sector de Bodega y Stock Multi-Sector](#us-025-depósito-de-insumos-en-sub-sector-de-bodega-y-stock-multi-sector)
+   - [US-032: Escaneo de Código de Barras en Extracción de Bodega](#us-032-escaneo-de-código-de-barras-en-extracción-de-bodega)
+   - [US-033: Registro de Temperatura de Refrigeración al Iniciar Turno](#us-033-registro-de-temperatura-de-refrigeración-al-iniciar-turno)
 6. [Estrategia de Calidad y Verificación (QA/Testing)](#6-estrategia-de-calidad-y-verificación-qatesting)
 7. [Roadmap Post-MVP (Fase 2)](#7-roadmap-post-mvp-fase-2)
 
@@ -154,7 +156,7 @@ sequenceDiagram
 *   **Descuento automático de inventario por receta (BOM):** No se calcularán deducciones automáticas de ingredientes basándose en el software de facturación o comandas. Todos los consumos y aperturas se declaran explícitamente en la terminal.
 *   **Gestión de Compras y Proveedores:** Quedan fuera de alcance las alertas automáticas de reabastecimiento, generación de órdenes de compra y el módulo de cuentas por pagar a proveedores.
 *   **Multisede:** La base de datos y la arquitectura del backend operan estrictamente para una sucursal física única. *(Nota: la subdivisión de la bodega de esa única sucursal en sub-sectores físicos —Heladera de Carnes, Cámara de Congelados, Bodega de Secos— SÍ está en alcance; ver `US-016` y `US-025`.)*
-*   **Integración de Hardware Físico:** No se integran balanzas electrónicas por USB/Bluetooth ni escáneres de código de barras en esta primera fase.
+*   **Integración de Hardware Físico:** No se integran balanzas electrónicas por USB/Bluetooth ni **lectores de código de barras dedicados** en esta primera fase. *(Aclarado en `US-032`, 2026-09-05: el escaneo de código de barras mediante la cámara ya integrada del dispositivo táctil — sin ningún periférico USB/Bluetooth nuevo — queda explícitamente fuera de esta exclusión; es una capacidad de software puro sobre hardware que el operario ya tiene.)*
 
 ---
 

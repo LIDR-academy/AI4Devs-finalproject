@@ -34,6 +34,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Advierte de forma no bloqueante al operario si ya existe un remanente activo del mismo insumo en cualquier ubicación de cocina, para reducir aperturas duplicadas (KPI #3 del PRD). ✅ Backend (`TK-080`) y Frontend (`TK-080-FE`) implementados.
 *   **[US-026: Áreas de Cocina como Ubicaciones de Catálogo y Destino Dinámico en Extracción](stock/US-026.md)** ✅
     *   *Descripción:* Las áreas de cocina (heladera, mesa de prep, línea) pasan a ser filas de `StorageLocation` (`type = KITCHEN`); el destino de cocina en la extracción se elige del catálogo y `Remanente.location` pasa a FK. Prerrequisito de ADR-003, cierra deuda de `TK-074-FE`. `TK-102`/`TK-102-FE` + `TK-112-FE` (tablero FEFO).
+*   **[US-032: Escaneo de Código de Barras en Extracción de Bodega](stock/US-032.md)**
+    *   *Descripción:* Preselecciona el insumo en `WarehouseExtractionModal` escaneando su código de barras con la cámara integrada del dispositivo (sin hardware dedicado — aclara el Non-Goal #4 del PRD). Sin match, solo `ADMIN` completa el alta. 📋 Spec aprobada — pendiente `TK-119` / `TK-119-FE`.
 
 ### ⚙️ Configuración (`/settings/`)
 *   **[US-017: Configuración General del Restaurante y Parámetros FEFO](settings/US-017.md)** ✅
@@ -62,6 +64,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Al cerrar una preparación, el operario declara porciones reales y, por ingrediente, cuánto sobró y **en qué área lo guardó** y cuánto se descartó y por qué; el consumo se calcula por cuadre. El sobrante intacto puede volver a bodega. 📝 Draft (ADR-003).
 *   **[US-030: Catálogo de Motivos de Consumo (Administrable)](kitchen/US-030.md)** ✅
     *   *Descripción:* El Administrador mantiene un catálogo de motivos (crear, editar, activar/desactivar) que el equipo de cocina elige al consumir un remanente o al declarar una varianza negativa de conciliación de turno. Backend (`TK-107`) + panel de administración en `/ajustes/motivos` (`TK-107-FE`, ADR-004).
+*   **[US-033: Registro de Temperatura de Refrigeración al Iniciar Turno](kitchen/US-033.md)**
+    *   *Descripción:* Registro manual (sin sensor) de la temperatura leída en el termómetro físico de cada sub-sector al iniciar turno; un valor fuera del rango FDA (≤4°C/≤-18°C) solo advierte, nunca bloquea. Histórico solo-`ADMIN`. 📋 Spec aprobada — pendiente `TK-120` / `TK-120-FE`.
 
 ### 📊 Reportes (`/reports/`)
 *   **[US-009: Dashboard y Reporte de Mermas Visibles](reports/US-009.md)**

@@ -1,6 +1,6 @@
 ---
 document: api_specification
-version: 1.2.0
+version: 1.3.0
 status: approved
 inputs:
   - docs/01_product_definition/02_prd.md
@@ -32,6 +32,9 @@ inputs:
 | **POST** | `/api/v1/kitchen/shift-reconciliation` | `ShiftReconciliationRequest` | `ShiftReconciliationResponse` | Ejecuta el cierre de turno, auto-descarta vencidos y reporta auditoría de discrepancias. Desde `ADR-004`/`TK-109`: `items[].reasonId` obligatorio en varianza negativa. |
 | **POST** | `/api/v1/stock/insumos` | `CreateInsumoRequest` | `CreateInsumoResponse` | Da de alta un insumo nuevo en el catálogo maestro con stock inicial en 0 (`TK-057`). |
 | **GET** | `/api/v1/stock/insumos` | *Ninguno* | `ListInsumosResponse` | Obtiene la lista de insumos del catálogo maestro (`TK-057`). |
+| **GET** | `/api/v1/stock/insumos/by-barcode/{barcode}` | *Ninguno* | `InsumoResponse` \| `404` | Busca un insumo por código de barras escaneado con la cámara del dispositivo (`TK-119`/`US-032`). |
+| **POST** | `/api/v1/kitchen/temperature-logs` | `CreateTemperatureLogRequest` | `TemperatureLogResponse` | Registra la lectura manual de temperatura de un sub-sector al iniciar turno (`TK-120`/`US-033`). Nunca bloquea — un valor fuera de rango solo marca `isWithinSafeRange: false`. |
+| **GET** | `/api/v1/kitchen/temperature-logs` | `?storageLocationId=&startDate=&endDate=` | `TemperatureLogResponse[]` | Histórico de lecturas de temperatura para auditoría (`TK-120`/`US-033`). Rol `ADMIN`. |
 | **PATCH** | `/api/v1/stock/insumos/{id}/restock` | `RestockInsumoRequest` | `RestockInsumoResponse` | Suma la cantidad recibida a un sub-sector de bodega de un insumo existente (`TK-060` / `US-025`). |
 | **GET** | `/api/v1/stock/movements` | `?insumoId=&startDate=&endDate=` | `StockMovementHistoryItem[]` | Histórico de movimientos de stock, auditoría (`TK-050`). Rol `ADMIN`. Desde `TK-101`: cada ítem expone `fromStorageLocationId` — `fromLoc` refleja el nombre ACTUAL del sub-sector si aún existe (join), no un snapshot desincronizable por renombrar. |
 | **GET** | `/api/v1/locations` | *Ninguno* | `ListStorageLocationsResponse` | Lista los sectores físicos de almacenamiento (`US-016`). Cualquier rol autenticado. |
@@ -633,6 +636,63 @@ sequenceDiagram
     *   `sampleSize`: Si es `0`, el frontend debe mostrar un estado vacío explícito — nunca `"0h"`, que se leería engañosamente como un resultado perfecto.
 *   **Response Error (`400 Bad Request`):**
     *   *Causa:* Formato incorrecto o no-ISO de las fechas `startDate` o `endDate`.
+*   **Response Error (`403 Forbidden`):**
+    *   *Causa:* El solicitante autenticado no tiene rol `ADMIN`.
+
+---
+
+### 2.15. `GET /api/v1/stock/insumos/by-barcode/{barcode}`
+*   **Descripción:** Busca un insumo del catálogo maestro por su código de barras (UPC/EAN), capturado escaneando con la cámara integrada del dispositivo táctil — sin ningún lector físico dedicado (`US-032`; aclaración del Non-Goal #4 del PRD). Usado por `WarehouseExtractionModal` para preseleccionar el insumo a extraer sin que el operario tenga que buscarlo por nombre.
+*   **Cabeceras Requeridas:**
+    *   `Authorization: Bearer <token_jwt>` (Cualquier rol autenticado)
+*   **Path Parameters:**
+    *   `barcode` (String, requerido): código de barras escaneado, tal cual lo decodifica la librería de escaneo del frontend.
+*   **Response Success (`200 OK` - `InsumoResponse`):** el insumo cuyo campo `barcode` coincide exactamente.
+*   **Response Error (`404 Not Found`):**
+    *   *Causa:* Ningún insumo del catálogo tiene ese `barcode` registrado. **Decisión de negocio confirmada:** el frontend NUNCA crea el insumo automáticamente en este caso — solo `ADMIN` puede completar el alta (mismo patrón de rol que `POST /api/v1/stock/insumos`), reutilizando el formulario de alta ya existente con el campo `barcode` pre-rellenado.
+
+---
+
+### 2.16. `POST /api/v1/kitchen/temperature-logs`
+*   **Descripción:** Registra la lectura manual de temperatura de un sub-sector (refrigerador o congelador) al iniciar turno (`US-033`). El operario lee el termómetro físico del equipo y tipea el valor — no existe integración de sensor (Non-Goal #4 del PRD).
+*   **Cabeceras Requeridas:**
+    *   `Authorization: Bearer <token_jwt>` (Cualquier rol autenticado)
+*   **Request Body (`CreateTemperatureLogRequest`):**
+    ```json
+    {
+      "storageLocationId": "loc-seed-fridge-a",
+      "unitType": "REFRIGERATOR",
+      "temperatureCelsius": "3.5"
+    }
+    ```
+*   **Response Success (`201 Created` - `TemperatureLogResponse`):**
+    ```json
+    {
+      "id": "b2c3d4e5-...",
+      "storageLocationId": "loc-seed-fridge-a",
+      "unitType": "REFRIGERATOR",
+      "temperatureCelsius": "3.5",
+      "isWithinSafeRange": true,
+      "recordedByUserId": "user-seed-001",
+      "recordedAt": "2026-09-05T08:00:00Z"
+    }
+    ```
+    *   `isWithinSafeRange`: calculado en backend contra el umbral estándar FDA Food Code — `REFRIGERATOR`: `temperatureCelsius <= 4.00`; `FREEZER`: `temperatureCelsius <= -18.00`. **Decisión de negocio confirmada:** un valor fuera de rango **nunca bloquea** la creación del registro ni el inicio de turno — el campo queda en `false` únicamente para visibilidad en el reporte de auditoría.
+*   **Response Error (`404 Not Found`):**
+    *   *Causa:* `storageLocationId` no existe.
+*   **Response Error (`400 Bad Request`):**
+    *   *Causa:* `temperatureCelsius` no es numérico, o `unitType` no es `REFRIGERATOR`/`FREEZER`.
+
+---
+
+### 2.17. `GET /api/v1/kitchen/temperature-logs`
+*   **Descripción:** Histórico de lecturas de temperatura para auditoría de cumplimiento (`US-033`).
+*   **Cabeceras Requeridas:**
+    *   `Authorization: Bearer <token_jwt>` (Rol requerido: `ADMIN`)
+*   **Query Parameters:**
+    *   `storageLocationId` (String, opcional): filtra por sub-sector.
+    *   `startDate` / `endDate` (String, opcionales): rango ISO 8601.
+*   **Response Success (`200 OK` - `TemperatureLogResponse[]`):** lista de lecturas, más reciente primero.
 *   **Response Error (`403 Forbidden`):**
     *   *Causa:* El solicitante autenticado no tiene rol `ADMIN`.
 

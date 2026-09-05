@@ -1,6 +1,6 @@
 ---
 document: database_schema
-version: 1.2.0
+version: 1.3.0
 status: approved
 inputs:
   - docs/01_product_definition/02_prd.md
@@ -345,6 +345,7 @@ model User {
   remanentes           Remanente[]
   stockMovements       StockMovement[]
   shiftReconciliations ShiftReconciliation[]
+  temperatureLogs      TemperatureLog[]
 
   @@map("users")
 }
@@ -359,6 +360,7 @@ model Insumo {
   conversionFactor  Decimal  @map("conversion_factor") @db.Decimal(10, 2)
   unitCost          Decimal? @map("unit_cost") @db.Decimal(12, 2) // US-019: costo por unidad de compra (purchaseUnit), nullable — insumos preexistentes sin costo capturado no bloquean el reporte de mermas, solo quedan fuera de su valorización monetaria.
   openShelfLifeDays Int?     @map("open_shelf_life_days")
+  barcode           String?  @unique @db.VarChar(64) // US-032: código de barras (UPC/EAN) escaneado con la cámara del dispositivo; nullable — insumos preexistentes no tienen código capturado. Único cuando presente (evita 2 insumos con el mismo código).
   isActive          Boolean  @default(true) @map("is_active")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
@@ -404,8 +406,40 @@ model StorageLocation {
   warehouseStocks WarehouseStock[]
   // AUDIT-DEV-006 F-7 / TK-101: movimientos con este sub-sector como origen
   stockMovements  StockMovement[]
+  // US-033: lecturas de temperatura registradas para este sub-sector (si es un refrigerador/congelador)
+  temperatureLogs TemperatureLog[]
 
   @@map("storage_locations")
+}
+
+// US-033: clasificación del equipo al momento de registrar la lectura — desacoplada de
+// StorageLocation.type (WAREHOUSE/KITCHEN, que responde a otra pregunta: dónde está físicamente,
+// no si es frío/congelado). Determina el umbral seguro validado en backend (Guard estándar FDA
+// Food Code): REFRIGERATOR <= 4.00°C, FREEZER <= -18.00°C.
+enum TemperatureUnitType {
+  REFRIGERATOR
+  FREEZER
+}
+
+// US-033: registro manual de temperatura al iniciar turno. El operario lee el termómetro físico
+// del equipo y tipea el valor — no hay integración de sensor (Non-Goal #4 del PRD). Un valor fuera
+// del umbral seguro NUNCA bloquea el inicio de turno — solo se marca isWithinSafeRange=false para
+// que quede visible en el reporte de auditoría (decisión de negocio consultada con el humano).
+model TemperatureLog {
+  id                 String              @id @default(uuid()) @db.Uuid
+  storageLocationId  String              @map("storage_location_id") @db.Uuid
+  unitType           TemperatureUnitType @map("unit_type")
+  temperatureCelsius Decimal             @map("temperature_celsius") @db.Decimal(5, 2)
+  isWithinSafeRange  Boolean             @map("is_within_safe_range")
+  recordedByUserId   String              @map("recorded_by_user_id") @db.Uuid
+  recordedAt         DateTime            @default(now()) @map("recorded_at")
+
+  storageLocation StorageLocation @relation(fields: [storageLocationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  recordedBy      User            @relation(fields: [recordedByUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([storageLocationId])
+  @@index([recordedAt])
+  @@map("temperature_logs")
 }
 
 model SystemSettings {

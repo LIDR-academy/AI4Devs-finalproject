@@ -1,6 +1,6 @@
 ---
 document: backlog_map
-version: 1.3.0
+version: 1.4.0
 status: approved
 inputs:
   - docs/01_product_definition/02_prd.md
@@ -158,6 +158,21 @@ graph TD
     US025 --> TK096FE
     TK074 --> TK096
 
+    %% Mejoras derivadas de comparacion competitiva/AppSec externa (2026-09-05)
+    US032["📝 US-032: Escaneo de Codigo de Barras"]
+    TK119["🎫 TK-119: Busqueda por Barcode (Backend)"]
+    TK119FE["🎫 TK-119-FE: Escaneo por Camara (Frontend)"]
+    EpicStock --> US032
+    US032 --> TK119
+    US032 --> TK119FE
+
+    US033["📝 US-033: Registro Manual de Temperatura"]
+    TK120["🎫 TK-120: TemperatureLog (Backend)"]
+    TK120FE["🎫 TK-120-FE: Panel de Registro + Reporte (Frontend)"]
+    EpicKitchen --> US033
+    US033 --> TK120
+    US033 --> TK120FE
+
     %% Gap Analysis del PRD (US-019 a US-021) — cierran los 3 KPIs del producto
     US019["📝 US-019: Costeo y Valorización de Mermas"]
     TK078["🎫 TK-078: Costeo de Insumos (Backend)"]
@@ -230,8 +245,8 @@ graph TD
 
     class Roadmap roadmap;
     class EpicAuth,EpicStock,EpicKitchen,EpicReports,EpicCatalog,EpicShared epic;
-    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013,US014,US016,US019,US020,US021,US022,US023,US024,US025 us;
-    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE,TK072,TK072FE,TK078,TK078FE,TK079,TK079FE,TK080,TK080FE,TK081FE,TK082FE,TK083FE,TK084FE,TK085FE,TK086FE,TK087FE,TK088FE,TK089FE,TK090FE tk;
+    class US001,US002,US003,US004,US005,US006,US007,US008,US009,US010,US011,US012,US013,US014,US016,US019,US020,US021,US022,US023,US024,US025,US032,US033 us;
+    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010,TK007B,TK007C,TK007D,TK007E,TK007F,TK048,TK049,TK049FE,TK050,TK050FE,TK051,TK056,TK057,TK057FE,TK060,TK060FE,TK072,TK072FE,TK078,TK078FE,TK079,TK079FE,TK080,TK080FE,TK081FE,TK082FE,TK083FE,TK084FE,TK085FE,TK086FE,TK087FE,TK088FE,TK089FE,TK090FE,TK119,TK119FE,TK120,TK120FE tk;
 ```
 
 ---
@@ -273,5 +288,7 @@ graph TD
 | **🍳 Cocina (`kitchen`)** | [US-027: Apertura de Preparación de Receta al Extraer](11_user_stories/kitchen/US-027.md) — [ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md) | [TK-103: Agregado `RecipePreparation`](12_tickets/kitchen/backend/TK-103.md) | [TK-103-FE: Extracción + Tablero de Preparaciones](12_tickets/kitchen/frontend/TK-103-FE.md) | 🏗️ Backend Done · FE pendiente |
 | **🍳 Cocina (`kitchen`)** | [US-028: Cierre de Preparación — Sobrante con Ubicación + Merma con Motivo](11_user_stories/kitchen/US-028.md) — [ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md) | [TK-104: Cierre y Abandono de Preparación](12_tickets/kitchen/backend/TK-104.md) | [TK-104-FE: Pantalla "Cerrar Preparación"](12_tickets/kitchen/frontend/TK-104-FE.md) | 📝 Draft |
 | **📊 Reportes (`reports`)** | [US-029: Reporte de Mermas de Preparación + Auditoría del Consumo Ad-hoc](11_user_stories/reports/US-029.md) — [ADR-003](../02_architecture_design/adr/ADR-003-recipe-preparation-tracking.md) | [TK-105: Reporte + `CONSUMPTION_RECIPE`](12_tickets/reports/backend/TK-105.md) | [TK-105-FE: Panel de Reporte](12_tickets/reports/frontend/TK-105-FE.md) | 📝 Draft (diferible) |
+| **📦 Bodega (`stock`)** | [US-032: Escaneo de Código de Barras en Extracción de Bodega](11_user_stories/stock/US-032.md) — comparación competitiva/AppSec externa (2026-09-05) | [TK-119: Búsqueda por Barcode](12_tickets/stock/backend/TK-119.md) | [TK-119-FE: Escaneo por Cámara](12_tickets/stock/frontend/TK-119-FE.md) — librería pendiente (Guard 24) | 📋 Spec aprobada |
+| **🍳 Cocina (`kitchen`)** | [US-033: Registro de Temperatura de Refrigeración al Iniciar Turno](11_user_stories/kitchen/US-033.md) — comparación competitiva/AppSec externa (2026-09-05) | [TK-120: `TemperatureLog`](12_tickets/kitchen/backend/TK-120.md) | [TK-120-FE: Panel de Registro + Reporte](12_tickets/kitchen/frontend/TK-120-FE.md) | 📋 Spec aprobada |
 
 

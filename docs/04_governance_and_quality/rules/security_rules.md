@@ -72,5 +72,12 @@ Esta directiva rige la seguridad técnica, sanitización activa y ejecución seg
 * **Expiración:** `expiresIn` del JWT ≤ 12 h (ver §1). Un token de vida larga en `localStorage` amplía la ventana de un token robado; preferir el extremo bajo del rango y evaluar refresh tokens si el negocio lo permite.
 * **Verificación de transporte activa, no presencial:** en la auditoría de seguridad no basta con confirmar que `helmet()` está montado — verificar que HSTS realmente se emite en las respuestas y que existe redirección HTTP→HTTPS en el edge (nginx / proxy) para el despliegue real.
 
+---
 
+## 📦 10. Límites de Recursos y Expresiones Regulares (Anti-DoS)
+
+Motivado por un prompt de auditoría AppSec externo que el humano compartió pidiendo comparación contra este proyecto — el grueso ya estaba cubierto (SQLi/XSS N/A por arquitectura, Helmet/CORS/rate-limit ya wireados y verificados en código real), pero expuso 2 categorías genuinamente ausentes de este documento:
+
+* **Límite explícito de tamaño de cuerpo HTTP:** `express.json()` (o el parser de body equivalente) DEBE declarar un `limit` explícito y documentado (ej. `express.json({ limit: '1mb' })`), nunca depender del default implícito de la librería sin que sea una decisión consciente — un límite no declarado es indistinguible de "nadie lo pensó" en una auditoría futura, aunque el default de hoy no sea peligroso.
+* **Revisión Anti-ReDoS de expresiones regulares:** toda expresión regular que procese texto de longitud no acotada proveniente de un input externo (payload HTTP, archivo subido, parámetro de búsqueda) debe revisarse contra patrones de *catastrophic backtracking* (grupos anidados con cuantificadores `(a+)+`, alternancia solapada) antes de aceptarse — especialmente si en algún momento se construye la expresión dinámicamente (`new RegExp(...)` con un fragmento derivado de input de usuario), lo cual queda además prohibido salvo justificación explícita y sanitización previa del fragmento.
 
