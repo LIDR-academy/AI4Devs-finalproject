@@ -1,0 +1,11 @@
+:root {
+  --font-family-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-family-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-family-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace; /* lotes, cantidades, timestamps */
+  --font-family: var(--font-family-body);
+
+  --fs-xs: 0.75rem; --fs-sm: 0.85rem; --fs-md: 0.9rem; --fs-base: 1rem;
+  --fs-lg: 1.25rem; --fs-xl: 1.4rem; --fs-2xl: 1.8rem; --fs-3xl: 2rem;
+
+  --fw-regular: 400; --fw-semibold: 600; --fw-bold: 700; --fw-black: 800;
+}

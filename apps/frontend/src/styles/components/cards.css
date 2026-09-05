@@ -1,0 +1,59 @@
+/* Estructura de Tarjetas (Sistema FEFO — bordes de sello, sin sombra) */
+.card-dashboard {
+  background-color: var(--bg-card);
+  border: 2px solid var(--rule);
+  border-radius: 0;
+  padding: 20px;
+  box-shadow: none;
+}
+
+/* Fila de conciliación reutilizable (ShiftReconciliationWizard, ClosePreparationModal —
+   ambas listan un ítem con posible variante de alerta; TK-104-FE). */
+.reconciliation-item-row {
+  border: 2px solid var(--rule);
+  background-color: var(--bg-card);
+  padding: var(--space-3) var(--space-4);
+  border-radius: 0;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 2px dashed var(--rule);
+}
+
+.card-badge-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  color: var(--color-primary-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-badge-icon--danger {
+  background-color: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  color: var(--color-danger-text);
+}
+.card-badge-icon--warning {
+  background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  color: var(--color-warning-text);
+}
+.card-badge-icon--success {
+  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: var(--color-success-text);
+}
+
+.card-title {
+  font-family: var(--font-family-display);
+  font-size: 1.1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+}

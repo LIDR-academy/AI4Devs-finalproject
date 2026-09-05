@@ -1,0 +1,12 @@
+/* Modal Shared Layouts */
+.modal-footer-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: var(--space-4);
+}
+
+.modal-header-center {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}

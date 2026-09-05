@@ -7,7 +7,13 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 ## 🛠️ Pila Tecnológica Detectada & Cumplimiento de Diseño
 * **Framework Core:** React 18 + Vite 5 (TypeScript) — SPA única, sin SSR.
 * **Routing:** `react-router-dom` 7 (data router). Reglas dedicadas: [`react-router_rules.md`](./react-router_rules.md). El shell de rutas (`AppShell`, `ProtectedRoute`, `router.tsx`) vive en `apps/frontend/src/app/`.
-* **Estilos & Sistema de Diseño (Guard 29, `AGENTS.md`):** Vanilla CSS con variables/tokens centralizados en `index.css`, exportados al estándar de raíz [`/DESIGN.md`](../../../DESIGN.md) (Google Labs Spec v1.0.0, auditado con `npx -y @google/design.md lint DESIGN.md`). `index.css` contiene solo la capa compartida (tokens de espaciado/tipografía, botones, primitivas de layout — clases usadas por 2+ componentes); toda clase específica de un único componente vive en un `Componente.module.css` colocado junto al `.tsx` e importado como `import styles from './Componente.module.css'`.
+* **Estilos & Sistema de Diseño (Guard 29, `AGENTS.md`):** Vanilla CSS con variables/tokens centralizados, exportados al estándar de raíz [`/DESIGN.md`](../../../DESIGN.md) (Google Labs Spec v1.0.0, auditado con `npx -y @google/design.md lint DESIGN.md`). Toda clase específica de un único componente vive en un `Componente.module.css` colocado junto al `.tsx` e importado como `import styles from './Componente.module.css'`.
+* **Manifiesto de Partials, no archivo monolítico (patrón ITCSS/7-1):** `apps/frontend/src/index.css` **no declara ninguna regla propia** — es únicamente un manifiesto de `@import url(...)` en cascada (`variables/` → `base/` → `components/` → `layout/utilities.css` al final) hacia `apps/frontend/src/styles/`. Una categoría, un archivo, ubicación predecible:
+  - `styles/variables/{colors,typography,spacing,motion}.css` — tokens (`--color-*`, `--font-family-*`/`--fs-*`/`--fw-*`, `--space-*`, `--duration-*`/`--ease-*`).
+  - `styles/base/{reset,typography}.css` — reset y estilos base de encabezados.
+  - `styles/components/{buttons,inputs,cards,tables,modals,banners,pin,user-management}.css` — clases compartidas por 2+ componentes, una por dominio.
+  - `styles/layout/utilities.css` — utilidades de una sola responsabilidad (`.flex-*`, `.mb-*`/`.p-*`, `.fs-*`/`.fw-*`); se importa **al final** a propósito, para que gane sobre estilos de componente cuando se combinan en el mismo elemento (ej. `className="card-dashboard mb-4"`).
+  - **Antes de añadir un token o clase nueva:** localizar el partial de su categoría y añadirlo ahí — nunca crear una regla suelta en `index.css` ni un nuevo archivo de categoría sin verificar primero si ya existe uno. Ver el "Mapa de Ubicación en Código" de `docs/02_architecture_design/05_ui_ux_design_system.md` §9.
 * **Regla Innegociable de Tokens y Estilos (Guard 29):** Queda estrictamente prohibido hardcodear colores hexadecimales o RGB en línea (`style={{ color: '#HEX' }}`) o maquetar estructuras con objetos `style={{ display: 'flex', gap: ... }}` inline en componentes JSX. Todos los estilos visuales y de layout DEBEN consumir las clases CSS declaradas en `index.css` o `*.module.css` (ej. `className="btn-touch flex-between"`). Única excepción permitida: valores numéricos calculados dinámicamente en runtime (ej. porcentajes de ancho en barras de progreso `style={{ width: `${pct}%` }}`).
 * **Persistencia Offline:** Dexie.js (IndexedDB / Cola FIFO local)
 * **Testing UI & QA Visual:** Vitest / React Testing Library / SK-21 a11y Auditor
@@ -16,7 +22,7 @@ Esta directiva rige el desarrollo de la interfaz cliente para terminales táctil
 
 ## 📱 1. Ergonomía Táctil y Layout
 * **Objetivos Táctiles:** Botones e inputs interactivos deben medir mínimo **48px x 48px** con **8px** de margen alrededor. Teclado de PIN: **64px x 64px**.
-* **Tokens de Diseño (Sistema FEFO, `US-022`/`US-023`):** Usar exclusivamente las variables CSS de `apps/frontend/src/index.css` (turno Día por defecto en `:root`, turno Noche en `:root[data-theme="dark"]`). Encabezados de tarjeta con badge circular a la izquierda y separador de 2px `dashed var(--rule)`; esquinas rectas (`border-radius: 0`) salvo el botón de acción circular de la lámina "Aplicación".
+* **Tokens de Diseño (Sistema FEFO, `US-022`/`US-023`):** Usar exclusivamente las variables CSS de `apps/frontend/src/styles/variables/` (turno Día por defecto en `:root`, turno Noche en `:root[data-theme="dark"]`) — nunca hardcodear un valor que ya existe como token. Encabezados de tarjeta con badge circular a la izquierda y separador de 2px `dashed var(--rule)`; esquinas rectas (`border-radius: 0`) salvo el botón de acción circular de la lámina "Aplicación".
 
 ---
 

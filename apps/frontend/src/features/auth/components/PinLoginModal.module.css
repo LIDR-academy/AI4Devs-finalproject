@@ -11,7 +11,7 @@
   align-items: center;
   justify-content: center;
   font-family: inherit;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--duration-fast) var(--ease-standard);
 }
 
 .btn-link:hover {
@@ -36,7 +36,7 @@
   font-size: 0.8rem;
   border-radius: 0;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
 .recent-operator-chip:hover {

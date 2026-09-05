@@ -17,7 +17,7 @@
   place-items: center;
   cursor: pointer;
   touch-action: manipulation;
-  transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: transform var(--duration-fast) var(--ease-standard), background-color var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard);
 }
 .circle:disabled { opacity: 0.5; cursor: not-allowed; }
 

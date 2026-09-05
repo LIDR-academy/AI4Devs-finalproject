@@ -1,0 +1,57 @@
+/* Regla de Ergonomía Táctil Innegociable (Touch Target >= 48px x 48px) */
+.btn-touch {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 12px 20px;
+  border-radius: 0;
+  font-weight: 700;
+  font-size: 1rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--duration-base) var(--ease-standard-in-out);
+  touch-action: manipulation;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-on);
+  border-color: var(--color-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: var(--bg-card);
+  border-color: var(--rule);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* .btn-danger: usado por acciones destructivas (RolesManagementModal, LocationsManagementModal,
+   ConfirmModal). --color-danger-on evita el bug de contraste del turno Dia: --text-primary es
+   tinta oscura de dia, y --color-danger de dia es un rojo medio que necesita texto claro encima. */
+.btn-danger {
+  background-color: var(--color-danger);
+  color: var(--color-danger-on);
+  border-color: var(--color-danger);
+}
+
+.btn-danger:hover {
+  filter: brightness(1.1);
+}
+
+/* Modificador de boton solo-icono (ej. cerrar modal); combinar con .btn-touch .btn-secondary */
+.btn-icon {
+  padding: 0;
+}

@@ -1,8 +1,13 @@
 ---
 name: RestoStock UI Design System
-version: "4.1.0"
-description: "Sistema FEFO — turno Dia (comanda de papel) / Noche (pizarra de turno), con interruptor persistido por dispositivo. Reemplaza 'Señal Industrial' v3.0 como unico tema. v4.1.0 anade la lamina Aplicacion (shell de rutas con barra lateral comanda, boton de accion circular, chip de urgencia de 4 niveles, panel Estado de 3 cubetas) — US-023. Ver docs/02_architecture_design/05_ui_ux_design_system.md."
+version: "4.2.0"
+description: "Sistema FEFO — turno Dia (comanda de papel) / Noche (pizarra de turno), con interruptor persistido por dispositivo. Reemplaza 'Señal Industrial' v3.0 como unico tema. v4.1.0 anade la lamina Aplicacion (shell de rutas con barra lateral comanda, boton de accion circular, chip de urgencia de 4 niveles, panel Estado de 3 cubetas) — US-023. v4.2.0: index.css pasa a ser manifiesto de @import a partials (apps/frontend/src/styles/), sin cambios de tokens. Ver docs/02_architecture_design/05_ui_ux_design_system.md."
 colors:
+  # Alias plano requerido por herramientas que esperan un esquema de un solo tema
+  # (ej. el linter oficial de este formato busca literalmente "colors.primary").
+  # Mismo valor real que light.primary — el turno Dia es el default documentado
+  # en todo este archivo (ver Overview).
+  primary: "#2e5f76"
   light:
     primary: "#2e5f76"
     secondary: "#6e6555"
@@ -50,9 +55,21 @@ components:
   # Valores de referencia = turno Dia ({colors.light.*}); el turno Noche usa
   # los mismos componentes con {colors.dark.*} y --text-primary/--color-primary-on
   # equivalentes de ese turno (ver docs/02_architecture_design/05_ui_ux_design_system.md).
+  # Las variantes "-dark" de abajo son el mismo componente en tiempo de ejecución
+  # (una sola clase CSS con el valor de la variable swapeado vía
+  # :root[data-theme="dark"]), no una clase separada — se documentan como entrada
+  # propia solo porque este formato de un tema no tiene forma nativa de expresar
+  # "mismo componente, tema alterno". textColor de cada "-dark" es el valor real
+  # de --color-X-on / --text-primary de ese turno en apps/frontend/src/styles/variables/colors.css.
   button-primary:
     backgroundColor: "{colors.light.primary}"
     textColor: "#fbf8ef"
+    rounded: "{rounded.md}"
+    height: "48px"
+    padding: "{spacing.md}"
+  button-primary-dark:
+    backgroundColor: "{colors.dark.primary}"
+    textColor: "#171c18"
     rounded: "{rounded.md}"
     height: "48px"
     padding: "{spacing.md}"
@@ -62,9 +79,26 @@ components:
     rounded: "{rounded.md}"
     height: "48px"
     padding: "{spacing.md}"
+  # secondary/tertiary/success/warning en Noche: contorno + texto en el color de
+  # acento (mismo patron real "tiza" documentado para ActionButton/UrgencyChip),
+  # no relleno solido con texto claro encima — los tonos de acento de Noche estan
+  # calibrados para usarse como texto/trazo, no como fondo opaco (confirmado por
+  # el fallo real de contraste al intentar el relleno solido primero).
+  button-secondary-dark:
+    backgroundColor: "{colors.dark.card}"
+    textColor: "{colors.dark.secondary}"
+    rounded: "{rounded.md}"
+    height: "48px"
+    padding: "{spacing.md}"
   button-tertiary:
     backgroundColor: "{colors.light.tertiary}"
     textColor: "#fbf8ef"
+    rounded: "{rounded.md}"
+    height: "48px"
+    padding: "{spacing.md}"
+  button-tertiary-dark:
+    backgroundColor: "{colors.dark.card}"
+    textColor: "{colors.dark.tertiary}"
     rounded: "{rounded.md}"
     height: "48px"
     padding: "{spacing.md}"
@@ -74,9 +108,21 @@ components:
     rounded: "{rounded.md}"
     height: "48px"
     padding: "{spacing.md}"
+  button-danger-dark:
+    backgroundColor: "{colors.dark.danger}"
+    textColor: "#171c18"
+    rounded: "{rounded.md}"
+    height: "48px"
+    padding: "{spacing.md}"
   button-success:
     backgroundColor: "{colors.light.success}"
     textColor: "#fbf8ef"
+    rounded: "{rounded.md}"
+    height: "48px"
+    padding: "{spacing.md}"
+  button-success-dark:
+    backgroundColor: "{colors.dark.card}"
+    textColor: "{colors.dark.success}"
     rounded: "{rounded.md}"
     height: "48px"
     padding: "{spacing.md}"
@@ -86,11 +132,29 @@ components:
     rounded: "{rounded.md}"
     height: "48px"
     padding: "{spacing.md}"
+  button-warning-dark:
+    backgroundColor: "{colors.dark.card}"
+    textColor: "{colors.dark.warning}"
+    rounded: "{rounded.md}"
+    height: "48px"
+    padding: "{spacing.md}"
   card-container:
     backgroundColor: "{colors.light.card}"
     textColor: "#18140f"
     rounded: "{rounded.md}"
     padding: "{spacing.lg}"
+  card-container-dark:
+    backgroundColor: "{colors.dark.card}"
+    textColor: "#f2eedd"
+    rounded: "{rounded.md}"
+    padding: "{spacing.lg}"
+  # neutral = --bg-root real (fondo raíz de la app, apps/frontend/src/styles/base/reset.css).
+  app-background:
+    backgroundColor: "{colors.light.neutral}"
+    textColor: "#18140f"
+  app-background-dark:
+    backgroundColor: "{colors.dark.neutral}"
+    textColor: "#f2eedd"
   pin-key:
     backgroundColor: "{colors.light.card}"
     textColor: "#18140f"

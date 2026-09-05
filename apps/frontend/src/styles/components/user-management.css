@@ -1,0 +1,16 @@
+.edit-user-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+.input-touch-compact { height: 38px; font-size: var(--fs-sm); }
+.edit-user-action-btn { padding: 6px var(--space-3); }
+.user-row {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border-card);
+  background-color: var(--bg-root);
+  border-radius: 6px;
+  margin-bottom: var(--space-2);
+}
+.user-row-icon-btn { padding: 6px 10px; }
+.user-row-toggle-btn { min-width: 100px; }
+.user-list-scroll { max-height: 300px; overflow-y: auto; }
+
+.w-120 { width: 120px; }
+.font-mono { font-family: monospace; }

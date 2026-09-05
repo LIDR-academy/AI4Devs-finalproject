@@ -1,8 +1,9 @@
 ---
 document: ui_ux_design_system
-version: 4.2.0
+version: 5.2.0
 status: approved
 inputs:
+  - docs/00_stack_manifest.md
   - docs/01_product_definition/02_prd.md
   - docs/02_architecture_design/04_technical_design.md
   - docs/05_agile_planning/11_user_stories/shared/US-022.md
@@ -12,68 +13,62 @@ inputs:
 
 # 🎨 Especificación de Sistema de Diseño UI/UX y Ergonomía Táctil
 
-> **Navegación del Framework SDD:**  
+> **Navegación del Framework SDD:**
 > [⬅️ Volver a Arquitectura de Sistema (04_technical_design.md)](./04_technical_design.md) | [📖 Glosario & Reglas](../01_product_definition/01_glosario_y_reglas_negocio.md) | [Siguiente: Modelado de Datos (06_database_schema.md) ➡️](../03_persistence_and_api/06_database_schema.md)
 
+> **Migración a Índice Fijo de Secciones (v5.0.0, SK-05 ≥ 3.10.0, Guard 9):** este documento vivía organizado cronológicamente por versión (`## v4.0.0`, `## v4.1.0`, `## v4.2.0`). Esta revisión consolida ese mismo contenido por categoría — cada tema vive en un único lugar de aquí en adelante; la traza de qué cambió y cuándo se preserva íntegra en la §10 Historial de Versiones, no se pierde.
+
 ---
 
-## 🎫 v4.0.0 — Dirección "Sistema FEFO" (Turno Día/Noche)
+## 1. 🗺️ Arquitectura de Información
 
-> **Reemplaza** la dirección v2.0.0/v3.0.0 "Señal Industrial" (tema oscuro único) documentada más abajo, que queda conservada solo como referencia histórica. Cubierto por `US-022` y sus tickets `TK-081-FE` a `TK-084-FE`.
+**Plataforma objetivo:** Web (confirmado en `docs/00_stack_manifest.md` §4 — React 18 + Vite 5, sin ambigüedad; ninguna pregunta al humano necesaria, Guard 8).
 
-**Concepto:** dos turnos, un mismo sistema. De día la interfaz es una **comanda de papel** — ficha clara, tinta oscura, bordes de sello. De noche es la **pizarra del turno** — fondo oscuro tipo pizarrón, texto y acentos en tiza (tonos más brillantes para sostener el mismo contraste objetivo). El operario alterna entre ambos con un interruptor visible en el header; la elección se guarda por dispositivo (`localStorage`) y, si no hay elección guardada, arranca según `prefers-color-scheme` del sistema operativo.
+### Sitemap (rutas de nivel superior, `AppShell`)
 
-### Paleta de Tokens (CSS Variables)
+| Ruta | Path | Contenido | Acceso |
+| :--- | :--- | :--- | :--- |
+| Inventario | `/` | Tablero FEFO de cocina (remanentes activos, health bar, filtros de estación) | Operario autenticado |
+| Bodega | `/bodega` | Extracción de bodega (operario); catálogo/reabastecimiento de insumos y ubicaciones (acciones solo `ADMIN`) | Operario autenticado (ruta); `ADMIN` (gestión) |
+| Recetas | `/recetas` | Recetario: consulta (operario); alta de recetas (solo `ADMIN`) | Operario autenticado (ruta); `ADMIN` (alta) |
+| Reportes | `/reportes` | Dashboard de mermas + KPIs (TRR, valorización) — inline | **`ADMIN`** |
+| Ajustes › Configuración | `/ajustes/configuracion` | Configuración del restaurante y parámetros FEFO | **`ADMIN`** |
+| Ajustes › Personal | `/ajustes/personal` | Alta y bloqueo de operarios | **`ADMIN`** |
+| Ajustes › Roles | `/ajustes/roles` | Roles y matriz de permisos | **`ADMIN`** |
+| Ajustes › Movimientos | `/ajustes/movimientos` | Historial de movimientos de stock | **`ADMIN`** |
 
-```css
-/* Turno Día (valores por defecto en :root) */
-:root {
-  --bg-root: #efe8d8;        --bg-card: #f7f2e6;        --border-card: #18140f;   --rule: #18140f;
-  --color-primary: #2e5f76;  --color-primary-hover: #24495c;  --color-primary-on: #fbf8ef;
-  --color-secondary: #6e6555;
-  --color-danger: #b43a24;   --color-danger-text: #a03420;   --color-danger-on: #fbf8ef;
-  --color-warning: #8a6414;  --color-warning-text: #6b4c0e;
-  --color-success: #3e6b3a;  --color-success-text: #345c2f;  --color-info: #2e5f76;  --color-info-text: #244d61;
-  --text-primary: #18140f;   --text-secondary: #6e6555;
-  --font-family-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
-  --font-family-body: 'IBM Plex Sans', system-ui, sans-serif;
-  --font-family-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace; /* lotes, cantidades, timestamps */
-}
+### Inventario de Contenido (a nivel de ruta — el detalle elemento-por-elemento vive en el ticket `TK-XXX` de cada pantalla)
 
-/* Turno Noche — @media (prefers-color-scheme: dark), guardado :root:not([data-theme="light"]),
-   y repetido en :root[data-theme="dark"] para que el interruptor gane en ambos sentidos */
-:root[data-theme="dark"] {
-  --bg-root: #171c18;        --bg-card: #1f251f;        --border-card: #e9e4d0;   --rule: #e9e4d0;
-  --color-primary: #6faac7;  --color-primary-hover: #8bc0d8;  --color-primary-on: #171c18;
-  --color-secondary: #9aa394;
-  --color-danger: #e1573a;   --color-danger-text: #f0806a;   --color-danger-on: #171c18;
-  --color-warning: #e6be55;  --color-warning-text: #e6be55;
-  --color-success: #7cb36e;  --color-success-text: #7cb36e;  --color-info: #6faac7;  --color-info-text: #6faac7;
-  --text-primary: #f2eedd;   --text-secondary: #9aa394;
-}
+| ID | Pantalla/Ruta | Elemento | Tipo de Contenido | Propósito | Fuente de datos/API | Acción |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| C-01 | `/` | `FEFOInventoryHealthBar` + 3 cubetas | Widget de estado | Salud de inventario en 1 vistazo | `GET /api/v1/remanentes` | Mantener |
+| C-02 | `/` | Tablero de remanentes con `UrgencyChip`/`RowButton` | Tabla/lista priorizada | Priorización FEFO de cocina | `GET /api/v1/remanentes` | Mantener |
+| C-03 | `/bodega` | `InsumoCatalogPanel` + `InsumoStockBreakdownRow` | Tabla expandible | Catálogo y desglose de stock por sector | `GET /api/v1/insumos`, `GET /api/v1/locations` | Mantener |
+| C-04 | `/recetas` | `RecipeCatalogPanel` | Lista/catálogo | Consulta y preparación de recetas | `GET /api/v1/recipes` | Mantener |
+| C-05 | `/reportes` | Dashboard de KPIs | Métricas | Mermas, TRR, valorización | `GET /api/v1/reports/*` | Mantener |
+| C-06 | `/ajustes/personal` | `UserStatusForm` | Formulario CRUD | Alta/bloqueo de operarios | `GET/POST /api/v1/users` | Mantener |
+| C-07 | `/ajustes/roles` | `RolesManagementModal` | Matriz de permisos | RBAC dinámico | `GET/PUT /api/v1/roles` | Mantener |
+| C-08 | (global) | `PinLoginModal` / `AuthScreen` | Autenticación | Acceso táctil por PIN | `POST /api/v1/auth/login` | Mantener |
+
+### User Flow crítico (representativo — extracción de bodega)
+
+```
+Operario en "/" → tap "Extraer de Bodega" (ActionButton)
+  └─ WarehouseExtractionModal
+       ├─ Selecciona sector de origen (StorageSectorSelect)
+       │    └─ Ve "Disponible aquí: <n> <u>"
+       ├─ Selecciona insumo + cantidad
+       ├─ Submit
+       │    ├─ 200 OK → remanente creado, modal cierra, tablero se actualiza
+       │    └─ 422 INSUFFICIENT_STOCK → ErrorBanner inline (errorMessageMapper), modal permanece abierto
+       └─ Cancelar → RowButton--ghost, cierra sin efecto
 ```
 
-> **Nota de contraste (validada con formula de luminancia relativa WCAG, no estimada — corregido durante `TK-081-FE` y `TK-084-FE`):** `--color-danger`/`--color-warning`/`--color-success`/`--color-info` son fondos/rellenos, no texto directo. Cada uno tiene su propia variante `-text` para usarse como texto sobre el badge tintado al 12–15% de su propio color (el caso mas exigente, contra el fondo real donde compone el badge — `--bg-root` o `--bg-card` segun el contenedor, **verificar contra el fondo real de cada uso, no asumir uno**: un primer calculo de `TK-084-FE` contra `--bg-card` dio numeros optimistas que no correspondian al `--bg-root` real detras de `.location-row`, y ademas nunca se habia verificado `--color-success` como texto — resultó en un fallo AA real de ~4.19:1 en turno dia, encontrado recien en la revision adversarial de `TK-084-FE`): de dia, `--color-danger-text` (`#a03420`, ~5.6:1), `--color-warning-text` (`#6b4c0e`, ~5.84:1 — `--color-warning` solo da ~3.98:1), `--color-success-text` (`#345c2f`, ~5.2:1 — `--color-success` solo da ~4.19:1, bajo AA) y `--color-info-text` (`#244d61`, ~6:1 — `--color-info` solo pasaba por apenas ~4.63:1, sin margen real); de noche, `--color-danger-text` (`#f0806a`, ~5.02:1 — igualarlo a `--color-danger` daba ~3.55:1) y `--color-warning-text`/`--color-success-text`/`--color-info-text` iguales a su color base (ya suficientemente claros de noche, verificado ≥4.7:1 en los cuatro casos). `--color-danger-on`/`--color-primary-on` son un tercer caso distinto: texto sobre el **relleno solido** de un boton (`.btn-danger`, `.btn-primary`), no sobre un tinte transparente.
-
-> **Auditoría v4.1.0 completa (`TK-088-FE`, `docs/audits/AUDIT-A11Y-001-TK-088-FE-contrast-report.md`):** 40 pares color/fondo (20 por turno) verificados con calculadora WCAG real contra el fondo compuesto real. **Todos ≥ objetivo.** `--text-primary` (cuerpo, label de nav, wordmark de sidebar, texto sobre `--rule`): 13–16:1 en ambos turnos (AAA con holgura). Variantes `-text` de chip/cubeta: 5.0–8.8:1 (AA, convención v4.0.0). **Un fallo AA real corregido:** el chip de urgencia crítico en **turno Noche** usaba `--color-danger` (`#e1573a`) como texto sobre `--bg-card` → **4.19:1, bajo AA**; cambiado a `--color-danger-text` (`#f0806a`) → **5.96:1**. Los 3 chips de noche pasan a usar su variante `-text` (para warning/success `-text` == base de noche, sin cambio visual). `--color-*-on` sobre relleno sólido (`RowButton--urgent`, `.btn-primary`, `.btn-danger`): 4.6–6.8:1 (AA, tercer caso ya documentado arriba).
-
-### Cambios Estructurales (no solo de color)
-* **Bordes en vez de sombras:** `box-shadow` se elimina de `.card-dashboard` y equivalentes; se reemplaza por `border: 2px solid var(--rule)`.
-* **Esquinas rectas:** `border-radius: 0` en tarjetas, botones e inputs (antes 4–8px).
-* **Tipografía:** `Big Shoulders Display` (titulares/cifras, condensada tipo sello) + `IBM Plex Sans` (cuerpo) + `IBM Plex Mono` (datos alineados en columna: lotes, cantidades, `HH:MM:SS`) — reemplazan `Oswald`/`Barlow` en todo el sistema, no solo en el tablero de cocina.
-* **Objetivos táctiles sin cambio:** `.btn-touch` sigue en 48×48px mínimo; el teclado de PIN sigue en 64×64px — ver `TK-083-FE`.
-
----
-
-## 🧾 v4.1.0 — Lámina "Aplicación": Shell de Rutas, Componentes y Panel de Estado
-
-> **Amplía** la dirección v4.0.0 con la tercera lámina de la propuesta Sistema FEFO. Cubierto por `US-023` y sus tickets `TK-085-FE` a `TK-088-FE`. No cambia ningún token cromático de v4.0.0 — añade estructura de navegación y tres componentes nuevos.
-
-### 1. `AppShell` — estructura de navegación
+### Wireframe de baja fidelidad (`AppShell`, ya validado en producción)
 
 ```
 ┌────┬──────────────────────────────────────────────┐
-│ S  │  [Inventario] Estaciones Recetas Reportes …   │  ← topbar: nav + sesión + Cerrar Sesión
+│ S  │  [Inventario] Bodega Recetas Reportes Ajustes │  ← topbar: nav + sesión + Cerrar Sesión
 │ I  ├──────────────────────────────────────────────┤
 │ D  │                                              │
 │ E  │            <Outlet /> (ruta activa)           │
@@ -82,268 +77,227 @@ inputs:
 │ R  │                                              │
 └────┴──────────────────────────────────────────────┘
 ```
+Grid `88px 1fr`; en `sm` (<640px) la barra lateral colapsa a franja superior de 44px.
 
-* **Grid:** `grid-template-columns: 88px 1fr`. En breakpoint `sm` (<640px) la barra lateral colapsa a una franja superior de 44px con el wordmark horizontal.
-* **Barra lateral (ficha de comanda):** `background: var(--rule)`; wordmark del restaurante en `writing-mode: vertical-rl; transform: rotate(180deg)`, `--font-family-display`, color `var(--bg-root)` (invertido, contrasta en ambos turnos); dos perforaciones circulares decorativas (`aria-hidden`) de 18px sobre el borde derecho. El nombre sale de `SystemSettings` (branding dinámico, `TK-075-FE`) con fallback `"RestoStock"`.
-* **Topbar:** `border-bottom: 3px solid var(--rule)`. Contiene `<nav>` de rutas, indicador `● Conectado` (`--color-success`), badge de usuario y botón `Cerrar Sesión` (`.btn-danger`). El interruptor Día/Noche de `US-022` se mantiene aquí.
-* **Rutas y acceso:**
+---
 
-  | Ruta | Path | Contenido | Acceso |
-  | :--- | :--- | :--- | :--- |
-  | Inventario | `/` | Tablero FEFO de cocina (remanentes activos, health bar, filtros de estación) | Operario autenticado |
-  | Bodega | `/bodega` | Extracción de bodega (operario); catálogo/reabastecimiento de insumos y ubicaciones (acciones solo `ADMIN`, ocultas a operario). *Renombrada de `/estaciones` en `TK-095-FE` WS-3 — la página siempre fue el catálogo de bodega; `/estaciones` redirige aquí.* | Operario autenticado (ruta); `ADMIN` (acciones de gestión) |
-  | Recetas | `/recetas` | Recetario: consulta (operario); alta de recetas (solo `ADMIN`, oculta a operario) | Operario autenticado (ruta); `ADMIN` (alta) |
-  | Reportes | `/reportes` | Dashboard de mermas + KPIs (TRR, valorización) — **inline** | **`ADMIN`** |
-  | Ajustes | `/ajustes` | Redirige a `/ajustes/configuracion` | **`ADMIN`** |
-  | Ajustes › Configuración | `/ajustes/configuracion` | Configuración del restaurante y parámetros FEFO | **`ADMIN`** |
-  | Ajustes › Personal | `/ajustes/personal` | Alta y bloqueo de operarios | **`ADMIN`** |
-  | Ajustes › Roles | `/ajustes/roles` | Roles y matriz de permisos | **`ADMIN`** |
-  | Ajustes › Movimientos | `/ajustes/movimientos` | Historial de movimientos de stock | **`ADMIN`** |
+## 2. 🎨 Paleta de Color
 
-  > *`Ajustes › Catálogo` (`/ajustes/catalogo`) se retiró en `TK-095-FE` WS-3: duplicaba exactamente `/bodega` (alta de insumos) + `/recetas` (alta de recetas) para un `ADMIN`.*
+Fuente real: `apps/frontend/src/styles/variables/colors.css`. Turno **Día** (comanda de papel, valores por defecto en `:root`) / Turno **Noche** (pizarra de turno, `prefers-color-scheme` o `:root[data-theme="dark"]`).
 
-* **Contenido de ruta = inline, nunca `<Modal>` (`US-024`):** el `element` de una ruta de nivel superior (o sub-ruta) se renderiza **inline** dentro del `<main>` del shell — nunca como `<Modal>` (overlay flotante `position: fixed; z-index: 1000`). Los `<Modal>` quedan reservados a **acciones transitorias** (formularios de alta/edición, confirmaciones, selectores) lanzadas *desde dentro* de una ruta. `/ajustes` es un **layout route** con `<nav>` de sub-pestañas (`<NavLink>`) + `<Outlet>`; sus 4 sub-rutas (`configuracion`/`personal`/`roles`/`movimientos`) son deep-linkables y recargables. Descubierto tras `US-023`: `ReportsDashboard` se montó verbatim en `/reportes` conservando su `<Modal>`, quedando visualmente inconsistente con `/bodega`/`/recetas` (paneles inline). Las **pantallas de autenticación** (login PIN, rotación forzada, reset por token) usan el layout `<AuthScreen>` (`TK-095-FE` WS-1) — pantalla completa sobre el fondo FEFO, no `<Modal>` sobre scrim.
-
-* **Gating de acción por rol (dentro de rutas de operario):** los componentes reutilizados en rutas de menor restricción que su montaje anterior (`InsumoCatalogPanel`, `RecipeCatalogPanel`) reciben un prop `canManage` (default `false`) que oculta cada `<button>` de mutación cuyo endpoint exige `ADMIN`. Un botón que devolvería 403 no debe renderizarse (evita la falsa regresión de "cero cambio funcional").
-
-* **`<ProtectedRoute requiredRole?>`:** envuelve el `<Outlet />`. Sin sesión → render de `PinLoginModal` (comportamiento actual). Con sesión pero sin el rol requerido → `<Navigate to="/" replace />`. Alinea con la autoredirección por permisos que introducirá `US-015` (Dynamic RBAC) sin bloquearse a ella: hoy compara `currentUser.role`.
-* **Operaciones transitorias:** `WarehouseExtractionModal`, `RecipeSelectorModal`, `DiscardModal`, `ShiftReconciliationWizard`, y los formularios de alta/edición internos de las secciones de Ajustes (alta de operario, edición de configuración, alta de insumo/receta, reabastecimiento, confirmaciones de borrado) **siguen siendo modales** lanzados desde su ruta padre — no son rutas. Nav activa con `border-bottom: 3px solid var(--color-primary)`.
-
-### 2. `ActionButton` — botón de acción circular
-
-* **Objetivo táctil:** 72×72px (supera el mínimo de 48px). `border-radius: 9999px` — **única excepción documentada** a la regla de esquinas rectas del sistema; su forma redonda es la señal que lo distingue de todo lo demás (que es cuadrado).
-* **Dos capas de color independientes** (la confusión que la referencia original mezclaba):
-  * capa **acción** — cuál botón es cuál: `Extraer` = `--color-danger`, `Agregar` = `--color-primary`, `Receta` = `--color-warning`.
-  * capa **estado/urgencia** — vive solo en los chips y la health bar, nunca en los botones.
-* **Turno Noche:** relleno sólido → contorno de 3px + ícono/label en el color (mismo patrón "tiza" que los badges v4.0.0). Borde exterior siempre `var(--rule)` de día.
-* **Composición:** círculo + label debajo (`--font-family-body`, 600) + hint opcional (`--font-family-mono`, `--text-secondary`).
-
-### 3. `UrgencyChip` — escala de urgencia de 4 niveles
-
-Reemplaza el `StatusBadge` tri-color heredado. Escala completa, sin cortar a la mitad:
-
-| Nivel | Etiqueta | Token de color | Umbral (`hoursRemaining`) |
+| Token | Día | Noche | Uso |
 | :--- | :--- | :--- | :--- |
-| Crítico | `Vencido` | `--color-danger` / `--color-danger-text` | `< 0` (ya vencido) |
-| Crítico | `Hoy` | `--color-danger` / `--color-danger-text` | `< 24` |
-| Atención | `Mañana` | `--color-warning` / `--color-warning-text` | `< 48` |
-| Vigente | `N Días` | `--color-success` / `--color-success-text` | `>= 48` (`Math.ceil(h/24)`) |
+| `--bg-root` / `--bg-card` | `#efe8d8` / `#f7f2e6` | `#171c18` / `#1f251f` | Fondo base / superficie de tarjeta |
+| `--border-card` / `--rule` | `#18140f` | `#e9e4d0` | Bordes de sello, separadores |
+| `--color-primary` (+hover, +on, +text) | `#2e5f76` | `#6faac7` | Acciones principales, navegación activa |
+| `--color-secondary` | `#6e6555` | `#9aa394` | Acciones secundarias/no urgentes |
+| `--color-danger` (+on, +text) | `#b43a24` | `#e1573a` | Crítico / vencido / destructivo |
+| `--color-warning` (+text) | `#8a6414` | `#e6be55` | Atención (vence mañana) |
+| `--color-success` (+text) | `#3e6b3a` | `#7cb36e` | Vigente / éxito |
+| `--color-info` (+text) | alias de `--color-primary` | alias de `--color-primary` | Informativo |
+| `--text-primary` / `--text-secondary` | `#18140f` / `#6e6555` | `#f2eedd` / `#9aa394` | Texto principal/secundario |
 
-> La segmentación vive en **un solo helper** (`shared/components/urgency.ts`: `urgencyFromHours` + `bucketRemanentes`), consumido por el chip de fila, la `FEFOInventoryHealthBar` y el panel Estado de 3 cubetas — todos muestran los mismos conteos (TK-087-FE).
-
-* **Regla WCAG 1.4.1:** siempre marca cuadrada de 9px (`currentColor`) **+ texto**, nunca solo color.
-* De día: relleno tintado al 12–15% del color + texto en la variante `-text`. De noche: contorno + texto en el color base (más brillante).
-
-### 4. `RowButton` — botón de fila con prioridad
-
-* `RowButton` normal (`--rule` sólido), `RowButton--urgent` (`--color-danger` sólido, para la fila cuyo chip es `Hoy`), `RowButton--ghost` (transparente + contorno, para `Cancelar`).
-* La variante crítica se decide por la urgencia de la fila, no manualmente.
-
-### 5. Panel `Estado` de 3 cubetas + leyenda numérica
-
-* El bloque de resumen del tablero pasa de 2 tarjetas (`Remanentes Abiertos`, `Vencimiento Próximo <24h`) a **3 cubetas de severidad** alineadas con los 3 segmentos de la health bar:
-  * `Vigentes` (`--color-success`) · `Vencimiento Próximo` (`--color-warning`) · `Críticos Hoy` (`--color-danger`).
-* `FEFOInventoryHealthBar` gana una **leyenda numérica** bajo la barra: `58% vigente (7)` · `25% próximo (3)` · `17% crítico (2)` — `--font-family-mono`, cada entrada con su punto de color. La barra en sí conserva `role="img"` con `aria-label` descriptivo.
-* **Grid `Acciones | Estado`:** en breakpoint `md+`, panel izquierdo con los 3 `ActionButton`, panel derecho con las 3 cubetas + health bar, separados por `border-left: 2px dashed var(--rule)`. En `sm` se apilan.
-
-### Cambios estructurales de layout
-
-* Nuevo contenedor raíz `<AppShell>` en `App.tsx`; el contenido actual del tablero se mueve a una ruta `IndexRoute`.
-* `App.module.css` reescribe `.dashboard-container` como el grid del shell; el header full-width apilado se sustituye por sidebar + topbar.
+> **Regla incondicional de contraste (Discovered `TK-081-FE`, reforzado `TK-084-FE`):** ningún `--color-X` se usa como texto directo sobre su propio badge tintado (`color-mix(... 12–15%, transparent)`) — cada uno tiene su variante `-text` dedicada, verificada por fórmula de luminancia relativa WCAG contra el fondo real donde compone (no un fondo asumido por conveniencia). `--color-X-on` es un tercer caso: texto sobre el relleno **sólido** de un botón (`.btn-primary`, `.btn-danger`).
+>
+> **Auditoría completa (`TK-088-FE`, `docs/audits/AUDIT-A11Y-001-TK-088-FE-contrast-report.md`):** 40 pares color/fondo (20 por turno), todos ≥ objetivo. `--text-primary`: 13–16:1 (AAA). Variantes `-text` de chip/badge: 5.0–8.8:1 (AA). `--color-*-on` sobre relleno sólido: 4.6–6.8:1 (AA).
+>
+> **WCAG 1.4.1 (uso del color):** ningún estado se comunica solo por color — todo badge/chip lleva marca geométrica + texto (`UrgencyChip`, ver §7).
 
 ---
 
-## 🧾 v4.2.0 — Sub-Sectores de Bodega y Desglose de Stock (US-016 / US-025)
+## 3. 🔤 Tipografía
 
-> **Amplía** v4.1.0 sin tocar tokens cromáticos. Cubierto por `TK-074-FE` (destino de cocina dinámico + gestión) y `TK-096-FE` (selectores de sub-sector + desglose). No introduce componentes visuales nuevos: reutiliza `<select class="input-touch">`, `ErrorBanner` y el patrón de fila expandible.
+Fuente real: `apps/frontend/src/styles/variables/typography.css`.
 
-### 1. `StorageSectorSelect` — selector de sub-sector obligatorio
+| Familia | Valor | Uso |
+| :--- | :--- | :--- |
+| `--font-family-display` | `'Big Shoulders Display', 'Arial Narrow', sans-serif` | Titulares, cifras (condensada tipo sello) |
+| `--font-family-body` | `'IBM Plex Sans', system-ui, sans-serif` | Cuerpo de texto |
+| `--font-family-mono` | `'IBM Plex Mono', 'SFMono-Regular', monospace` | Datos alineados en columna: lotes, cantidades, `HH:MM:SS` |
 
-* `<select class="input-touch">` (≥ 48px) con `<label>` asociado por `htmlFor`. Usado en 3 sitios: alta de insumo (`CreateInsumoModal`), reabastecimiento (`RestockInsumoModal`) y sector de origen en extracción (`WarehouseExtractionModal`).
-* Opciones desde `GET /api/v1/locations` filtradas por `isActive` y por `type`: `WAREHOUSE` para bodega, `KITCHEN` para el destino de cocina de la extracción. **Prohibido** el array de literales hardcodeado (`KITCHEN_FRIDGE`/`PREP`/`LINE`) que existe hoy — fallback tolerado solo si la llamada falla (patrón `useAvailableInsumos`).
-* Primera opción `value=""` deshabilitada: `— Seleccionar sector —`. Submit bloqueado + `ErrorBanner` inline (`El sector de bodega es obligatorio`) si queda vacío.
+**Escala de tamaño** (`--fs-*`) — auditada del código real, **no** es una progresión geométrica limpia (ratios entre pasos: 1.13 / 1.06 / 1.11 / 1.25 / 1.12 / 1.29 / 1.11); documentada tal cual, sin forzar un ratio matemático que no corresponde al código:
 
-### 2. Desglose de stock por sector en el catálogo
+| Token | Valor | Ratio vs. anterior |
+| :--- | :--- | :--- |
+| `--fs-xs` | 0.75rem (12px) | — |
+| `--fs-sm` | 0.85rem (13.6px) | 1.13× |
+| `--fs-md` | 0.9rem (14.4px) | 1.06× |
+| `--fs-base` | 1rem (16px) | 1.11× |
+| `--fs-lg` | 1.25rem (20px) | 1.25× |
+| `--fs-xl` | 1.4rem (22.4px) | 1.12× |
+| `--fs-2xl` | 1.8rem (28.8px) | 1.29× |
+| `--fs-3xl` | 2rem (32px) | 1.11× |
 
-* La columna del `InsumoCatalogPanel` pasa de `Stock en Bodega Principal` a **`Stock en Bodega (total)`** mostrando la suma (`warehouseStock`).
-* Disclosure por fila (`▸`/`▾`, target ≥ 44px, `aria-expanded`, `aria-controls`) que revela una **lista de definición** (`<dl>`), no una tabla anidada: un par `sector — cantidad unidad` por cada `stockByLocation[]`, con `--space-2xs` de gap y `--fs-sm`. Sin existencias → `<span>` atenuado `Sin stock en bodega`.
+`--fw-regular` (400) / `--fw-semibold` (600) / `--fw-bold` (700) / `--fw-black` (800).
 
-### 3. Saldo por sector y errores en extracción
-
-* Al elegir el sector de origen, junto al insumo seleccionado se muestra `Disponible aquí: <n> <u>` (`--fs-sm`, `--text-secondary`), leído de `stockByLocation`.
-* El saldo insuficiente NO se previene en cliente con lógica duplicada: se envía la petición y el `422` (`INSUFFICIENT_STOCK`) se traduce vía `errorMessageMapper` a `ErrorBanner` (`No hay suficiente stock de «X» en «sector»: disponible N, solicitado M`). Guard 38 — sin `window.alert/confirm`.
-
-### 4. Sector con existencias en `LocationsManagementModal`
-
-* Cuando `loc.hasStock`, los botones `Power` (desactivar) y `Trash2` (borrar) van `aria-disabled` + `title="El sector tiene existencias asociadas"`; el `409` del backend se traduce con el mismo mapper.
-
-### Guards aplicables
-
-* **Guard 29:** cero `style={{}}` inline; toda medida por clase desde `--space-*`/`--fs-*`/`--fw-*`; clases de un solo componente en su `*.module.css` colocalizado.
-* **Guard 38:** errores solo vía `ErrorBanner` + `errorMessageMapper`.
-* **WCAG 2.1 AAA:** `<label>` por cada `<select>`, targets táctiles ≥ 48px (44px para el disclosure), contraste auditado en ambos turnos.
+> **Gap declarado (Guard 7):** no existe token de `line-height` — cada regla que necesita interlineado lo fija ad-hoc o hereda el valor por defecto del navegador. Pendiente de una implementación aparte (candidato a ticket), no rellenado con un valor aspiracional.
 
 ---
 
-## 📝 Visión General y Estilo Visual
-**v2.0.0 — Dirección "Señal Industrial":** reemplaza el tema *Dark Petrol & Charcoal* (v1.x) para la **pantalla táctil de cocina** (login por PIN, consulta FEFO, extracción, alertas críticas, cierre de turno). El sistema utiliza negro industrial casi puro, un único ámbar de seguridad como acento estructural/de marca y un rojo de alerta reservado en exclusiva a la urgencia FEFO crítica — inspirado en señalética de planta, pensado para leerse a distancia de brazo bajo la luz intensa de cocina. Tipografía condensada en titulares (`Oswald`) + grotesca robusta en cuerpo/datos (`Barlow`), bordes gruesos y esquinas casi rectas en lugar de sombras suaves.
+## 4. 📐 Retícula y Espaciado
 
-> **Alcance:** cubre las pantallas táctiles de cocina (`TK-067`) y, por decisión explícita del humano, también el **Dashboard administrativo** de escritorio (`StockManagerDashboard`: Catálogo, Reabastecimiento, Reportes de Mermas, panel de acciones; `TK-068`) — mismos tokens de color/tipografía en ambos contextos, sin adaptación de densidad/layout específica para escritorio más allá de lo ya definido en la Matriz de Breakpoints.
+Fuente real: `apps/frontend/src/styles/variables/spacing.css` — escala de paso fijo de **4px** (no es un híbrido 8pt/4pt; se documenta el valor real):
 
-> **Nota de diseño — ámbar compartido:** `--color-primary` y `--color-warning` usan intencionalmente el mismo tono. En una señalética industrial el ámbar ya significa "atención/precaución", así que reforzar la marca con ese mismo tono es coherente con un producto anti-merma. La contrapartida: reservar el relleno ámbar sólido para elementos que realmente ameritan atención (acciones primarias, estados "usar antes de 24h"); para acciones neutras (secundarias, navegación) usar `--color-secondary` (gris oscuro) o contorno, nunca ámbar sólido decorativo.
+`--space-1: 4px` · `--space-2: 8px` · `--space-3: 12px` · `--space-4: 16px` · `--space-5: 20px` · `--space-6: 24px` · `--space-7: 28px`.
 
-> **Integración con Google Labs & Arnés `.agents`:**  
-> Este documento actúa como la **SSoT de UI/UX** coordinada por la Habilidad [`SK-05_design_ui_ux_system.md`](../../.agents/skills/specs/02_architecture_design/SK-05_design_ui_ux_system.md) (v3.5.0). Sus tokens cromáticos y reglas táctiles son exportados automáticamente al estándar machine-readable [`/DESIGN.md`](../../DESIGN.md) en la raíz del proyecto y auditados con la CLI de Google Labs (`npx -y @google/design.md lint DESIGN.md`).
+**Sistema de columnas:** no existe un grid de columnas explícito (no es un layout tipo "12 columnas"). El layout se resuelve con CSS Grid ad-hoc por contenedor: `AppShell` (`grid-template-columns: 88px 1fr`), `.metrics-grid` (`repeat(auto-fit, minmax(240px, 1fr))`), `.edit-user-grid` (`1fr 1fr`). Documentado así en vez de inventar una convención de columnas que el código no tiene.
 
 ---
 
-## 🎨 Paleta Cromática & Tokens de Animación (CSS Variables)
+## 5. 🎬 Motion & Micro-interacciones
 
-```css
-:root {
-  /* Fondo de Pantalla y Contenedores */
-  --bg-root: hsl(0, 0%, 6%);              /* #101010 - Negro Industrial */
-  --bg-card: hsl(0, 0%, 10%);             /* #1a1a1a - Superficie de Tarjeta */
-  --border-card: hsl(0, 0%, 40%);         /* #666666 - Borde de componente táctil (≥3:1 no-texto, WCAG 1.4.11) */
+Fuente real: `apps/frontend/src/styles/variables/motion.css`. Extraídos mecánicamente de los 4 usos reales de `transition` que ya existían en el código — mismos valores exactos, ahora nombrados como token en vez de literales sueltos repetidos (sin inventar ninguna duración/curva nueva):
 
-  /* Colores Primarios y Acentos */
-  --color-primary: hsl(24, 100%, 50%);      /* #ff6a00 - Ámbar de Seguridad Industrial */
-  --color-primary-hover: hsl(24, 100%, 44%); /* #e05f00 */
-  --color-primary-on: hsl(0, 0%, 6%);       /* #101010 - texto/icono sobre fondo --color-primary (7.06:1 AAA) */
-  --color-secondary: hsl(0, 0%, 20%);       /* #333333 - Gris Neutro (acciones secundarias/no urgentes) */
+| Token | Valor | Uso real |
+| :--- | :--- | :--- |
+| `--duration-fast` | `0.15s` | `.pin-dot-indicator` |
+| `--duration-base` | `0.2s` | `body`, `.btn-touch`, `.input-touch` |
+| `--ease-standard` | `ease` | `body`, `.input-touch`, `.pin-dot-indicator` |
+| `--ease-standard-in-out` | `ease-in-out` | `.btn-touch` |
 
-  /* Indicadores de Salud FEFO & Alertas (Badges & Franjas) */
-  --color-danger: hsl(2, 100%, 44%);        /* #e10600 - Rojo de Alerta (< 6h FEFO). SOLO fondo/badge/borde — nunca texto pequeño directo, ver --color-danger-text */
-  --color-danger-text: hsl(4, 100%, 71%);   /* #ff6b5e - variante clara para texto/labels de alerta (6.2–6.8:1 sobre --bg-root/--bg-card) */
-  --color-warning: hsl(24, 100%, 50%);      /* #ff6a00 - mismo tono que --color-primary, ver nota de diseño arriba (< 24h FEFO) */
-  --color-success: hsl(148, 61%, 47%);      /* #2fbf6e - Verde de Confirmación (cierre de turno, matches OK) */
+**Capa compartida** (`apps/frontend/src/styles/`):
 
-  /* Tipografía y Textos */
-  --font-family-display: 'Oswald', system-ui, sans-serif;   /* Titulares, labels, cifras destacadas */
-  --font-family-body: 'Barlow', system-ui, sans-serif;      /* Cuerpo de texto, metadatos */
-  --text-primary: hsl(84, 12%, 96%);      /* #f5f5f0 - ~18:1 sobre --bg-root */
-  --text-secondary: hsl(60, 2%, 55%);     /* #8a8a86 - 5.0–5.5:1 sobre --bg-root/--bg-card (cumple el mínimo 4.5:1 de texto secundario) */
+| Ubicación | Propiedad | Token |
+| :--- | :--- | :--- |
+| `base/reset.css` (`body`) | `background-color, color` | `var(--duration-base) var(--ease-standard)` |
+| `components/buttons.css` (`.btn-touch`) | `all` | `var(--duration-base) var(--ease-standard-in-out)` |
+| `components/inputs.css` (`.input-touch`) | `border-color` | `var(--duration-base) var(--ease-standard)` |
+| `components/pin.css` (`.pin-dot-indicator`) | `all` | `var(--duration-fast) var(--ease-standard)` |
 
-  /* Tokens de Animación y Feedback Táctil */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-smooth: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --scale-press: scale(0.96);             /* Efecto de compresión táctil al hacer click */
-}
-```
+**Capa de componente** (`*.module.css` — los tokens de `:root` cascan globalmente, ningún import extra necesario): auditados los 39 `.module.css` del proyecto, 3 usos más consumían el mismo valor exacto sin el token — migrados a los mismos tokens de arriba, cero cambio visual:
 
-> **Regla de contraste de texto sobre color:** `--color-primary` y `--color-success` son suficientemente claros para llevar texto/ícono oscuro (`--color-primary-on` / `#101010`, ≥7:1). `--color-danger` es más oscuro de lo que parece (`#e10600`, luminancia relativa ~0.16) — como fondo de botón/badge lleva **texto blanco** (`#ffffff`, 4.97:1, nivel AA; para AAA usar tamaño ≥19px en negrita) y **nunca** se usa como color de texto directo sobre `--bg-root`/`--bg-card` (3.5–3.8:1, insuficiente) — para eso está `--color-danger-text`.
+| Ubicación | Propiedad | Token |
+| :--- | :--- | :--- |
+| `PinLoginModal.module.css` (`.btn-link`) | `opacity` | `var(--duration-fast) var(--ease-standard)` |
+| `PinLoginModal.module.css` (`.recent-operator-chip`) | `background-color` | `var(--duration-fast) var(--ease-standard)` |
+| `ActionButton.module.css` (`.circle`) | `transform` / `background-color, color, border-color` | `var(--duration-fast)` / `var(--duration-base)` (ambos `var(--ease-standard)`) |
 
----
+**Gap real distinto, no resuelto a propósito (2 valores sin token, en `.module.css`):**
 
-## 📱 Matriz de Breakpoints y Layout Responsivo
-
-| Breakpoint | Ancho Mínimo | Layout Dominante | Dispositivo Objetivo |
+| Ubicación | Propiedad | Valor real | Nota |
 | :--- | :--- | :--- | :--- |
-| **`sm`** | `640px` | 1 Columna Apilada (Full Touch) | Móvil Operativo / Terminal Táctil Vertical |
-| **`md`** | `768px` | Grid de 2 Columnas | Tablet de Cocina Horizon (KDS Terminal) |
-| **`lg`** | `1024px` | Dashboard Grid (3 Columnas) | Laptop / Terminal Backoffice Administración |
-| **`xl`** | `1280px` | Ultra-Wide Monitor Grid (4 Columnas) | Pantalla de Supervisión Central de Cocinas |
+| `ReportsDashboard.module.css` (`.progress-bar-fill`) | `width` | `0.4s ease` | Relleno de barra de progreso (reportes) |
+| `FEFOInventoryHealthBar.module.css` (`.health-bar-segment`) | `width` | `0.3s` (sin curva explícita) | Relleno de barra de progreso (salud de inventario) — mismo propósito semántico que la anterior, valor distinto, sin comentario que lo justifique |
+
+Ambos son animaciones de "relleno de ancho" con propósito casi idéntico pero duración distinta entre sí, sin evidencia de que sea intencional. No se unificó ni se les asignó un token nuevo en este pase — cambiar cualquiera de los dos valores altera el timing visible de una barra real, una decisión de producto, no de estructura. Candidato a decisión explícita en un ticket aparte (¿un solo valor para ambas, o dos tokens con nombre que refleje un propósito distinto?).
+
+> **Gap real restante (distinto — este es de cobertura, no de tokens):** `prefers-reduced-motion: no-preference` gatea la transición de `body` y el `hover` de `ActionButton.circle`; el resto de transiciones de la tabla no están condicionadas a la preferencia del usuario todavía. No se corrige en este documento (sería un cambio de comportamiento, no de estructura/tokens) — candidato a ticket de accesibilidad aparte.
+>
+> No hay aún una curva de aceleración diferenciada por dirección (`ease-out` al entrar / `ease-in` al salir, per las mejores prácticas de la Fase 3 de `SK-05`) — las transiciones reales usan `ease`/`ease-in-out` genéricos. Documentado tal cual; no se sustituye por una curva "correcta" no verificada en el código.
 
 ---
 
-## 🧱 Catálogo de Componentes (Atomic Design)
+## 6. 📱 Breakpoints y Layout Responsivo
 
-1. **Átomos (Base Elements):**
-   - `TouchButton`: Botón táctil con respuesta visual $<50\text{ms}$ y transform `--scale-press`.
-   - `StatusBadge`: Etiqueta tri-color (Rojo `--color-danger-text` / Ámbar `--color-warning` / Verde `--color-success`) con indicador pulsante.
-   - `NumericInput`: Teclado numérico sanitizado con Zod para cantidades físicas.
-2. **Moléculas (Composite UI):**
-   - `PinPadModal`: Ventana modal táctil de autenticación por PIN (botones **cuadrados/blocky** de mínimo $64\text{px} \times 64\text{px}$, esquinas casi rectas — sustituye el estilo circular de v1.x, alineado a la identidad de señalética industrial).
-   - `GaugeDialCard`: Velocímetro FEFO con aguja indicadora y lectura numérica central.
-   - `RemanenteCard`: Tarjeta de insumo abierto con borde izquierdo de acento (6px) por nivel de urgencia y barra de progreso de vida útil.
-3. **Organismos (Full Views):**
-   - `KitchenTabletView`: Panel táctil de operaciones de cocina.
-   - `StockManagerDashboard`: Tablero principal de administración de inventarios.
+| Breakpoint | Ancho Mínimo | Layout Dominante | Comportamiento del Shell y Tablero |
+| :--- | :--- | :--- | :--- |
+| **`sm`** | `<640px` | 1 Columna Apilada (Full Touch) | Barra lateral colapsa a franja superior de 44px; paneles apilados. |
+| **`md`** | `768px` | Grid de 2 Columnas (KDS Terminal) | Sidebar de 88px fija; grid `Acciones (minmax(260px, 0.85fr)) \| Estado (1fr)`. |
+| **`lg`** | `1024px` | Dashboard Grid Backoffice | Shell completo, catálogos en tabla/grilla de alta densidad. |
+| **`xl`** | `1280px` | Ultra-Wide Monitor Grid | Pantalla de supervisión central de múltiples áreas. |
 
 ---
 
-## 👆 Ergonomía Táctil y Accesibilidad (WCAG 2.1)
+## 7. 🧩 Catálogo de Componentes
 
-1. **Superficie Táctil Mínima (`.btn-touch`):**
-   - Mínimo **48px de alto por 48px de ancho** con un margen de separación de al menos **8px**.
-   - Para el teclado táctil de PIN (`auth`): botones cuadrados/blocky de **64px x 64px** mínimo.
-   - **Feedback Visual Instantáneo:** Todo toque táctil debe generar un estado visual activo (`:active`) en menos de **$50\text{ms}$**.
-2. **Accesibilidad WCAG 2.1 AA/AAA:**
-   - Contraste de texto sobre fondo oscuro de al menos `7:1` para números principales y `4.5:1` para texto secundario.
-3. **Manejo Obligatorio de 4 Estados de UI:**
-   - **Data Ready:** Tarjetas renderizadas con contraste alto.
-   - **Loading State:** Skeletons animados pulsantes sobre `--bg-card`.
-   - **Empty State:** Ilustración minimalista en `--color-primary` (ámbar) con mensaje descriptivo ("No hay remanentes en riesgo").
-   - **Error State:** Banner con borde rojo `--color-danger` (uso decorativo/no-textual, ≥3:1) y botón táctil de reintento; el texto del banner usa `--text-primary` o `--color-danger-text`, nunca `--color-danger` directo.
+### Ergonomía táctil (aplica a todos los átomos interactivos)
+Superficie mínima **48×48px** con **8px** de margen (`.btn-touch`); teclado de PIN **64×64px**; disclosure de desglose de stock **44×44px**. Feedback visual `:active` en **<50ms**.
 
----
+### Matriz de Estados por Componente Interactivo
 
-## 🔢 Formateo Inteligente de Cantidades y Adaptación por Unidad (UX Anti-Ambigüedad)
+| Componente/Variante | Default | Hover | Active | Focus-visible | Disabled | Loading | Error |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `.btn-primary` | ✅ | ✅ | ⚠️ solo transición genérica | ❌ gap | ❌ gap | ❌ gap | N/A |
+| `.btn-secondary` | ✅ | ✅ | ⚠️ solo transición genérica | ❌ gap | ❌ gap | ❌ gap | N/A |
+| `.btn-danger` | ✅ | ✅ (`filter: brightness`) | ⚠️ solo transición genérica | ❌ gap | ❌ gap | ❌ gap | N/A |
+| `.input-touch` | ✅ | N/A | N/A | ✅ (`box-shadow` anillo) | ❌ gap | N/A | vía `ErrorBanner`, no estilo propio del input |
 
-1. **Insumos Discretos/Contables (`UNITS`, `UNIDADES`, `PZA`, `PACK`):**
-   - Renderizado en números enteros directos sin decimales (ej. **`12 Ud.`** en lugar de `12.000 UNITS`) cuando el valor es entero.
-   - Etiqueta de unidad localizada en español: `UNITS` $\rightarrow$ **`Ud.`**
-   - Controles de consumo rápido táctiles adaptativos: **`-1`**, **`-2`**, **`-5`**.
+> **Gap real declarado (Guard 7):** ningún botón tiene estilo explícito de `:focus-visible`, `:disabled` ni estado `Loading` (spinner/`aria-busy`) propio — hoy dependen del estilo nativo del navegador. Candidato a ticket de mejora de accesibilidad/estados, fuera de alcance de este refactor de estructura.
 
-2. **Insumos Continuos por Peso/Volumen (`KG`, `L`, `ML`, `G`):**
-   - Supresión de ceros no significativos a la derecha (*trim trailing zeros*) (ej. **`1,75 KG`** en lugar de `1.750 KG`, **`4,5 L`** en lugar de `4.500 L`).
-   - Controles de consumo rápido táctiles fraccionales: **`-0.25`**, **`-0.5`**, **`-1.0`**.
+### Atomic Design
 
----
+- **Átomos:** `.btn-touch` (+variantes primary/secondary/danger/icon), `.input-touch`, `UrgencyChip`, `.card-badge-icon`, `.pin-dot-indicator`.
+- **Moléculas:** `.card-header` + `.card-title`, `.banner-alert`/`.banner-success`, `.pin-dots-bar`, `RowButton`.
+- **Organismos:** `AppShell` (sidebar+topbar+outlet), `FEFOInventoryHealthBar` + panel de 3 cubetas, `.data-table` + `.table-wrapper`, sistema de modales (§ subsección abajo), `InsumoStockBreakdownRow`.
 
-## 🪟 Sistema de Ventanas Emergentes Flotantes (Solid Industrial Overlays)
+### `AppShell` — estructura de navegación
+Grid `88px 1fr`. Barra lateral = "ficha de comanda" (`background: var(--rule)`, wordmark vertical `writing-mode: vertical-rl`, invierte tono respecto al fondo en ambos turnos). Topbar con `border-bottom: 3px solid var(--rule)`, nav + indicador `● Conectado` + badge de usuario + `Cerrar Sesión`. Contenido de ruta **inline** en `<main>`, nunca `<Modal>` flotante (`US-024`); `/ajustes` es layout route con sub-pestañas. `<ProtectedRoute requiredRole?>` envuelve el `<Outlet />`.
 
-Todas las ventanas modales de la aplicación (`PinLoginModal`, `WarehouseExtractionModal`, `RecipeSelectorModal`, `DiscardModal`, `ShiftReconciliationWizard` y `ReportsDashboard`) se abren de forma **flotante sobre el tablero principal de la pantalla**. v2.0.0 sustituye el tratamiento *glassmorphism* de v1.x por superficies **opacas y de alto contraste**: bajo luz intensa de cocina, un fondo translúcido con desenfoque reduce legibilidad justo donde más se necesita máxima definición.
+### `ActionButton` — botón de acción circular
+Objetivo táctil **72×72px**, `border-radius: 9999px` — **única excepción documentada** a las esquinas rectas del sistema. Capa acción (`Extraer`=danger, `Agregar`=primary, `Receta`=warning) independiente de la capa estado/urgencia (solo en chips/health bar). Noche: relleno sólido → contorno de 3px.
 
-1. **Capa Oscura Flotante de Fondo (`.modal-overlay` / `.modal-backdrop`):**
-   - Cobertura fija (`position: fixed; inset: 0; z-index: 1000;`).
-   - Fondo **opaco**, sin desenfoque (`background-color: rgba(16, 16, 16, 0.92)`; sin `backdrop-filter`).
-   - Oculta por completo el tablero de fondo — prioriza foco absoluto sobre el modal frente a mantener contexto visual borroso.
+### `UrgencyChip` — escala de urgencia de 4 niveles
+| Nivel | Etiqueta | Token | Umbral |
+| :--- | :--- | :--- | :--- |
+| Crítico | `Vencido` | `--color-danger`/`-text` | `< 0` |
+| Crítico | `Hoy` | `--color-danger`/`-text` | `< 24h` |
+| Atención | `Mañana` | `--color-warning`/`-text` | `< 48h` |
+| Vigente | `N Días` | `--color-success`/`-text` | `>= 48h` |
 
-2. **Tarjeta Emergente Flotante (`.modal-card`):**
-   - Posicionamiento centrado en viewport, sobre `--bg-card`, con borde superior de acento de 4px en `--color-primary` (misma firma visual que los encabezados de pantalla) en lugar de resplandor de color.
-   - Esquinas casi rectas (`border-radius: 4px`), consistentes con el resto de componentes de esta dirección.
-   - Animación de entrada suave tipo *scale-up* (`transform: scale(0.94) -> scale(1)` en $250\text{ms}$), sin cambios respecto a v1.x.
+Segmentación centralizada en `shared/components/urgency.ts` (`urgencyFromHours` + `bucketRemanentes`), consumida por chip de fila, `FEFOInventoryHealthBar` y panel de 3 cubetas. WCAG 1.4.1: marca cuadrada de 9px + texto, nunca solo color.
 
----
+### `RowButton` — botón de fila con prioridad
+`RowButton` normal (`--rule` sólido), `RowButton--urgent` (`--color-danger` sólido, fila con chip `Hoy`), `RowButton--ghost` (contorno, `Cancelar`). Variante crítica decidida por la urgencia de la fila, nunca manual.
 
-## ⚡ 7. Arquitectura UI/UX v3.0: Salud de Inventario, Navegación Táctica y Filtros de Estación
+### `StorageSectorSelect` + desglose de stock por sector
+`<select class="input-touch">` (≥48px) con `<label>` asociado. Opciones desde `GET /api/v1/locations` filtradas por `type`/`isActive`; placeholder deshabilitado `— Seleccionar sector —`; submit bloqueado + `ErrorBanner` si vacío. Desglose por fila: disclosure `▸/▾` (≥44px, `aria-expanded`) → lista de definición `sector — cantidad unidad`.
 
-**v3.0.0 — Innovaciones de Experiencia Operativa:**
-1. **Medidor Visual de Salud de Inventario (FEFO Inventory Health Bar - "1-Second Glance"):**
-   - Barra de progreso tri-color en tiempo real en la cabecera del tablero que permite al Chef Ejecutivo evaluar el nivel de riesgo global de mermas del turno en 1 segundo:
-     - 🟢 **Seguro ($>24\text{h}$):** Verde `--color-success`.
-     - 🟡 **Atención ($6\text{h}-24\text{h}$):** Ámbar `--color-primary`.
-     - 🔴 **Crítico ($<6\text{h}$):** Rojo `--color-danger`.
-2. **Desacoplamiento de Header (Barra Táctica vs. Drawer de Administración):**
-   - **Acciones Tácticas de Cocina (Foco Operatorio Mantenido):** `Extraer Bodega`, `Preparar Receta`, `Conciliar Turno`.
-   - **Menú Flotante de Administración (`Administración ▾`):** Agrupa `Personal`, `Roles`, `Sectores`, `Ajustes`, `Movimientos` y `Catálogo` bajo un menú desplegable de acceso controlado para evitar saturación cognitiva en la línea de servicio.
-3. **Filtros por Estación Física en Cocina (`LocationFilterTabs`):**
-   - Pestañas táctiles en la vista de remanentes para filtrar por sector físico: `[ Todos ]`, `[ Refrigerador Principal ]`, `[ Mesa de Preparación ]`, `[ Línea de Servicio ]`.
-4. **Reloj Regresivo en Vivo (Live Countdown):**
-   - Temporizador dinámico en formato `HH:MM:SS` con micro-animación pulsante para insumos críticos ($<6\text{h}$).
+### Sistema de Ventanas Modales
+- **`<AuthScreen>`:** pantalla completa (login PIN, rotación forzada, reset por token) — nunca `<Modal>` con scrim.
+- **Rutas principales:** inline en `<main>`, deep-linkables.
+- **`.modal-overlay`/`.modal-card`:** exclusivas para operaciones transitorias (`WarehouseExtractionModal`, `RecipeSelectorModal`, `DiscardModal`, `ShiftReconciliationWizard`, CRUD de Ajustes). Cobertura `position: fixed; inset: 0; z-index: 1000`, fondo opaco de alto contraste, borde superior de acento 4px `--color-primary`.
+
+### Patrones adicionales (fusión selectiva Stitch, `US-031`)
+Chips de operario reciente (`PinLoginModal`, hasta 3, client-only `localStorage`) · botón de acción rápida circular grande (`.action-target-lg`, 72×72px) · resaltado full-bleed de fila con varianza negativa (`ShiftReconciliationWizard`) · barra de herramientas acoplada de búsqueda/filtro/vista (`BodegaRoute`).
+
+### Formateo Inteligente de Cantidades
+Insumos discretos (`UNITS`/`PZA`): enteros sin decimales (`12 Ud.`), decrementos `-1/-2/-5`. Insumos continuos (`KG`/`L`): trim de ceros no significativos (`1,75 KG`), decrementos `-0.25/-0.5/-1.0`.
 
 ---
 
-## 🧩 8. Arquitectura UI/UX v4.2.0: Fusión Selectiva de Patrones Explorados (Stitch)
+## 8. 🖥️ Estados de UI a Nivel de Pantalla
 
-> **Amplía** v4.1.0 sin reemplazar tokens ni tipografía. Cubierto por `US-031`. Origen: 5 mockups exploratorios generados con Google Stitch (`docs/02_architecture_design/stitch_designs/*.html`, no productivos — reusan los tokens ya aprobados de este documento, convertidos a clases Tailwind, más algunos tokens Material genéricos de relleno del scaffold que **no** se adoptan). De los patrones nuevos que sí introducían, se fusionan 4 puntuales; el resto de cada mockup (paleta MD3 de relleno, estructura de sidebar, etc.) se descarta por no aportar sobre lo ya implementado — p.ej. la barra "Salud FEFO" del mockup 2 ya existía en `FEFOInventoryHealthBar.tsx` desde v3.0.0 y no cambia.
+Transversal a todas las pantallas — obligatorios en cada una:
 
-1. **Chips de Operario Reciente (`PinLoginModal`):**
-   - Bajo el campo de ID de operario, hasta 3 chips táctiles con los últimos IDs que iniciaron sesión **en ese dispositivo** (no una lista de usuarios del sistema — no hay endpoint que la exponga, ver nota en `PinLoginModal.tsx`). Fuente: `localStorage`, client-only, nunca sincronizado con el backend.
-   - Un tap rellena el campo de ID sin loguear; el PIN se sigue tecleando a mano.
-   - Estilo: `border: 1px solid var(--rule)`, texto `font-family-mono`, mismo tratamiento que los chips de sugerencia del mockup 1.
+1. **Data Ready:** tarjetas/tablas con contraste alto, bordes `2px solid var(--rule)`.
+2. **Loading State:** skeletons animados sobre `--bg-card`, respetando `prefers-reduced-motion`.
+3. **Empty State:** panel con ícono + texto en `--text-secondary` (ej. "¡No hay remanentes abiertos en cocina!").
+4. **Error State:** `ErrorBanner` inline con borde `--color-danger`, mapeo semántico vía `errorMessageMapper` (Guard 38 — prohibido `window.alert`/`confirm`).
 
-2. **Botón de Acción Rápida Circular Grande (`action-target-lg`, tablero de cocina):**
-   - Nuevo tamaño táctil, **72×72px**, círculo (`border-radius: 9999px`) — mismo diámetro y misma excepción documentada a la regla de esquinas rectas que el botón de acción circular de `US-023` (§ token `.btn-touch` de 72×72px, punto 113 de este documento); no es un tercer tamaño, es el mismo patrón reutilizado para una acción de un solo toque en el tablero (p. ej. `Extraer Bodega`), anclado junto a la barra de Salud FEFO.
-   - Reservado para **una única acción primaria** por vista — no reemplaza los botones por fila existentes, es un atajo adicional.
+---
 
-3. **Resaltado Full-Bleed de Fila con Varianza (`ShiftReconciliationWizard`):**
-   - La fila de un ítem con varianza negativa pendiente de motivo pasa de un tratamiento de borde a un fondo tintado **de sangre completa** (`margin-inline` negativo hasta el borde del contenedor, `background: color-mix(in srgb, var(--color-danger) 5%, transparent)`, `border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent)`), para que sea visible sin tener que leer el texto — más contraste posicional bajo luz de cocina.
-   - No cambia el color de texto ni los targets táctiles ya validados; es un cambio de fondo únicamente.
+## 9. 🗂️ Mapa de Ubicación en Código
 
-4. **Barra de Herramientas Acoplada (`BodegaRoute`, catálogo):**
-   - Búsqueda + filtro + alternador de vista (grid/lista) en una franja `bg-card` con borde inferior, **anclada sobre la tabla/grilla del catálogo** en vez de vivir en un modal o cabecera de página separada.
-   - El alternador grid/lista persiste la preferencia por dispositivo (`localStorage`), igual que el interruptor de turno día/noche.
+| Categoría | Mecanismo real | Ruta en el repo |
+| :--- | :--- | :--- |
+| Color (tokens) | CSS custom properties | `apps/frontend/src/styles/variables/colors.css` |
+| Tipografía (tokens) | CSS custom properties | `apps/frontend/src/styles/variables/typography.css` |
+| Espaciado (tokens) | CSS custom properties | `apps/frontend/src/styles/variables/spacing.css` |
+| Motion (tokens) | CSS custom properties | `apps/frontend/src/styles/variables/motion.css` |
+| Reset/base | CSS | `apps/frontend/src/styles/base/reset.css`, `base/typography.css` |
+| Botones | CSS | `apps/frontend/src/styles/components/buttons.css` |
+| Inputs/formularios | CSS | `apps/frontend/src/styles/components/inputs.css` |
+| Tarjetas | CSS | `apps/frontend/src/styles/components/cards.css` |
+| Tablas | CSS | `apps/frontend/src/styles/components/tables.css` |
+| Modales | CSS | `apps/frontend/src/styles/components/modals.css` |
+| Banners | CSS | `apps/frontend/src/styles/components/banners.css` |
+| PIN/Auth | CSS | `apps/frontend/src/styles/components/pin.css` |
+| Gestión de usuarios | CSS | `apps/frontend/src/styles/components/user-management.css` |
+| Utilidades de layout/espaciado/tipografía | CSS | `apps/frontend/src/styles/layout/utilities.css` |
+| Manifiesto de entrada | `@import` únicamente | `apps/frontend/src/index.css` |
+| Capa machine-readable | YAML + Google Labs lint | `/DESIGN.md` |
+| Reglas de gobernanza Frontend | Markdown | `docs/04_governance_and_quality/rules/frontend_rules.md` |
 
+---
 
+## 10. 🕰️ Historial de Versiones
+
+| Versión | Ticket/US | Sección(es) afectada(s) | Qué cambió |
+| :--- | :--- | :--- | :--- |
+| 5.2.0 | — | §5 | Auditados los 39 `.module.css` del proyecto (no solo la capa compartida): 3 transiciones más migradas a los tokens de motion (mismo valor, cero cambio visual). Expuesta y documentada una inconsistencia real sin resolver: 2 barras de progreso con propósito casi idéntico usan duraciones distintas (`0.3s`/`0.4s`) sin token ni justificación — dejado como decisión de producto pendiente. |
+| 5.1.0 | — | §5, §9 | Motion deja de ser gap: 4 transiciones reales existentes extraídas a tokens (`variables/motion.css`), sin cambiar ningún valor. Cobertura de `prefers-reduced-motion` sigue incompleta (3 de 4), documentado como gap distinto. |
+| 5.0.0 | — (migración SK-05 v3.10.0+, Guard 9) | Todas | Migración de estructura cronológica-por-versión al Índice Fijo de 10 secciones. Sin cambios de tokens/comportamiento — solo reorganización. |
+| 4.2.0 | `US-016`/`US-025`/`US-031` | §7, §9 | Sub-sectores de bodega (`StorageSectorSelect`, desglose de stock) y fusión selectiva Stitch (chips operario reciente, resaltado varianza, toolbar catálogo). |
+| 4.1.0 | `US-023` (`TK-085-FE`–`TK-088-FE`) | §1, §7 | Lámina "Aplicación": `AppShell`, `ActionButton`, `UrgencyChip` de 4 niveles, `RowButton`, panel de 3 cubetas. |
+| 4.0.0 | `US-022` (`TK-081-FE`–`TK-084-FE`) | §2, §3, §6 | Dirección "Sistema FEFO" (turno Día/Noche), reemplaza "Señal Industrial" v3.0.0. Bordes en vez de sombras, esquinas rectas, tipografía Big Shoulders Display/IBM Plex. |
+| 3.0.0 | — | §7, §8 | `FEFOInventoryHealthBar` tri-color, desacoplamiento operatoria cocina/administración, `LocationFilterTabs`. |

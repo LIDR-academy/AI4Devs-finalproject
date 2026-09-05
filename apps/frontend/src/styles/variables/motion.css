@@ -1,0 +1,9 @@
+:root {
+  /* Extraídos de los 4 usos reales de `transition` ya existentes en el código
+     (body en base/reset.css, .btn-touch, .input-touch, .pin-dot-indicator) —
+     mismos valores, ahora nombrados como token en vez de literales sueltos. */
+  --duration-fast: 0.15s;
+  --duration-base: 0.2s;
+  --ease-standard: ease;
+  --ease-standard-in-out: ease-in-out;
+}
