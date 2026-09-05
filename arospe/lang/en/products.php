@@ -65,6 +65,15 @@ return [
         // per 0024b's own D-14 precedent.
         'value_in_use' => 'This value cannot be removed: :count variant uses it.|This value cannot be removed: :count variants use it.',
         'type_in_use' => 'This type cannot be deleted: :count variant uses it.|This type cannot be deleted: :count variants use it.',
+
+        // Story 0029b -- the cartesian combination generator. `summary` is a trans_choice over
+        // the created count for 0031's own result-table UI -- this backend-only story never
+        // calls it itself, but the action's whole outcome contract (D-G1) is this vocabulary.
+        'generate' => [
+            'empty_type' => 'The attribute type ":type" has no values, so it cannot be used to generate combinations.',
+            'too_many' => 'Generating these types would create :attempted combinations, above the limit of :limit. Select fewer types or values.',
+            'summary' => ':count variant created.|:count variants created.',
+        ],
     ],
 
     // Story 0027 -- the routed product editor.

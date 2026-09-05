@@ -58,6 +58,13 @@ return [
         // Historia 0029a -- clave por clave idéntico a lang/en/products.php.
         'value_in_use' => 'Este valor no se puede eliminar: lo utiliza :count variante.|Este valor no se puede eliminar: lo utilizan :count variantes.',
         'type_in_use' => 'Este tipo no se puede eliminar: lo utiliza :count variante.|Este tipo no se puede eliminar: lo utilizan :count variantes.',
+
+        // Historia 0029b -- clave por clave idéntico a lang/en/products.php.
+        'generate' => [
+            'empty_type' => 'El tipo de atributo ":type" no tiene valores, por lo que no se puede usar para generar combinaciones.',
+            'too_many' => 'Generar estos tipos crearía :attempted combinaciones, por encima del límite de :limit. Selecciona menos tipos o valores.',
+            'summary' => ':count variante creada.|:count variantes creadas.',
+        ],
     ],
 
     // Historia 0027 -- clave por clave idéntico a lang/en/products.php.
