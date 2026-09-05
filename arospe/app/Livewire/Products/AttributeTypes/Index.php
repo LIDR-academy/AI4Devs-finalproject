@@ -93,9 +93,11 @@ class Index extends Component
     public string $deletingTypeName = '';
 
     /**
-     * Always 0 until story 0029 adds an in-use guard -- D7. Deliberately
-     * not derived from a stub model method that hardcodes `return 0;`:
-     * dead code that lies is worse than an absent method.
+     * Populated by confirmDelete() from ProductAttributeType::
+     * variantUsageCount() (story 0029a, D-A6) -- the same query
+     * App\Actions\Products\DeleteProductAttributeType's own in-use guard
+     * consumes, so this property and the guard's refusal message can never
+     * disagree about the count.
      */
     #[Locked]
     public int $deletingTypeUsageCount = 0;
@@ -356,7 +358,7 @@ class Index extends Component
 
         $this->deletingTypeId = $target->id;
         $this->deletingTypeName = $target->name;
-        $this->deletingTypeUsageCount = 0;
+        $this->deletingTypeUsageCount = $target->variantUsageCount();
         $this->showDeleteModal = true;
     }
 

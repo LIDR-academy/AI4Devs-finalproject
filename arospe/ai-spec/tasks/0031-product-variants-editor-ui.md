@@ -19,7 +19,7 @@ taxonomy).
 > standing assumptions about them are false.** [0029](done/0029-product-variants-backend.md) **failed Phase 2
 > INVEST on "Small"** and was split into **0029** (core: the tables, the derived SKU, the combination
 > hash, image inheritance, the three single-variant actions),
-> **[0029a](0029a-attribute-in-use-delete-guards-backend.md)** (the two attribute in-use delete
+> **[0029a](done/0029a-attribute-in-use-delete-guards-backend.md)** (the two attribute in-use delete
 > guards) and **[0029b](0029b-product-variant-combination-generator-backend.md)** (the cartesian
 > generator). **Nothing was cancelled or deferred** — the same code ships, in three sequenced stories.
 > Three consequences for this file, each of which contradicts text below that has **not** been
@@ -99,7 +99,7 @@ pairs, and 0028/0030 supply the taxonomy this screen reads.
 **[0029b](0029b-product-variant-combination-generator-backend.md)** is a hard blocker for **D-17**
 (the generator UI) specifically, and for nothing else in this story — so if 0029b slips, D-17 slips
 with it and the rest of the screen does not.
-**[0029a](0029a-attribute-in-use-delete-guards-backend.md)** blocks nothing here directly; it is in
+**[0029a](done/0029a-attribute-in-use-delete-guards-backend.md)** blocks nothing here directly; it is in
 the chain because it edits 0028's shipped code that this screen's sibling (0030) renders. This is the
 **last** story of Epic 2's products arc and therefore the one with the longest chain in the project.
 
