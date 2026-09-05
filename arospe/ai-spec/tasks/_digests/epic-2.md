@@ -286,3 +286,307 @@ re-derive, never the full prose of a finalized story.
 - Full mechanism is documented at
   [docs/api/routes.md#productsindex-productscreate-and-productsedit--the-fifth-permission-gated-route-family](../../../docs/api/routes.md#productsindex-productscreate-and-productsedit--the-fifth-permission-gated-route-family)
   and [docs/architecture/authorization.md#productpolicy--the-sixth-policy-and-the-second-built-entirely-for-a-screen-that-does-not-exist-yet](../../../docs/architecture/authorization.md#productpolicy--the-sixth-policy-and-the-second-built-entirely-for-a-screen-that-does-not-exist-yet).
+
+## Story 0028 — Product variant attribute types & values backend (gap-filled at story 0029's Phase 6 — missing since 0028's own closure)
+
+- Two tables, `product_attribute_types` and `product_attribute_values`, related by a plain FK
+  (`product_attribute_values.product_attribute_type_id`) rather than a pivot — **D1**, rejected a
+  single self-referencing table with a discriminator for two reasons: it makes "a future combination
+  pivot references only values, never types" unenforceable in SQL, and `unique(parent_id, name)` with
+  `parent_id IS NULL` on type rows makes global type-name uniqueness silently unenforced (MySQL allows
+  unlimited `NULL`s in a unique index) — story 0028.
+- `product_attribute_types`: `id` (uuid v7), `name` (`VARCHAR(100)`, globally unique), `position`
+  (`INT UNSIGNED default 0`, ships now but **nothing writes it yet** — deferred drag-to-reorder, D5).
+  `product_attribute_values`: `id`, `product_attribute_type_id` (FK, `cascadeOnDelete()`), `value`
+  (`VARCHAR(100)`, deliberately not `name` — disambiguates `$type->name` from `$value->value`),
+  `position` (**is** written on every save, unlike its parent's homonymous column). Uniqueness is
+  **per-type**: `unique(product_attribute_type_id, value)`, so "Black" is legal as both a Color value
+  and a Material value — story 0028 D2/D3.
+- `App\Actions\Products\SyncProductAttributeValues::__invoke(ProductAttributeType $type, array
+  $values)` is the **single writer** of every `product_attribute_values` row for a type — a
+  **diff, never delete-and-recreate**, against a fresh `$type->values()->pluck('id')` read on every
+  save: a submitted owned id → `UPDATE` in place; an unowned/null/foreign id → new row; an owned id
+  absent from the submission → `DELETE`. **This is what guarantees value-id stability across an
+  edit** — a save that only renames the type does not re-key any value id, which is what makes a
+  variant's stored combination (a set of value ids) survive a taxonomy edit — story 0028 D4, depended
+  on directly by story 0029.
+- `SyncProductAttributeValues` authorizes **nothing** — the codebase's fifth "collaborator invoked
+  only by an already-authorized action needs no gate of its own" instance (after
+  `GenerateImageConversions`, `EnforceGrantorPermissionScope`, `SyncProductGallery`,
+  `SyncProductSalesRegions`), invoked only inside `CreateProductAttributeType`'s/
+  `UpdateProductAttributeType`'s already-authorized transaction — story 0028.
+- `CreateProductAttributeType`/`UpdateProductAttributeType`/`DeleteProductAttributeType` each
+  self-authorize `update`/`create`/`delete` on `App\Models\ProductAttributeType` via the **new**
+  `App\Policies\ProductAttributeTypePolicy` (the app's seventh policy, and the first whose Three
+  Amigos "no policy needed" recommendation was reversed at Phase 2 review) — gating on the existing
+  `products.*` catalog, **no tenth permission slug added**, catalog still 42 — story 0028 D6.
+- **`DeleteProductAttributeType` shipped with NO in-use guard as of story 0029's own closure** — D7
+  explicitly deferred it to "0029", written before Phase 2 review split that story into
+  0029/0029a/0029b; 0029 itself shipped no change to `DeleteProductAttributeType`/
+  `DeleteProductVariant`'s in-use behaviour at all. **Closed by story 0029a** (see its own section
+  below) — `DeleteProductAttributeType` and `SyncProductAttributeValues`' delete branch both now hard
+  block, and `$deletingTypeUsageCount` is no longer a hardcoded `0`.
+- D7 also names the analogous hazard 0029a inherits: deleting a **type** whose values are referenced
+  aborts at the database (InnoDB evaluates the RESTRICT while cascading the type→value delete) unless
+  the application-level pre-check counts variants across **all of a type's values**, not one value at
+  a time.
+- Row-targeting contract for any future editor: each value row carries a stable, server-generated
+  `key` (`(string) Str::uuid()`, assigned once — on `addValue()` or on read in `openEditModal()`),
+  and `removeValue()`/`moveValue()` must target by that `key`, **never by array index** — removing by
+  index shifts every later row's DOM identity out from under `wire:key`, leaving the browser showing
+  stale content against a different server row — story 0028.
+- Values are validated in a **three-pass** sequential `Validator::make()->validate()` (not two): pass
+  1 bounds `values` array size (`max:100`) + validates `name`; pass 2 establishes each row's shape
+  (`values.*` is `['array']`, `values.*.id` is `['nullable','string']`) **before any text
+  normalisation runs**; pass 3 applies `distinct:ignore_case` only to the now-bounded, now-shaped set
+  — closing an O(n²) validation-cost hazard on `values.*.value` (the first real, shipped call site of
+  [array-validation-bounds.md](../../../docs/security/array-validation-bounds.md)'s rule) and an
+  unhandled `TypeError` from a forged row/id shape — story 0028 Phase 4.
+- `App\Concerns\ProductAttributeValidationRules` — the sixth `<Noun>ValidationRules` trait:
+  `attributeTypeNameRules()`, `attributeValueListRules()`, `attributeValueRowRules()`,
+  `attributeValueIdRules()`, `attributeValueRules()`. Entity-prefixed, but **not** `ProductValidationRules`'s
+  collision-driven exception applied again — none of the five collide with an existing sibling trait;
+  they follow the plain field-not-model rule, naming the real submitted field — story 0028.
+- Route `GET /products/attribute-types` → `product-attribute-types.index`, `can:products.view`. The
+  Blade view is a **genuine one-line placeholder** (`{{ $this->typesSummary['total'] }}`) — full
+  authorization/validation/action wiring shipped, no real markup, matching `sales-regions.index`'s own
+  precedent between tasks 0017/0018. **No `config/modules.php` sidebar entry** — third time this
+  linkless half-state has occurred (after `roles.index`, `sales-regions.index`) — story 0028.
+- Full mechanism at [docs/database/schema.md#product_attribute_types](../../../docs/database/schema.md#product_attribute_types)
+  / [#product_attribute_values](../../../docs/database/schema.md#product_attribute_values).
+
+## Story 0029 — Product variants core backend (two tables, derived SKU, combination-hash duplicate guard, read-time image inheritance, self-authorizing actions)
+
+- Two new tables: `product_variants` (id uuid v7 PK, `product_id` FK `cascadeOnDelete()`,
+  `combination_hash` `CHAR(64)`, `sku` `VARCHAR(128)` unique, `price` `DECIMAL(10,2)` NOT NULL,
+  `stock` signed INT default 0, `featured_media_id` nullable FK → `media` `restrictOnDelete()`,
+  `position` INT UNSIGNED default 0) and `product_variant_values` (composite PK
+  `(product_variant_id, product_attribute_value_id)`, `product_attribute_value_id`
+  `restrictOnDelete()` — **mandated by story 0028's own D4**, not this story's choice). Table named
+  `product_variant_values`, not `product_variant_attribute_values`/`product_variant_attribute_value`
+  — both alternatives produce a FK constraint name over MySQL's 64-char identifier limit
+  (`ERROR 1059`), verified independently twice — story 0029.
+- `App\Models\ProductVariant`: `#[Fillable(['price', 'stock', 'featured_media_id', 'position'])]` —
+  `product_id`/`sku`/`combination_hash` deliberately excluded (server-derived or fixed-at-creation).
+  `casts()`: `price` → `'decimal:2'` (returns a **string**), `stock`/`position` → `'integer'`.
+  `values(): BelongsToMany` is ordered **inside the relationship**
+  `(product_attribute_types.position, .id, product_attribute_values.position, .id)` — every consumer
+  (`label()` included) sees one canonical order, never re-derived per call site.
+  `displayFeaturedMediaId(): ?string` = `$this->featured_media_id ?? $this->product->featured_media_id`
+  — resolved at **READ time only**, never copied at creation, so a later change to the parent's image
+  keeps propagating to every variant that never chose its own — story 0029.
+- `App\Actions\Products\HashVariantCombination::__invoke(array $productAttributeValueIds): string` —
+  the single definition of `combination_hash`: `sha256` of the ids, **deduplicated, `SORT_STRING`
+  sorted, `|`-joined**. Order-independent, duplicate-insensitive. **The ids passed in MUST already be
+  read back from the database, never taken from a client payload** —
+  `product_attribute_values` sits under `utf8mb4_unicode_ci`, so `Rule::exists()` is case-insensitive
+  and a submitted `V-40` would otherwise hash differently than a stored `v-40` and evade the
+  duplicate-combination guard — story 0029.
+- `App\Actions\Products\DeriveVariantSku` — the SKU formula:
+  `{product.sku}-{segment(value)}...`, values rendered in
+  `(product_attribute_types.position, .id, product_attribute_values.position, .id)` order (never
+  submission order, and a **different** order than the hash sorts by — the hash is a set key, the SKU
+  an ordered rendering). `segment()`: `Str::ascii()` transliterate → space-runs to one hyphen (the
+  PO's one named rule; casing preserved verbatim) → strip outside `[A-Za-z0-9._/-]` → collapse/trim
+  repeated hyphens. `MAX_LENGTH = 128` (not 0024's 64 — the inputs aren't admin-typed, so there's no
+  field to shorten). `checked(string $productSku, array $orderedValues): string` is the validating
+  entry point **every writer must call, not the bare `__invoke()`** — it throws on an empty-segment
+  value (`products.variants.derived_sku_empty_segment`) and on exceeding `MAX_LENGTH`
+  (`products.variants.derived_sku_too_long`); the bare derivation skips both — story 0029.
+- `App\Actions\Products\TranslateProductVariantUniqueViolation::__invoke(UniqueConstraintViolationException
+  $e, string $sku, ?string $overrideMessage = null): ValidationException` — disambiguates which of
+  `product_variants`' **two** unique indexes (`sku` vs `(product_id, combination_hash)`) a caught
+  violation came from, by matching the violated index's own name in `$e->getMessage()`; re-throws the
+  original for an unrecognised index. `$overrideMessage` exists because `UpdateProduct`'s parent-SKU-
+  change cascade needs `products.variants.parent_sku_change_collides` (always under the `sku` key)
+  rather than the two create-path messages for the identical two indexes — story 0029.
+- **SKUs are one namespace across `products` AND `product_variants`.**
+  `ProductValidationRules::productSkuRules()` gained a second `Rule::unique(ProductVariant::class,
+  'sku')` alongside its existing `Rule::unique(Product::class, 'sku')`, with no `->ignore()` on
+  either side (a variant SKU is derived, never typed, so there's no `?string $productVariantId`
+  ignore-parameter needed). Every cross-table SKU-collision check (`CreateProductVariant`,
+  `CreateProduct`, `UpdateProduct`) locks both tables in the **same fixed order** — `products`, then
+  `product_variants` — via `lockForUpdate()`, closing one deadlock class rather than eliminating every
+  possible one — story 0029.
+- **Two re-derivation triggers for `product_variants.sku`, both retrofits to already-shipped 0024/0028
+  actions, both routed through `DeriveVariantSku::checked()`**: (1) `UpdateProduct::reDeriveVariantSkus()`
+  — a change to `products.sku` re-derives every one of that product's variants in the **same
+  transaction** as the product update, all-or-nothing; `UpdateProduct`'s own `DB::transaction()` call
+  deliberately carries **no `attempts: N`** (see the errors-log entry below). (2)
+  `SyncProductAttributeValues::reDeriveVariantSkusForRenamedValues()` — a rename branch retrofit
+  (0028's file), re-derives every variant built on a renamed value **across every product** that uses
+  it; it is a query-builder mass update with no Eloquent events, so this cascade is explicit code, not
+  something a model observer could carry. Both cascades gained a **batch-internal-duplicate
+  pre-check** that excludes the WHOLE batch of variants being re-derived from the per-row database
+  collision check, not just each row's own id — a batch can legitimately rotate SKUs among its own
+  members — story 0029, closing Phase 4 findings F-1/F-2/F-3/R-3/R-4 (full history:
+  [derived-column-invariants.md](../../../docs/security/derived-column-invariants.md)).
+- **`App\Concerns\ProductVariantValidationRules`** — the seventh `<Noun>ValidationRules` trait:
+  `variantCombinationRules()` (pass 1 — shape/bound alone, `['required','array','min:1','max:10']`, no
+  DB-touching rule), `variantCombinationValueRules()` (pass 2 — per-element,
+  `['string','distinct',Rule::exists('product_attribute_values','id')]` — a first pass only, never
+  authoritative; the read-back inside `CreateProductVariant` is what actually decides), plus
+  `variantPriceRules()`/`variantStockRules()`/`variantFeaturedMediaIdRules()` (0024's product rules
+  verbatim). **Deliberately does NOT `use ProductValidationRules`** and declares **no**
+  `skuRules()`/`variantSkuRules()` at all — there is no SKU input to validate — story 0029.
+- **`App\Actions\Products\CreateProductVariant`** — self-authorizes `update` on the **parent
+  `Product`** as its first statement (before validation, before any transaction). Reads attribute-value
+  ids **and** their `value` strings back from the database in one query (never from the payload — see
+  the case-collation note above). Checks the duplicate-combination invariant (V-lock on
+  `(product_id, combination_hash)`) **before** the cross-table SKU collision, so the clearer message
+  wins when both would apply. `DB::transaction($fn, attempts: 3)` — **safe** because the row is built
+  **inside** the closure via `forceCreate()`, so a retried attempt re-does real work — story 0029.
+- **`App\Actions\Products\UpdateProductVariant`/`DeleteProductVariant`** — self-authorize the same way,
+  against the variant's **freshly re-fetched** row: `ProductVariant::query()->with('product')
+  ->whereKey($variant->getKey())->firstOrFail()` as the literal first statement, **not** merely
+  `load('product')` on the caller-supplied instance (Phase 4 finding F-8 — `load('product')` alone
+  re-reads the product but resolves *which* product from the caller's in-memory, mass-assignable-until-
+  this-fix `product_id`). `UpdateProductVariant`'s `$featuredMediaId` parameter carries **NO default**
+  (unlike `CreateProductVariant`'s `= null`, which is correct there) — an update caller must state
+  intent explicitly, matching the `docs/errors-log.md` 2026-09-01 entry's rule applied a second time —
+  story 0029.
+- **No `ProductVariantPolicy` — a genuine Three Amigos plan reversal.** The task file originally
+  planned NO self-authorization inside the actions at all, citing a stale claim about
+  `CreateUser`/`UpdateUser`'s own shape (falsified by task 0008a, which moved authorization *into*
+  those actions specifically). Phase 2 review caught the stale citation and reversed the plan — all
+  three variant actions now self-authorize `update` on `App\Models\Product` via the existing
+  `ProductPolicy`, following the fully-established action-owns-the-rule convention. There is no per-row
+  distinction between two variants of one product for a variant-scoped policy to encode — story 0029.
+- **`DB::transaction($fn, attempts: N)` hazard, found and closed this story**: `attempts: 3` was
+  briefly on `UpdateProduct`'s transaction too, but its closure mutates `$product` — a model **created
+  outside the closure** — so a retried attempt after a genuine deadlock reused the model's own
+  post-mutation dirty-tracking state, issued no SQL, skipped the SKU cascade, and returned success
+  while writing nothing. Fixed by **removing** the retry from `UpdateProduct` entirely (not by
+  key-passing, since that would reshape the action's return contract). The two retained `attempts: 3`
+  sites (`CreateProduct`, `CreateProductVariant`) are safe because both `forceCreate()` their row
+  inside the closure. **`attempts` is silently inert on a nested `DB::transaction()`** — only the
+  outermost transaction's `attempts` ever fires, so story 0031's `Editor::save()` must NOT add its own
+  `attempts:` without first re-deriving this analysis — full history at
+  [derived-column-invariants.md](../../../docs/security/derived-column-invariants.md#what-the-remediation-introduced-a-retried-transaction-is-a-retry-safe-unit-or-it-is-a-lost-update)
+  and [errors-log.md](../../../docs/errors-log.md#dbtransactionfn-attempts-n-retried-a-closure-that-mutated-a-model-created-outside-it-producing-a-silent-lost-update-reported-as-success--2026-09-04).
+- **This story ships NO Livewire component, NO route, NO in-use delete guard change.** Story 0031
+  owns the editor UI; story 0029a is planned to own the attribute-value/type in-use guards (see the
+  0028 section above — D7's "0029" reference actually resolves to 0029a); story 0029b is planned to
+  own a combination generator. Neither 0029a nor 0029b had started as of this story's own closure
+  (both still sit at the top level of `ai-spec/tasks/`, not `in-progress/`) — a later story must not
+  assume either has shipped.
+- Full mechanism at [docs/database/schema.md#product_variants](../../../docs/database/schema.md#product_variants)
+  / [#product_variant_values](../../../docs/database/schema.md#product_variant_values), and
+  [docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy](../../../docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy).
+
+## Story 0029a — Attribute type & value in-use delete guards backend (split out of 0029's D-10; discharges 0028's own Q3/D7 hand-off)
+
+- Two hard-block-with-count in-use guards, no schema change, no new permission, no Livewire
+  component, no route — the same D-14 shape `App\Actions\ProductCategories\DeleteProductCategory`
+  already established, applied to the two paths story 0029's own `restrictOnDelete()` FKs made a
+  database fact: deleting a `product_attribute_types` row that cascades into a
+  `product_attribute_values` row still referenced by `product_variant_values` (path 1), and removing a
+  single value from a type's inline value list via the diff editor (path 2) — both previously met a
+  raw MySQL `1451` (path 1, verified by 0029's own V-12) or an unhandled `QueryException` (path 2,
+  since `SyncProductAttributeValues`' delete branch had **no** `try`/`catch` at all until now).
+- **`App\Models\ProductAttributeType::variantUsageCount(): int`** — the single source of the
+  type-level count, `COUNT(DISTINCT pvv.product_variant_id)` joined `product_variant_values` through
+  `product_attribute_values`, scoped to the type's own values. `DISTINCT` is load-bearing: a variant
+  built on two values of the same type (legal at schema level, story 0029's DIS-1) counts once, not
+  twice. Consumed by both `App\Actions\Products\DeleteProductAttributeType`'s guard and
+  `App\Livewire\Products\AttributeTypes\Index::confirmDelete()`, which now populates
+  `$deletingTypeUsageCount` with a real value instead of the hardcoded `0` 0028 shipped as a documented
+  placeholder.
+- **Path 1 — `DeleteProductAttributeType`**: authorizes `delete` as its first statement (unchanged from
+  0028), computes `variantUsageCount()` **after** that call (never before — a reversed order would
+  leak the count to an actor who does not even hold `products.delete`), throws a `ValidationException`
+  keyed on `productAttributeTypeId` when positive, logged via `LogRefusedPrivilegedAttempt::log()` with
+  reason `attribute_type_in_use`. `deleteOrFail()` (not `delete()`, matching `DeleteProductCategory`'s
+  own Larastan-driven reasoning — a plain `delete()` gives Larastan no `@throws` to trace, making a
+  `try`/`catch` around it a dead catch at level 7) replaces the outer `DB::transaction()`, with a catch
+  narrowed to MySQL error **1451** via `errorInfo[1]` as the race backstop.
+- **Path 2 — `SyncProductAttributeValues`' delete branch**: per submitted id about to be removed, a
+  `product_variant_values` count (no `DISTINCT` needed — the pivot's own PK already makes
+  `(variant, value)` unique) runs **before** any `DELETE`, refusing the **whole** save (never just the
+  offending value — the diff runs in one transaction, so a thrown `ValidationException` rolls back
+  every update/insert already applied in the same call) with a `ValidationException` keyed on
+  `values`, logged with reason `attribute_value_in_use`. The delete's own narrowed-to-1451 catch is
+  deliberately **separate** from `writeRow()`'s pre-existing `23000` catch (which means "duplicate
+  value" — `23000` covers both MySQL `1062` and `1451`, so folding them would report "the value must
+  be distinct" for an in-use deletion). `SyncProductAttributeValues` authorizes **nothing** of its own
+  (unchanged, D6) — the ordering guarantee here is inherited from its caller's own
+  `Gate::authorize()`, not a new Gate call added to this class.
+- **Both counts share one presentation floor**, `max(1, $count)`, the identical
+  `DeleteProductCategory::blockedByProducts()` precedent: a rolled-back transaction on the race path
+  can make the recount read `0`.
+- **`lang/{en,es}/products.php`** extended (never recreated) with two new `trans_choice` keys under
+  the existing `variants` group — `type_in_use`/`value_in_use` — both the **simple** `singular|plural`
+  form (never the explicit-range form `media.php` uses), since both refusals only ever throw once
+  their count is already positive.
+- **No confirm-and-proceed path at any privilege level, proven the same three ways
+  `DeleteProductCategory` established**: reflection on `DeleteProductAttributeType::__invoke()`'s
+  signature (exactly one parameter, no `force`-shaped argument), calling twice in succession, and a
+  Super Admin refused identically — the strongest proof, since it shows the block is data integrity
+  rather than authorization.
+- **This story ships NO migration, NO new column, NO permission, NO policy change, NO Livewire
+  component, NO route, NO Blade view and NO browser test** — every FK it counts against is story
+  0029's. Full mechanism at
+  [docs/database/schema.md#product_attribute_types](../../../docs/database/schema.md#product_attribute_types)
+  and
+  [docs/database/schema.md#since-story-0029a-deleting-a-value-in-use-is-hard-refused-per-value-with-a-message-naming-the-exact-count](../../../docs/database/schema.md#since-story-0029a-deleting-a-value-in-use-is-hard-refused-per-value-with-a-message-naming-the-exact-count).
+
+## Story 0029b — Product variant combination generator backend (the cartesian "generate all combinations" action; split out of 0029 at Phase 2 on INVEST "Small")
+
+- **`App\Actions\Products\GenerateProductVariantCombinations`** — `__invoke(Product $product, array
+  $productAttributeTypeIds): array`, returning the summary array shape
+  `{created: Collection<int, ProductVariant>, skipped: array<int, array{value_ids, label}>, refused:
+  array<int, array{value_ids, label, sku, message}>, attempted: int}` — a summary array, deliberately
+  never a bare `Collection<ProductVariant>`, because "8 created, 2 already existed" cannot be expressed
+  by a collection of 8 rows alone. Story 0031's editor renders this shape as a result table; the name
+  that ships is `GenerateProductVariantCombinations`, not `GenerateProductVariants` (0031's own task
+  file names the latter — the shipped name wins).
+- **Re-implements NOTHING** — every combination is created through the ordinary `CreateProductVariant`
+  (story 0029's), inside one outer `DB::transaction()` whose per-combination `CreateProductVariant`
+  call becomes a savepoint. A per-combination `ValidationException` (a SKU collision, or a lost race on
+  the combination index) rolls back only that savepoint and lands in `refused`/`skipped`; an
+  **unexpected** exception propagates past the outer transaction and rolls back the whole batch.
+- **Authorizes ONCE, up front, against the parent `Product`** — before validation, before the value-set
+  read, before the cap check, before the transaction opens (D-G0) — never once per generated row. A
+  refused actor learns neither the attempted count nor which selected type is empty.
+  `CreateProductVariant`'s own per-row gate still runs on every generated combination and is not
+  redundant (0029's action-owns-the-rule guarantee holding for every caller). No "skip the gate"
+  parameter exists or may be added to `CreateProductVariant` to bypass it. No `ProductVariantPolicy` —
+  see [docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy](../../../docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy).
+- **`attributeTypeIds` is validated in TWO sequential `Validator::make(...)->validate()` passes**
+  (`variantAttributeTypeIdsRules()` — `required, array, min:1, max:5` — then, only once bounded,
+  `variantAttributeTypeIdRules()` — `string, uuid, distinct, Rule::exists(...)`), appended to 0029's
+  existing `App\Concerns\ProductVariantValidationRules` trait — **no second trait**. This is
+  [array-validation-bounds.md](../../../docs/security/array-validation-bounds.md)'s two-pass shape
+  discharged for a new call site, closing the identical `.* ` wildcard-runs-before-`max`-fails cost
+  `regionIds`/`galleryMediaIds` (story 0027) and `values.*` (story 0028) already closed.
+- **`MAX_COMBINATIONS = 200`, computed by MULTIPLYING the value-set sizes — never by materialising the
+  cartesian product and counting it.** `array_product(array_map(fn ($values) => $values->count(),
+  $valueSetsByType))`, checked **after** the value sets are read (one query) and **before** the
+  transaction opens, so an over-large request costs exactly one read. A selected type with zero values
+  is refused **before** this multiplication (an empty set's `array_product()` is `0`, which would pass
+  the cap silently and generate nothing while reporting `attempted: 0`).
+- **🟢 `V-G1`, executed 2026-09-05 against this repo's real `testing0029` database: `ROLLBACK TO
+  SAVEPOINT` releases an `X,GAP` lock immediately — it is NOT held to the end of the outer
+  transaction.** Two raw PDO connections, no ORM, on this project's MySQL 8.4 container. This resolves
+  `OQ-G1` — `MAX_COMBINATIONS` stays at **200**, no lowering needed — and narrows `R-G1`'s risk framing:
+  only combinations that actually **commit** hold their locks for the whole outer transaction's
+  duration; a refused or skipped combination releases at its own savepoint rollback. Treat this as a
+  **verified**, not assumed, basis for the constant — a later story changing the cap should re-run the
+  same execution rather than reason about it from this summary alone.
+- **`CreateProductVariant`'s own `attempts: 3` retry becomes silently inert when invoked from inside
+  this generator's outer transaction** — `Illuminate\Database\Concerns\ManagesTransactions`'s retry
+  loop only fires at nesting level 1, so a callee's own `attempts` is inert the instant anything wraps
+  it, regardless of which class opened the outer transaction. This is the *same* mechanism story 0029's
+  own `UpdateProduct`/`Editor::save()` nesting already exercises, now confirmed on a second, independent
+  call path — full generalized rule at
+  [docs/security/derived-column-invariants.md#second-confirming-instance-a-generators-own-outer-transaction--attempts-fires-only-at-nesting-level-1](../../../docs/security/derived-column-invariants.md#second-confirming-instance-a-generators-own-outer-transaction--attempts-fires-only-at-nesting-level-1).
+  **Story 0031 must NOT add its own `attempts:` to `Editor::save()`'s transaction without first
+  re-deriving this analysis** — doing so blindly risks converting a rare loud failure into a silent
+  lost update, the exact shape story 0029's own `errors-log.md` 2026-09-04 entry records (a *different*
+  hazard — a model mutated outside its closure — but the same family of "a retried transaction is a
+  retry-safe unit, or it is a lost update").
+- **This story ships NO Livewire component, NO route, NO Blade view, NO browser test, NO new
+  permission and NO `product_product_attribute_type` declaration table** — story 0031 owns the
+  generator's UI. Full mechanism at
+  [docs/database/schema.md#product_variants](../../../docs/database/schema.md#product_variants) and
+  [docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy](../../../docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy).

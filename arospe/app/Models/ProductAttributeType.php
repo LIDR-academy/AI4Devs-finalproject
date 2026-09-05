@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property string $id
@@ -52,5 +53,32 @@ class ProductAttributeType extends Model
         return $this->hasMany(ProductAttributeValue::class)
             ->orderBy('position')
             ->orderBy('value');
+    }
+
+    /**
+     * How many distinct variants are built on any value of this type --
+     * story 0029a's D-A3 type-level query, the single source of truth
+     * consumed by both App\Actions\Products\DeleteProductAttributeType's
+     * in-use guard and App\Livewire\Products\AttributeTypes\Index::
+     * confirmDelete() (D-A6).
+     *
+     * DISTINCT on pvv.product_variant_id is load-bearing, not decorative:
+     * a variant built on TWO values of the same type (legal at schema
+     * level, story 0029's DIS-1 -- e.g. Size 40 AND Size 41) must count
+     * once, not twice, or the administrator would be told 13 variants are
+     * affected when 12 are. Neither this query nor the per-value one in
+     * App\Actions\Products\SyncProductAttributeValues needs a hand-written
+     * index (D-A3/D-14): InnoDB's auto-created key on
+     * product_variant_values.product_attribute_value_id already carries
+     * the clustered-index columns in its leaf entries, so both are fully
+     * covering.
+     */
+    public function variantUsageCount(): int
+    {
+        return DB::table('product_variant_values as pvv')
+            ->join('product_attribute_values as pav', 'pav.id', '=', 'pvv.product_attribute_value_id')
+            ->where('pav.product_attribute_type_id', $this->id)
+            ->distinct()
+            ->count('pvv.product_variant_id');
     }
 }

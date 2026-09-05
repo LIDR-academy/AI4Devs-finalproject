@@ -5,6 +5,7 @@ namespace App\Concerns;
 use App\Enums\ProductStatus;
 use App\Enums\ProductType;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Validation\Rule;
@@ -91,6 +92,17 @@ trait ProductValidationRules
      * trap this story shares with 0023's R-1): saving a product under its
      * own unchanged SKU must succeed.
      *
+     * Story 0029 D-4/D-4.7: SKUs are one namespace across `products` AND
+     * `product_variants` -- PRD Sec 2.2's Scenario Outline names both "another
+     * product" and "a variant" as collision cases. The second
+     * `Rule::unique(ProductVariant::class, 'sku')` below closes the product-
+     * side half of that rule (a variant SKU is derived, never admin-typed, so
+     * nothing on the variant side ever calls this method or needs an
+     * `?string $productVariantId` parameter -- D-4.7's third correction). It
+     * sits OUTSIDE the ternary above and carries NO `->ignore()` on either
+     * branch: no variant row is ever the subject being saved here, so there is
+     * nothing to exclude from the comparison.
+     *
      * @return array<int, ValidationRule|array<mixed>|string>
      */
     protected function productSkuRules(?string $productId = null): array
@@ -103,6 +115,7 @@ trait ProductValidationRules
             $productId === null
                 ? Rule::unique(Product::class, 'sku')
                 : Rule::unique(Product::class, 'sku')->ignore($productId),
+            Rule::unique(ProductVariant::class, 'sku'),
         ];
     }
 

@@ -2,9 +2,14 @@
 
 namespace App\Actions\Products;
 
+use App\Actions\Auth\LogRefusedPrivilegedAttempt;
 use App\Models\ProductAttributeType;
 use App\Models\ProductAttributeValue;
+use App\Models\ProductVariant;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -25,9 +30,39 @@ use Illuminate\Validation\ValidationException;
  * CreateProductAttributeType/UpdateProductAttributeType references this
  * class, which is what makes the missing Gate call structural rather than
  * an oversight.
+ *
+ * Story 0029a, D-A1 path 2 / D-A2: the delete branch below is hard-blocked,
+ * per submitted value, while any product variant is still built on it --
+ * logged via LogRefusedPrivilegedAttempt::log() (never ->authorize(), which
+ * would add a Gate call this class deliberately has none of). The
+ * ordering rule is INHERITED rather than added: this class authorizes
+ * nothing of its own, so the in-use count it computes is already behind
+ * its caller's Gate::authorize() call (Create/UpdateProductAttributeType's
+ * own first statement) by construction -- do not add a Gate call here to
+ * "close the same gap" DeleteProductAttributeType closes; there is no gap,
+ * only a different mechanism producing the same guarantee.
  */
 class SyncProductAttributeValues
 {
+    /**
+     * Constructor injection for this action's own collaborators
+     * (DeriveVariantSku, used by the rename cascade; TranslateProductVariantUniqueViolation,
+     * the last-word 23000/1062 disambiguator for that cascade's write loop;
+     * LogRefusedPrivilegedAttempt, the story 0029a in-use refusal's
+     * recorder) -- the first two were resolved with app() inside a method
+     * body before a Phase 5 code review found the anti-pattern
+     * (code-style.md's constructor-injection convention: no fixed,
+     * non-`$this`-controlled parameter list forces app() here, so it was
+     * the shape to avoid, not the carve-out). __invoke()'s own signature
+     * is unaffected, since callers already reach this class exclusively
+     * through app(SyncProductAttributeValues::class), never `new`.
+     */
+    public function __construct(
+        private readonly DeriveVariantSku $deriveVariantSku,
+        private readonly TranslateProductVariantUniqueViolation $translateProductVariantUniqueViolation,
+        private readonly LogRefusedPrivilegedAttempt $logRefusedPrivilegedAttempt,
+    ) {}
+
     /**
      * Diff-sync a type's value list against the submitted, complete,
      * authoritative array -- never a delta (D4).
@@ -70,10 +105,16 @@ class SyncProductAttributeValues
     public function __invoke(ProductAttributeType $type, array $values): void
     {
         DB::transaction(function () use ($type, $values): void {
-            $owned = $type->values()->pluck('id')->all();
-            $ownedSet = array_flip($owned);
+            // D-4.6.1: read id AND value (not ids alone) -- this is what lets the rename branch
+            // below tell "renamed" from "resubmitted unchanged", which is what scopes story
+            // 0029's SKU re-derivation cascade to the values that actually moved rather than
+            // re-deriving every variant of the type on every save.
+            $owned = $type->values()->get(['id', 'value'])->keyBy('id');
+            $ownedIds = $owned->keys()->all();
+            $ownedSet = array_flip($ownedIds);
 
             $submittedIds = [];
+            $renamedIds = [];
 
             foreach ($values as $position => $row) {
                 $id = $row['id'] ?? null;
@@ -96,6 +137,14 @@ class SyncProductAttributeValues
                 if (is_string($id) && array_key_exists($id, $ownedSet)) {
                     unset($ownedSet[$id]);
 
+                    // Story 0029 D-4.6.1: this is a QUERY-BUILDER mass update -- it instantiates
+                    // no model and fires NO Eloquent event, so a model observer cannot carry the
+                    // SKU re-derivation cascade below. It has to be explicit code, in this same
+                    // transaction, after the diff loop.
+                    if ($owned[$id]->value !== $text) {
+                        $renamedIds[] = $id;
+                    }
+
                     $this->writeRow(fn () => ProductAttributeValue::where('id', $id)->update([
                         'value' => $text,
                         'position' => $position,
@@ -115,12 +164,179 @@ class SyncProductAttributeValues
                 ]));
             }
 
-            $toDelete = array_diff($owned, $submittedIds);
+            $toDelete = array_values(array_diff($ownedIds, $submittedIds));
 
             if ($toDelete !== []) {
-                ProductAttributeValue::whereIn('id', $toDelete)->delete();
+                // D-A1 path 2: the app-level pre-check, per submitted value, before any DELETE
+                // runs -- refusing the WHOLE save rather than partially applying it (D-A5),
+                // since a thrown ValidationException here rolls back this whole transaction,
+                // including every update/insert already applied above.
+                $this->guardAgainstValuesInUse($toDelete);
+
+                try {
+                    ProductAttributeValue::whereIn('id', $toDelete)->delete();
+                } catch (QueryException $e) {
+                    // D-A4: narrowed to MySQL error 1451 (row is referenced) via errorInfo[1],
+                    // NEVER folded into writeRow()'s existing 23000 catch above -- that catch
+                    // means "duplicate value", and 23000 covers both 1062 and 1451, so widening
+                    // it would report "the value must be distinct" for an in-use deletion. This
+                    // is the race backstop behind the pre-check above: a bulk
+                    // `whereIn(...)->delete()` does not identify WHICH row tripped the
+                    // RESTRICT, so every id in the batch is re-checked in firstValueInUse().
+                    if (($e->errorInfo[1] ?? null) === 1451) {
+                        $found = $this->firstValueInUse($toDelete) ?? [$toDelete[0], 0];
+
+                        throw $this->blockedByValueInUse($found[0], $found[1]);
+                    }
+
+                    throw $e;
+                }
+            }
+
+            if ($renamedIds !== []) {
+                $this->reDeriveVariantSkusForRenamedValues($renamedIds);
             }
         });
+    }
+
+    /**
+     * Story 0029 D-4.6: renaming an attribute value re-derives every variant built on it, across
+     * EVERY product that uses it -- not just one, since the same value can be shared by variants
+     * of unrelated products. Collect once, cascade once (D-4.6.1 point 3): every affected
+     * variant's new SKU is computed and checked before any row is written, so a single collision
+     * aborts the whole rename (this transaction is the caller's own, opened in __invoke() above).
+     *
+     * @param  array<int, string>  $renamedIds
+     */
+    private function reDeriveVariantSkusForRenamedValues(array $renamedIds): void
+    {
+        $variants = ProductVariant::query()
+            ->whereHas('values', fn (Builder $query) => $query->whereIn('product_attribute_values.id', $renamedIds))
+            ->with(['values', 'product'])
+            ->get();
+
+        if ($variants->isEmpty()) {
+            return;
+        }
+
+        /** @var array<string, string> $newSkus keyed by variant id */
+        $newSkus = [];
+
+        foreach ($variants as $variant) {
+            $orderedValues = $variant->values->pluck('value')->all();
+            // F-1/F-2: checked() -- not the bare __invoke() -- so this rename cascade refuses an
+            // over-length derivation (a raw 1406) or an empty-segment rename (a silent
+            // trailing-hyphen SKU) exactly like CreateProductVariant does, instead of neither.
+            $newSkus[$variant->id] = $this->deriveVariantSku->checked($variant->product->sku, $orderedValues);
+        }
+
+        // F-3: assert the batch's own new-SKU set has no internal duplicates BEFORE the database
+        // is ever consulted. This is what makes it safe to widen the per-row database pre-check
+        // below to exclude the WHOLE batch (Phase 4 re-audit finding R-4) rather than only the
+        // row being checked -- a genuine same-batch duplicate is already caught here, so a batch
+        // of two mutually-colliding renames still fails cleanly with a validation error rather
+        // than reaching the write loop below and raising an uncaught
+        // UniqueConstraintViolationException. See docs/security/derived-column-invariants.md.
+        $duplicatesWithinBatch = array_diff_key($newSkus, array_unique($newSkus));
+
+        if ($duplicatesWithinBatch !== []) {
+            throw ValidationException::withMessages([
+                'sku' => trans('products.variants.derived_sku_taken', ['sku' => reset($duplicatesWithinBatch)]),
+            ]);
+        }
+
+        // R-4: excludes every variant id in THIS batch, not only the row being checked --
+        // otherwise a batch that rotates two SKUs between two of its own variants (each ending up
+        // with a SKU some OTHER variant in the batch currently holds, but nothing outside it) is
+        // wrongly refused as "taken" even though the final state is legal. Safe because the
+        // internal-duplicate check above already rules out a genuine within-batch collision.
+        $batchVariantIds = array_keys($newSkus);
+
+        foreach ($newSkus as $newSku) {
+            $conflict = DB::table('products')->where('sku', $newSku)->lockForUpdate()->value('id');
+
+            if ($conflict === null) {
+                $conflict = DB::table('product_variants')
+                    ->where('sku', $newSku)
+                    ->whereNotIn('id', $batchVariantIds)
+                    ->lockForUpdate()
+                    ->value('id');
+            }
+
+            if ($conflict !== null) {
+                throw ValidationException::withMessages([
+                    'sku' => trans('products.variants.derived_sku_taken', ['sku' => $newSku]),
+                ]);
+            }
+        }
+
+        foreach ($newSkus as $variantId => $newSku) {
+            try {
+                DB::table('product_variants')->where('id', $variantId)->update([
+                    'sku' => $newSku,
+                    'updated_at' => now(),
+                ]);
+            } catch (UniqueConstraintViolationException $e) {
+                // F-3: the same last-word 23000/1062 catch CreateProductVariant has for its own
+                // write, via the shared translator -- a race that slips past the pre-check above
+                // still surfaces as a clean products.variants.duplicate_combination-family
+                // ValidationException rather than an uncaught database exception.
+                throw ($this->translateProductVariantUniqueViolation)($e, $newSku);
+            }
+        }
+    }
+
+    /**
+     * Story 0029a, D-A1 path 2's app-level guard, checked for every id about to be removed
+     * BEFORE any DELETE runs. Throws on the first value found in use rather than accumulating
+     * every one -- the whole save is already refused by the single throw, and the caller fixes
+     * one value at a time in any case.
+     *
+     * @param  array<int, string>  $ids
+     */
+    private function guardAgainstValuesInUse(array $ids): void
+    {
+        $found = $this->firstValueInUse($ids);
+
+        if ($found !== null) {
+            throw $this->blockedByValueInUse(...$found);
+        }
+    }
+
+    /**
+     * D-A3's per-VALUE in-use query, re-run for each id until one shows usage -- the pivot's
+     * PRIMARY KEY makes (variant, value) unique, so unlike
+     * App\Models\ProductAttributeType::variantUsageCount()'s type-level query, no DISTINCT is
+     * needed here.
+     *
+     * @param  array<int, string>  $ids
+     * @return array{0: string, 1: int}|null
+     */
+    private function firstValueInUse(array $ids): ?array
+    {
+        foreach ($ids as $id) {
+            $count = DB::table('product_variant_values')->where('product_attribute_value_id', $id)->count();
+
+            if ($count > 0) {
+                return [$id, $count];
+            }
+        }
+
+        return null;
+    }
+
+    private function blockedByValueInUse(string $valueId, int $count): ValidationException
+    {
+        // max(1, ...): the same presentation floor App\Actions\ProductCategories\
+        // DeleteProductCategory's blockedByProducts() documents -- the race backstop above may
+        // call this with a recount of 0 once this whole transaction has already rolled back.
+        $count = max(1, $count);
+
+        $this->logRefusedPrivilegedAttempt->log(Auth::user(), 'attribute_value_in_use', 'product_attribute_value', $valueId);
+
+        return ValidationException::withMessages([
+            'values' => trans_choice('products.variants.value_in_use', $count, ['count' => $count]),
+        ]);
     }
 
     /**
