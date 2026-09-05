@@ -27,6 +27,7 @@ return [
         'sales_regions' => 'Regiones de venta',
         'product_categories' => 'Categorías de productos',
         'products' => 'Productos',
+        'product_attribute_types' => 'Tipos de atributos',
     ],
 
 ];

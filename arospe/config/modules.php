@@ -98,5 +98,16 @@ return [
             'current_when' => 'products.*',
             'permissions' => ['products.view'],
         ],
+        // Story 0030 -- attribute types are a product sub-resource, so this entry gates on the
+        // same 'products.view' ability as 'product_categories' and 'products' above (0028's
+        // ProductAttributeTypePolicy adds no new permission module).
+        'product_attribute_types' => [
+            'group' => 'platform',
+            'label' => 'navigation.items.product_attribute_types',
+            'icon' => 'swatch',
+            'route' => 'product-attribute-types.index',
+            'current_when' => 'product-attribute-types.*',
+            'permissions' => ['products.view'],
+        ],
     ],
 ];

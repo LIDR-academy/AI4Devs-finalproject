@@ -77,4 +77,19 @@ return [
         'save' => 'Save',
         'cancel' => 'Cancel',
     ],
+
+    // Story 0030 -- the product attribute types management screen (list, create/edit modal with
+    // an inline values repeater, delete). Generic chrome (Save, Cancel, Name, Values, New
+    // attribute type, Delete attribute type) stays as bare __('...') literals, matching every
+    // other module screen -- only domain copy that needs to be consistent across contexts goes
+    // here.
+    'attribute_types' => [
+        'summary' => ':total types · :values values',
+        'no_types' => 'No attribute types found.',
+        'no_values' => 'No values yet.',
+        'action_not_allowed' => 'Action not allowed',
+        // Not count-sensitive in English ("more" doesn't inflect), so a plain __() with a
+        // :count placeholder is sufficient -- no trans_choice() needed.
+        'value_preview_more' => '+:count more',
+    ],
 ];

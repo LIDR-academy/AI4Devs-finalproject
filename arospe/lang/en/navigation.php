@@ -26,6 +26,7 @@ return [
         'sales_regions' => 'Sales Regions',
         'product_categories' => 'Product categories',
         'products' => 'Products',
+        'product_attribute_types' => 'Attribute types',
     ],
 
 ];

@@ -71,4 +71,13 @@ return [
         'save' => 'Guardar',
         'cancel' => 'Cancelar',
     ],
+
+    // Historia 0030 -- clave por clave idéntico a lang/en/products.php.
+    'attribute_types' => [
+        'summary' => ':total tipos · :values valores',
+        'no_types' => 'No se encontraron tipos de atributos.',
+        'no_values' => 'Aún no hay valores.',
+        'action_not_allowed' => 'Acción no permitida',
+        'value_preview_more' => '+:count más',
+    ],
 ];
