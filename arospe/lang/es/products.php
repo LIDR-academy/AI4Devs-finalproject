@@ -54,6 +54,10 @@ return [
         'derived_sku_empty_segment' => 'El valor de atributo ":value" no se puede usar para derivar un SKU -- por favor, renómbralo.',
         'derived_sku_too_long' => 'El SKU derivado superaría los :max caracteres. Renombra un valor de atributo o el SKU del producto para acortarlo.',
         'parent_sku_change_collides' => 'Cambiar el SKU del producto crearía un SKU duplicado para una de sus variantes. No se guardaron los cambios.',
+
+        // Historia 0029a -- clave por clave idéntico a lang/en/products.php.
+        'value_in_use' => 'Este valor no se puede eliminar: lo utiliza :count variante.|Este valor no se puede eliminar: lo utilizan :count variantes.',
+        'type_in_use' => 'Este tipo no se puede eliminar: lo utiliza :count variante.|Este tipo no se puede eliminar: lo utilizan :count variantes.',
     ],
 
     // Historia 0027 -- clave por clave idéntico a lang/en/products.php.

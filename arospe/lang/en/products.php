@@ -60,6 +60,11 @@ return [
         'derived_sku_empty_segment' => 'The attribute value ":value" cannot be used to derive a SKU -- please rename it.',
         'derived_sku_too_long' => 'The derived SKU would be longer than :max characters. Rename an attribute value or the product SKU to shorten it.',
         'parent_sku_change_collides' => 'Changing the product SKU would create a duplicate SKU for one of its variants. No changes were saved.',
+
+        // Story 0029a -- the attribute type/value in-use delete guards (D-A5), both trans_choice
+        // per 0024b's own D-14 precedent.
+        'value_in_use' => 'This value cannot be removed: :count variant uses it.|This value cannot be removed: :count variants use it.',
+        'type_in_use' => 'This type cannot be deleted: :count variant uses it.|This type cannot be deleted: :count variants use it.',
     ],
 
     // Story 0027 -- the routed product editor.
