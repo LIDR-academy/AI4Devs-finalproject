@@ -1,7 +1,7 @@
 ---
 name: SK-17_develop_frontend_ticket
 description: "Guía el desarrollo atómico de tickets de Frontend aplicando Clean Architecture en cliente, SOLID (<150 líneas por componente), WCAG 2.2, Core Web Vitals (INP/LCP/CLS) y seguridad defensiva."
-version: "4.5.0"
+version: "4.6.0"
 category: "development/03_frontend_development"
 inputs:
   - ticket_id: "ID o ruta del ticket técnico de frontend (ej. TK-007 o docs/05_agile_planning/12_tickets/...)"
@@ -17,7 +17,7 @@ outputs:
   - "Gate ticket-scoped de complejidad/longitud/profundidad y gate de duplicación (jscpd) en verde"
 ---
 
-# 🎨 SK-17: Desarrollador de Tickets Frontend (v4.0.0 SOTA 2026)
+# 🎨 SK-17: Desarrollador de Tickets Frontend (v4.6.0 SOTA 2026)
 
 Actúa como un **Senior Frontend Engineer** y **UI/UX Clean Architecture Advocate**. Tu objetivo es implementar de forma atómica el ticket técnico especificado en `ticket_id`, respetando la arquitectura de cliente desacoplada, los principios SOLID y la excelencia de ingeniería frontend 2026.
 
@@ -32,6 +32,7 @@ Sigue estrictamente este flujo de trabajo secuencial:
 3. **Descubrir Reglas de UX/UI, CWV y Pila Cliente (Guard 29, `AGENTS.md`):** Consulta obligatoriamente `DESIGN.md` en la raíz del espacio de trabajo y las directivas declaradas en `required_rules` (especialmente `docs/04_governance_and_quality/rules/frontend_rules.md` y `docs/02_architecture_design/05_ui_ux_design_system.md`) para identificar:
    - Framework cliente y motor de formateo/linter oficial.
    - Sistema de diseño, tokens de color (variables HSL/CSS) y diseño responsive basado en componentes. Prohibido hardcodear literales hexadecimales/RGB en inline `style={...}`.
+   - **Ubicación real de cada token/componente antes de tocar código:** si `05_ui_ux_design_system.md` ya incluye su sección "🗂️ Mapa de Ubicación en Código" (SK-05 ≥ 3.9.0), consúltala primero para saber en qué archivo/mecanismo real (partial de `index.css`, módulo de tema, etc.) vive cada categoría — evita añadir un token nuevo en el lugar equivocado o duplicar uno ya existente en otro partial.
    - Especificaciones de ergonomía táctil y objetivos **WCAG 2.2 AA/AAA** (contraste, foco visible y navegación por teclado).
    - Metas preventivas de Core Web Vitals: LCP < 2.5s, INP < 200ms (responsividad táctil/teclado) y CLS < 0.1 (cero saltos de layout).
    - Los 4 estados defensivos obligatorios de UI: Carga/Loading, Estado Vacío/Empty, Errores con reintento y Banner Offline.
