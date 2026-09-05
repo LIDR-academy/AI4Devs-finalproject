@@ -174,6 +174,9 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 </laravel-boost-guidelines>
 
+## Language
+All repository artifacts — code, code comments, documentation (`docs/`, README, ADRs, PRD, user stories), tests, and commit messages — must be written in English, regardless of the language used in conversation with the assistant. This is independent from `lang/en`/`lang/es` (the application's own UI locales, documented in @docs/conventions/naming.md#translation-keys).
+
 ## Project documentation
 Full index: @docs/README.md
 
