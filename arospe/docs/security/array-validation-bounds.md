@@ -519,7 +519,7 @@ a slot rather than a rewrite._
 _Previously: 2026-09-04 — Story 0027 (products list + editor UI), Phase 4 **re-audit**. Added the
 section directly above, verifying the previous round's two fixes and recording the residual the
 second of them introduced, per this project's rule that a security fix is new code and is audited as
-such ([errors-log.md](../errors-log.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19)).
+such ([errors-log-archive.md](../errors-log-archive.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19)).
 The save-path ❌ in the section above it is now **closed** and is marked so in place rather than left
 describing a tree that no longer exists; the new ❌ is marked **open** so the next round has a slot to
 fill rather than a framing to rewrite._

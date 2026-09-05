@@ -575,7 +575,7 @@ code change, the day a channel begins populating those columns.
     trait lands in that folder.
   - The dormancy is recorded **where a reader will meet it** — in `schema.md` beside the columns, not
     only in this task file — so nobody later reads `flagged_for_review` being universally `false` as a
-    broken feature. This is the [bare-negative-claim](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
+    broken feature. This is the [bare-negative-claim](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
     failure mode inverted: a **positive** claim ("orders are flagged on an IP mismatch") that is true
     of the code and false of every row.
 - [ ] Acceptance criteria met.

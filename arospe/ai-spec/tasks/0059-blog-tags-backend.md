@@ -458,7 +458,7 @@ rather than a pair:
   0023's **D-11**. That story could assert `ProductCategory` references no blog-taxonomy namespace
   because a second namespace was nameable; here there is no sibling table to assert *against* that
   0058/0061 will not create anyway, so an `arch()` rule would be the vacuous-assertion failure mode
-  [the errors log](../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)
+  [the errors log](../../docs/errors-log-archive.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)
   already records. Independence is honoured structurally (own table, own model, own action namespace,
   own policy) and stated in prose. Recorded as a deliberate departure, not an inconsistency.
 

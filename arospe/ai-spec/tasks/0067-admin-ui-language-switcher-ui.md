@@ -471,7 +471,7 @@ timing.
 - **D-3 — No `wire:model`-bound property; each option is a `wire:click` action.** Not a form collecting
   a pending choice but a list of act-now controls, the idiom every row action in this app already uses.
   It also sidesteps
-  [the `null`-property/native-`<select>` failure class](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
+  [the `null`-property/native-`<select>` failure class](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
   **structurally rather than by discipline** — there is no bound property for a stale `null` to sit in.
 - **D-4 — ⚠️ CORRECTED: the fallback is `LocaleSetting::defaultUiLocale()->value`, not
   `config('app.locale')`.** Read the current value with

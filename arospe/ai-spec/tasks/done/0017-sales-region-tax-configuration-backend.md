@@ -1462,7 +1462,7 @@ caller-supplied one, after the re-fetch.
 ### Phase 4 re-audit round 2 (`appsec-auditor`, 2026-08-26)
 
 Per this repo's own rule — [a security fix must be re-audited as new code, not merely confirmed to close the
-original finding](../../../docs/errors-log.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19) —
+original finding](../../../docs/errors-log-archive.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19) —
 the F-1/F-2 fix above was re-audited the next day. **Verdict: PASS**, four Low findings, none reopening F-1
 or F-2. Full detail (including the two-live-MySQL-session deadlock reproduction) is in
 [`docs/security/model-instance-trust.md`](../../../docs/security/model-instance-trust.md#re-audit-round-2-what-the-fix-itself-got-subtly-wrong).

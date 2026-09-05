@@ -551,7 +551,7 @@ Orders-adjacent customer view reuses.
     `grep -rn "no relation exists\|no detail route\|only route\|does not exist yet" docs/` — 0041 **D-15**'s
     "no eager loading (no relation exists yet)" is quoted in at least two places and becomes an
     under-statement the moment `orders()` lands
-    ([errors-log.md](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)).
+    ([errors-log-archive.md](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)).
 - [ ] Acceptance criteria met.
 
 ## Documented functional decisions
@@ -664,7 +664,7 @@ affordance 0044 refused. Adding it is a one-line backlog item once 0055 lands ([
 Three files here belong to a sibling story: `resources/views/livewire/customers.blade.php`,
 `lang/{en,es}/customers.php` and `routes/customers.php`. This repo has a recorded incident about two
 agents writing the same Blade view
-([errors-log.md](../../docs/errors-log.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)),
+([errors-log-archive.md](../../docs/errors-log-archive.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)),
 and 0044's own "Why this is one story" section refused to split its view for the same reason.
 
 **The rule for Phase 3: this story must not be implemented in parallel with 0044.** A *sequential* edit of

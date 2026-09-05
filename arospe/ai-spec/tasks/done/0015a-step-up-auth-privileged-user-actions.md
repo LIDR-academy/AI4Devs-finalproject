@@ -748,7 +748,7 @@ closed until **both** sub-tasks have completed their Phase 7" clause therefore d
   > [`docs/contracts.md`](../../../docs/contracts.md)'s Parallel Agent File-Ownership Rule two agents
   > writing one file is a lost-edit bug waiting to happen — a rule this project adopted after a real
   > incident on this exact Blade file (see
-  > [`docs/errors-log.md`](../../../docs/errors-log.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)).
+  > [`docs/errors-log.md`](../../../docs/errors-log-archive.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)).
   > Whichever story reaches Phase 3 second rebases onto the first and re-verifies its own line
   > citations.
 - **Depends on shipped code only** — `laravel/fortify`'s password-confirmation flow (live, and the

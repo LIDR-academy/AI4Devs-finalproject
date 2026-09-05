@@ -793,7 +793,7 @@ deliberately does not re-derive 0061's rules:
       browser test reaches this: a component test can assert the rendered HTML contains the field but
       cannot prove the client-side reveal fires.
 - [ ] **A `<select>` pick of the *first* option**, for both status and category. *Risk if missing:*
-      the [null-`<select>` desync](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16),
+      the [null-`<select>` desync](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16),
       which neither `Livewire::test()->set()` nor a scripted `->select()` can reproduce. The two fail
       **differently** here and both are worth driving: `status` has a real fallback (`Draft`), so it
       fails *quietly correct-looking*; `blog_category_id` has **none** (NOT NULL, no "none" option), so
@@ -918,7 +918,7 @@ Nothing about the data model changes: this story adds no table, column, migratio
       blog half** — the canonical term is **post** (**D-22**) — and that section's own justification
       corrected: it still reads *"`app/Models/` contains only `User`"*, false since task 0016, which is
       this project's recurring
-      [bare-negative-claim](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
+      [bare-negative-claim](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
       failure mode.
 - [ ] **`docs/testing/frontend/playwright-setup.md`'s file count corrected** — it says the browser
       suite holds three files; `ls tests/Browser/` returns **four** (**V-4**). 0060's Phase 1 already
@@ -1226,7 +1226,7 @@ because the answer interacts with that race.
 
 ### D-6 — Every `wire:model`-bound property's type and empty value
 
-The [null-`<select>` desync](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
+The [null-`<select>` desync](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
 is the single most relevant prior incident to this screen, and this screen carries **more bound
 controls than any shipped one**. The rule — *a `wire:model`-bound property must never be `null`; give
 it a real empty value in the type the DOM expects* — applies to all of them, with the right empty
@@ -1813,7 +1813,7 @@ Recorded in the Definition of Done as a docs-keeper hand-off, together with a co
 needs anyway: its stated justification is *"No blog or ecommerce domain exists in the code yet
 (`app/Models/` contains only `User`)"*, which has been false since task 0016 shipped `SalesRegion` —
 this project's recurring
-[bare-negative-claim](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
+[bare-negative-claim](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
 failure mode, arriving in a file nobody opens while adding a model.
 
 ## Scope fences: what this story must NOT do

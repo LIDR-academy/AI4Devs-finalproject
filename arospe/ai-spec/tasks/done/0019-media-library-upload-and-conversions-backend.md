@@ -487,7 +487,7 @@ grep -rn "\b37\b\|\b38\b" tests/Feature/Seeders/RolePermissionSeederTest.php tes
   `docs/testing/backend/feature-integration-tests.md:70` ("a seeded 38-permission catalog"). Each
   needs only the number changed (38→42, and the one 37→41), not a rewrite — but a doc that states a
   stale count in prose is exactly this project's own recorded
-  [bare-negative/stale-arithmetic-claim](../../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
+  [bare-negative/stale-arithmetic-claim](../../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
   failure mode, so `docs-keeper` must re-grep for `\b38\b` and `\b37\b` across `docs/` at Phase 6
   rather than trust this list to be exhaustive by then.
 

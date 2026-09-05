@@ -482,7 +482,7 @@ if ($blogPost->status === BlogPostStatus::Published) {
 **The two conditions are deliberately different, and that asymmetry is why the second trigger was
 missable in the first place** (**OQ-1**): an update has a prior state to compare against, a creation
 does not. `getRawOriginal('status')` read **before** the transaction is correct and is *not* the
-[2026-08-17 errors-log trap](../../docs/errors-log.md#a-listener-read-the-pre-save-value-with-getoriginal-which-save-had-already-overwritten--2026-08-17) —
+[2026-08-17 errors-log trap](../../docs/errors-log-archive.md#a-listener-read-the-pre-save-value-with-getoriginal-which-save-had-already-overwritten--2026-08-17) —
 that trap is `getOriginal()` read **after** `save()`, which `finishSave()`'s `syncOriginal()` has
 already overwritten. See **D-7** for the full four-way comparison, and **R-1** for the one residual
 this shape does not close.
@@ -705,7 +705,7 @@ covers both manual actions** — the update matrix below, then the three create 
       fail.
 - [ ] **Prove the registration assertion can fail**: comment out the `Event::listen(...)` line, confirm
       this test goes red, revert, and record that it was done — the same regression-proof discipline
-      this repo's [vacuous-`arch()`-rule entry](../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)
+      this repo's [vacuous-`arch()`-rule entry](../../docs/errors-log-archive.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)
       demands of any assertion that passes by default.
 
 **`tests/Feature/Blog/RestoreBlogPostNotificationTest.php`** (`RefreshDatabase`, driven through
@@ -809,7 +809,7 @@ link (**R-8**).
       0061* (**D-8**).
 - [ ] **The update condition is a transition *into* `Published`**, computed from the row's pre-save
       status read **before** any mutation. **`getOriginal('status')` is never read after `save()`** —
-      the [2026-08-17 errors-log trap](../../docs/errors-log.md#a-listener-read-the-pre-save-value-with-getoriginal-which-save-had-already-overwritten--2026-08-17)
+      the [2026-08-17 errors-log trap](../../docs/errors-log-archive.md#a-listener-read-the-pre-save-value-with-getoriginal-which-save-had-already-overwritten--2026-08-17)
       (**D-7**). **The create condition is the submitted status alone**, with no dirty-state read —
       `performInsert()` populates neither `$changes` nor `$previous` (**V-5**).
 - [ ] A `Published`→`Published` re-save announces nothing, and each row of **both** matrices above has
@@ -1150,7 +1150,7 @@ verified against `laravel/framework v13.19.0`** (**V-5**):
 
 | Read | Correct? | Why |
 | --- | --- | --- |
-| `getOriginal('status')` **after** `save()` | ❌ **never** | `finishSave()` calls `syncOriginal()` unconditionally after every successful save, so "original" already holds the value just written. This is [the 2026-08-17 errors-log entry](../../docs/errors-log.md#a-listener-read-the-pre-save-value-with-getoriginal-which-save-had-already-overwritten--2026-08-17) verbatim, and `ActivateVerifiedUser`'s own docblock warns against it by name |
+| `getOriginal('status')` **after** `save()` | ❌ **never** | `finishSave()` calls `syncOriginal()` unconditionally after every successful save, so "original" already holds the value just written. This is [the 2026-08-17 errors-log entry](../../docs/errors-log-archive.md#a-listener-read-the-pre-save-value-with-getoriginal-which-save-had-already-overwritten--2026-08-17) verbatim, and `ActivateVerifiedUser`'s own docblock warns against it by name |
 | `getPrevious()['status']` | ✅ correct | `syncChanges()` sets `$previous = array_intersect_key(getRawOriginal(), $changes)` inside `performUpdate()`, *before* `finishSave()` — this is the idiom `ActivateVerifiedUser` uses, and it is correct **for a listener**, which has no other way to see the pre-save value |
 | `wasChanged('status')` | ✅ correct | reads the same `$changes` array |
 | **`getRawOriginal('status')` read before the transaction** | ✅ **shipped by 0061** | `UpdateBlogPost` performs both the read and the write, so it does not have the listener's constraint at all — and reading *before* any mutation sidesteps `syncOriginal()`/`syncChanges()` ordering entirely |

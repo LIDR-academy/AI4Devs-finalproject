@@ -321,7 +321,7 @@ Non-negotiable properties of both files:
   buys, and it is the reason the story is blocked rather than partially shipped.
 - **No explicit `$table->index()` anywhere.** `constrained()` already leaves every FK column indexed;
   writing one by hand emits a second DDL statement and produces the redundant index recorded in
-  [errors-log.md](../../docs/errors-log.md#a-redundant-users_uuid_unique-index-survived-the-uuid-primary-key-conversion--2026-08-12).
+  [errors-log-archive.md](../../docs/errors-log-archive.md#a-redundant-users_uuid_unique-index-survived-the-uuid-primary-key-conversion--2026-08-12).
   Verify with `php artisan db:table orders` / `db:table order_items` after migrating, never by reading
   the migration ([migrations.md](../../docs/database/migrations.md#an-fk-column-does-not-also-get-an-explicit-index-here)).
 - **`order_number` UNIQUE** is the only non-FK index on either table (**D-1**).
@@ -711,7 +711,7 @@ table to build against.
     **D-2**); record the three-way rule rather than leaving a reader to infer it from three files.
   - **Grep for bare negative claims this story falsifies**, rather than trusting the change→doc
     mapping — the failure mode recorded in
-    [errors-log.md](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13).
+    [errors-log-archive.md](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13).
 - [ ] Acceptance criteria met.
 
 ## Resolved disagreement
@@ -741,7 +741,7 @@ in progress; of everything this story references, only `sales_regions` (task 001
    `constrained()` supply the FK's index" is stated as **the** rule for FK indexing, and option (b)
    would require writing explicit `$table->index()` calls on four columns — reintroducing, by design,
    precisely the hand-written index the
-   [redundant `users_uuid_unique`](../../docs/errors-log.md#a-redundant-users_uuid_unique-index-survived-the-uuid-primary-key-conversion--2026-08-12)
+   [redundant `users_uuid_unique`](../../docs/errors-log-archive.md#a-redundant-users_uuid_unique-index-survived-the-uuid-primary-key-conversion--2026-08-12)
    entry exists to prevent. Then, when the retrofit `ALTER` lands, `constrained()` would find a
    suitable index already present or create a second — and nobody would notice either way, because an
    index nobody wrote is not visible in a diff.

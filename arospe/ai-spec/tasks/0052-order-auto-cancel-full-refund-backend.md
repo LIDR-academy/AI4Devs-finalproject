@@ -570,7 +570,7 @@ a repeated trigger against an already-cancelled order is a silent no-op.
     anything asserting this app dispatches no domain events, has no `app/Events/`, or that every
     mutation is `Gate`-authorized. That last one is the dangerous shape, because it is the kind of
     reassuring sentence a security page writes in passing. This is the
-    [bare-negative-claim](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
+    [bare-negative-claim](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
     failure mode.
 - [ ] Acceptance criteria met.
 

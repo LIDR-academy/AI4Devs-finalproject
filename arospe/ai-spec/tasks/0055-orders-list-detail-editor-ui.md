@@ -534,7 +534,7 @@ Markup rules inherited rather than invented:
    Do not "simplify" either back into the obvious form.
 4. **Every `wire:model`-bound property has a real non-`null` value in the type the DOM expects** — the
    status select binds a `string` backing value and never a nullable enum
-   ([errors-log.md](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)),
+   ([errors-log-archive.md](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)),
    which is **D-8**.
 5. **`data-test` hooks on *both* branches of every gated control**, so a browser test selects the same
    way regardless of whether it is enabled.
@@ -870,7 +870,7 @@ controls than any screen in the app, and one large file would make a failure's b
   "Orders"/"Cancel"/"Total" all collide with other copy on the page.
 - **Drive the selects the way a person does**, not through a `selectOption()`-style API: the
   `null`-property/native-`<select>` desync recorded in
-  [errors-log.md](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
+  [errors-log-archive.md](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
   is invisible to both `Livewire::test()->set()` and `selectOption()`, and this screen binds **three**
   selects (status, product, variant).
 - **Prove each new browser test can fail** before counting it as coverage — the regression-proof
@@ -993,7 +993,7 @@ enforce first.
     middleware column **understates** what protects the detail page: three distinct abilities govern its
     controls, all enforced in-method and therefore invisible there. **This is the third and fourth
     permission-gated route** — re-count rather than assume, per the
-    [bare-negative-claim](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
+    [bare-negative-claim](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
     failure mode arriving as arithmetic.
   - [`architecture/authorization.md`](../../docs/architecture/authorization.md) — the
     `Gate::allows()`-is-a-UI-hint section gains its **first three-ability screen**, and its accepted-drift
@@ -1037,7 +1037,7 @@ backend stories — behind a component whose own schedule this decomposition doe
 - An explicit empty state when the catalog is empty, and a bounded result set with a visible notice when
   it is truncated (**R-4**).
 - Both selects bind `public string` properties defaulting to `''`, never `null`
-  ([errors-log.md](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)).
+  ([errors-log-archive.md](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)).
 
 **This is logged as a stopgap, in three places** — here, in [Risks](#risks) as **R-4**, and in the
 [backlog](#technical-tasks-for-the-backlog) as item 1 — because an undocumented interim becomes
@@ -1188,7 +1188,7 @@ its currency affix and no casting whatsoever, plus a **sequential** retrofit of 
 
 ⚠️ **The retrofit is a sequential edit of a closed story's file, never a concurrent one** — the same
 constraint 0047's own **D-6** imposed when it edited 0044's view, and the same incident behind it
-([errors-log.md](../../docs/errors-log.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)).
+([errors-log-archive.md](../../docs/errors-log-archive.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)).
 0047's rendering test must be re-run after it.
 
 **`tax_rate` renders as its stored string plus `%`** — `21.000` → `21.000%`. Trimming trailing zeros is a
@@ -1200,7 +1200,7 @@ Three separate rules, each with its own reason:
 
 - **A `public string` bound to a real backing value, never a nullable enum.** A `wire:model`-bound
   property that is `null` desynchronises a native `<select>` and silently drops the user's own pick
-  ([errors-log.md](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)),
+  ([errors-log-archive.md](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)),
   and a *typed enum* property is hydrated through `$type::from($value)` **before** validation runs, so a
   forged value raises an unhandled `\ValueError` rather than a validation error (task 0015's F8). The
   shipped shape is the one both findings converge on: non-nullable `string`, defaulting to the order's
@@ -1432,7 +1432,7 @@ block. The replacement criterion is recorded verbatim in D-1 so the swap is sche
 
 All of these are **sequential** edits of closed stories' files, which is ordinary maintenance; a
 **concurrent** one is the incident recorded in
-[errors-log.md](../../docs/errors-log.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)
+[errors-log-archive.md](../../docs/errors-log-archive.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)
 and governed by `contracts.md`'s Parallel Agent File-Ownership Rule. Since every listed sibling is a
 hard dependency of this story, the ordering constraint costs nothing — it only needs stating.
 

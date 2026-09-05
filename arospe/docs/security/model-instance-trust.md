@@ -251,7 +251,7 @@ signal, not merely proof they exist.
 ## Re-audit round 2: what the fix itself got subtly wrong
 
 The rule this repo already has for a security fix — [re-audit it as new code, not merely as a diff against the
-finding](../errors-log.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19) —
+finding](../errors-log-archive.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19) —
 applied to the fix above, the same day. Verdict: **PASS**, four Low findings, none reopening F-1 or F-2. All
 five are closed or recorded below; **R-1's documentation half is the one worth reading closely**, because it
 is a false guarantee that had been written into this very page.

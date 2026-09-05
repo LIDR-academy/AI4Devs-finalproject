@@ -551,7 +551,7 @@ with a caller.
   - [`architecture/authorization.md`](../../docs/architecture/authorization.md#policies) gains
     `OrderPolicy` as the **third** policy — and the "`UserPolicy` has seven abilities / `RolePolicy`
     has five" enumerations nearby are re-counted rather than assumed, the under-count failure mode
-    recorded in [errors-log.md](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13).
+    recorded in [errors-log-archive.md](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13).
   - [`conventions/base-standards.md`](../../docs/conventions/base-standards.md#directory-structure)'s
     directory listing gains `OrderPolicy` in `app/Policies/` and
     `OrderStatusRegressionRequiresConfirmationException → 409` beside the three exceptions already
@@ -657,7 +657,7 @@ a rediscovery.
   - **Scheduling consequence, and the reason this is flagged rather than buried:** 0050, 0051, 0052
     and 0055 all add abilities to **this same file**. Two of them running in parallel is the
     same-file-ownership hazard recorded in
-    [errors-log.md](../../docs/errors-log.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)
+    [errors-log-archive.md](../../docs/errors-log-archive.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)
     and governed by `contracts.md`'s Parallel Agent File-Ownership Rule — sequence them, or name the
     owner explicitly in both briefs.
 - **D-6 — Any transition to or from `Cancelled` is refused outright, with no confirmation path.**

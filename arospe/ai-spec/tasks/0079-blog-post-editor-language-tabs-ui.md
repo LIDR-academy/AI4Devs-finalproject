@@ -620,7 +620,7 @@ cause**. That is the same shape 0078 **D-6** records for the trashed-post reserv
 - [ ] The action is **resolved from the container, never `new`-ed**, in every test.
 - [ ] ⚠️ **Architecture guard:** `App\Actions\Translations\SetTranslation` appears in **no** import
       under `app/Livewire/` — **one `arch()` rule per namespace, never `expect([...])`**, and proven
-      able to fail, per [the vacuous-`arch()` entry](../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18).
+      able to fail, per [the vacuous-`arch()` entry](../../docs/errors-log-archive.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18).
 
 ### Feature — `tests/Feature/Blog/BlogPostEditorLanguageTabsTest.php`
 
@@ -949,7 +949,7 @@ $originalTranslatedLanguageIds` and the unlocked `public string $activeLanguageI
   destroying content. 0071 **D-3** and 0077 **D-2** reach the identical conclusion for the identical
   reason.
 - **`$activeLanguageId` stays unlocked and never binds a `<select>`** — it drives an `x-show`
-  comparison, so the [null-bound-`<select>` trap](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
+  comparison, so the [null-bound-`<select>` trap](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
   is structurally inapplicable, recorded so nobody "defensively" applies it. The trap **does** still
   bind `$blogCategoryId` and `$status`, unchanged from 0063 **D-6**.
 

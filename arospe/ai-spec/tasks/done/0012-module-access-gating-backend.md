@@ -704,7 +704,7 @@ module route consumes them. (4) Confirmed no change was warranted in `database/s
 story's new test file follows. (5) **A broken relative link already inside this file**, written
 during Phase 3: the Phase 3 record's citation of `tests/Feature/Authorization/ModuleRouteAccessTest.php`
 used `](../../tests/…)`, which resolves to `ai-spec/tests/` from this file's `in-progress/` depth —
-exactly the [stage-move link class](../../../docs/errors-log.md#a-task-files-relative-links-broke-silently-when-it-moved-to-in-progressdone--2026-08-17)
+exactly the [stage-move link class](../../../docs/errors-log-archive.md#a-task-files-relative-links-broke-silently-when-it-moved-to-in-progressdone--2026-08-17)
 [workflow.md](../../../docs/workflow.md#link-integrity-check-on-every-stage-move) makes a mandatory
 check, caught here one phase early rather than at Phase 7. Corrected to `../../../tests/`; note that
 `in-progress/` → `done/` is a same-depth move, so it stays correct through closure. (6) **Three

@@ -1085,7 +1085,7 @@ product taxonomy.
   as the two flat ones. `ls tests/Browser/` returns **four**: `Auth/LoginSmokeTest.php`,
   `UsersIndexTest.php`, `SalesRegionsIndexTest.php` **and `RolesIndexTest.php`** — a *third* flat file
   the doc never mentions. So the flat/mirrored ratio the page reasons from is 3:1, not 2:1. This is the
-  [bare-negative-claim](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
+  [bare-negative-claim](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
   failure mode arriving as arithmetic, and it is load-bearing here because that page's own count is
   part of the argument **V-1** adjudicates. Correcting it is named in the Definition of Done.
 

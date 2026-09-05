@@ -550,7 +550,7 @@ enforces.
 **D-16 — No `wire:model`-bound property is ever `null`, and `#[Locked]` covers exactly two.** `$code`,
 `$languageId`, `$replacementLanguageId`, `$defaultUiLocale` and `$defaultNotificationLocale` are plain
 `string`s with `''` as the "nothing chosen" sentinel matching a placeholder `<option value="">` — the
-[errors-log rule](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
+[errors-log rule](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
 applied to every control up front rather than case by case. The two locale properties are assigned real
 values in `mount()` before first render. `#[Locked]` goes on `$languages` (a client-writable array of
 rendered rows is a disclosure risk — the `$regions`/`$users` precedent) and `$languageId` (server-only
@@ -678,7 +678,7 @@ Derived from this debate; **none are in scope for 0069**.
 
 1. **Mark 0068's D26/R-16 superseded** once **Q-2** is confirmed, so no later story inherits the "the
    notification locale has no consumer" claim that 0066's D-14 has already falsified. This is the
-   [stale-claim failure mode](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
+   [stale-claim failure mode](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
    caught before it propagates a third time.
 2. **Swap the picker's hand-rolled Alpine filter for the searchable multi-select component** if story
    0022 ever ships — this modal is its natural first consumer (**D-6**).

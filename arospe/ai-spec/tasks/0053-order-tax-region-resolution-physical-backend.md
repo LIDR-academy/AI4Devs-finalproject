@@ -650,7 +650,7 @@ is the basis `tax_amount` is derived from — re-summing the line items into it 
     to mistake for duplication and "fix".
   - **Grep for bare negative claims this story falsifies** rather than trusting the change→doc mapping —
     the failure mode recorded in
-    [errors-log.md](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13).
+    [errors-log-archive.md](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13).
     0045's docs pass will have written "`sales_region_id` is `null` at creation and resolving it is
     0053's"; that sentence is still true, but anything phrased as "no order ever carries a sales region"
     is not. **Add to that grep, since D-13:** anything phrased as "0053 does not compute a tax amount",

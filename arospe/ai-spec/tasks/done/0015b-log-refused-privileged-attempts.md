@@ -421,7 +421,7 @@ documented exception) — but found three concrete, mechanical gaps:
 - [x] **Regression-proof each new assertion.** For at least one refusal test per screen, temporarily
       remove the logging call and confirm the test goes red, per this repo's standing convention. A
       logging assertion that has never been observed failing is the same vacuous coverage
-      [`docs/errors-log.md`](../../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)
+      [`docs/errors-log.md`](../../../docs/errors-log-archive.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)
       records twice.
 - [x] **Domain actions — authorization refusal is logged, matching the components' shape.** Per the
       Q5 decision above, `App\Actions\Users\CreateUser`'s `promoteToAdministrator` refusal,

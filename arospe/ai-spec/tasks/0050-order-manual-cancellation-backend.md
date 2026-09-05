@@ -627,7 +627,7 @@ branch in `TransitionOrderStatus` is left standing rather than deleted (**D-4**)
   - [`architecture/authorization.md`](../../docs/architecture/authorization.md#policies) — `OrderPolicy`
     now has **two** abilities, not one; **re-count rather than assume**, the under-count failure mode
     recorded in
-    [errors-log.md](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13).
+    [errors-log-archive.md](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13).
     Record the **hint-in-the-policy / authority-in-the-action** split and why it does not contradict
     0051's **DR-2** — that pairing is the reusable fact a later epic inherits. **Also record that
     `cancel()` is this repo's first ability requiring *two* permissions** (**D-6**), with the product
@@ -932,7 +932,7 @@ and every name in this document is a reading aid rather than a locator (**R-5**)
 > ⚠️ **This story is not parallel-safe with 0049, 0051, 0052 or 0055 — they all write
 > `app/Policies/OrderPolicy.php`.** 0049's **D-5** flagged this in advance: *"0050, 0051, 0052 and 0055
 > all add abilities to **this same file**"*, and it is the same-file-ownership hazard recorded in
-> [errors-log.md](../../docs/errors-log.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)
+> [errors-log-archive.md](../../docs/errors-log-archive.md#two-agents-dispatched-in-parallel-both-wrote-to-the-same-blade-view--2026-08-16)
 > and governed by `contracts.md`'s Parallel Agent File-Ownership Rule. **Sequence them, or name the
 > file's owner explicitly in both briefs.** Note 0051's **DR-2** has since decided that story adds
 > **no** ability, so today the contended set is 0049 → 0050 → (0052, 0055). `lang/{en,es}/orders.php`

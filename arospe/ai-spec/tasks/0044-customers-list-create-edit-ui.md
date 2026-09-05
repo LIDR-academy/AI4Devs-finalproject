@@ -242,7 +242,7 @@ Public surface the view consumes:
 
 - **Every form property is a `string`, never `null`.** A `wire:model`-bound property that is actually
   `null` desynchronises a native control and silently swallows the user's own input — the bug recorded in
-  [errors-log.md](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16).
+  [errors-log-archive.md](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16).
   There is no `<select>` on this form today (see **D-2**), but the rule binds every bound control, and an
   empty string is the correct "not filled in" value for all thirteen optional fields. The actions convert
   `''` → `null` at the boundary, or the component does before calling them — **pick one and state it in a
@@ -598,7 +598,7 @@ writes a database row that no UI in this repository reads yet.
   - [`conventions/base-standards.md`](../../docs/conventions/base-standards.md) — the `routes/` listing
     gains `customers.php`, the `app/Livewire/` listing gains `Customers/`, and the `lang/` listing gains
     `customers.php`. **Each of those is an enumeration that becomes an under-count the moment this story
-    lands** — the [bare-negative-claim](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
+    lands** — the [bare-negative-claim](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
     failure mode arriving as arithmetic. **Grep `docs/` for "three per-area files", "two module routes"
     and similar counts** rather than trusting the change→doc mapping, which routes only to the docs
     describing the change.
@@ -657,7 +657,7 @@ accepts is worse than a text field: it makes a legal value unreachable through t
 Two supporting facts. The Sales Regions **screen** does not exist yet either (story 0018), so there is no
 shipped precedent for how this catalog is presented. And a `<select>` here would reintroduce the
 null-property/native-`<select>` desync class of bug for no gain
-([errors-log.md](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)).
+([errors-log-archive.md](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)).
 
 **Revisit once Sales Regions UI ships**, and only if the *product* wants a constrained list — at which
 point the right shape is a searchable picker over the full ISO catalog (which the seeder already holds as

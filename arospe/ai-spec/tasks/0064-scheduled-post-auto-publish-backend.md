@@ -352,7 +352,7 @@ the behaviour above through a second door.
 **Feature — `tests/Feature/Console/ScheduleRegistrationTest.php`** (new) — the schedule entry itself
 
 > **This test is recommended, and its falsifiability was checked rather than assumed** — the standard
-> this repo's [vacuous-`arch()`-rule entry](../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)
+> this repo's [vacuous-`arch()`-rule entry](../../docs/errors-log-archive.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)
 > demands of any assertion that passes by default. ✅ **Verified against `laravel/framework v13.19.0`:**
 > `Schedule::events()` returns `Event[]` (`Support/Facades/Schedule.php:16`), `Event::$command` is
 > **public** (`Console/Scheduling/Event.php:34`), `Event::getExpression()` is **public**
@@ -892,7 +892,7 @@ which is sufficient:
    bug.
 3. **This repo's own precedent points the same way.** `App\Listeners\ActivateVerifiedUser` listens to
    Laravel's explicitly-dispatched `Verified` event, not a generic model hook — and
-   [errors-log.md's `getPrevious()` entry](../../docs/errors-log.md#a-listener-read-the-pre-save-value-with-getoriginal-which-save-had-already-overwritten--2026-08-17)
+   [errors-log.md's `getPrevious()` entry](../../docs/errors-log-archive.md#a-listener-read-the-pre-save-value-with-getoriginal-which-save-had-already-overwritten--2026-08-17)
    is a standing warning about how fragile implicit dirty-state reconstruction is.
 
 **The seam with 0065, stated as a contract rather than an intention.** This story owns *"a post went

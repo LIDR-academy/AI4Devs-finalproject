@@ -266,7 +266,7 @@ not write an `administratorName()` resolver mirroring `superAdminName()`.
   `Administrator` case is the locked identity itself and is compared against directly), rather than
   leaving a sentence that has quietly gone stale. Same obligation on the docs side — see the Definition
   of Done's `docs-keeper` bullet — and the general rule in
-  [`docs/errors-log.md`](../../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13).
+  [`docs/errors-log.md`](../../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13).
 
 - `app/Models/Role.php` (**modify** — created by 0008) — add one `public static` helper. It takes a role
   **row** and answers whether that row is the Administrator role, by exact, case-sensitive comparison
@@ -421,7 +421,7 @@ not write an `administratorName()` resolver mirroring `superAdminName()`.
   > array of targets **disjunctively** — the rule passes as soon as any one target satisfies it — so the
   > merged form is vacuous over half its stated scope. That is not a hypothetical: it is how the test
   > shipped green the first time, and it is a recorded entry in
-  > [`docs/errors-log.md`](../../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18).
+  > [`docs/errors-log.md`](../../../docs/errors-log-archive.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18).
   > The split form is deliberate and carries a comment in the test file saying so.
 
   Note this is a *policy-body* `hasRole()` against the **target**, which
@@ -642,7 +642,7 @@ configuration.
       **Three specific statements elsewhere become false the day this ships and must be corrected in
       the same pass — named here so they are not left to be discovered later**, per the "don't leave a
       bare negative claim to go stale into a lie" rule in
-      [`docs/errors-log.md`](../../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13):
+      [`docs/errors-log.md`](../../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13):
 
       1. [`docs/architecture/authorization.md`](../../../docs/architecture/authorization.md#one-name-one-resolution-path)'s
          **"One name, one resolution path"** section closes with "`App\Enums\RoleName` supplies **only**

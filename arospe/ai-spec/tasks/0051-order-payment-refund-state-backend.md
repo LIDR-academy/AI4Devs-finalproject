@@ -257,7 +257,7 @@ Non-negotiable properties of both files:
   applied to this story's own table.
 - **No explicit `$table->index()` anywhere.** `constrained()` already indexes `order_item_id` and
   `refunded_by`; a hand-written one produces the redundant index recorded in
-  [errors-log.md](../../docs/errors-log.md#a-redundant-users_uuid_unique-index-survived-the-uuid-primary-key-conversion--2026-08-12).
+  [errors-log-archive.md](../../docs/errors-log-archive.md#a-redundant-users_uuid_unique-index-survived-the-uuid-primary-key-conversion--2026-08-12).
   Verify with `php artisan db:table refunds` after migrating, **never** by reading the migration
   ([migrations.md](../../docs/database/migrations.md#an-fk-column-does-not-also-get-an-explicit-index-here)).
 - **No index on `created_at`** — the same cardinality argument 0045 applied to `status`: a
@@ -705,7 +705,7 @@ column this story always writes `null` into. The permission catalog grows by exa
     `architecture/overview.md`, `database/schema.md`, `conventions/naming.md`,
     `testing/backend/datasets-and-factories.md`, `testing/backend/feature-integration-tests.md` and
     `security/authorization-patterns.md` — several in files the change→doc mapping routes nowhere.
-    This is the [bare-negative-claim](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
+    This is the [bare-negative-claim](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
     failure mode arriving as arithmetic.
 - [ ] Acceptance criteria met.
 

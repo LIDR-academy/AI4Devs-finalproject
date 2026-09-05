@@ -436,7 +436,7 @@ public UserStatus $status = UserStatus::Inactive;
 
 That non-nullability is **deliberate and load-bearing**, established by
 [`docs/errors-log.md` — "A `null` Livewire property bound to a native `<select>` silently dropped the
-user's own pick"](../../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16).
+user's own pick"](../../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16).
 This story's first draft said to retype it to `public ?UserStatus $status` → `public ?string $status`.
 **That instruction was wrong and is withdrawn**: the nullable retype reintroduces exactly that bug,
 in which a user's first-option pick is silently discarded with the correct value still displayed.

@@ -354,7 +354,7 @@ coverage, named for a cross-cutting concern the way `tests/Feature/Authorization
 - [ ] Pin `config(['app.locale' => 'en'])` explicitly in the tests that assert the default rather
       than relying on the ambient value — `phpunit.xml` sets no `APP_LOCALE`, and this repo has
       already been bitten by a test that depended on an ambient config value
-      ([errors-log.md](../../docs/errors-log.md#a-test-asserted-against-a-fixture-address-that-the-local-env-also-pointed-super_admin_email-at--2026-08-12)).
+      ([errors-log-archive.md](../../docs/errors-log-archive.md#a-test-asserted-against-a-fixture-address-that-the-local-env-also-pointed-super_admin_email-at--2026-08-12)).
 
 **Feature — `tests/Feature/Localization/UiLocaleLivewireRoundTripTest.php`** (new; split out because
 its technique differs materially and it is the single highest-risk test in the story)

@@ -543,7 +543,7 @@ this one**; its shape is not settled.
       `expect([...])` array — Pest's `expect(array $targets)` is **disjunctive**, so a combined rule
       passes as soon as any one target satisfies it, which is exactly how an architecture test in
       this repo already shipped vacuous once
-      ([errors-log.md](../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)).
+      ([errors-log-archive.md](../../docs/errors-log-archive.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)).
       Honest caveat, and the reason **OQ-2** exists: `App\Models\ProductCategory` **does not exist in
       this tree**, so a literal `->not->toUse(ProductCategory::class)` is a fatal class-not-found
       error at collection time, not a red test.
@@ -971,7 +971,7 @@ the two taxonomies can be diffed decision by decision. **D-13** and **D-14** are
 - **R-9 — A vacuous architecture test.** A `->not->toUse()` assertion is a negative claim and is
   green both when the invariant holds and when the test is structurally unable to fail. Whatever
   shape **OQ-2** settles on, it must be proven able to go red before it is counted as coverage, per
-  [errors-log.md](../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18).
+  [errors-log-archive.md](../../docs/errors-log-archive.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18).
 
 ### Open questions
 

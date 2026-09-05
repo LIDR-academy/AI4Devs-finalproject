@@ -353,7 +353,7 @@ drops before `blog_posts`, so the pair is genuinely symmetric.
 > ⚠️ **Do not add `$table->index('blog_category_id')`, `$table->index('blog_tag_id')` or
 > `$table->index('blog_post_id')`.** InnoDB creates the FK index itself, and a hand-written one
 > duplicates it — the shape of the `users_uuid_unique` debt in
-> [errors-log.md](../../docs/errors-log.md#a-redundant-users_uuid_unique-index-survived-the-uuid-primary-key-conversion--2026-08-12).
+> [errors-log-archive.md](../../docs/errors-log-archive.md#a-redundant-users_uuid_unique-index-survived-the-uuid-primary-key-conversion--2026-08-12).
 > This is [migrations.md](../../docs/database/migrations.md#an-fk-column-does-not-also-get-an-explicit-index-here)'s
 > shipped rule; `create_passkeys_table`'s explicit `$table->index('user_id')` is the documented
 > divergence, not the pattern. **Verify with `php artisan db:table blog_posts` and
@@ -559,7 +559,7 @@ Backend only — **no browser tests**, since this story ships no screen.
       `QueryException`. *Risk if missing:* a broken reference becomes a 500 instead of a form error.
 - [ ] **An invalid `status` string is refused as a `ValidationException`, never an uncaught
       `\ValueError` from the enum cast.** *Risk if missing:* this is exactly
-      [task 0015's finding F8](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
+      [task 0015's finding F8](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
       recurring — Livewire's `EnumSynth` hydrates a forged backing value through `$type::from()`
       **before** validation runs. This story ships the repo's first new status-backed enum since that
       lesson landed, so it is a live precedent rather than a hypothetical.
@@ -800,7 +800,7 @@ named residual risk.
       structurally impossible (**D-20**) — `restrictOnDelete()` refuses to delete a category any
       trashed post references — so a test would be asserting a state the database cannot produce, which
       is the vacuous-assertion failure mode
-      [errors-log.md](../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)
+      [errors-log-archive.md](../../docs/errors-log-archive.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)
       records. The property is already pinned from the other side, by the trashed-post block case in
       `DeleteBlogCategoryTest.php`.
 
@@ -848,7 +848,7 @@ named residual risk.
   class-not-found at collection time, not a red test — the identical reasoning 0058's **OQ-2** and
   0059 both recorded. If Phase 2 wants one anyway, it must be **one rule per namespace**, never
   `expect([...])`, which is disjunctive and has already shipped vacuous here once
-  ([errors-log.md](../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)).
+  ([errors-log-archive.md](../../docs/errors-log-archive.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18)).
 
 ## Expected outcome
 

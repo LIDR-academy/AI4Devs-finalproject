@@ -330,7 +330,7 @@ mass-assignment guard and not an integrity one.
 
 ❌ **As found (first re-audit, 2026-09-04) — ✅ closed the same day by the second re-audit; see the
 block at the end of this section.** Found by re-auditing the fix as new code, per
-[errors-log.md](../errors-log.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19).
+[errors-log-archive.md](../errors-log-archive.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19).
 The ❌ text below is kept verbatim as the record of what shipped, per the audit-authored-page rule.
 
 The same remediation added `attempts: 3` to three `DB::transaction()` calls, so that the fixed lock
@@ -416,7 +416,7 @@ here because this story is where the two halves first pull against each other.
 >   pins this with a source-level assertion that also proves it can fail — it asserts the literal
 >   `}, attempts:` **is** present in both siblings before asserting its absence in `UpdateProduct`,
 >   rather than trusting a negative on its own (the vacuous-assertion trap
->   [errors-log.md](../errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18) records).
+>   [errors-log-archive.md](../errors-log-archive.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18) records).
 > - **The two retained `attempts: 3` are still retry-safe.** Both build the row they mutate *inside*
 >   the closure with `forceCreate()`; a second attempt re-does real work rather than skipping it. Every
 >   model either closure writes to is fetched or created by that attempt — `CreateProductVariant` reads

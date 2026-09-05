@@ -320,7 +320,7 @@ Invokable, imperative verb phrase, no `Action` suffix, **resolved from the conta
 `new`-ed** ([code-style.md](../../docs/conventions/code-style.md#exception-an-actions-own-dependency-is-constructor-injected-when-the-method-signature-is-a-public-contract)).
 `__invoke(Order $order, string $productId, ?string $productVariantId, int $quantity): OrderItem`,
 performing **in this order** (the ordering is part of the guard, not an implementation detail — see
-[errors-log.md](../../docs/errors-log.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19)):
+[errors-log-archive.md](../../docs/errors-log-archive.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19)):
 
 1. **`$order->refresh()` / `$order->load('items')`** — read the state every later step decides on, from
    the database, before the first check reads it. A caller may hand over a stale instance.
@@ -625,7 +625,7 @@ found.
     `app/Actions/Orders/` entry gains the three actions, and `app/Exceptions/` gains
     `OrderNotEditableException → 409` beside its three siblings (an enumeration that becomes an
     **under-count** the moment this ships — the exact
-    [bare-negative-claim](../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
+    [bare-negative-claim](../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13)
     failure mode arriving as arithmetic).
   - [`database/schema.md`](../../docs/database/schema.md) — the `orders` / `order_items` sections gain a
     note that `subtotal` / `tax_amount` / `total` are **derived and re-derived** rather than
@@ -753,7 +753,7 @@ rediscovery.
   rule story 0015a established for its step-up layer, and it generalises — **a refusal that reveals
   something about the target must never precede the check on whether the caller may look at the target
   at all.** Ordering is part of the guard, not an implementation detail
-  ([errors-log.md](../../docs/errors-log.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19)).
+  ([errors-log-archive.md](../../docs/errors-log-archive.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19)).
 
 - **D-7 — Totals are recomputed by summing `order_items.line_total`, inside the same transaction as the
   write.** *(`backend-expert`.)* Not incrementally adjusted (`subtotal += $newLine`), which drifts the

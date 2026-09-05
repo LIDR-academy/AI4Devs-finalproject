@@ -391,7 +391,7 @@ under test has leaked back into the caller.
       the Spanish string. ***The single most important test in this story*** — see **D-2** and **R-2**.
 - [ ] `$names` holds a key for **every** active store language, including untranslated ones, and every
       value is a string. *Why:* an omitted key desyncs Livewire's array dehydration; a `null` is the
-      generalised form of the hazard [errors-log.md](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16) records.
+      generalised form of the hazard [errors-log-archive.md](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16) records.
 - [ ] `$names` holds **no** key for an inactive store language.
 - [ ] **Saving with an untranslated tab left empty creates no translation row for it.** Assert the
       tag's translation **count** is unchanged. *Why it can fail:* any implementation that submits
@@ -765,7 +765,7 @@ render with `x-show` (kept in the DOM) rather than `@if` (removed from it). That
 
 One obligation survives from the original decision unchanged: every active language must have an
 explicit `''` key in `$names` — never omitted, never `null` — the generalised form of the
-[`<select>` desync hazard](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16).
+[`<select>` desync hazard](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16).
 0060's *"no `<select>` here, so that trap does not apply"* stops being true and must not be carried
 forward.
 

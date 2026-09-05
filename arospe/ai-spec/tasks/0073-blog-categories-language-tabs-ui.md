@@ -744,7 +744,7 @@ conditional-requiredness branch: a forged value would let an actor blank away a 
 translation without tripping the blank-is-refused rule, silently destroying content. That is a
 data-integrity concern, locked for the same reason `$editingCategoryId` is. **No entry in `$names` is
 ever `null`** — every active language gets a real `''` key at modal-open, extending this repo's
-[never-`null`-bound-property rule](../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
+[never-`null`-bound-property rule](../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
 from scalars to array **values**.
 
 **D-3 — Tabs switch on a server round trip via `public string $activeLanguageId`, not client-side

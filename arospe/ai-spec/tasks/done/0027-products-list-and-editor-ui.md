@@ -986,7 +986,7 @@ layer up** — see [Deliberately not tested here](#deliberately-not-tested-here)
 > The three cases become **five**, and the shape of the first one inverts:
 >
 > - [ ] The list query selects **explicit columns and never names `name`** — which after 0076 is not a `products` column at all. The `DB::listen()` capture stands; what it asserts on changes.
-> - [ ] **The ordering is by translated name for the chosen language, with the store default as the fallback**, asserted as an exact sequence over a fixture where the two orders genuinely differ — a product translated in the requested language, one translated only in the default, and two whose relative order flips between the two answers. **A fixture where both orders agree asserts nothing**, which is the same vacuous-coverage trap the [errors-log's `arch()` entry](../../../docs/errors-log.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18) records.
+> - [ ] **The ordering is by translated name for the chosen language, with the store default as the fallback**, asserted as an exact sequence over a fixture where the two orders genuinely differ — a product translated in the requested language, one translated only in the default, and two whose relative order flips between the two answers. **A fixture where both orders agree asserts nothing**, which is the same vacuous-coverage trap the [errors-log's `arch()` entry](../../../docs/errors-log-archive.md#a-pest-arch-rule-over-an-array-of-namespaces-shipped-green-while-proving-nothing--2026-08-18) records.
 > - [ ] ⚠️ **The eager load does not drag `description` onto the list** — the 0024 **R-9** obligation, now one table over. This is the assertion that makes [0076's **R-7**](../0076-translatable-content-retrofit-products-backend.md) visible rather than silent: if `withTranslationsFor()` still loads whole translation rows, this **fails**, and the fix is 0070's rather than a local patch. **Write it even if it is expected to fail** — a recorded, escalated red is the outcome; quietly dropping the assertion is not.
 > - [ ] The **N+1 guard**, unchanged in intent but now covering a third relation: 10 products with 10 distinct categories, 10 distinct featured images **and translations in two languages** must cost the same as 1. Distinct relations stay load-bearing.
 > - [ ] Pagination, unchanged.
@@ -1562,7 +1562,7 @@ property gets its own browser test driven by real clicks (see the test plan).
 
 > ⚠️ **Noticed during the 2026-09-03 Phase 2 correction pass and flagged rather than decided —
 > `$status`'s enum *typing* has a shipped precedent against it that this table does not answer.**
-> [errors-log.md's 2026-08-24 update](../../../docs/errors-log.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
+> [errors-log.md's 2026-08-24 update](../../../docs/errors-log-archive.md#a-null-livewire-property-bound-to-a-native-select-silently-dropped-the-users-own-pick--2026-08-16)
 > records that `App\Livewire\Users\Index::$status` was retyped from a **typed enum** to
 > `public string $status = UserStatus::Inactive->value;` for a reason that applies verbatim here:
 > Livewire's `EnumSynth` hydrates a client-supplied backing value through `$type::from($value)`
@@ -1635,7 +1635,7 @@ presentation threshold, and one constant does not justify a config key).
 
 > ⚠️ **Correction, 2026-08-30 — the arithmetic is wrong after [0077](../0077-product-editor-language-tabs-ui.md); the *reasoning* is not.** The page mounts **2 + N** `Gallery` instances, not three, where N is the number of active store languages: the two direct embeds below, plus **one per `WysiwygEditor`**, and 0077 **D-1** mounts one editor per language simultaneously. At three store languages that is **five**.
 >
-> **The safety argument survives intact and needs no rework**, which is the point worth recording: 0021 **D5** derives its event name **per instance**, so it holds at any N — only the count in the table below is stale, which is the [stale-arithmetic failure mode](../../../docs/errors-log.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13) at its most mechanical. The two literals here (`featured-image-selected`, `product-images-added`) stay distinct from each other and from every derived name.
+> **The safety argument survives intact and needs no rework**, which is the point worth recording: 0021 **D5** derives its event name **per instance**, so it holds at any N — only the count in the table below is stale, which is the [stale-arithmetic failure mode](../../../docs/errors-log-archive.md#a-docs-this-app-has-no-x-yet-claim-outlived-the-x-by-two-tasks--2026-08-13) at its most mechanical. The two literals here (`featured-image-selected`, `product-images-added`) stay distinct from each other and from every derived name.
 >
 > **What genuinely changes is page weight, not correctness** (0077's **R-5**): each instance mounts and calls `Gate::authorize('viewAny', Media::class)`, so a three-language store pays five. 0077 owns the bounded-query-count test for it. **Do not "fix" this by rendering only the active language's panel** — `@if` instead of `x-show` tears down a `wire:ignore`d region and silently discards typed text, which is the whole subject of 0077 **D-1**.
 
