@@ -7,7 +7,7 @@ variant is built on must be **hard-refused with a message stating the exact coun
 privilege level, with no confirm-and-proceed path — instead of the raw MySQL `1451` an administrator
 meets today.
 
-This story exists because **[0029](done/0029-product-variants-backend.md)** ships the
+This story exists because **[0029](../0029-product-variants-backend.md)** ships the
 `product_variant_values` pivot whose `restrictOnDelete()` FK makes the refusal a database fact. The FK
 holds integrity on its own; what is missing in front of it is the *message*. Story **0028** built the
 seam for one half of this deliberately — `App\Actions\Products\DeleteProductAttributeType` exists as
@@ -37,21 +37,21 @@ always-`0` placeholder with a real query on 0028's already-shipped component; th
 it is 0030's/0031's.
 
 Covers the "Attribute values in use by variants cannot be removed" half of
-[PRD](../../docs/PRD/PRD.md#22-products) §2.2, and discharges 0028's own **Q3**/**D7** hand-off.
+[PRD](../../../docs/PRD/PRD.md#22-products) §2.2, and discharges 0028's own **Q3**/**D7** hand-off.
 
 ## Type
 
 backend | includes database-expert: **no**
 
 No table, column, index, FK, enum or migration. Every FK this story depends on is
-[0029](done/0029-product-variants-backend.md)'s and is already in place by the time this story starts. What
+[0029](../0029-product-variants-backend.md)'s and is already in place by the time this story starts. What
 this story adds is two counting queries, two refusals and one component property's real value — all
 application code. `database-expert` was convened for 0029 and its findings (**V-12** especially) are
 inherited rather than re-derived.
 
 ## Three Amigos participants
 
-Inherited from [0029](done/0029-product-variants-backend.md)'s 2026-08-18 debate — `product-owner` (lead),
+Inherited from [0029](../0029-product-variants-backend.md)'s 2026-08-18 debate — `product-owner` (lead),
 `database-expert`, `backend-expert`, with `backend-qa`'s contribution performed inline by
 `product-owner` after the platform refused that dispatch. **No new debate was run for this split**:
 every decision below already existed in 0029's D-10 and is carried over verbatim except where marked
@@ -61,7 +61,7 @@ not anticipate.
 ## Gherkin
 
 Every scenario opens with a named business-role actor and carries exactly one `When`, per
-[gherkin-guidelines.md](../../docs/testing/frontend/gherkin-guidelines.md) rules 1 and 3. Carried over
+[gherkin-guidelines.md](../../../docs/testing/frontend/gherkin-guidelines.md) rules 1 and 3. Carried over
 unchanged from 0029, plus one new scenario for the authorization-ordering correction.
 
 ```gherkin
@@ -139,8 +139,8 @@ This is the **exact precedent** `App\Actions\ProductCategories\DeleteProductCate
 and documents in its own docblock — *"This MUST run before the in-use count below, never after: a
 reversed order would leak the product count to an actor who does not even hold `products.delete`
 (R-6)"* — established at 0024b/0025 and recorded in
-[database/schema.md](../../docs/database/schema.md#product_categories) and
-[architecture/authorization.md](../../docs/architecture/authorization.md). Follow it exactly rather
+[database/schema.md](../../../docs/database/schema.md#product_categories) and
+[architecture/authorization.md](../../../docs/architecture/authorization.md). Follow it exactly rather
 than re-deriving it.
 
 **For path 2 the ordering is inherited rather than added.** `SyncProductAttributeValues` deliberately
@@ -179,7 +179,7 @@ product_variant_id)` — both queries are **fully covering**, the per-value coun
 scan that never touches the clustered index, and the per-type count's `DISTINCT product_variant_id`
 resolves from the index leaf over an `IN` list bounded by the type's 10¹–10² values. **Do not add
 `$table->index('product_attribute_value_id')`** — that would be the `users_uuid_unique` write
-amplification [errors-log.md](../../docs/errors-log.md) records, and 0029's migration carries a
+amplification [errors-log.md](../../../docs/errors-log.md) records, and 0029's migration carries a
 comment saying so.
 
 ### D-A4 🔴 — The database backstop must be narrowed to `1451`, and must not reuse the existing `23000` catch
@@ -241,7 +241,7 @@ and its rendering rationale:
 
 - The refusal is a **`ValidationException`**, not a `Gate` denial, because it is a **domain
   invariant** rather than an authorization rule: the actor may hold `products.delete` and the answer
-  is still no. See [architecture/authorization.md](../../docs/architecture/authorization.md)'s
+  is still no. See [architecture/authorization.md](../../../docs/architecture/authorization.md)'s
   *"a domain invariant is not an authorization rule"* section.
 - It is nonetheless **logged**, via `LogRefusedPrivilegedAttempt::log()` (never `->authorize()`, which
   would re-run the already-passed gate), with a snake_case reason — `attribute_type_in_use` /
@@ -263,7 +263,7 @@ not stable.
 
 `App\Livewire\Products\AttributeTypes\Index` already declares
 `#[Locked] public int $deletingTypeUsageCount = 0;`, documented in
-[api/routes.md](../../docs/api/routes.md#product-attribute-typesindex--the-fifth-permission-gated-route-and-the-first-shipped-with-a-backend-only-placeholder-view-since-task-0017)
+[api/routes.md](../../../docs/api/routes.md#product-attribute-typesindex--the-fifth-permission-gated-route-and-the-first-shipped-with-a-backend-only-placeholder-view-since-task-0017)
 as *"always `0` until story 0029 adds an in-use guard — the same D7 hand-off `product_categories`'s
 own in-use block once was, deliberately not a stub returning a lying `0` from a model method"*.
 
@@ -275,7 +275,7 @@ ordering holds there for free — but verify it rather than assume it.
 ## Scope fences: what this story must NOT do
 
 - No new table, column, index, FK or migration — every one it needs is
-  [0029](done/0029-product-variants-backend.md)'s.
+  [0029](../0029-product-variants-backend.md)'s.
 - No Livewire component, route, Blade view, sidebar entry or browser test. The one component touch is
   a property's value, not its contract; the markup rendering the blocked-delete message is 0030's.
 - **No `Gate` call added to `SyncProductAttributeValues`** — see **D-A2**.
@@ -302,7 +302,7 @@ ordering holds there for free — but verify it rather than assume it.
 | Path | What & why |
 | --- | --- |
 | `app/Actions/Products/DeleteProductAttributeType.php` | the type-level in-use guard (**D-A1** path 1), inserted **between** the existing `authorize()` call and the `DB::transaction()` (**D-A2**), plus a `1451`-narrowed catch as the race backstop (**D-A4**) |
-| `app/Actions/Products/SyncProductAttributeValues.php` | the per-value in-use guard in its **delete branch** (**D-A1** path 2). ⚠️ **This story edits a file [0029](done/0029-product-variants-backend.md) also edits** — 0029 owns the *rename* branch (its **D-4.6.1**), this story owns the *delete* branch. 0029 lands first (see [Dependencies](#dependencies-and-risks)) |
+| `app/Actions/Products/SyncProductAttributeValues.php` | the per-value in-use guard in its **delete branch** (**D-A1** path 2). ⚠️ **This story edits a file [0029](../0029-product-variants-backend.md) also edits** — 0029 owns the *rename* branch (its **D-4.6.1**), this story owns the *delete* branch. 0029 lands first (see [Dependencies](#dependencies-and-risks)) |
 | `app/Models/ProductAttributeType.php` | gains `variantUsageCount(): int` — **D-A3**'s type query, `COUNT(DISTINCT variant)` and never a pivot-row count |
 | `app/Livewire/Products/AttributeTypes/Index.php` | `$deletingTypeUsageCount` gets its real value from `variantUsageCount()` (**D-A6**). One query; the property's declaration, type and `#[Locked]` are unchanged |
 | `lang/en/products.php`, `lang/es/products.php` | **Extend, never recreate.** Two keys, both `trans_choice` per 0024b **D-14**: `products.variants.value_in_use` and `products.variants.type_in_use`, each interpolating `:count`. Key-for-key identical in both locales |
@@ -317,7 +317,7 @@ ordering holds there for free — but verify it rather than assume it.
 ## Tests to perform
 
 Backend only. `tests/Unit/` gets **no** database trait in this repo (verified at
-[`tests/Pest.php`](../../tests/Pest.php)), so everything here is a Feature test.
+[`tests/Pest.php`](../../../tests/Pest.php)), so everything here is a Feature test.
 
 **Feature — `tests/Feature/Products/DeleteProductAttributeTypeTest.php`** (extends 0028's file)
 
@@ -400,8 +400,8 @@ the leak is the finding, not the exception type.
 
 ### Explicitly not tested
 
-Per [what-not-to-test.md](../../docs/testing/qa/what-not-to-test.md): the `restrictOnDelete()` FK's own
-behaviour (that is [0029](done/0029-product-variants-backend.md)'s
+Per [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md): the `restrictOnDelete()` FK's own
+behaviour (that is [0029](../0029-product-variants-backend.md)'s
 `ProductVariantReferentialIntegrityTest`, and duplicating it here would make two stories fail for one
 schema change); `Rule::exists`'s generated SQL; attribute type/value CRUD itself (0028); any markup or
 modal (0030).
@@ -454,24 +454,24 @@ is the message in front of it.
 ## Definition of Done
 
 - [ ] Tests written and green, plus the **full** existing suite in a single isolated run, per
-      [contracts.md](../../docs/contracts.md)'s Full Test Suite Gate Rule.
+      [contracts.md](../../../docs/contracts.md)'s Full Test Suite Gate Rule.
 - [ ] `vendor/bin/pint --format agent` (unscoped, **not** `--dirty`) and `vendor/bin/phpstan analyse`
       (level 7) both clean, **and both recorded** — a gate absent from the record is a gate that did
-      not run ([errors-log.md](../../docs/errors-log.md)).
+      not run ([errors-log.md](../../../docs/errors-log.md)).
 - [ ] Code reviewed (code-reviewer).
 - [ ] No security findings (appsec-auditor). Point the audit at **D-A2** specifically — that neither
       count is computed on any path reachable before the gate, including through
       `AttributeTypes\Index::confirmDelete()` — and at **D-A4**, that the `1451` narrowing cannot
       swallow or be swallowed by the existing `23000` catch.
-- [ ] Documentation updated (docs-keeper): [database/schema.md](../../docs/database/schema.md)'s
+- [ ] Documentation updated (docs-keeper): [database/schema.md](../../../docs/database/schema.md)'s
       `product_attribute_types` / `product_attribute_values` sections gain the in-use blocks (the
       counterpart of what `product_categories` already carries for its own guard), and
-      [api/routes.md](../../docs/api/routes.md)'s `product-attribute-types.index` subsection's claim
+      [api/routes.md](../../../docs/api/routes.md)'s `product-attribute-types.index` subsection's claim
       that `$deletingTypeUsageCount` is *"always `0` until story 0029 adds an in-use guard"* is
       **corrected in place** — it is this story, not 0029, and it is no longer always `0`.
 - [ ] 🟠 **Digest entry appended** to
-      [`ai-spec/tasks/_digests/epic-2.md`](_digests/epic-2.md) at Phase 6/7, per
-      [workflow.md](../../docs/workflow.md#decision-digest-per-epic). ⚠️ **That file currently has no
+      [`ai-spec/tasks/_digests/epic-2.md`](../_digests/epic-2.md) at Phase 6/7, per
+      [workflow.md](../../../docs/workflow.md#decision-digest-per-epic). ⚠️ **That file currently has no
       entry for story 0028 either** — a gap predating this story, flagged here because 0028 is 0029's
       and this story's direct, load-bearing dependency and a later Epic 2 story will re-read 0028 in
       full without one.
@@ -481,13 +481,13 @@ is the message in front of it.
 
 ### Dependencies
 
-- **[0029](done/0029-product-variants-backend.md) — hard, blocking, and must reach Phase 7 first.** This
+- **[0029](../0029-product-variants-backend.md) — hard, blocking, and must reach Phase 7 first.** This
   story counts rows in `product_variant_values`, which 0029 creates. There is nothing to count and
   nothing to guard until it exists.
 - ⚠️ **File overlap with 0029, in the same class.** Both stories edit
   `app/Actions/Products/SyncProductAttributeValues.php` — 0029 the **rename** branch (its **D-4.6.1**
   SKU re-derivation cascade), this story the **delete** branch. **Sequential, never concurrent**: this
-  is the shape [errors-log.md](../../docs/errors-log.md)'s parallel-agent file-ownership entry
+  is the shape [errors-log.md](../../../docs/errors-log.md)'s parallel-agent file-ownership entry
   records, and 0029's own **R-J** already names uncoordinated edits to a shared file as a risk.
 - **0028 (attribute types & values) — shipped**, in `done/`. Every file this story modifies is real,
   tested, reviewed code, so every claim about its shape in this document was verified by reading it.
@@ -516,7 +516,7 @@ is the message in front of it.
 
 ## Provenance
 
-Split out of [0029](done/0029-product-variants-backend.md) on **2026-09-04**, at Phase 2, after
+Split out of [0029](../0029-product-variants-backend.md) on **2026-09-04**, at Phase 2, after
 `code-reviewer` failed that story on INVEST **"Small"**. Every decision here is 0029's **D-10**,
 carried over rather than re-debated — including `database-expert`'s **V-12** (executed proof that a
 type delete aborts with `1451` and deletes nothing) and `backend-expert`'s discovery of the second
@@ -540,5 +540,5 @@ affirmatively by **D-A5**.
 > puts it **three** levels down and silently breaks all of them — `../../docs/...` must become
 > `../../../docs/...`, and the sibling-task links (`0029-...md`) must become `../0029-...md`. This is
 > a mandatory step, not a nicety: see
-> [workflow.md](../../docs/workflow.md#link-integrity-check-on-every-stage-move) and the
-> [errors-log entry](../../docs/errors-log.md) recording the six `done/` files this already broke.
+> [workflow.md](../../../docs/workflow.md#link-integrity-check-on-every-stage-move) and the
+> [errors-log entry](../../../docs/errors-log.md) recording the six `done/` files this already broke.

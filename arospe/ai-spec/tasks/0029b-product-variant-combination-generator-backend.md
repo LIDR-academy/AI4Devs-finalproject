@@ -158,7 +158,7 @@ Five points:
    incoherent state for a control that should never have let the batch start.
 2. **Before the cap check and before the empty-type check**, so a refused actor learns **nothing**:
    not the combination count, not which types are empty, not the limit. This is the same disclosure
-   rule [0029a](0029a-attribute-in-use-delete-guards-backend.md)'s **D-A2** applies to its in-use
+   rule [0029a](done/0029a-attribute-in-use-delete-guards-backend.md)'s **D-A2** applies to its in-use
    count and `DeleteProductCategory` already ships.
 3. **`CreateProductVariant`'s own gate still runs, per row, and that is correct rather than
    redundant.** It is 0029 **D-12.1**'s action-owns-the-rule guarantee, which must hold for every
@@ -484,7 +484,7 @@ clearer message than an array-size error would give. `max:5` is the sanity bound
 `app/Policies/**` · `app/Models/**` · `app/Livewire/**` · `resources/views/**` · `tests/Browser/**` ·
 `docs/**` (Phase 6) · `app/Actions/Products/CreateProductVariant.php` and every other file
 [0029](done/0029-product-variants-backend.md) ships · anything belonging to
-[0029a](0029a-attribute-in-use-delete-guards-backend.md), 0030 or 0031.
+[0029a](done/0029a-attribute-in-use-delete-guards-backend.md), 0030 or 0031.
 
 ## Tests to perform
 
@@ -704,7 +704,7 @@ Nothing is user-visible yet: the generator UI that consumes all of this is story
   `unique(product_id, combination_hash)` (which serves the pre-read as a covering scan),
   `HashVariantCombination` and `DeriveVariantSku`, `ProductVariant::label()`, and
   `ProductVariantValidationRules`.
-- **No file overlap with [0029a](0029a-attribute-in-use-delete-guards-backend.md).** The two siblings
+- **No file overlap with [0029a](done/0029a-attribute-in-use-delete-guards-backend.md).** The two siblings
   could run in parallel; sequential (0029 → 0029a → 0029b) is the safe default given 0029's **R-J**.
 - **Story 0031 depends on this one** (the generator UI).
 

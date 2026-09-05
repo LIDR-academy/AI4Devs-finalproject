@@ -320,15 +320,12 @@ re-derive, never the full prose of a finalized story.
   `App\Policies\ProductAttributeTypePolicy` (the app's seventh policy, and the first whose Three
   Amigos "no policy needed" recommendation was reversed at Phase 2 review) — gating on the existing
   `products.*` catalog, **no tenth permission slug added**, catalog still 42 — story 0028 D6.
-- **`DeleteProductAttributeType` ships with NO in-use guard** — D7 explicitly deferred it to "0029",
-  written before Phase 2 review split that story into 0029/0029a/0029b. **The guard is now planned for
-  story 0029a** ("attribute in-use delete guards backend" — not yet started as of story 0029's own
-  closure, still sitting at `ai-spec/tasks/0029a-attribute-in-use-delete-guards-backend.md`, not
-  `in-progress/`), not story 0029 itself — 0029 ships no change to
-  `DeleteProductAttributeType`/`DeleteProductVariant`'s in-use behaviour at all. A later reader should
-  not assume "0029 closed D7" — check whether 0029a has shipped. `#[Locked] public int
-  $deletingTypeUsageCount = 0;` is already on `AttributeTypes\Index`'s public surface, always `0`
-  until 0029a wires a real count.
+- **`DeleteProductAttributeType` shipped with NO in-use guard as of story 0029's own closure** — D7
+  explicitly deferred it to "0029", written before Phase 2 review split that story into
+  0029/0029a/0029b; 0029 itself shipped no change to `DeleteProductAttributeType`/
+  `DeleteProductVariant`'s in-use behaviour at all. **Closed by story 0029a** (see its own section
+  below) — `DeleteProductAttributeType` and `SyncProductAttributeValues`' delete branch both now hard
+  block, and `$deletingTypeUsageCount` is no longer a hardcoded `0`.
 - D7 also names the analogous hazard 0029a inherits: deleting a **type** whose values are referenced
   aborts at the database (InnoDB evaluates the RESTRICT while cascading the type→value delete) unless
   the application-level pre-check counts variants across **all of a type's values**, not one value at
@@ -476,3 +473,59 @@ re-derive, never the full prose of a finalized story.
 - Full mechanism at [docs/database/schema.md#product_variants](../../../docs/database/schema.md#product_variants)
   / [#product_variant_values](../../../docs/database/schema.md#product_variant_values), and
   [docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy](../../../docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy).
+
+## Story 0029a — Attribute type & value in-use delete guards backend (split out of 0029's D-10; discharges 0028's own Q3/D7 hand-off)
+
+- Two hard-block-with-count in-use guards, no schema change, no new permission, no Livewire
+  component, no route — the same D-14 shape `App\Actions\ProductCategories\DeleteProductCategory`
+  already established, applied to the two paths story 0029's own `restrictOnDelete()` FKs made a
+  database fact: deleting a `product_attribute_types` row that cascades into a
+  `product_attribute_values` row still referenced by `product_variant_values` (path 1), and removing a
+  single value from a type's inline value list via the diff editor (path 2) — both previously met a
+  raw MySQL `1451` (path 1, verified by 0029's own V-12) or an unhandled `QueryException` (path 2,
+  since `SyncProductAttributeValues`' delete branch had **no** `try`/`catch` at all until now).
+- **`App\Models\ProductAttributeType::variantUsageCount(): int`** — the single source of the
+  type-level count, `COUNT(DISTINCT pvv.product_variant_id)` joined `product_variant_values` through
+  `product_attribute_values`, scoped to the type's own values. `DISTINCT` is load-bearing: a variant
+  built on two values of the same type (legal at schema level, story 0029's DIS-1) counts once, not
+  twice. Consumed by both `App\Actions\Products\DeleteProductAttributeType`'s guard and
+  `App\Livewire\Products\AttributeTypes\Index::confirmDelete()`, which now populates
+  `$deletingTypeUsageCount` with a real value instead of the hardcoded `0` 0028 shipped as a documented
+  placeholder.
+- **Path 1 — `DeleteProductAttributeType`**: authorizes `delete` as its first statement (unchanged from
+  0028), computes `variantUsageCount()` **after** that call (never before — a reversed order would
+  leak the count to an actor who does not even hold `products.delete`), throws a `ValidationException`
+  keyed on `productAttributeTypeId` when positive, logged via `LogRefusedPrivilegedAttempt::log()` with
+  reason `attribute_type_in_use`. `deleteOrFail()` (not `delete()`, matching `DeleteProductCategory`'s
+  own Larastan-driven reasoning — a plain `delete()` gives Larastan no `@throws` to trace, making a
+  `try`/`catch` around it a dead catch at level 7) replaces the outer `DB::transaction()`, with a catch
+  narrowed to MySQL error **1451** via `errorInfo[1]` as the race backstop.
+- **Path 2 — `SyncProductAttributeValues`' delete branch**: per submitted id about to be removed, a
+  `product_variant_values` count (no `DISTINCT` needed — the pivot's own PK already makes
+  `(variant, value)` unique) runs **before** any `DELETE`, refusing the **whole** save (never just the
+  offending value — the diff runs in one transaction, so a thrown `ValidationException` rolls back
+  every update/insert already applied in the same call) with a `ValidationException` keyed on
+  `values`, logged with reason `attribute_value_in_use`. The delete's own narrowed-to-1451 catch is
+  deliberately **separate** from `writeRow()`'s pre-existing `23000` catch (which means "duplicate
+  value" — `23000` covers both MySQL `1062` and `1451`, so folding them would report "the value must
+  be distinct" for an in-use deletion). `SyncProductAttributeValues` authorizes **nothing** of its own
+  (unchanged, D6) — the ordering guarantee here is inherited from its caller's own
+  `Gate::authorize()`, not a new Gate call added to this class.
+- **Both counts share one presentation floor**, `max(1, $count)`, the identical
+  `DeleteProductCategory::blockedByProducts()` precedent: a rolled-back transaction on the race path
+  can make the recount read `0`.
+- **`lang/{en,es}/products.php`** extended (never recreated) with two new `trans_choice` keys under
+  the existing `variants` group — `type_in_use`/`value_in_use` — both the **simple** `singular|plural`
+  form (never the explicit-range form `media.php` uses), since both refusals only ever throw once
+  their count is already positive.
+- **No confirm-and-proceed path at any privilege level, proven the same three ways
+  `DeleteProductCategory` established**: reflection on `DeleteProductAttributeType::__invoke()`'s
+  signature (exactly one parameter, no `force`-shaped argument), calling twice in succession, and a
+  Super Admin refused identically — the strongest proof, since it shows the block is data integrity
+  rather than authorization.
+- **This story ships NO migration, NO new column, NO permission, NO policy change, NO Livewire
+  component, NO route, NO Blade view and NO browser test** — every FK it counts against is story
+  0029's. Full mechanism at
+  [docs/database/schema.md#product_attribute_types](../../../docs/database/schema.md#product_attribute_types)
+  and
+  [docs/database/schema.md#since-story-0029a-deleting-a-value-in-use-is-hard-refused-per-value-with-a-message-naming-the-exact-count](../../../docs/database/schema.md#since-story-0029a-deleting-a-value-in-use-is-hard-refused-per-value-with-a-message-naming-the-exact-count).
