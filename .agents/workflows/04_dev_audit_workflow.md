@@ -23,6 +23,21 @@ Sigue estrictamente la siguiente metodología de auditoría en 7 Fases:
 2. Lee las directivas activas (`domain_rules.md`, `backend_rules.md`, `frontend_rules.md`, `database_rules.md`, `testing_rules.md`, `security_rules.md`, `git_rules.md`).
 3. Identifica el runner de pruebas del proyecto, el motor de linters/compiladores y los estándares de sanitización.
 4. **Cascada Spec-Antes-que-Código (Guard 26, TK-054):** confirma que existe un `TK-XXX.md` en `docs/05_agile_planning/12_tickets/` para el ticket auditado, con al menos 1 User Story (`US-XXX.md`) enlazada (o `N/A (Técnico)` justificado) y una fila correspondiente en `13_matriz_trazabilidad.md`. El `N/A (Técnico)` es legítimo para: (a) un habilitador de infraestructura base, o (b) un **ticket de remediación técnica** — corrección de un defecto en código entregado por un ticket ya `done` (bug, refactor, deuda de infra, o endurecer un comportamiento ya especificado pero mal implementado) que **no** introduce regla de negocio nueva ni comportamiento de cara al usuario no especificado (Guard 26, carve-out C-DEV-006-4). En el caso (b) el ticket DEBE citar en su frontmatter el informe de auditoría que lo motiva (`related_story: … · AUDIT-XXX`) y no reabrir el ticket original. Si el código ya existe pero estos artefactos de la Etapa 1 no — o se crearon después, como reconstrucción retroactiva en vez de spec previa — marca la fase como DEFECTUOSA: es la misma clase de gap que dejó sin Frontend a `TK-049`/`TK-050` hasta que una auditoría manual lo detectó.
+5. **Reconciliación de Cambios de Origen Humano Sin Ticket Previo (si el punto 4 detectó el gap):** cuando el código auditado no viene de un ticket agotado por un skill de desarrollo, sino de un cambio que el humano hizo directamente (ej. un commit `[skip-tk]`, o cualquier diff sin `TK-XXX` previo), **no te detengas en marcar la fase como DEFECTUOSA y esperar** — ejecuta esta reconciliación antes de continuar a las Fases 1-6:
+   - **a. Clasifica con el test decisivo de Guard 26:** ¿el dueño de producto o un usuario notaría una diferencia en las reglas de negocio o en el comportamiento de cara al usuario? **Sí** → detente aquí y exige la cascada completa (`01_cascading_spec_workflow.md`: PRD/US/TK) antes de seguir auditando. **No** (mismo comportamiento, corrección técnica/estructural) → continúa a (b).
+   - **b. Crea el ticket de remediación técnica retroactivo** vía `SK-12`, citando esta auditoría en su frontmatter (`related_story: … · AUDIT-XXX`, carve-out C-DEV-006-4) — nunca reabras un ticket ya `done` para esto.
+   - **c. Mapea qué documentación viva quedó potencialmente desactualizada**, según el área real que tocó el diff (reutiliza la taxonomía fija de `docs/`, no inventes una nueva):
+
+     | Área del diff | Documento a verificar | Script de drift (Guard 27) |
+     | :--- | :--- | :--- |
+     | `prisma/schema.prisma` / migraciones (o ORM equivalente) | `docs/03_persistence_and_api/06_database_schema.md` | `check_schema_drift.sh` |
+     | Rutas/contratos HTTP | `docs/03_persistence_and_api/openapi.yaml` (o equivalente) | `check_contract_drift.sh` |
+     | Estilos/tokens de diseño, `DESIGN.md` | `docs/02_architecture_design/05_ui_ux_design_system.md` + `docs/04_governance_and_quality/rules/frontend_rules.md` | `npx -y @google/design.md lint DESIGN.md` |
+     | `docs/00_stack_manifest.md` §6 (herramientas DevSecOps) | — | `check_devsecops_manifest_coverage.sh` |
+
+   - **d. Ejecuta el/los script(s) de drift correspondientes** de la tabla — no asumas que "compila y pasan los tests" implica que la documentación sigue vigente; ese es exactamente el tipo de discrepancia que estos scripts existen para atrapar.
+   - **e. Presenta el hallazgo al humano como una propuesta de diff a los documentos afectados, nunca los reescribas en silencio** — mismo gate de Human-in-the-Loop (PAUSA OBLIGATORIA) que el resto del framework.
+   - **f. Solo tras la aprobación humana del punto (e)**, continúa normalmente a las Fases 1-6 sobre el ticket ya creado en (b).
 
 ---
 
