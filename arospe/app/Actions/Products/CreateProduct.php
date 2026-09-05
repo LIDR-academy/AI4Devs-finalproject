@@ -127,6 +127,11 @@ class CreateProduct
         $resolvedStatus = $status === null ? ProductStatus::Draft : ProductStatus::from($status);
 
         try {
+            // attempts: 3 (Phase 4 re-audit finding F-5) -- this transaction's own D-4.5 comment
+            // already states the design intent ("a concurrent writer... deadlocks (1213,
+            // retryable)"), but Laravel only retries causedByConcurrencyError() when
+            // $attempts > 1. A ValidationException is not a concurrency error and propagates
+            // unaffected on the first attempt.
             return DB::transaction(function () use (
                 $name,
                 $sku,
@@ -139,6 +144,23 @@ class CreateProduct
                 $featuredMediaId,
                 $orderedGalleryMediaIds,
             ): Product {
+                // Story 0029 D-4.5/D-4.7: SKUs are one namespace across `products` AND
+                // `product_variants` -- a product may not claim a string some variant already
+                // derived. ALWAYS this order -- products, then product_variants -- so a
+                // concurrent writer claiming the same string on either table deadlocks (1213,
+                // retryable) rather than corrupting the invariant.
+                $conflict = DB::table('products')->where('sku', $sku)->lockForUpdate()->value('id');
+
+                if ($conflict === null) {
+                    $conflict = DB::table('product_variants')->where('sku', $sku)->lockForUpdate()->value('id');
+                }
+
+                if ($conflict !== null) {
+                    throw ValidationException::withMessages([
+                        'sku' => trans('validation.unique', ['attribute' => 'sku']),
+                    ]);
+                }
+
                 $product = Product::forceCreate([
                     'name' => $name,
                     'sku' => $sku,
@@ -153,7 +175,7 @@ class CreateProduct
                 ($this->syncProductGallery)($product, $featuredMediaId, $orderedGalleryMediaIds);
 
                 return $product;
-            });
+            }, attempts: 3);
         } catch (QueryException $e) {
             // 1062 = MySQL ER_DUP_ENTRY. SQLSTATE 23000 alone is too broad
             // here (Phase 4 audit finding F-2): this transaction also

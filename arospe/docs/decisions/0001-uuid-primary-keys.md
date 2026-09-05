@@ -79,7 +79,19 @@ Two bookkeeping corrections that follow from this landing normally, rather than 
 
 One bookkeeping correction that follows normally: Amendment 2's "five [of the original seven] are still future" note is now **four** — Product Variants (PRD Epic 2) and Blog Categories, Blog Tags, Blog Posts (PRD Epic 4).
 
-_Last updated: 2026-09-01 — Story 0024 (Products — core CRUD backend): added **Amendment 3**, recording `products` as the second of this ADR's original seven entities to ship (after `product_categories` one story earlier) — needing no amendment, since "Products" is named explicitly in Context. Also records, for the first time, that a pivot table with no surrogate key (`product_media`) falls outside this ADR's UUID-entity count entirely, the same standing exemption the vendored permission pivots already have. Corrected Amendment 2's "five still future" note in place (now four)._
+## Amendment 4 (2026-09-04) — Product Variants is the third of the original seven to ship
+
+**Status: accepted. This amendment narrows a stale count in Amendment 3 above; it changes no rule.**
+
+[`product_variants`](../database/schema.md#product_variants) (story 0029) is the third of this ADR's originally-named seven entities to ship — like `product_categories` and `products` before it, it needed **no** amendment, because "Product Variants" is named explicitly in the Context section on line 10 above. It is a plain, greenfield `create_*` migration following the Decision exactly: `HasUuids`, a single `uuid('id')->primary()`, no `$keyType`/`$incrementing` restated.
+
+`product_variant_values`, the combination pivot the same story adds, is the **same out-of-scope case** `product_media` and `product_sales_region` already are, per Amendment 3 above: no surrogate primary key of its own — a composite `(product_variant_id, product_attribute_value_id)` over two already-UUID foreign keys, verified against `php artisan db:table product_variant_values`. There is no "entity identifier" for this ADR's policy to apply to.
+
+One bookkeeping correction that follows normally: Amendment 3's "four [of the original seven] are still future" note is now **three** — Blog Categories, Blog Tags, Blog Posts (PRD Epic 4). Product Variants, `product_categories` and `products` are the first three of the seven to ship.
+
+_Last updated: 2026-09-04 — Story 0029 (Product variants — core backend): added **Amendment 4**, recording `product_variants` as the third of this ADR's original seven entities to ship — needing no amendment, since "Product Variants" is named explicitly in Context. Also records that `product_variant_values`, the variant-combination pivot, falls outside this ADR's UUID-entity count entirely, the same standing exemption `product_media`/`product_sales_region` already have. Corrected Amendment 3's "four still future" note in place (now three)._
+
+_Previously: 2026-09-01 — Story 0024 (Products — core CRUD backend): added **Amendment 3**, recording `products` as the second of this ADR's original seven entities to ship (after `product_categories` one story earlier) — needing no amendment, since "Products" is named explicitly in Context. Also records, for the first time, that a pivot table with no surrogate key (`product_media`) falls outside this ADR's UUID-entity count entirely, the same standing exemption the vendored permission pivots already have. Corrected Amendment 2's "five still future" note in place (now four)._
 
 _Previously: 2026-09-01 — Story 0023 (Product categories — backend): added **Amendment 2**, recording that `product_categories` is the first of this ADR's original seven entities to actually ship since `users` — and, because it was always one of the seven named in Context, it is the first Epic 2 table here that landed needing **no** ADR amendment at all, unlike `sales_regions`/`media` before it. Corrected Amendment 1's "six of the original seven are still future" note in place (now five) rather than leaving a stale count standing._
 

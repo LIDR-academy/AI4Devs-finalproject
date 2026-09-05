@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -49,5 +50,17 @@ class ProductAttributeValue extends Model
     public function type(): BelongsTo
     {
         return $this->belongsTo(ProductAttributeType::class, 'product_attribute_type_id');
+    }
+
+    /**
+     * Every variant built on this value, across every product (story 0029,
+     * D-17.2) -- the reverse of ProductVariant::values(). What a future
+     * in-use count reads through.
+     *
+     * @return BelongsToMany<ProductVariant, $this>
+     */
+    public function variants(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductVariant::class, 'product_variant_values');
     }
 }

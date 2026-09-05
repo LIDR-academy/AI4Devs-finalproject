@@ -346,7 +346,98 @@ repo must follow — always with a real code example pulled from this repository
   per-value text), the two-pass shape above with one extra pass for a row-shape check this domain
   needs that the sales-region case did not. See [database/schema.md](../database/schema.md#product_attribute_values).
 
-_Last updated: 2026-09-03 — Story 0027 (Products — list screen and product editor UI), **Phase 4 (three rounds)**: no new page. Updated the [array-validation-bounds.md](array-validation-bounds.md) entry above: story 0027 discharged only half of story 0026's hand-off — `regionIds` got the two-pass shape exactly as specified, but `galleryMediaIds` was wired one-pass (2,000 submitted ids → 2,000 queries despite `max:20`), which its own re-audit closed and generalised into a second rule (**two-pass validation bounds the save; a cap at the mutation point bounds the component**, since `#[Locked]` binds the property write channel, never a public method like `addGalleryImages()` that appends to it with no cap).
+- [Derived columns: every invariant must hold at every write site](derived-column-invariants.md) — the
+  rule established by story 0029's Phase 4 audit, and the **fifteenth** page: the first about a
+  **stored derived column** (`product_variants.sku`, computed from the parent product's SKU plus the
+  variant's attribute values and then persisted). Its central rule is that **every invariant the
+  column's *creating* writer enforces must be re-enforced at every *re-derivation* writer**, because a
+  derived column has more write sites than an ordinary one and they do not look like writes to it —
+  they look like edits to its *inputs*. Story 0029 ships three writers of that column and only the one
+  the story is named after (`CreateProductVariant`) carries the length cap, the empty-segment refusal
+  and the disambiguating `1062` catch; the two cascades retrofitted into 0024's `UpdateProduct` and
+  0028's `SyncProductAttributeValues` were reviewed against *"does the SKU follow its inputs?"* rather
+  than *"is this a legal SKU?"*, and answer only the first. Three consequences reproduced by execution
+  against this worktree's MySQL 8.4: a value rename or a parent-SKU rename raises an unhandled
+  `SQLSTATE[22001] … 1406 Data too long` (the exact outcome the story's own test checklist forbids,
+  satisfied only on the creating path); a rename to a value that `segment()` reduces to `''` raises
+  **no** exception at all and stores the SKU `AA-`, silently violating D-4.4; and a batch pre-check
+  that compares each new SKU only against the rows' **pre-rename** values lets two mutually-colliding
+  renames through to an uncaught `UniqueConstraintViolationException`. Severity is error-handling and
+  data integrity rather than access control — no guard is bypassed and the transaction rolls back in
+  every case — but a raw `QueryException` carries the SQL plus the connection's host, port and database
+  into the log and onto the page at `APP_DEBUG=true`. The ✅ is to move the invariants into
+  `DeriveVariantSku`'s own checked entry point so no writer can call the derivation and skip them, plus
+  two cascade-specific rules (a batch pre-check must compare against the batch's own pending values,
+  not only the database; and a re-derivation site needs the same last-word `1062` catch — with
+  `CreateProductVariant::translateRaceViolation()`'s two-unique-index disambiguation — that its
+  creating sibling has). Its review question is *who else can change this column's inputs, and does
+  that path enforce everything the column's own writer does?* A closing section carries the same
+  audit's smaller companion finding, the derived-value idea applied to an **authorization target**:
+  `load('product')` re-reads the product but resolves *which* product from the caller's in-memory,
+  mass-assignable `$variant->product_id`, while `delete()` acts on `$variant->getKey()` — two different
+  sources — reproduced by deleting product `VICTIM`'s variant while the gate evaluated `update` against
+  product `DECOY`. Latent rather than live (story 0029 ships no caller at all), and the rule is
+  **re-read the subject of the operation, not only the relation you authorize through**, the same
+  remedy [model-instance-trust.md](model-instance-trust.md) already prescribes for `SalesRegion`. Both
+  sections were written as ❌/✅ pairs from the start per the audit-authored-page rule, and **both are
+  ✅ CLOSED as of 2026-09-04**, re-verified by the same day's Phase 4 re-audit rather than assumed from
+  the fix. That re-audit added two further sections. **[What the remediation introduced](derived-column-invariants.md#what-the-remediation-introduced-a-retried-transaction-is-a-retry-safe-unit-or-it-is-a-lost-update)**
+  (❌ as found, **✅ CLOSED 2026-09-04** by the second re-audit the same day — closed by *removing*
+  `attempts` from `UpdateProduct` rather than by rewriting its closure) is the page's sharpest content
+  and generalises well past this column: the fix added
+  `attempts: 3` to three transactions, and **`attempts: N` is a change to the closure's contract, not a
+  flag** — a rollback restores the database but not the PHP objects the closure mutated, so
+  `UpdateProduct`'s closure, which writes an Eloquent model created *outside* it, commits having
+  written **nothing** on a retried attempt (executed, no database needed: `$product->sku !== $sku` is
+  `false` and `isDirty()` is `false` on attempt 2, so `update()` issues no SQL and the variant cascade
+  is skipped) while returning an instance whose in-memory attributes show the new values — a silent
+  lost update reported as saved. The ✅ is one folder away: `SetSalesRegionActive` passes **keys** into
+  its closure and re-reads the rows inside it. Coupled to it, and the reason not to fix the halves in
+  the wrong order: `attempts` on a **nested** transaction is inert (`handleTransactionException()`
+  refuses to retry while `transactions > 1`), and `Products\Editor::save()` — the only shipped caller —
+  wraps both actions in an outer transaction that takes no `attempts`, so moving the retry up there
+  without fixing the closure first converts a rare loud 500 into silent data loss. **[Confirmed safe: `causedByConcurrencyError()` matches a message, not a class](derived-column-invariants.md#confirmed-safe-causedbyconcurrencyerror-matches-a-message-not-a-class)**
+  records the mechanism the obvious mental model gets wrong: the detector does **not** check for a
+  `QueryException` — it falls through to `Str::contains($e->getMessage(), [...])` for any `Throwable`,
+  and a `ValidationException`'s message is its first rendered error, so a retried transaction must not
+  throw an exception whose message can carry user-controlled text. Verified inert here by enumerating
+  all five messages these transactions can throw and both of their interpolations. **Since the second
+  re-audit (same day) every ❌ on that page is ✅**: `UpdateProduct`'s transaction carries no retry
+  parameter and `Editor::save()` reintroduces none (pinned by a source assertion that first proves the
+  string *can* be found in the two siblings that legitimately keep it); `UpdateProduct` calls the shared
+  `TranslateProductVariantUniqueViolation` instead of re-implementing its index-name test, through a new
+  `?string $overrideMessage` that carries a `trans()` key from the call site and so opens no path for an
+  index name or SQL to reach an actor-facing message; and both re-derivation cascades exclude the whole
+  batch (`array_keys($newSkus)`) from their per-row database pre-check, with the batch-internal
+  duplicate check confirmed to still run **first** — the ordering that makes the widening safe — and the
+  added `whereNotIn` confirmed not to weaken either the gap lock or the fixed `products`-then-
+  `product_variants` lock order. The one residual is unchanged and is deliberately *not* closed here:
+  `attempts` on a nested transaction is inert, so the deadlock window the retries were added for is
+  still open on `Editor::save()`, and R-1 is precisely why moving `attempts` up there is not the fix.
+
+_Last updated: 2026-09-04 — Story 0029 (Product variants — core backend), **Phase 4 re-audit**: no new
+page. Closed both of [derived-column-invariants.md](derived-column-invariants.md)'s original ❌ sections
+(re-verified by enumerating the three writers of `product_variants.sku` and by reading the two variant
+actions' statement order, not by trusting the fix) and added two sections to it — one ❌ **OPEN**
+finding the remediation itself introduced (`attempts: 3` over a closure that mutates an Eloquent model
+created outside it — a silent lost update on any retried attempt, with the coupled fact that `attempts`
+on a nested transaction is inert and the shipped caller nests both actions), and one confirmed-safe
+record that `causedByConcurrencyError()` matches an exception's **message**, not its class. Both are
+summarised in this page's own entry above._
+
+_Previously: 2026-09-04 — Story 0029 (Product variants — core backend), **Phase 4**: added
+[derived-column-invariants.md](derived-column-invariants.md), the fifteenth page and the first about a
+stored derived column. The audit's other confirmations produced no new rule and live in the audit
+response rather than here — V-10's database read-back (verified by execution: an all-uppercase
+attribute-value id creates the variant with the **stored** lowercase id in the pivot and the correct
+derived SKU), the `#[Fillable]` exclusion of `sku`/`combination_hash`, the authorization-before-
+validation ordering in all three variant actions (verified: an unauthorized actor submitting a
+5,000-element payload issues **zero** domain queries before the refusal), and D-16.1's two-pass bound
+(verified: 5,000 submitted ids → **zero** `Rule::exists()` queries), which is
+[array-validation-bounds.md](array-validation-bounds.md)'s rule applied correctly at a fourth call
+site rather than a new one._
+
+_Previously: 2026-09-03 — Story 0027 (Products — list screen and product editor UI), **Phase 4 (three rounds)**: no new page. Updated the [array-validation-bounds.md](array-validation-bounds.md) entry above: story 0027 discharged only half of story 0026's hand-off — `regionIds` got the two-pass shape exactly as specified, but `galleryMediaIds` was wired one-pass (2,000 submitted ids → 2,000 queries despite `max:20`), which its own re-audit closed and generalised into a second rule (**two-pass validation bounds the save; a cap at the mutation point bounds the component**, since `#[Locked]` binds the property write channel, never a public method like `addGalleryImages()` that appends to it with no cap).
 
 _Previously: 2026-09-03 — Story 0028 (Product variant attribute types & values — backend), **Phase 4**: no new page. Updated the [array-validation-bounds.md](array-validation-bounds.md) entry above: story 0028 is that page's first real, shipped call site — `App\Livewire\Products\AttributeTypes\Index::save()` reproduced the identical O(n²) hazard against `distinct:ignore_case` and closed it directly with a three-pass sequential `validate()` structure, unlike story 0026's two call sites, both still unreachable and closed only by a written Definition-of-Done hand-off. Two other Phase 4 findings from this story (an unhandled `TypeError` from an unvalidated row shape; silent data loss from a duplicate submitted owned-id) are mechanical fixes with their own real regression tests, recorded on [database/schema.md](../database/schema.md#product_attribute_values) rather than given a new security page._
 
