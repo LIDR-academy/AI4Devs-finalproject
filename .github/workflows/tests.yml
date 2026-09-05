@@ -7,12 +7,18 @@ on:
       - main
       - master
       - workos
+    paths:
+      - 'arospe/**'
+      - '.github/workflows/tests.yml'
   pull_request:
     branches:
       - develop
       - main
       - master
       - workos
+    paths:
+      - 'arospe/**'
+      - '.github/workflows/tests.yml'
 
 permissions:
   contents: read
@@ -20,6 +26,9 @@ permissions:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: arospe
     strategy:
       matrix:
         php-version: ['8.3', '8.4', '8.5']
