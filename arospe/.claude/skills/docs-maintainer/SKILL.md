@@ -101,7 +101,16 @@ docs/
   ```
   _Last updated: <YYYY-MM-DD> — <brief reason for the change>_
   ```
-  Update this line (not just prepend) every time the file changes.
+  Update this line (not just prepend) every time the file changes. **Never accumulate a footer changelog.** If the file already carries one or more `_Previously: ...` blocks below the `_Last updated:` line, fold their still-relevant substance into the single current line and delete them — do not add another `_Previously:` block on top. See [Doc growth management](#doc-growth-management) below for why, and `docs/contracts.md`'s Doc Growth Management Rule for the full rationale.
+
+## Doc growth management
+
+`docs/README.md`, `docs/errors-log.md`, `api/routes.md`, `database/schema.md`, `conventions/base-standards.md` and `database/migrations.md` have each independently trended toward (or exceeded) a 150k-character practical limit, every time from the same two causes: an accumulating `_Previously:` footer chain, and a section re-narrating detail another doc already owns in full. This is a recognized, recurring failure mode — check for it on **every** sync pass, not only once a file is already close to the limit. The full rule lives in [docs/contracts.md](../../../docs/contracts.md#doc-growth-management-rule) (the standing agent-contract copy); this is the operational summary to act on while running this skill:
+
+- **Collapse, don't append, the footer.** Per the Content rules bullet above — one current `_Last updated:` line, no `_Previously:` chain.
+- **State current facts, not a narrative history.** Avoid "Since task X... corrected by Y..." chains inline; put real historical value in `errors-log.md`, a `decisions/` ADR, or a dedicated section, not repeated in the middle of every affected paragraph.
+- **Watch for a section outgrowing its file.** If a section's own size is a large fraction of the whole file, or it keeps needing "Since story N" additions, propose splitting it into its own file (linked from the original) rather than continuing to expand it in place — the same move already applied to `docs/errors-log.md` (archived + topic-indexed).
+- **Before trimming a section that re-narrates another doc's detail, verify the detail already lives there in full**, then rewrite the section to state the current contract concisely with a link, per the placement rule above — never delete detail that exists only in the section being trimmed.
 
 ## Mermaid diagrams
 
@@ -135,4 +144,6 @@ Newest entry first (top of file, below the H1).
 - [ ] `errors-log.md` entries (if any were added) follow the fixed format.
 - [ ] All prose inside `docs/` is in English.
 - [ ] Every touched file's footer `_Last updated:_` line is current.
+- [ ] No touched file gained or kept an accumulating `_Previously:` footer chain — see [Doc growth management](#doc-growth-management).
+- [ ] No section touched this pass is re-narrating detail another doc already owns in full, and no section has silently grown to a large fraction of its file without at least a note that it may need splitting.
 - [ ] `CLAUDE.md` links to every doc that should be surfaced (mandatory or conditional), is ≤200 lines, and no edits were made inside a `<laravel-boost-guidelines>` block.
