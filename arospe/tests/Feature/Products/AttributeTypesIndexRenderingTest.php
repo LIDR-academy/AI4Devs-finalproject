@@ -18,6 +18,7 @@ use App\Actions\Products\CreateProductAttributeType;
 use App\Livewire\Products\AttributeTypes\Index;
 use App\Models\ProductAttributeType;
 use App\Models\ProductAttributeValue;
+use App\Models\ProductVariant;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Str;
@@ -405,4 +406,94 @@ test('a forged array id with an otherwise well-shaped row is skipped rather than
         ->html();
 
     expect($html)->toContain('data-test="attribute-type-values-list"');
+});
+
+// Discharges story 0029a's explicit hand-off ("the markup rendering the blocked-delete message
+// is 0030's"), found via this story's own backmerge of feature-entrega2-ARP.
+test('deleting a type still backing a variant renders the blocked message in the still-open delete modal', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Size', ['38']);
+    ProductVariant::factory()->withCombination([$type->values->first()->id])->create();
+
+    $component = Livewire::test(Index::class)
+        ->call('confirmDelete', $type->id)
+        ->call('deleteType');
+
+    $component->assertHasErrors('productAttributeTypeId')
+        ->assertSet('showDeleteModal', true);
+
+    $html = $component->html();
+
+    expect($html)
+        ->toContain('data-test="attribute-type-delete-blocked"')
+        ->toContain(trans_choice('products.variants.type_in_use', 1, ['count' => 1]));
+
+    expect(ProductAttributeType::find($type->id))->not->toBeNull();
+});
+
+// The reactive-only choice (decision 6's original reasoning, extended): the count is never shown
+// as a proactive line in the confirmation dialog, only inside the blocked message itself.
+test('the delete confirmation renders no proactive usage-count line, even for a type in use', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Size', ['38']);
+    ProductVariant::factory()->withCombination([$type->values->first()->id])->create();
+
+    $html = Livewire::test(Index::class)->call('confirmDelete', $type->id)->html();
+
+    // No blocked-message hook yet -- confirmDelete() only populates the count, it does not
+    // attempt the delete -- so this pins that the dialog itself stays silent about the count
+    // until Delete is actually clicked.
+    expect($html)->not->toContain('data-test="attribute-type-delete-blocked"');
+});
+
+test('closing the delete modal after a blocked delete clears the stale in-use message', function () {
+    // Mirrors tests/Feature/ProductCategories/IndexRenderingTest.php's identical staleness test
+    // for its own create/edit modal -- Livewire persists the error bag across round trips, so
+    // without closeDeleteModal()'s own resetValidation() (this story's fix), the blocked message
+    // for one type would leak into confirming delete on a second, unrelated, unblocked type.
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $blocked = createAttributeTypeWithValues('Size', ['38']);
+    ProductVariant::factory()->withCombination([$blocked->values->first()->id])->create();
+
+    $unblocked = createAttributeTypeWithValues('Material');
+
+    Livewire::test(Index::class)
+        ->call('confirmDelete', $blocked->id)
+        ->call('deleteType')
+        ->assertHasErrors('productAttributeTypeId')
+        ->call('closeDeleteModal')
+        ->call('confirmDelete', $unblocked->id)
+        ->assertHasNoErrors();
+});
+
+test('removing a value still backing a variant renders the blocked message, and the value survives', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Size', ['38', '39']);
+    $values = $type->values;
+    ProductVariant::factory()->withCombination([$values->firstWhere('value', '38')->id])->create();
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $type->id);
+    $keys = collect($component->get('values'))->keyBy('value')->map(fn (array $row): string => $row['key']);
+
+    $component->call('removeValue', $keys['38'])
+        ->call('save');
+
+    $component->assertHasErrors('values');
+
+    $html = $component->html();
+
+    expect($html)
+        ->toContain('data-test="attribute-type-value-in-use"')
+        ->toContain(trans_choice('products.variants.value_in_use', 1, ['count' => 1]));
+
+    $type->refresh();
+    expect($type->values->pluck('value')->all())->toBe(['38', '39']);
 });

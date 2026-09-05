@@ -266,6 +266,16 @@
                             </div>
                         @endif
 
+                        {{-- Story 0029a: removing a value still backing any product variant is
+                        hard-refused, on the whole 'values' key rather than a per-row one --
+                        SyncProductAttributeValues's diff has already decided WHICH ids are being
+                        deleted by the time the guard runs, so there is no single row left to
+                        attach the message to. Mirrors product-categories.blade.php's identical
+                        @error('productCategoryId') pattern for its own in-use block. --}}
+                        @error('values')
+                            <flux:callout variant="danger" icon="x-circle" heading="{{ $message }}" data-test="attribute-type-value-in-use" />
+                        @enderror
+
                         <flux:button variant="ghost" size="sm" icon="plus" wire:click="addValue" data-test="add-value">
                             {{ __('Add value') }}
                         </flux:button>
@@ -290,9 +300,11 @@
         @endif
     </flux:modal>
 
-    {{-- Delete confirmation modal. deletingTypeUsageCount is deliberately NEVER rendered here
-    (decision 6) -- it is always 0 until story 0029, and a "used by 0 variants" line would be
-    filler that also implies a check exists when it does not. --}}
+    {{-- Delete confirmation modal. deletingTypeUsageCount (real since story 0029a's
+    variantUsageCount() query) is deliberately never rendered as a proactive line here -- it
+    exists so the blocked message below and this dialog can never disagree about the count, not
+    to pre-empt clicking Delete. The blocked message itself is the ONLY place the count appears,
+    matching product-categories.blade.php's identical choice for its own in-use block. --}}
     <flux:modal name="delete-attribute-type-modal" class="max-w-md md:min-w-md" @close="closeDeleteModal" wire:model="showDeleteModal">
         @if ($showDeleteModal)
             <div class="space-y-6">
@@ -302,6 +314,16 @@
                         {{ __('Are you sure you want to delete ":name"? This cannot be undone.', ['name' => $deletingTypeName]) }}
                     </flux:text>
                 </div>
+
+                {{-- Story 0029a: deleteType() throws a ValidationException keyed
+                'productAttributeTypeId' -- the one exception Livewire already routes into the
+                component's error bag with no plumbing at the call site -- when the type still
+                backs any product variant. The throw aborts before closeDeleteModal() ever runs,
+                which is what keeps this modal open by construction. Mirrors
+                product-categories.blade.php's identical @error('productCategoryId') pattern. --}}
+                @error('productAttributeTypeId')
+                    <flux:callout variant="danger" icon="x-circle" heading="{{ $message }}" data-test="attribute-type-delete-blocked" />
+                @enderror
 
                 <div class="flex gap-3 justify-end">
                     <flux:button variant="outline" wire:click="closeDeleteModal">

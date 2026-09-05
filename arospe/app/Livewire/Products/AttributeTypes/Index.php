@@ -388,11 +388,19 @@ class Index extends Component
 
     /**
      * Close the delete-confirmation modal and reset its state.
+     *
+     * Also resets validation (story 0030, the identical cross-story fix task 0018 made to
+     * task 0017's SalesRegions\Index::closeModal()): deleteType()'s in-use guard (story 0029a)
+     * throws a ValidationException keyed 'productAttributeTypeId' BEFORE this method ever runs,
+     * so without resetting the bag here, dismissing that blocked message and confirming a
+     * DIFFERENT, unblocked type would leak the stale "used by N variants" message into a delete
+     * that has nothing to do with it -- Livewire persists the error bag across round trips.
      */
     public function closeDeleteModal(): void
     {
         $this->showDeleteModal = false;
         $this->reset(['deletingTypeId', 'deletingTypeName', 'deletingTypeUsageCount']);
+        $this->resetValidation();
     }
 
     /**
