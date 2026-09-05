@@ -529,3 +529,64 @@ re-derive, never the full prose of a finalized story.
   [docs/database/schema.md#product_attribute_types](../../../docs/database/schema.md#product_attribute_types)
   and
   [docs/database/schema.md#since-story-0029a-deleting-a-value-in-use-is-hard-refused-per-value-with-a-message-naming-the-exact-count](../../../docs/database/schema.md#since-story-0029a-deleting-a-value-in-use-is-hard-refused-per-value-with-a-message-naming-the-exact-count).
+
+## Story 0029b — Product variant combination generator backend (the cartesian "generate all combinations" action; split out of 0029 at Phase 2 on INVEST "Small")
+
+- **`App\Actions\Products\GenerateProductVariantCombinations`** — `__invoke(Product $product, array
+  $productAttributeTypeIds): array`, returning the summary array shape
+  `{created: Collection<int, ProductVariant>, skipped: array<int, array{value_ids, label}>, refused:
+  array<int, array{value_ids, label, sku, message}>, attempted: int}` — a summary array, deliberately
+  never a bare `Collection<ProductVariant>`, because "8 created, 2 already existed" cannot be expressed
+  by a collection of 8 rows alone. Story 0031's editor renders this shape as a result table; the name
+  that ships is `GenerateProductVariantCombinations`, not `GenerateProductVariants` (0031's own task
+  file names the latter — the shipped name wins).
+- **Re-implements NOTHING** — every combination is created through the ordinary `CreateProductVariant`
+  (story 0029's), inside one outer `DB::transaction()` whose per-combination `CreateProductVariant`
+  call becomes a savepoint. A per-combination `ValidationException` (a SKU collision, or a lost race on
+  the combination index) rolls back only that savepoint and lands in `refused`/`skipped`; an
+  **unexpected** exception propagates past the outer transaction and rolls back the whole batch.
+- **Authorizes ONCE, up front, against the parent `Product`** — before validation, before the value-set
+  read, before the cap check, before the transaction opens (D-G0) — never once per generated row. A
+  refused actor learns neither the attempted count nor which selected type is empty.
+  `CreateProductVariant`'s own per-row gate still runs on every generated combination and is not
+  redundant (0029's action-owns-the-rule guarantee holding for every caller). No "skip the gate"
+  parameter exists or may be added to `CreateProductVariant` to bypass it. No `ProductVariantPolicy` —
+  see [docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy](../../../docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy).
+- **`attributeTypeIds` is validated in TWO sequential `Validator::make(...)->validate()` passes**
+  (`variantAttributeTypeIdsRules()` — `required, array, min:1, max:5` — then, only once bounded,
+  `variantAttributeTypeIdRules()` — `string, uuid, distinct, Rule::exists(...)`), appended to 0029's
+  existing `App\Concerns\ProductVariantValidationRules` trait — **no second trait**. This is
+  [array-validation-bounds.md](../../../docs/security/array-validation-bounds.md)'s two-pass shape
+  discharged for a new call site, closing the identical `.* ` wildcard-runs-before-`max`-fails cost
+  `regionIds`/`galleryMediaIds` (story 0027) and `values.*` (story 0028) already closed.
+- **`MAX_COMBINATIONS = 200`, computed by MULTIPLYING the value-set sizes — never by materialising the
+  cartesian product and counting it.** `array_product(array_map(fn ($values) => $values->count(),
+  $valueSetsByType))`, checked **after** the value sets are read (one query) and **before** the
+  transaction opens, so an over-large request costs exactly one read. A selected type with zero values
+  is refused **before** this multiplication (an empty set's `array_product()` is `0`, which would pass
+  the cap silently and generate nothing while reporting `attempted: 0`).
+- **🟢 `V-G1`, executed 2026-09-05 against this repo's real `testing0029` database: `ROLLBACK TO
+  SAVEPOINT` releases an `X,GAP` lock immediately — it is NOT held to the end of the outer
+  transaction.** Two raw PDO connections, no ORM, on this project's MySQL 8.4 container. This resolves
+  `OQ-G1` — `MAX_COMBINATIONS` stays at **200**, no lowering needed — and narrows `R-G1`'s risk framing:
+  only combinations that actually **commit** hold their locks for the whole outer transaction's
+  duration; a refused or skipped combination releases at its own savepoint rollback. Treat this as a
+  **verified**, not assumed, basis for the constant — a later story changing the cap should re-run the
+  same execution rather than reason about it from this summary alone.
+- **`CreateProductVariant`'s own `attempts: 3` retry becomes silently inert when invoked from inside
+  this generator's outer transaction** — `Illuminate\Database\Concerns\ManagesTransactions`'s retry
+  loop only fires at nesting level 1, so a callee's own `attempts` is inert the instant anything wraps
+  it, regardless of which class opened the outer transaction. This is the *same* mechanism story 0029's
+  own `UpdateProduct`/`Editor::save()` nesting already exercises, now confirmed on a second, independent
+  call path — full generalized rule at
+  [docs/security/derived-column-invariants.md#second-confirming-instance-a-generators-own-outer-transaction--attempts-fires-only-at-nesting-level-1](../../../docs/security/derived-column-invariants.md#second-confirming-instance-a-generators-own-outer-transaction--attempts-fires-only-at-nesting-level-1).
+  **Story 0031 must NOT add its own `attempts:` to `Editor::save()`'s transaction without first
+  re-deriving this analysis** — doing so blindly risks converting a rare loud failure into a silent
+  lost update, the exact shape story 0029's own `errors-log.md` 2026-09-04 entry records (a *different*
+  hazard — a model mutated outside its closure — but the same family of "a retried transaction is a
+  retry-safe unit, or it is a lost update").
+- **This story ships NO Livewire component, NO route, NO Blade view, NO browser test, NO new
+  permission and NO `product_product_attribute_type` declaration table** — story 0031 owns the
+  generator's UI. Full mechanism at
+  [docs/database/schema.md#product_variants](../../../docs/database/schema.md#product_variants) and
+  [docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy](../../../docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy).

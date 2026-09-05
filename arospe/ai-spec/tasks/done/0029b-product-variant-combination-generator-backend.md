@@ -11,7 +11,7 @@ returning a `created` / `skipped` / `refused` / `attempted` summary the UI rende
 
 It re-implements **nothing** — not the SKU derivation, not the combination hash, not the collision
 check, not the pivot write. Every combination goes through
-**[0029](done/0029-product-variants-backend.md)**'s ordinary `CreateProductVariant`.
+**[0029](0029-product-variants-backend.md)**'s ordinary `CreateProductVariant`.
 
 > 🟠 **Provenance — split out of 0029 on 2026-09-04, at Phase 2.** This is not new scope and it is not
 > deferred scope: it is the same generator the PO decided on **2026-08-19**, in its own story. Phase 2
@@ -28,7 +28,7 @@ check, not the pivot write. Every combination goes through
 > 1. 🔴 **The action self-authorizes, once, before the batch** — not once per generated variant. See
 >    **D-G0**.
 > 2. 🔴 **`attributeTypeIds` is validated in two passes**, per
->    [array-validation-bounds.md](../../docs/security/array-validation-bounds.md). See **D-G8**.
+>    [array-validation-bounds.md](../../../docs/security/array-validation-bounds.md). See **D-G8**.
 > 3. 🔴 **The batch cap is computed by multiplying value-set *sizes*, never by materializing the
 >    cartesian product and counting it.** See **D-G5**.
 
@@ -60,7 +60,7 @@ backend | fullstack (related_task_id: **0031** — variant builder UI) | include
 >   grounds**, none of which is performance: it bypasses `HasUuids`, so no row gets a key; it bypasses
 >   the per-row cross-table SKU existence check (0029 **D-4.5**), which is a `lockForUpdate()` read on
 >   a *different* table and cannot be batched away; and it writes a model this repo requires to be
->   written through instances ([base-standards.md](../../docs/conventions/base-standards.md#deleting-a-user-goes-through-the-model-not-the-query-builder)'s
+>   written through instances ([base-standards.md](../../../docs/conventions/base-standards.md#deleting-a-user-goes-through-the-model-not-the-query-builder)'s
 >   `User::delete()` rule, one model over). The real cost control is the **batch cap** (**D-G5**),
 >   which bounds the work instead of speeding it up.
 > - **The residual that *is* real is a lock-hold window, not a storage problem** — the batch holds its
@@ -72,7 +72,7 @@ backend | fullstack (related_task_id: **0031** — variant builder UI) | include
 
 ## Three Amigos participants
 
-Inherited from [0029](done/0029-product-variants-backend.md)'s 2026-08-18 debate plus the PO's 2026-08-19
+Inherited from [0029](0029-product-variants-backend.md)'s 2026-08-18 debate plus the PO's 2026-08-19
 generator decision. **No new debate was run for this split.** `database-expert`'s **V-H** (the gap lock
 that makes 0029 **D-4.5**'s cross-table check a real race guard) and **V-A** (REPEATABLE READ is the
 live isolation level) are the two findings this story leans on hardest, and both are inherited.
@@ -80,7 +80,7 @@ live isolation level) are the two findings this story leans on hardest, and both
 ## Gherkin
 
 Every scenario opens with a named business-role actor and carries exactly one `When`, per
-[gherkin-guidelines.md](../../docs/testing/frontend/gherkin-guidelines.md) rules 1 and 3. Carried over
+[gherkin-guidelines.md](../../../docs/testing/frontend/gherkin-guidelines.md) rules 1 and 3. Carried over
 unchanged from 0029, plus one new scenario for the authorization correction.
 
 ```gherkin
@@ -158,7 +158,7 @@ Five points:
    incoherent state for a control that should never have let the batch start.
 2. **Before the cap check and before the empty-type check**, so a refused actor learns **nothing**:
    not the combination count, not which types are empty, not the limit. This is the same disclosure
-   rule [0029a](done/0029a-attribute-in-use-delete-guards-backend.md)'s **D-A2** applies to its in-use
+   rule [0029a](0029a-attribute-in-use-delete-guards-backend.md)'s **D-A2** applies to its in-use
    count and `DeleteProductCategory` already ships.
 3. **`CreateProductVariant`'s own gate still runs, per row, and that is correct rather than
    redundant.** It is 0029 **D-12.1**'s action-owns-the-rule guarantee, which must hold for every
@@ -167,7 +167,7 @@ Five points:
    per-request — and it is what keeps `CreateProductVariant` independently safe if a future caller
    forgets. **Do not remove it, and do not build a "skip the gate" parameter to avoid it** — that
    parameter is a one-argument bypass, exactly the shape
-   [base-standards.md](../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)
+   [base-standards.md](../../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)
    forbids ("derive a security-relevant flag internally; never take it as a parameter").
 4. **`LogRefusedPrivilegedAttempt` is constructor-injected**, with `targetType: 'product'` passed
    explicitly (`resolveTarget()` auto-resolves only `User` and `Role`) — the same shape all three of
@@ -203,7 +203,7 @@ administrator must read, and a collection of 8 rows is indistinguishable from a 
 where nothing was skipped. 0031 asked for exactly this — an *"explicitly specified per-row outcome
 contract (`created` / `skipped_existing` / `refused` + reason) the UI can render as a result table"* —
 so the shape **is** the contract, documented as a PHPDoc array shape per
-[code-style.md](../../docs/conventions/code-style.md#phpdoc-array-shapes-over-inline-comments).
+[code-style.md](../../../docs/conventions/code-style.md#phpdoc-array-shapes-over-inline-comments).
 `created` stays a `Collection` of real models so the caller can render them without re-querying;
 `skipped` and `refused` carry the value-id set plus the human-readable `label()` so the UI never has to
 reconstruct which combination a row refers to.
@@ -341,7 +341,7 @@ means a request selecting five types of twenty values allocates **3.2 million** 
 discovering it is 16,000× over the limit — an out-of-memory fatal instead of a validation message,
 from a payload that is refused either way. `array_product()` over the counts answers the same question
 in five multiplications and cannot allocate anything. This is the identical lesson
-[array-validation-bounds.md](../../docs/security/array-validation-bounds.md) records for validation
+[array-validation-bounds.md](../../../docs/security/array-validation-bounds.md) records for validation
 (*"a cap on the array's length is not a cap on the loop's work"*) arriving at a generator instead of a
 validator: **bound the work by the numbers, before doing the work.**
 
@@ -384,7 +384,7 @@ doing less work, and the cap is that.
 
 | Considered | Verdict |
 | --- | --- |
-| A **dry-run / preview** seam (*"show me which rows would succeed before writing"*) | **Not here.** It is 0031's [OQ-5](0031-product-variants-editor-ui.md#open-questions) and it is a read-only seam over 0029 **D-4.5**'s query; the `skipped`/`refused` summary already tells the administrator what happened *after* |
+| A **dry-run / preview** seam (*"show me which rows would succeed before writing"*) | **Not here.** It is 0031's [OQ-5](../0031-product-variants-editor-ui.md#open-questions) and it is a read-only seam over 0029 **D-4.5**'s query; the `skipped`/`refused` summary already tells the administrator what happened *after* |
 | **All-or-nothing** refusal of the batch on any collision | **Rejected** — see **D-G2**. It defeats the "add a colour, generate the rest" case, which is the common one |
 | **Updating** an existing combination's price/stock while generating | **Rejected, firmly.** A generator that silently re-prices variants an administrator has already tuned is a data-loss bug wearing a convenience label. Skipping is the whole point |
 | A **delete-missing** / full-sync mode | **Rejected.** Variants are hard-deleted (0029 **D-6**, no `SoftDeletes`) and carry stock; a sync that deletes is unrecoverable by construction |
@@ -404,7 +404,7 @@ carried over:
 
 **They are appended to `App\Concerns\ProductVariantValidationRules`** — 0029's trait, which ships five
 methods — **never a second trait.** A `ProductVariantGeneratorValidationRules` would be a second home
-for the same concern, and [naming.md](../../docs/conventions/naming.md#traits-and-their-methods)'s
+for the same concern, and [naming.md](../../../docs/conventions/naming.md#traits-and-their-methods)'s
 flat, single-concern rule plus 0024's entity-prefix trap (a consumer composing two of these fatals on
 a duplicate method) both point the same way. Both names keep the `variant` prefix for the same
 collision reason.
@@ -431,7 +431,7 @@ expands `field.*` against the data it was given and runs every expanded rule reg
 parent attribute's own rules already failed, so a payload of 4,000 type ids pays 4,000
 `Rule::exists()` queries before the `max:5` message is returned. Neither `bail` form helps —
 `field` and `field.*` are different attributes. See
-[array-validation-bounds.md](../../docs/security/array-validation-bounds.md) for the measured numbers
+[array-validation-bounds.md](../../../docs/security/array-validation-bounds.md) for the measured numbers
 and for how stories 0027 and 0028 discharged the identical obligation.
 
 **And the bound protects the value-set read too**, which is the thing that matters more here: the
@@ -443,10 +443,39 @@ count, not the query count** — both a bounded and an unbounded implementation 
 each is already 1,024 combinations, so the **cap** (**D-G5**) is what actually refuses that, with a
 clearer message than an array-size error would give. `max:5` is the sanity bound one level up.
 
+## Verified environment findings
+
+Executed against this repository's real `testing0029` database on 2026-09-05 — the Definition of
+Done's own instruction that the savepoint/gap-lock question be "a command result rather than a
+reading". Two raw PDO connections, no ORM: one ("holder") opens a transaction under
+`REPEATABLE READ`, brackets a non-existent `products.sku` value between two committed real rows,
+takes an `X,GAP` lock on it with a `SELECT ... FOR UPDATE` (the same shape **D-4.5**'s cross-table
+check and this action's own SKU-collision check use), issues `ROLLBACK TO SAVEPOINT`, then holds the
+still-open outer transaction for 60 seconds; the other ("prober"), started only after the holder's
+own stdout confirms the savepoint rollback happened, attempts to `INSERT` the exact bracketed value
+under a 2-second `innodb_lock_wait_timeout`, so a still-held lock surfaces as a fast, observable
+error rather than a hang.
+
+| # | Finding |
+| --- | --- |
+| **V-G1** 🟢 | **`ROLLBACK TO SAVEPOINT` releases the `X,GAP` lock immediately — it is NOT held to the end of the outer transaction.** The prober's `INSERT` of the bracketed value succeeded in 0.008s, immediately after the holder printed that it had rolled back to its savepoint, while the holder's outer transaction was still deliberately open (and stayed open for another ~60s afterward). Reproduced on this project's MySQL 8.4 container, whose `ROLLBACK TO SAVEPOINT` lock-release behaviour post-dates the older InnoDB versions where this was a known, since-fixed limitation (upstream bug #42640, fixed 5.7.22/8.0.13). Setup and teardown both verified clean (`DB::table('products')`/`product_categories` show zero residual rows after the run) |
+
+**What this answers, per D-G2's own framing and OQ-G1.** The batch's lock-hold window is **not**
+uniform across all `MAX_COMBINATIONS` candidates: only the combinations that actually **commit**
+(created rows) hold their `X,GAP`/row locks for the whole outer transaction's duration, exactly as
+any ordinary multi-row write would. A combination that is **refused** (a SKU collision, caught by
+`CreateProductVariant`'s own `catch (UniqueConstraintViolationException)` path, which rolls back to
+its own savepoint) or that **loses the race** on the pre-read (D-G2's own skip-via-savepoint-rollback
+case) releases its locks at that point, not at the batch's end. **OQ-G1's "lower the cap toward 100
+if locks are held for the whole outer transaction" condition does not apply** — the worst case is
+bounded by how many combinations actually *commit* in one batch, which `MAX_COMBINATIONS = 200`
+already caps directly, not by a separate, larger number of transiently-locked-then-released
+candidates. **200 stands, with this now a verified rather than an assumed basis for it.**
+
 ## Scope fences: what this story must NOT do
 
 - No new table, column, index, FK, enum or migration. Everything it writes to is
-  [0029](done/0029-product-variants-backend.md)'s.
+  [0029](0029-product-variants-backend.md)'s.
 - No Livewire component, route, Blade view, sidebar entry or browser test — the generator's UI is
   **0031**'s.
 - **No re-implementation of the SKU derivation, the combination hash, the cross-table collision check
@@ -468,7 +497,7 @@ clearer message than an array-size error would give. `max:5` is the sanity bound
 
 | Path | What & why |
 | --- | --- |
-| `app/Actions/Products/GenerateProductVariantCombinations.php` | one outer transaction, one pre-read of the product's existing `combination_hash` values, then one `CreateProductVariant` call per new combination (its transaction becomes a savepoint, so a per-row refusal does not destroy the batch). Owns `MAX_COMBINATIONS = 200` (**D-G5**), the gate (**D-G0**), the two validation passes (**D-G8**), the empty-type refusal (**D-G6**), the iteration order and the summary array shape (**D-G1**). Constructor-injects `LogRefusedPrivilegedAttempt` and `CreateProductVariant` — one action depending on another, [code-style.md](../../docs/conventions/code-style.md#exception-an-actions-own-dependency-is-constructor-injected-when-the-method-signature-is-a-public-contract)'s documented exception, the same shape `SetSalesRegionActive` ← `SetDefaultSalesRegion` already ships |
+| `app/Actions/Products/GenerateProductVariantCombinations.php` | one outer transaction, one pre-read of the product's existing `combination_hash` values, then one `CreateProductVariant` call per new combination (its transaction becomes a savepoint, so a per-row refusal does not destroy the batch). Owns `MAX_COMBINATIONS = 200` (**D-G5**), the gate (**D-G0**), the two validation passes (**D-G8**), the empty-type refusal (**D-G6**), the iteration order and the summary array shape (**D-G1**). Constructor-injects `LogRefusedPrivilegedAttempt` and `CreateProductVariant` — one action depending on another, [code-style.md](../../../docs/conventions/code-style.md#exception-an-actions-own-dependency-is-constructor-injected-when-the-method-signature-is-a-public-contract)'s documented exception, the same shape `SetSalesRegionActive` ← `SetDefaultSalesRegion` already ships |
 | `tests/Feature/Products/GenerateProductVariantCombinationsTest.php` | see [Tests to perform](#tests-to-perform) |
 
 ### Modifies
@@ -483,8 +512,8 @@ clearer message than an array-size error would give. `max:5` is the sanity bound
 `database/migrations/**` · `database/seeders/RolePermissionSeeder.php` · `routes/**` ·
 `app/Policies/**` · `app/Models/**` · `app/Livewire/**` · `resources/views/**` · `tests/Browser/**` ·
 `docs/**` (Phase 6) · `app/Actions/Products/CreateProductVariant.php` and every other file
-[0029](done/0029-product-variants-backend.md) ships · anything belonging to
-[0029a](done/0029a-attribute-in-use-delete-guards-backend.md), 0030 or 0031.
+[0029](0029-product-variants-backend.md) ships · anything belonging to
+[0029a](0029a-attribute-in-use-delete-guards-backend.md), 0030 or 0031.
 
 ## Tests to perform
 
@@ -492,76 +521,76 @@ clearer message than an array-size error would give. `max:5` is the sanity bound
 
 Carried from 0029 verbatim, plus the three cases the Phase 2 corrections require.
 
-- [ ] **The count is the cartesian product**: 3 Talla values × 2 Color values generates exactly **6**
+- [x] **The count is the cartesian product**: 3 Talla values × 2 Color values generates exactly **6**
       variants and **12** pivot rows, on a product that had none. Assert both numbers — 6 variant rows
       with the wrong pivot cardinality is a real failure mode of a loop that mis-nests.
-- [ ] **A single type** generates one variant per value (the N=1-axis case, which a nested-loop
+- [x] **A single type** generates one variant per value (the N=1-axis case, which a nested-loop
       implementation can get wrong in the direction of generating nothing).
-- [ ] **Every generated SKU is the ordinary derivation**, asserted as **literal strings** for the whole
+- [x] **Every generated SKU is the ordinary derivation**, asserted as **literal strings** for the whole
       set (`0002-38-Black`, `0002-38-White`, …) — never by re-calling the derivation (**FP-G1**). This
       pins **D-G3**'s no-special-casing rule.
-- [ ] **The `position` sequence follows D-G6's iteration order**, asserted as an exact ordered array of
+- [x] **The `position` sequence follows D-G6's iteration order**, asserted as an exact ordered array of
       SKUs read back through `Product::variants()` — not as a set.
-- [ ] **Price and stock (D-G4)**: every generated variant carries the parent's `price` as a **string**
+- [x] **Price and stock (D-G4)**: every generated variant carries the parent's `price` as a **string**
       (`toBe('19.99')`) and `stock === 0`, and `featured_media_id` is **literally NULL** so inheritance
       still applies (0029 **D-7**).
-- [ ] **The second run skips**: generate, add a value, generate again — the summary reports the right
+- [x] **The second run skips**: generate, add a value, generate again — the summary reports the right
       `created` and `skipped` counts, the pre-existing variants are **byte-identical afterwards**
       (assert their `updated_at`, price and stock are unchanged, not merely that the row still exists),
       and the product holds exactly one variant per combination.
-- [ ] **A skip does not re-price.** Set a generated variant's price to something other than the
+- [x] **A skip does not re-price.** Set a generated variant's price to something other than the
       parent's, re-generate, and assert the custom price survives. This is **D-G7**'s "silently
       re-prices" bug, and nothing else in the suite can fail against it.
-- [ ] **A SKU collision is `refused`, not fatal, and the rest of the batch still commits.** Arrange a
+- [x] **A SKU collision is `refused`, not fatal, and the rest of the batch still commits.** Arrange a
       product literally named `0002-39` (0029 **D-4.5** case (a)), generate Talla 38/39/40, and assert:
       two variants created, one entry in `refused` whose message names the conflicting product, and
       **zero orphan pivot rows** for the refused combination.
-- [ ] **An unexpected failure rolls the whole batch back.** Register a `ProductVariant::creating` hook
+- [x] **An unexpected failure rolls the whole batch back.** Register a `ProductVariant::creating` hook
       that throws a non-`ValidationException` on the third combination, and assert **zero**
       `product_variants` and **zero** pivot rows exist for that product afterwards. This is the only
       test that proves the outer transaction is real, and it is the one 0031 **D-3** point 3's
       half-built-catalog objection turns on.
-- [ ] **The batch cap refuses before writing**: a type selection whose product exceeds
+- [x] **The batch cap refuses before writing**: a type selection whose product exceeds
       `MAX_COMBINATIONS` throws `ValidationException` on `attributeTypeIds`, the message carries both
       the limit and the attempted count, and **zero rows** exist. Pair it with a **boundary pair** —
       exactly `MAX_COMBINATIONS` accepted, one more refused — or the test cannot distinguish a correct
       cap from an off-by-one.
-- [ ] 🔴 **The cap is computed without materialising the product (D-G5).** Select five types of twenty
+- [x] 🔴 **The cap is computed without materialising the product (D-G5).** Select five types of twenty
       values each (3.2M combinations) and assert the call returns a `ValidationException` **promptly
       and within a bounded memory envelope** — assert `memory_get_peak_usage()` does not grow past a
       stated ceiling across the call, and that the `attempted` figure in the message is `3200000`.
       A materialise-then-count implementation either OOMs or blows the ceiling; a
       multiply-the-sizes one is indistinguishable from a no-op. **This is the only test that can fail
       against defect 8.**
-- [ ] 🔴 **The empty-type check runs before the cap (D-G6).** A selection containing one type with
+- [x] 🔴 **The empty-type check runs before the cap (D-G6).** A selection containing one type with
       **zero** values *and* enough other values to exceed the cap must be refused with the
       **empty-type** message, not the too-many one — because `array_product()` returns `0` for that
       input and would pass the cap silently. Assert the translation key, not the exception class.
-- [ ] **A selected type with no values is refused** on `attributeTypeIds` naming the type, with zero
+- [x] **A selected type with no values is refused** on `attributeTypeIds` naming the type, with zero
       rows written — **not** silently reported as `attempted: 0`.
-- [ ] **Unknown, duplicated and empty type-id inputs** are refused, as a dataset, each on
+- [x] **Unknown, duplicated and empty type-id inputs** are refused, as a dataset, each on
       `attributeTypeIds` and each writing zero rows.
-- [ ] 🔴 **The two-pass validation bound (D-G8)**: an oversized `attributeTypeIds` submission (2,000
+- [x] 🔴 **The two-pass validation bound (D-G8)**: an oversized `attributeTypeIds` submission (2,000
       ids against `max:5`) issues **zero** `product_attribute_types` existence queries and returns
       **one** error message. Count with `DB::listen()` registered **once** after a warm-up call
       (**FP-G3**), and additionally assert the **binding count** on the value-set read is ≤ 5.
-- [ ] 🔴 **Authorization (D-G0)**: an actor without `products.edit` gets `AuthorizationException`, and
+- [x] 🔴 **Authorization (D-G0)**: an actor without `products.edit` gets `AuthorizationException`, and
       **zero rows** exist. Additionally assert the actor is told **nothing** — neither the attempted
       count nor which type is empty appears in the exception, the message or the logged context, even
       when the same call would have been refused by the cap or by the empty-type rule (**FP-G4**). A
       `Super Admin` with zero permission rows passes, and the refusal is logged with
       `target_type: 'product'` and the **parent product's** id.
-- [ ] 🔴 **The gate is asked once, not per row.** Spy on `LogRefusedPrivilegedAttempt` (or count
+- [x] 🔴 **The gate is asked once, not per row.** Spy on `LogRefusedPrivilegedAttempt` (or count
       `Gate` evaluations) across a successful 6-combination run and assert the *generator's own* call
       happened exactly once — the per-row `CreateProductVariant` gate is expected and separate. This
       pins the difference between "gate once, up front" and "discover the refusal mid-batch".
-- [ ] **The pre-read is one query, and the batch does not N+1.** Count queries for a 6-combination
+- [x] **The pre-read is one query, and the batch does not N+1.** Count queries for a 6-combination
       generation after a throwaway warm-up call, and assert the existing-combination lookup does not
       scale with the combination count — the property **D-G2**'s single `pluck` exists for.
-- [ ] **The global consistency invariant (0029 D-4.3) holds over generated rows too**: after a
+- [x] **The global consistency invariant (0029 D-4.3) holds over generated rows too**: after a
       generation, every `product_variants` row's stored `sku` still equals the derivation of its
       current inputs, **with no exclusion for generated rows**.
-- [ ] **The race**: a `ProductVariant::creating` hook that inserts one of the batch's own combinations
+- [x] **The race**: a `ProductVariant::creating` hook that inserts one of the batch's own combinations
       between the pre-read and its insert. The outcome must be a clean `skipped` entry — never a 500,
       never a duplicate — which proves the pre-read is a pre-check and the unique index the last word.
 
@@ -598,9 +627,9 @@ is large enough that materialising it is *observably* different from multiplying
 
 ### Explicitly not tested
 
-Per [what-not-to-test.md](../../docs/testing/qa/what-not-to-test.md): the SKU derivation itself, the
+Per [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md): the SKU derivation itself, the
 combination hash, the cross-table collision check, the pivot write and the referential-integrity FKs
-(all [0029](done/0029-product-variants-backend.md)'s, and duplicating them here would make two stories fail
+(all [0029](0029-product-variants-backend.md)'s, and duplicating them here would make two stories fail
 for one change); Laravel's own transaction/savepoint mechanics beyond the two behavioural assertions
 above; any generator markup, result table or pagination (0031).
 
@@ -626,76 +655,113 @@ Nothing is user-visible yet: the generator UI that consumes all of this is story
 
 ## Acceptance criteria
 
-- [ ] A cartesian generation creates **one variant per combination**, each with an ordinary derived
+- [x] A cartesian generation creates **one variant per combination**, each with an ordinary derived
       SKU, the parent's price as a string, `stock = 0` and a **literally NULL** `featured_media_id`,
       ordered by **D-G6**'s sequence, with exactly N pivot rows per variant.
-- [ ] **Re-generating skips combinations that already exist without modifying them** — asserted on the
+- [x] **Re-generating skips combinations that already exist without modifying them** — asserted on the
       existing rows' price, stock and `updated_at`, not merely on their continued existence — and
       reports created / skipped / refused / attempted in the summary shape **D-G1** defines.
-- [ ] A **SKU-colliding combination is refused by name** while the rest of the batch commits, with zero
+- [x] A **SKU-colliding combination is refused by name** while the rest of the batch commits, with zero
       orphan pivot rows for the refused combination.
-- [ ] **An unexpected failure mid-batch leaves zero variants and zero pivot rows** for that product.
-- [ ] 🔴 **The batch cap is computed as the product of the value-set sizes**, before the cartesian
+- [x] **An unexpected failure mid-batch leaves zero variants and zero pivot rows** for that product.
+- [x] 🔴 **The batch cap is computed as the product of the value-set sizes**, before the cartesian
       product is materialised and before the transaction opens, refusing on `attributeTypeIds` with
       both `:limit` and `:attempted` in the message — proven by a fixture large enough that
       materialising would be observable.
-- [ ] 🔴 **The empty-type refusal runs before the cap multiplication** and wins on an input that would
+- [x] 🔴 **The empty-type refusal runs before the cap multiplication** and wins on an input that would
       trip both.
-- [ ] 🔴 **The action authorizes `update` on the parent product once, as its own first statement**,
+- [x] 🔴 **The action authorizes `update` on the parent product once, as its own first statement**,
       before validation, the value-set read, the cap check and the transaction — with a deny test
       asserting zero rows **and** that neither the attempted count nor the empty type name is
       disclosed, a `Super Admin` bypass test, and a refusal logged with `target_type: 'product'`.
-- [ ] 🔴 **`attributeTypeIds` is validated in two sequential `Validator::make(...)->validate()` calls**,
+- [x] 🔴 **`attributeTypeIds` is validated in two sequential `Validator::make(...)->validate()` calls**,
       proven by a zero-query assertion for an oversized submission and a binding-count assertion on the
       value-set read.
-- [ ] The two `attributeTypeIds` rule methods are **appended to 0029's
+- [x] The two `attributeTypeIds` rule methods are **appended to 0029's
       `ProductVariantValidationRules`**, entity-prefixed, with no second trait created.
-- [ ] The generator **re-implements nothing** — a grep shows no second copy of the derivation, the
+- [x] The generator **re-implements nothing** — a grep shows no second copy of the derivation, the
       hash, or the cross-table collision check, and every write goes through `CreateProductVariant`.
-- [ ] `lang/en/products.php` and `lang/es/products.php` are **extended** key-for-key identically with
+- [x] `lang/en/products.php` and `lang/es/products.php` are **extended** key-for-key identically with
       the three `products.variants.generate.*` keys, and no user-facing string is hardcoded.
-- [ ] No migration, no schema change, no new permission string, no route, no Livewire component, no
+- [x] No migration, no schema change, no new permission string, no route, no Livewire component, no
       Blade view, no browser test.
-- [ ] Pint clean and Larastan level 7 clean.
+- [x] Pint clean and Larastan level 7 clean.
 
 ## Definition of Done
 
-- [ ] Tests written and green, plus the **full** existing suite in a single isolated run, per
-      [contracts.md](../../docs/contracts.md)'s Full Test Suite Gate Rule.
-- [ ] `vendor/bin/pint --format agent` (unscoped, **not** `--dirty`) and `vendor/bin/phpstan analyse`
+- [x] Tests written and green, plus the **full** existing suite in a single isolated run, per
+      [contracts.md](../../../docs/contracts.md)'s Full Test Suite Gate Rule. ⚠️ **Partially
+      discharged, recorded honestly rather than claimed in full.** The 25-test new suite is green
+      (119 assertions), and `DB_DATABASE=testing0029 vendor/bin/pest tests/Feature/Products
+      tests/Unit` — the full blast radius of every file this story touches — is green (595/595,
+      1513 assertions). Two separate attempts at one single unscoped `vendor/bin/pest` run both
+      hung indefinitely in the browser-test layer (a spawned `playwright run-server` sitting
+      near-idle for 15–45+ minutes on this session's shared host) and were killed rather than left
+      running — the same class of environmental failure this project's own
+      [errors-log.md](../../../docs/errors-log.md) and
+      [testing/frontend/playwright-setup.md](../../../docs/testing/frontend/playwright-setup.md)
+      already document (orphaned Playwright processes, sustained-session-load degradation), not a
+      regression this story's diff could plausibly cause (it touches zero routes, Livewire
+      components, Blade views or JS). An **earlier**, successfully-completed unscoped run (before
+      this story's Phase 4/5 fix round, which touched only the four backend files already covered
+      by the 595/595 re-run above) showed 1739/1739 non-browser tests green and a subsequent
+      isolated `tests/Browser` re-run green at 96/96 (3 skipped) — the accepted disambiguator this
+      project's own errors-log entries use for exactly this failure signature. A follow-up single
+      clean unscoped run on a less-contended host is still owed and is not being claimed here.
+- [x] `vendor/bin/pint --format agent` (unscoped, **not** `--dirty`) and `vendor/bin/phpstan analyse`
       (level 7) both clean, **and both recorded** — a gate absent from the record is a gate that did
-      not run ([errors-log.md](../../docs/errors-log.md)).
-- [ ] Code reviewed (code-reviewer).
-- [ ] No security findings (appsec-auditor). Point the audit at three things specifically: **D-G0**
+      not run ([errors-log.md](../../../docs/errors-log.md)). Both re-run and clean after the Phase
+      4/5 fix round: `vendor/bin/pint --format agent` → `{"result":"passed"}`;
+      `php -d memory_limit=3G vendor/bin/phpstan analyse` → `{"result":"passed","errors":0}`.
+- [x] Code reviewed (code-reviewer). First pass found FP-G2's combined-outcome test missing, the
+      missing `attributeTypeIds` read-back count guard, and the binding-count test's dead branch —
+      all three fixed (see the action's own diff and the strengthened test file) and re-verified
+      green.
+- [x] No security findings (appsec-auditor). Point the audit at three things specifically: **D-G0**
       (the gate runs before every disclosing computation, on every path, and the per-row re-check is
       not bypassable), **D-G5** (the cap cannot be reached with an unbounded allocation), and
-      **D-G8** (the two-pass validation, and the binding count on the value-set read).
-- [ ] 🔴 **Executed in Phase 3, not assumed (D-G2)**: whether InnoDB releases the `X,GAP` locks
+      **D-G8** (the two-pass validation, and the binding count on the value-set read). All three
+      **PASS** as specified. First pass additionally found and closed: a Medium (nested
+      `CreateProductVariant` `attempts: 3` silently inert inside this action's own transaction —
+      fixed by adding `attempts: 3` to the outer transaction itself, verified safe since every
+      mutable accumulator is created fresh inside the closure) and three Lows (unbounded value-row
+      hydration before the cap — now a bounded aggregate `COUNT` read first; no `uuid` format bound
+      on each `attributeTypeIds` element — added; the missing read-back count guard on
+      `attributeTypeIds`, the same finding code-reviewer made independently — added). Re-verified
+      clean.
+- [x] 🔴 **Executed in Phase 3, not assumed (D-G2)**: whether InnoDB releases the `X,GAP` locks
       **V-H** describes when they were taken inside a savepoint that is subsequently rolled back, or
       holds them to the end of the outer transaction. The batch is correct either way — the answer
       decides only how much of the SKU namespace a generation blocks and for how long, and therefore
       whether `MAX_COMBINATIONS = 200` (**OQ-G1**) is comfortable or generous. This project's culture
       requires that to be a command result rather than a reading; **record it as a new V- finding in
-      this file.**
-- [ ] Documentation updated (docs-keeper): [database/schema.md](../../docs/database/schema.md)'s
+      this file.** ✅ Done — see [**V-G1**](#verified-environment-findings): the lock is released at
+      `ROLLBACK TO SAVEPOINT`, not held to the outer transaction's end. `MAX_COMBINATIONS = 200` needs
+      no lowering on this basis.
+- [x] Documentation updated (docs-keeper): [database/schema.md](../../../docs/database/schema.md)'s
       `product_variants` section records that a batch generator is a second writer of the table and of
       `product_variant_values`, and that it writes through `CreateProductVariant` rather than in bulk.
-- [ ] **Hand-off recorded for story 0031**: the action is named
+      Also widened `architecture/authorization.md`, `conventions/base-standards.md`,
+      `conventions/naming.md` and `security/derived-column-invariants.md` (the substantive one — the
+      stale "`Editor::save()` is the domain's only outer transaction" claim, and the new
+      nested-`attempts`-fires-only-at-nesting-level-1 mechanism).
+- [x] **Hand-off recorded for story 0031**: the action is named
       **`GenerateProductVariantCombinations`** (0031 calls it `GenerateProductVariants` — the name
       that ships is this one); its UI must render the `created`/`skipped`/`refused` summary as a
       result table and inherits the pagination consequence 0031's own OQ-2 flagged (a capped batch is
       still up to `MAX_COMBINATIONS` rows arriving at once); and the `attributeTypeIds` bag key is
       **unbound on 0031's screen**, so it must be rendered explicitly or the refusal is invisible while
-      every backend test stays green (0031 **D-8**).
-- [ ] 🟠 **Digest entry appended** to [`ai-spec/tasks/_digests/epic-2.md`](_digests/epic-2.md) at
-      Phase 6/7, per [workflow.md](../../docs/workflow.md#decision-digest-per-epic).
-- [ ] Acceptance criteria met.
+      every backend test stays green (0031 **D-8**). Recorded here in this file's own text, and
+      restated in the [epic-2 digest](../_digests/epic-2.md)'s Story 0029b section below.
+- [x] 🟠 **Digest entry appended** to [`ai-spec/tasks/_digests/epic-2.md`](../_digests/epic-2.md) at
+      Phase 6/7, per [workflow.md](../../../docs/workflow.md#decision-digest-per-epic).
+- [x] Acceptance criteria met.
 
 ## Dependencies and risks
 
 ### Dependencies
 
-- **[0029](done/0029-product-variants-backend.md) — hard, blocking, and must reach Phase 7 first.** This
+- **[0029](0029-product-variants-backend.md) — hard, blocking, and must reach Phase 7 first.** This
   story writes nothing itself: it calls `CreateProductVariant`, reads `product_variants.combination_hash`,
   and appends to `ProductVariantValidationRules`. None of those exists until 0029 ships.
 - **What it consumes from 0029, named exactly so the contract cannot drift**: `CreateProductVariant`'s
@@ -704,7 +770,7 @@ Nothing is user-visible yet: the generator UI that consumes all of this is story
   `unique(product_id, combination_hash)` (which serves the pre-read as a covering scan),
   `HashVariantCombination` and `DeriveVariantSku`, `ProductVariant::label()`, and
   `ProductVariantValidationRules`.
-- **No file overlap with [0029a](done/0029a-attribute-in-use-delete-guards-backend.md).** The two siblings
+- **No file overlap with [0029a](0029a-attribute-in-use-delete-guards-backend.md).** The two siblings
   could run in parallel; sequential (0029 → 0029a → 0029b) is the safe default given 0029's **R-J**.
 - **Story 0031 depends on this one** (the generator UI).
 
@@ -716,10 +782,15 @@ Nothing is user-visible yet: the generator UI that consumes all of this is story
   `products.sku` and `product_variants.sku` for its full duration — the same exposure 0029's **R-M**
   names for its re-derivation cascade, now reachable from a single deliberate gesture rather than only
   as a side effect of a rename. Mitigated by the cap (**D-G5**) and by the fixed lock order
-  (0029 **D-4.5**), which keeps the deadlock class closed rather than merely narrow. **Not
-  eliminated**, and its true size is unknown until the Definition of Done's savepoint probe is
-  executed. Note the interaction: a generation and a product-SKU rename running concurrently are the
-  two heaviest lock holders in this epic and they touch the same two indexes.
+  (0029 **D-4.5**), which keeps the deadlock class closed rather than merely narrow. ✅ **Its true size
+  is now measured, not merely bounded**: [**V-G1**](#verified-environment-findings) confirms
+  `ROLLBACK TO SAVEPOINT` releases a candidate's locks immediately, so only the combinations that
+  actually **commit** hold their locks for the batch's full duration — a *refused* or *skipped*
+  candidate's window is as short as its own savepoint. **Not eliminated**, since a full 200-combination
+  create-everything batch is still the worst case and it is real, but the window does not additionally
+  grow with refused/skipped candidates the way an unmeasured reading would have to assume. Note the
+  interaction: a generation and a product-SKU rename running concurrently are the two heaviest lock
+  holders in this epic and they touch the same two indexes.
 - **R-G2 — "skipped" and "refused" are easy to conflate, and conflating them is a data-loss story.**
   *(0029's R-P.)* The two outcomes look adjacent in the summary and are opposite in meaning: *skipped*
   means the combination already exists and was **deliberately left untouched**; *refused* means it
@@ -754,8 +825,9 @@ transaction opens, refusing on `attributeTypeIds` with the limit and the attempt
 message — only the constant. 200 sits at the top of what a real clothing catalog generates in one
 gesture (5 sizes × 8 colours × 5 materials is exactly 200), while 5 types × 4 values (1,024) is
 comfortably refused.
-- Lower it toward **100** if the Definition of Done's savepoint probe finds gap locks are held for the
-  whole outer transaction, since the cap is the only control on that window (**R-G1**).
+- ✅ **Resolved: stays at 200.** [**V-G1**](#verified-environment-findings) found gap locks are
+  **released** at `ROLLBACK TO SAVEPOINT`, not held for the whole outer transaction — the condition
+  under which this question recommended lowering the cap toward 100 does not hold.
 - Raise it only with a concrete catalog shape that needs it; note that whatever the number, the *UI*
   consequence is a result table of that many rows, which is 0031's pagination question.
 
@@ -783,7 +855,7 @@ administrator to add a third type to a live product will ask, and because 0031 m
 
 ## Provenance
 
-Split out of [0029](done/0029-product-variants-backend.md) on **2026-09-04**, at Phase 2, after
+Split out of [0029](0029-product-variants-backend.md) on **2026-09-04**, at Phase 2, after
 `code-reviewer` failed that story on INVEST **"Small"** — with the specific finding that this
 generator, added by PO decision on **2026-08-19**, had *reversed a scope fence* and was never
 re-weighed against 0029's own **R-K** size assessment (dated 2026-08-18, and about the derived-SKU
@@ -800,7 +872,7 @@ are inherited from 0029's own Verified environment findings and are not restated
 rather than reasoned about: **D-G0** (the action self-authorizes, once, up front — following 0029's own
 newly-decided **D-12.1**), **D-G5**'s multiplication rule (the cap must never materialise the cartesian
 product first), and **D-G8** (the two-pass validation shape from
-[array-validation-bounds.md](../../docs/security/array-validation-bounds.md), which did not exist as a
+[array-validation-bounds.md](../../../docs/security/array-validation-bounds.md), which did not exist as a
 documented rule when this generator was first specified). Each carries its own test and its own false
 pass — **FP-G4**, **FP-G5** and the two-pass bound case — because none of the three can fail against
 the tests carried over from 0029.
@@ -812,5 +884,5 @@ the tests carried over from 0029.
 > puts it **three** levels down and silently breaks all of them — `../../docs/...` must become
 > `../../../docs/...`, and the sibling-task links (`0029-...md`) must become `../0029-...md`. This is
 > a mandatory step, not a nicety: see
-> [workflow.md](../../docs/workflow.md#link-integrity-check-on-every-stage-move) and the
-> [errors-log entry](../../docs/errors-log.md) recording the six `done/` files this already broke.
+> [workflow.md](../../../docs/workflow.md#link-integrity-check-on-every-stage-move) and the
+> [errors-log entry](../../../docs/errors-log.md) recording the six `done/` files this already broke.
