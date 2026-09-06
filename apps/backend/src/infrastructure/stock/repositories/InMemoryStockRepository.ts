@@ -51,6 +51,15 @@ export class InMemoryStockRepository
     return Array.from(this.insumos.values());
   }
 
+  async findByBarcode(barcode: string): Promise<Insumo | null> {
+    for (const insumo of this.insumos.values()) {
+      if (insumo.barcode === barcode) {
+        return insumo;
+      }
+    }
+    return null;
+  }
+
   async findRemanenteById(id: string): Promise<Remanente | null> {
     return this.remanentes.get(id) || null;
   }
@@ -211,16 +220,10 @@ export class InMemoryStockRepository
         )
       : [...insumo.stockLines, { storageLocationId, quantity }];
 
-    this.insumos.set(
-      insumoId,
-      new Insumo({
-        id: insumo.id,
-        name: insumo.name,
-        unitOfMeasure: insumo.unitOfMeasure,
-        unitCost: insumo.unitCost,
-        stockLines: nextLines,
-      })
-    );
+    // FASE 4.B (revisor adversarial, TK-119): `withStockLines` copia todos los campos
+    // actuales del agregado (incluido `barcode`) — nunca más se pierde uno por reconstruir
+    // el `Insumo` a mano con una lista de campos incompleta.
+    this.insumos.set(insumoId, insumo.withStockLines(nextLines));
   }
 
   /**
@@ -251,13 +254,7 @@ export class InMemoryStockRepository
         : l
     );
 
-    const updated = new Insumo({
-      id: insumo.id,
-      name: insumo.name,
-      unitOfMeasure: insumo.unitOfMeasure,
-      unitCost: insumo.unitCost,
-      stockLines: nextLines,
-    });
+    const updated = insumo.withStockLines(nextLines);
     this.insumos.set(insumoId, updated);
 
     return {

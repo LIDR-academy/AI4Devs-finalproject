@@ -363,6 +363,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: An insumo already exists with the same name, or (US-032/TK-119) the same barcode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/stock/insumos/by-barcode/{barcode}:
+    get:
+      summary: Find an insumo by its barcode, scanned with the device's built-in camera (US-032/TK-119)
+      operationId: findInsumoByBarcode
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: barcode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Insumo matching the scanned barcode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInsumoResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No insumo registered with that barcode — the frontend never auto-creates one; only ADMIN completes the catalog entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/stock/insumos/{id}/restock:
     patch:
@@ -1658,6 +1698,11 @@ components:
         unitCost:
           $ref: '#/components/schemas/DecimalString'
           description: Optional cost per purchase unit of unitOfMeasure (e.g. cost per KG), used to valuate waste reports in currency (US-019). Nullable — legacy insumos may have no cost recorded. Unlike other DecimalString fields (up to 4 decimals), the HTTP layer enforces at most 2 decimals and 10 integer digits here to match the Decimal(12,2) column exactly.
+        barcode:
+          type: string
+          maxLength: 64
+          description: Optional barcode (UPC/EAN), captured via the device's built-in camera or manual entry (US-032/TK-119). Unique when present — 409 if already registered on another insumo.
+          example: "7791234567890"
 
     CreateInsumoResponse:
       type: object
@@ -1678,6 +1723,11 @@ components:
         unitCost:
           $ref: '#/components/schemas/DecimalString'
           description: Nullable — absent when the insumo has no cost recorded yet. At most 2 decimals (see CreateInsumoRequest.unitCost).
+        barcode:
+          type: string
+          nullable: true
+          description: Nullable — absent when the insumo has no barcode captured yet (US-032/TK-119).
+          example: "7791234567890"
 
     RestockInsumoRequest:
       type: object

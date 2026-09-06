@@ -18,6 +18,8 @@ export interface InsumoProps {
   name: string;
   unitOfMeasure: string;
   unitCost?: DecimalQuantity;
+  /** US-032: código de barras (UPC/EAN) escaneado con la cámara del dispositivo. Único cuando presente. */
+  barcode?: string;
   /** Existencias por sub-sector de bodega (US-025). Fuente canónica del stock. */
   stockLines?: WarehouseStockLine[];
   /**
@@ -37,6 +39,7 @@ export class Insumo {
   private readonly _name: string;
   private readonly _unitOfMeasure: string;
   private readonly _unitCost?: DecimalQuantity;
+  private readonly _barcode?: string;
   private readonly _lines: Map<string, DecimalQuantity>;
 
   constructor(props: InsumoProps) {
@@ -44,6 +47,7 @@ export class Insumo {
     this._name = props.name;
     this._unitOfMeasure = props.unitOfMeasure;
     this._unitCost = props.unitCost;
+    this._barcode = props.barcode;
     this._lines = new Map();
 
     if (props.stockLines && props.stockLines.length > 0) {
@@ -53,6 +57,24 @@ export class Insumo {
     } else if (props.warehouseStock && !props.warehouseStock.toDecimal().isZero()) {
       this._lines.set(UNCLASSIFIED_WAREHOUSE_LOCATION_ID, props.warehouseStock);
     }
+  }
+
+  /**
+   * FASE 4.B (revisor adversarial, TK-119): reconstruye el agregado con líneas de
+   * stock nuevas, copiando explícitamente TODOS los demás campos actuales (incluido
+   * cualquier campo futuro) — cierra de raíz la clase de bug donde un fake in-memory
+   * que reconstruye `new Insumo({...})` a mano en vez de mutar in-place pierde en
+   * silencio un campo que no supo que tenía que listar (ocurrió con `barcode`).
+   */
+  public withStockLines(nextLines: WarehouseStockLine[]): Insumo {
+    return new Insumo({
+      id: this._id,
+      name: this._name,
+      unitOfMeasure: this._unitOfMeasure,
+      unitCost: this._unitCost,
+      barcode: this._barcode,
+      stockLines: nextLines,
+    });
   }
 
   public get id(): string {
@@ -69,6 +91,10 @@ export class Insumo {
 
   public get unitCost(): DecimalQuantity | undefined {
     return this._unitCost;
+  }
+
+  public get barcode(): string | undefined {
+    return this._barcode;
   }
 
   /** Suma de todas las líneas de stock de bodega. */

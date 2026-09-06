@@ -15,12 +15,14 @@ import { RecipePreparation } from '../../../domain/kitchen/entities/RecipePrepar
 import { RecipePreparationItem } from '../../../domain/kitchen/entities/RecipePreparationItem.js';
 import { recipePreparationUpsertArgs } from '../../kitchen/repositories/PrismaRecipePreparationRepository.js';
 import { InsufficientStockException } from '../../../domain/stock/errors/InsufficientStockException.js';
+import { InsumoAlreadyExistsException } from '../../../domain/stock/errors/InsumoAlreadyExistsException.js';
 
 type RawInsumo = {
   id: string;
   name: string;
   unitOfMeasure: string;
   unitCost: { toString(): string } | null;
+  barcode: string | null;
   warehouseStocks: { storageLocationId: string; quantity: { toString(): string } }[];
 };
 
@@ -33,6 +35,7 @@ function toInsumo(raw: RawInsumo): Insumo {
     name: raw.name,
     unitOfMeasure: raw.unitOfMeasure,
     unitCost: raw.unitCost !== null ? new DecimalQuantity(raw.unitCost.toString()) : undefined,
+    barcode: raw.barcode ?? undefined,
     stockLines: raw.warehouseStocks.map((s) => ({
       storageLocationId: s.storageLocationId,
       quantity: new DecimalQuantity(s.quantity.toString()),
@@ -61,6 +64,11 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
     return list.map(toInsumo);
   }
 
+  public async findByBarcode(barcode: string): Promise<Insumo | null> {
+    const raw = await this.prisma.insumo.findUnique({ where: { barcode }, include: { warehouseStocks: true } });
+    return raw ? toInsumo(raw) : null;
+  }
+
   public async existsStockAtLocation(storageLocationId: string): Promise<boolean> {
     const count = await this.prisma.warehouseStock.count({
       where: { storageLocationId, quantity: { gt: 0 } },
@@ -85,27 +93,47 @@ export class PrismaStockRepository implements IInsumoRepository, IRemanenteRepos
   public async save(insumo: Insumo): Promise<void> {
     const unitCost = insumo.unitCost ? insumo.unitCost.toDecimal() : null;
 
-    await this.prisma.$transaction(async (tx) => {
-      await tx.insumo.upsert({
-        where: { id: insumo.id },
-        update: { name: insumo.name, unitOfMeasure: insumo.unitOfMeasure, unitCost },
-        create: { id: insumo.id, name: insumo.name, unitOfMeasure: insumo.unitOfMeasure, unitCost },
-      });
-
-      for (const line of insumo.stockLines) {
-        const quantity = line.quantity.toDecimal();
-        await tx.warehouseStock.upsert({
-          where: {
-            insumoId_storageLocationId: {
-              insumoId: insumo.id,
-              storageLocationId: line.storageLocationId,
-            },
-          },
-          update: { quantity },
-          create: { insumoId: insumo.id, storageLocationId: line.storageLocationId, quantity },
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        const barcode = insumo.barcode ?? null;
+        await tx.insumo.upsert({
+          where: { id: insumo.id },
+          update: { name: insumo.name, unitOfMeasure: insumo.unitOfMeasure, unitCost, barcode },
+          create: { id: insumo.id, name: insumo.name, unitOfMeasure: insumo.unitOfMeasure, unitCost, barcode },
         });
+
+        for (const line of insumo.stockLines) {
+          const quantity = line.quantity.toDecimal();
+          await tx.warehouseStock.upsert({
+            where: {
+              insumoId_storageLocationId: {
+                insumoId: insumo.id,
+                storageLocationId: line.storageLocationId,
+              },
+            },
+            update: { quantity },
+            create: { insumoId: insumo.id, storageLocationId: line.storageLocationId, quantity },
+          });
+        }
+      });
+    } catch (error) {
+      // FASE 4.B (revisor adversarial, TK-119): condición de carrera real entre el
+      // check-then-write de unicidad de barcode en CreateInsumoUseCase y esta escritura —
+      // 2 requests concurrentes pueden pasar ambos el check antes de que cualquiera
+      // persista. `name` NO tiene constraint único a nivel de BD (solo check-then-write
+      // en la capa de aplicación, sin índice — ver schema.prisma) así que P2002 en este
+      // modelo solo puede originarse en `Insumo_barcode_key`; el mensaje coincide con el
+      // que ya usa CreateInsumoUseCase para el mismo caso, para no atribuir el conflicto
+      // al campo equivocado.
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002' &&
+        (error.meta?.target as string[] | undefined)?.some((t) => t.includes('barcode'))
+      ) {
+        throw new InsumoAlreadyExistsException('Ya existe un insumo registrado con ese código de barras.');
       }
-    });
+      throw error;
+    }
   }
 
   public async saveRemanente(remanente: Remanente): Promise<void> {

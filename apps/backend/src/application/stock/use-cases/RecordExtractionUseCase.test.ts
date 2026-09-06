@@ -52,6 +52,9 @@ class FakeInsumoRepository implements IInsumoRepository {
   async findByName(): Promise<Insumo | null> {
     return null;
   }
+  async findByBarcode(): Promise<Insumo | null> {
+    return null;
+  }
   async findAll(): Promise<Insumo[]> {
     return [...this.store.values()];
   }

@@ -5,6 +5,7 @@ import { GetStockMovementHistoryUseCase } from '../../../../application/stock/us
 import { CreateInsumoUseCase } from '../../../../application/stock/use-cases/CreateInsumoUseCase.js';
 import { ListInsumosUseCase } from '../../../../application/stock/use-cases/ListInsumosUseCase.js';
 import { RestockInsumoUseCase } from '../../../../application/stock/use-cases/RestockInsumoUseCase.js';
+import { FindInsumoByBarcodeUseCase } from '../../../../application/stock/use-cases/FindInsumoByBarcodeUseCase.js';
 import { IInsumoRepository } from '../../../../domain/stock/repositories/IInsumoRepository.js';
 import { IRemanenteRepository } from '../../../../domain/stock/repositories/IRemanenteRepository.js';
 import { IStockUnitOfWork } from '../../../../domain/stock/repositories/IStockUnitOfWork.js';
@@ -64,12 +65,14 @@ export function createStockRouter(
   const createInsumoUseCase = new CreateInsumoUseCase(stockRepository, locationRepository);
   const listInsumosUseCase = new ListInsumosUseCase(stockRepository, locationRepository);
   const restockInsumoUseCase = new RestockInsumoUseCase(stockRepository, stockRepository, cryptoIdGenerator, locationRepository);
+  const findInsumoByBarcodeUseCase = new FindInsumoByBarcodeUseCase(stockRepository, locationRepository);
   const controller = new StockController(
     useCase,
     getMovementHistoryUseCase,
     createInsumoUseCase,
     listInsumosUseCase,
-    restockInsumoUseCase
+    restockInsumoUseCase,
+    findInsumoByBarcodeUseCase
   );
 
   // Extracción de bodega (US-014/TK-072): la ejecutan operarios de cocina y admins.
@@ -79,6 +82,8 @@ export function createStockRouter(
   // Catálogo de insumos (TK-057): alta administrativa, listado para cualquier autenticado.
   router.post('/insumos', ...role('ADMIN'), controller.createInsumo);
   router.get('/insumos', controller.listInsumos);
+  // Escaneo de código de barras (US-032/TK-119): cualquier rol autenticado, solo lectura.
+  router.get('/insumos/by-barcode/:barcode', controller.findInsumoByBarcode);
   // Reabastecimiento de bodega (US-013/TK-060): incrementa warehouseStock, solo ADMIN.
   router.patch('/insumos/:id/restock', ...role('ADMIN'), controller.restockInsumo);
 

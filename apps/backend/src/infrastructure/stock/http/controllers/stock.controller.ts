@@ -5,6 +5,7 @@ import { GetStockMovementHistoryUseCase } from '../../../../application/stock/us
 import { CreateInsumoUseCase } from '../../../../application/stock/use-cases/CreateInsumoUseCase.js';
 import { ListInsumosUseCase } from '../../../../application/stock/use-cases/ListInsumosUseCase.js';
 import { RestockInsumoUseCase } from '../../../../application/stock/use-cases/RestockInsumoUseCase.js';
+import { FindInsumoByBarcodeUseCase } from '../../../../application/stock/use-cases/FindInsumoByBarcodeUseCase.js';
 import { respondValidationError } from '../../../http/utils/responseUtils.js';
 
 const recordExtractionSchema = z
@@ -63,6 +64,17 @@ const createInsumoSchema = z.object({
     .string()
     .regex(/^\d{1,10}(\.\d{1,2})?$/, 'El costo unitario debe ser un numero decimal valido de hasta 2 decimales (ej. "1800.00").')
     .optional(),
+  // US-032: código de barras opcional, capturado por escaneo o alta manual. `.trim()`
+  // se aplica ANTES de `.min(1)` (revisor adversarial, FASE 4.B): sin él, un valor de
+  // solo espacios ("   ") pasaba la validación y colapsaba en silencio a `undefined`
+  // en CreateInsumoUseCase — ahora ese caso se rechaza explícitamente con 400, igual
+  // que la cadena vacía.
+  barcode: z
+    .string()
+    .trim()
+    .min(1, 'El código de barras no puede ser una cadena vacía.')
+    .max(64, 'El código de barras no puede superar 64 caracteres.')
+    .optional(),
 });
 
 const restockInsumoSchema = z.object({
@@ -87,7 +99,8 @@ export class StockController {
     private readonly getStockMovementHistoryUseCase?: GetStockMovementHistoryUseCase,
     private readonly createInsumoUseCase?: CreateInsumoUseCase,
     private readonly listInsumosUseCase?: ListInsumosUseCase,
-    private readonly restockInsumoUseCase?: RestockInsumoUseCase
+    private readonly restockInsumoUseCase?: RestockInsumoUseCase,
+    private readonly findInsumoByBarcodeUseCase?: FindInsumoByBarcodeUseCase
   ) {}
 
   public recordExtraction = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -150,6 +163,18 @@ export class StockController {
         respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
         return;
       }
+      next(error);
+    }
+  };
+
+  public findInsumoByBarcode = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!this.findInsumoByBarcodeUseCase) {
+        throw new Error('FindInsumoByBarcodeUseCase no configurado.');
+      }
+      const result = await this.findInsumoByBarcodeUseCase.execute({ barcode: req.params.barcode });
+      res.status(200).json(result);
+    } catch (error) {
       next(error);
     }
   };

@@ -18,6 +18,9 @@ class FakeInsumoRepository implements IInsumoRepository {
   async findByName(): Promise<Insumo | null> {
     throw new Error('no debería llamarse');
   }
+  async findByBarcode(): Promise<Insumo | null> {
+    throw new Error('no debería llamarse');
+  }
   async findAll(): Promise<Insumo[]> {
     throw new Error('no debería llamarse');
   }
