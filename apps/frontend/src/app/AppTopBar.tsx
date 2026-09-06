@@ -28,7 +28,7 @@ const SessionBadge: React.FC<{ name: string; role: string }> = ({ name, role }) 
 
 export const AppTopBar: React.FC<AppTopBarProps> = ({ currentUser, theme, onThemeChange, onLogout }) => (
   <header className={styles.topbar}>
-    <AppNav userRole={currentUser.role} />
+    <AppNav />
     <div className={styles['topbar-session']}>
       <SessionBadge name={currentUser.name} role={currentUser.role} />
       {/* TK-095-FE WS-1 #4: cerrar sesión es una acción rutinaria — botón fantasma

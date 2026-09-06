@@ -1442,6 +1442,14 @@ components:
       properties:
         accessToken:
           type: string
+          description: >-
+            JWT firmado. Desde TK-121 (US-015 Escenario 2) su payload incluye
+            `permissions` (array de códigos como `stock:extract`) además de `role`.
+            Ese listado es **informativo, para que el cliente no ofrezca acciones que
+            fallarían**: la autorización real la resuelve el servidor en cada petición
+            contra el repositorio de roles, de modo que revocar un permiso surte efecto
+            de inmediato y no al expirar el token. Los tokens emitidos antes de TK-121
+            no traen el campo.
         user:
           type: object
           properties:

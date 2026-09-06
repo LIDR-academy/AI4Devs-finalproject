@@ -31,7 +31,7 @@ export const router = createBrowserRouter([
       {
         path: 'reportes',
         element: (
-          <ProtectedRoute requiredRole="ADMIN">
+          <ProtectedRoute requiredPermission="reports:view">
             <ReportesRoute />
           </ProtectedRoute>
         ),
@@ -39,7 +39,7 @@ export const router = createBrowserRouter([
       {
         path: 'ajustes',
         element: (
-          <ProtectedRoute requiredRole="ADMIN">
+          <ProtectedRoute requiredPermission="roles:manage">
             <AjustesLayout />
           </ProtectedRoute>
         ),

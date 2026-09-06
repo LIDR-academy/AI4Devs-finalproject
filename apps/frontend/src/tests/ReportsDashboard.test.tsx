@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ReportsDashboard } from '../features/reports/components/ReportsDashboard.js';
+import { seedSession, clearSession, ALL_PERMISSIONS } from './helpers/session.js';
 
 const EMPTY_PREPARATION_WASTE_REPORT = { wasteByReason: [], consumptionVsTheoretical: [], wasteAlertThresholdPercent: 5 };
 
@@ -43,12 +44,19 @@ function stubFetchWithWasteAndSettings(
 }
 
 describe('TK-007-E: ReportsDashboard Component Suite', () => {
+  // TK-121-FE: el dashboard ya no recibe el rol por prop — consulta `reports:view`
+  // desde el token de sesión, así que los tests siembran una sesión real.
+  beforeEach(() => {
+    seedSession({ role: 'ADMIN', permissions: ALL_PERMISSIONS });
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
+    clearSession();
   });
 
   it('se renderiza inline (US-024): sin overlay de modal ni botón de cerrar', () => {
-    const { container } = render(<ReportsDashboard userRole="ADMIN" />);
+    const { container } = render(<ReportsDashboard />);
 
     // El gating ADMIN vive ahora en <ProtectedRoute>; ReportsDashboard ya no envuelve
     // en <Modal> ni expone una "X" de cerrar (una ruta no se cierra, se navega).
@@ -58,20 +66,20 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
   });
 
   it('debe renderizar el dashboard con metricas cuando el usuario posee rol ADMIN', async () => {
-    render(<ReportsDashboard userRole="ADMIN" />);
+    render(<ReportsDashboard />);
 
     expect(screen.getByText(/Dashboard de Reportes y Mermas FEFO/i)).toBeInTheDocument();
     expect(screen.getByText(/Total Insumos Descartados/i)).toBeInTheDocument();
   });
 
   it('debe mostrar el valor monetario de la merma cuando el insumo tiene costo registrado (US-019 Escenario 1)', async () => {
-    render(<ReportsDashboard userRole="ADMIN" />);
+    render(<ReportsDashboard />);
 
     expect(await screen.findByText('$6300.00')).toBeInTheDocument();
   });
 
   it('debe mostrar "Sin costo registrado" cuando el insumo no tiene costo, nunca "$0.00" (US-019 Escenario 2)', async () => {
-    render(<ReportsDashboard userRole="ADMIN" />);
+    render(<ReportsDashboard />);
 
     expect(await screen.findByText('Sin costo registrado')).toBeInTheDocument();
     expect(screen.queryByText(/\$0\.00/)).not.toBeInTheDocument();
@@ -92,7 +100,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
       '$'
     );
 
-    render(<ReportsDashboard userRole="ADMIN" />);
+    render(<ReportsDashboard />);
 
     expect(await screen.findByText('$0.00')).toBeInTheDocument();
     expect(screen.queryByText('Sin costo registrado')).not.toBeInTheDocument();
@@ -113,7 +121,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
       '€'
     );
 
-    render(<ReportsDashboard userRole="ADMIN" />);
+    render(<ReportsDashboard />);
 
     expect(await screen.findByText('€6300.00')).toBeInTheDocument();
     expect(screen.queryByText('$6300.00')).not.toBeInTheDocument();
@@ -122,7 +130,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
   it('debe mostrar un estado vacio explicito cuando sampleSize es 0, nunca un valor numerico (US-020 Escenario 2)', async () => {
     stubFetchWithWasteAndSettings([], '$', { averageTrrHours: null, targetTrrHours: 72, sampleSize: 0 });
 
-    render(<ReportsDashboard userRole="ADMIN" />);
+    render(<ReportsDashboard />);
 
     expect(await screen.findByText('Sin remanentes finalizados en este periodo')).toBeInTheDocument();
     expect(screen.queryByText(/horas/)).not.toBeInTheDocument();
@@ -132,7 +140,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
   it('debe indicar cumplimiento (badge/texto verde) cuando el TRR real esta dentro del objetivo de 72h', async () => {
     stubFetchWithWasteAndSettings([], '$', { averageTrrHours: 50.0, targetTrrHours: 72, sampleSize: 12 });
 
-    render(<ReportsDashboard userRole="ADMIN" />);
+    render(<ReportsDashboard />);
 
     expect(await screen.findByText('50.0')).toBeInTheDocument();
     expect(await screen.findByText(/Dentro del objetivo/i)).toBeInTheDocument();
@@ -144,7 +152,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
   it('debe indicar incumplimiento (badge/texto rojo) cuando el TRR real supera el objetivo de 72h, sin hardcodear el umbral', async () => {
     stubFetchWithWasteAndSettings([], '$', { averageTrrHours: 96.5, targetTrrHours: 72, sampleSize: 5 });
 
-    render(<ReportsDashboard userRole="ADMIN" />);
+    render(<ReportsDashboard />);
 
     expect(await screen.findByText('96.5')).toBeInTheDocument();
     expect(await screen.findByText(/Fuera del objetivo/i)).toBeInTheDocument();
@@ -176,7 +184,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
         wasteAlertThresholdPercent: 5,
       });
 
-      render(<ReportsDashboard userRole="ADMIN" />);
+      render(<ReportsDashboard />);
 
       expect(await screen.findByText(/Pizza Margarita/)).toBeInTheDocument();
       expect(screen.getByText('Queso Mozzarella')).toBeInTheDocument();
@@ -206,7 +214,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
         wasteAlertThresholdPercent: 5,
       });
 
-      render(<ReportsDashboard userRole="ADMIN" />);
+      render(<ReportsDashboard />);
 
       const percentEl = await screen.findByText(/12\.00%/);
       expect(percentEl.closest('span')).toHaveClass('text-danger-color');
@@ -233,7 +241,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
         wasteAlertThresholdPercent: 5,
       });
 
-      render(<ReportsDashboard userRole="ADMIN" />);
+      render(<ReportsDashboard />);
 
       expect(await screen.findByText(/Pizza Margarita — consumo real vs\. teórico/i)).toBeInTheDocument();
       expect(screen.getByText(/Teórico: 2\.100 KG/)).toBeInTheDocument();
@@ -243,7 +251,7 @@ describe('TK-007-E: ReportsDashboard Component Suite', () => {
 
     it('sin mermas ni preparaciones en el período, muestra estados vacíos explícitos', async () => {
       stubFetchWithWasteAndSettings([], '$');
-      render(<ReportsDashboard userRole="ADMIN" />);
+      render(<ReportsDashboard />);
 
       expect(await screen.findByText(/Sin mermas de preparación registradas/i)).toBeInTheDocument();
       expect(screen.getByText(/Sin preparaciones cerradas/i)).toBeInTheDocument();

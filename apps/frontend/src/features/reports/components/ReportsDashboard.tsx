@@ -4,12 +4,12 @@ import { ReportsService, WasteSummaryItem, RotationMetrics } from '../services/r
 import { SettingsService } from '../../settings/services/settings.service.js';
 import { PreparationWasteReportPanel } from './PreparationWasteReportPanel.js';
 import { TemperatureLogReportPanel } from './TemperatureLogReportPanel.js';
+import { usePermissions } from '../../../shared/hooks/usePermissions.js';
 import styles from './ReportsDashboard.module.css';
 
-interface ReportsDashboardProps {
-  /** Rol de sesión — el acceso a `/reportes` ya lo garantiza `<ProtectedRoute requiredRole="ADMIN">`. */
-  userRole: string;
-}
+// TK-121-FE: el acceso a `/reportes` lo garantiza `<ProtectedRoute requiredPermission="reports:view">`;
+// el componente ya no recibe el rol, consulta el permiso por su cuenta.
+type ReportsDashboardProps = Record<string, never>;
 
 type FilterRange = 'today' | 'week' | 'month';
 
@@ -205,7 +205,7 @@ function useReportRangeDates(filterRange: FilterRange): { startDate: string; end
   }, [filterRange]);
 }
 
-function useReportsData(userRole: string, filterRange: FilterRange) {
+function useReportsData(canViewReports: boolean, filterRange: FilterRange) {
   const [data, setData] = useState<WasteSummaryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currencySymbol, setCurrencySymbol] = useState('$');
@@ -213,7 +213,9 @@ function useReportsData(userRole: string, filterRange: FilterRange) {
   const { startDate, endDate } = useReportRangeDates(filterRange);
 
   useEffect(() => {
-    if (userRole !== 'ADMIN') return;
+    // TK-121-FE: por permiso (`reports:view`), no por `role === 'ADMIN'` — evita
+    // disparar peticiones que el backend rechazaría con 403.
+    if (!canViewReports) return;
     setIsLoading(true);
 
     ReportsService.fetchWasteReport(startDate, endDate)
@@ -225,14 +227,15 @@ function useReportsData(userRole: string, filterRange: FilterRange) {
     SettingsService.fetchSettings()
       .then((settings) => setCurrencySymbol(settings.currencySymbol))
       .catch(() => {});
-  }, [userRole, startDate, endDate]);
+  }, [canViewReports, startDate, endDate]);
 
   return { data, isLoading, currencySymbol, rotationMetrics, startDate, endDate };
 }
 
-export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole }) => {
+export const ReportsDashboard: React.FC<ReportsDashboardProps> = () => {
   const [filterRange, setFilterRange] = useState<FilterRange>('week');
-  const { data, isLoading, currencySymbol, rotationMetrics, startDate, endDate } = useReportsData(userRole, filterRange);
+  const { has } = usePermissions();
+  const { data, isLoading, currencySymbol, rotationMetrics, startDate, endDate } = useReportsData(has('reports:view'), filterRange);
 
   const totalQuantity = data.reduce((acc, item) => acc + parseFloat(item.totalDiscardedQuantity || '0'), 0);
   const expirationWaste = data

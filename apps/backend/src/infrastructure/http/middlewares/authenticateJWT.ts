@@ -6,6 +6,15 @@ export interface AuthenticatedRequest extends Request {
     sub: string;
     name: string;
     role: string;
+    /**
+     * TK-121 (US-015 Esc. 2): lista de permisos del rol al momento de emitir el token.
+     * Opcional — los tokens anteriores a TK-121 no la traen. **Ninguna decisión de
+     * autorización debe leerse de aquí**: `authorizePermissions` consulta el
+     * repositorio en vivo para que una revocación surta efecto de inmediato, sin
+     * esperar a que expire el token. Este campo existe solo para que el cliente sepa
+     * qué ofrecer.
+     */
+    permissions?: string[];
   };
 }
 

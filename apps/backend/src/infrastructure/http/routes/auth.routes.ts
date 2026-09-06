@@ -25,7 +25,10 @@ export function createAuthRouter(
   const router = Router();
   const mailer = emailService || new ConsoleEmailService();
 
-  const useCase = new AuthenticateByPinUseCase(userRepository, jwtSecret);
+  // TK-121 (US-015 Esc. 2): el roleRepository proyecta los permisos del rol al JWT
+  // (solo para UX del cliente — la autorización real la resuelve authorizePermissions
+  // en vivo, por petición, más abajo en este mismo archivo).
+  const useCase = new AuthenticateByPinUseCase(userRepository, jwtSecret, roleRepository);
   const createUserUseCase = new CreateUserUseCase(userRepository);
   const setUserStatusUseCase = new SetUserStatusUseCase(userRepository);
   const listUsersUseCase = new ListUsersUseCase(userRepository);

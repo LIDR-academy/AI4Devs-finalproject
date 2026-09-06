@@ -32,11 +32,15 @@ describe('TK-085-FE: forma del árbol de rutas real (app/router.tsx)', () => {
     expect(byPath('*')).toBeDefined();
   });
 
-  it('/reportes y /ajustes están envueltas en <ProtectedRoute requiredRole="ADMIN">', () => {
-    for (const path of ['reportes', 'ajustes']) {
-      const el = byPath(path)?.element as ReactElement<{ requiredRole?: string }>;
+  // TK-121-FE (US-015 Esc. 2): el gating pasó de rol a permiso — un rol personalizado
+  // con `reports:view` ve Reportes sin necesidad de llamarse ADMIN.
+  it('/reportes y /ajustes están envueltas en <ProtectedRoute requiredPermission="...">', () => {
+    const expected: Record<string, string> = { reportes: 'reports:view', ajustes: 'roles:manage' };
+    for (const [path, permission] of Object.entries(expected)) {
+      const el = byPath(path)?.element as ReactElement<{ requiredPermission?: string; requiredRole?: string }>;
       expect(el?.type).toBe(ProtectedRoute);
-      expect(el?.props.requiredRole).toBe('ADMIN');
+      expect(el?.props.requiredPermission).toBe(permission);
+      expect(el?.props.requiredRole).toBeUndefined();
     }
   });
 
