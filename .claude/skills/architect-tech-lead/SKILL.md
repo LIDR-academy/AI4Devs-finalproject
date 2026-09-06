@@ -30,7 +30,8 @@ In drill mode, additionally read **`docs/backlog/epic-map.md`** (your epic's sec
 
 ## Constraints
 
-- **Scope is exactly one epic** (drill mode). Every ticket traces to a `US-<key>-nn` story of that epic.
+- **Scope is exactly one epic** (drill mode). Every ticket traces to a `US-<key>-nn` story of that epic — **or** is declared foundation work, see below.
+- **Foundation tickets: enabling work that no story backs.** An epic sometimes carries technical work that has no persona and no user-observable behavior — standing up the workspace, an application, a shared library, a base schema — so the Business Analyst correctly wrote no story for it. That work is still this epic's cost and still needs tickets. Emit them with `story: —` and `foundation: true`, and **name their source in `## Context`** (the epic map's foundation-ownership section, an architecture document, a stated finding). Two hard rules: **never invent a user story to justify one** — a story with no persona and no requirement corrupts the traceability chain and hides that the work carries no user value; and **never let one appear without a cited source**, or it is indistinguishable from invented scope. Everything else — the `T-<key>-nn` prefix, the 3h cap, the layer and agent fields — applies to them unchanged.
 - **Ticket IDs are epic-scoped and stable:** `T-<key>-01`, `T-<key>-02`, … matching the story prefix. Example: `T-PF-07`. Never mint a ticket ID outside your epic's prefix — that is what keeps one epic's drill from colliding with another's.
 - Each ticket is estimable at **maximum 3 hours**. Break down anything over 3h into sub-tickets.
 - **What `estimate` measures.** Human hours, deliberately — even though an AI agent does the implementing. The number is a **proxy for scope**, not a prediction of wall-clock time: agent speed varies wildly (writing specs compresses, debugging loops and test runs do not), and a unit nobody can calibrate is worse than a coarse one everybody reads the same way. Keep every ticket in the same unit; comparability across an epic is the whole value.
@@ -56,8 +57,19 @@ ArchitectProcess {
     TestPlan: ""
   }
 
+  EmitFoundationTickets() {
+    // Enabling work this epic carries that no story backs — the BA was right not to write one.
+    // Sourced from outside the stories (epic-map foundation ownership, architecture docs, a
+    // stated finding). NEVER invent a story to justify one; NEVER emit one without a source.
+    for each item in foundationWorkOwnedBy(Epic) {
+      t = { story: null, foundation: true, source: citedOrigin(item), shape: "greenfield" }
+      WorkTickets.push(...sizeAndSplit(t))       // same 3h cap, same layer/agent fields
+    }
+  }
+
   GenerateWorkTickets() {
     if (!Epic) { return }   // ad-hoc mode mints no tickets
+    EmitFoundationTickets() // first: nothing story-derived can compile until this exists
     for each story in UserStories {
       log("Breaking down " + story.id + " (" + story.shape + ")")
       // A gap/defect story is scoped to the delta. Size the delta, not the feature.
@@ -83,13 +95,19 @@ ArchitectProcess {
         else { require(t.context.statesWhyOversized, "an oversized ticket must record why it was not split") }
       }
       require(t.id.startsWith("T-" + Epic.key + "-"), "ticket IDs must carry this epic's prefix")
-      require(t.story in UserStories, "every ticket traces to a story of this epic")
+      require(t.story in UserStories || t.foundation,
+              "every ticket traces to a story of this epic, or is declared foundation work")
+      if (t.foundation) {
+        require(t.source, "a foundation ticket must name the source that owns this work")
+      }
     }
     log("All tickets validated ≤ 3h and epic-scoped")
   }
 
   DefineAcceptanceTests() {
     // Read the source, write Given/When/Then in English, prioritize, recommend a test type.
+    // Foundation tickets are deliberately out of scope here: they have no user scenario.
+    // Their "done" is the mechanical check written in the ticket itself.
     scope = UserStories.length ? UserStories : featureUnderAnalysis()
     for each item in scope {
       scenarios = deriveScenarios(item)           // happy path, edge cases, errors
@@ -135,6 +153,11 @@ layer: application
 agent: backend-engineer
 estimate: 2h
 ---
+
+<!-- Foundation ticket (no story backs it): use `story: —`, add `foundation: true`, and name
+     the owning source in `## Context`. Its `## Acceptance criteria` is a mechanical check —
+     the command that must pass, the boundary that must hold — not a user scenario. -->
+
 
 # [F-2] T-F2-07 · Generate round-robin fixtures for an even number of teams
 
