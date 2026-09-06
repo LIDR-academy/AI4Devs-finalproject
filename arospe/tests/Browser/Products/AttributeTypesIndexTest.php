@@ -39,9 +39,12 @@
 // click -- 'Cotton'/the modal's own list, both visible underneath the still-open modal -- and
 // looked like a wait without being one; both are now genuinely round-trip-gated.
 
+use App\Actions\Products\CreateProduct;
 use App\Actions\Products\CreateProductAttributeType;
+use App\Actions\Products\CreateProductVariant;
 use App\Models\ProductAttributeType;
 use App\Models\ProductAttributeValue;
+use App\Models\ProductCategory;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Spatie\Permission\PermissionRegistrar;
@@ -74,6 +77,32 @@ function attributeTypesBrowserSeed(string $name, array $values = []): ProductAtt
 function attributeTypesLastRowInputSelector(): string
 {
     return '[data-test="attribute-type-values-list"] > div:last-child input';
+}
+
+/**
+ * Story 0030a: a product/variant fixture arranged so renaming one attribute value's text
+ * collides with an already-derived variant SKU. Deliberately its own helper (not a reuse of
+ * tests/Feature/Products/ProductVariantSkuUniquenessTest.php's skuUniquenessTestProductPayload())
+ * -- a same-named top-level function declared in two test files loaded into one PHPUnit process
+ * would fatal with "Cannot redeclare function".
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function attributeTypesRenameCollisionProductPayload(array $overrides = []): array
+{
+    return array_merge([
+        'name' => 'Rename Collision Fixture',
+        'sku' => '0001',
+        'productCategoryId' => ProductCategory::factory()->create()->id,
+        'type' => 'physical',
+        'status' => 'active',
+        'price' => '19.99',
+        'stock' => 5,
+        'description' => null,
+        'featuredMediaId' => null,
+        'orderedGalleryMediaIds' => [],
+    ], $overrides);
 }
 
 // B1 -- Scenario: Removing a value row from an open type form
@@ -330,6 +359,69 @@ test('cancelling the create form adds nothing, and reopening it starts blank aga
         ->assertNoJavaScriptErrors()
         ->assertValue('name', '')
         ->assertDontSee('Should Not Persist Either');
+});
+
+// Story 0030a -- Scenario: Saving a rename that collides with an existing SKU is rejected with a
+// visible message ("Tests to perform": "Browser: the full rename -> collision -> visible callout
+// -> modal-still-open flow..."). RED as of this test's own authoring: neither the
+// data-test="attribute-type-rename-sku-collision" callout nor its @error('sku') outlet exist yet
+// on resources/views/livewire/products/attribute-types.blade.php -- see
+// ai-spec/tasks/in-progress/0030a-attribute-value-rename-warning-and-sku-collision-error.md.
+//
+// Fixture, per the task file's own Provenance section: one product (sku "0001") with two
+// single-value attribute types, each backing its own variant -- Talla="M" (derived sku "0001-M")
+// and Color="L" (derived sku "0001-L"). Renaming "L" to "M" through the real repeater, on the
+// Color type's own edit form, collides with the Talla variant's already-derived sku -- exercising
+// App\Actions\Products\SyncProductAttributeValues::reDeriveVariantSkusForRenamedValues() (already
+// shipped, story 0029) through the real component and Save button, not Livewire::test().
+test('renaming a value into a colliding derived sku shows the callout and keeps the modal open', function () {
+    $actor = attributeTypesBrowserActor();
+    $this->actingAs($actor);
+
+    $product = app(CreateProduct::class)(...attributeTypesRenameCollisionProductPayload());
+
+    $tallaType = ProductAttributeType::factory()->create(['name' => 'Talla', 'position' => 0]);
+    $tallaM = ProductAttributeValue::factory()->create([
+        'product_attribute_type_id' => $tallaType->id,
+        'value' => 'M',
+        'position' => 0,
+    ]);
+
+    $colorType = ProductAttributeType::factory()->create(['name' => 'Color', 'position' => 1]);
+    $colorL = ProductAttributeValue::factory()->create([
+        'product_attribute_type_id' => $colorType->id,
+        'value' => 'L',
+        'position' => 0,
+    ]);
+
+    app(CreateProductVariant::class)($product, [$tallaM->id], '19.99', 5);
+    $colorVariant = app(CreateProductVariant::class)($product, [$colorL->id], '19.99', 5);
+
+    expect($colorVariant->sku)->toBe('0001-L');
+
+    visit('/products/attribute-types')
+        ->assertNoJavaScriptErrors()
+        ->click('@edit-type-'.$colorType->id)
+        ->assertNoJavaScriptErrors()
+        ->fill('@value-input-'.$colorL->id, 'M')
+        ->assertNoJavaScriptErrors()
+        ->click('Save')
+        ->assertNoJavaScriptErrors()
+        // Self-polling completion signal for save()'s round trip (not a blind ->wait(n), per
+        // docs/testing/frontend/playwright-setup.md): this hook cannot exist before the request
+        // refusing the rename has actually landed and re-rendered the still-open modal.
+        ->assertVisible('@attribute-type-rename-sku-collision')
+        ->assertSee(__('products.variants.derived_sku_taken', ['sku' => '0001-M']))
+        // The modal never closed: closeModal() (which unmounts the whole @if ($showModal) block,
+        // Save/Cancel included) only runs on a SUCCESSFUL save. The renamed row's own remove
+        // button is a second, independent signal of the same fact -- its aria-label is derived
+        // from the in-memory (not-yet-persisted) "M" text, which only exists while this row is
+        // still rendered inside the still-open modal.
+        ->assertVisible('[aria-label="Remove M"]')
+        ->assertNoJavaScriptErrors();
+
+    expect(ProductAttributeValue::find($colorL->id)->value)->toBe('L')
+        ->and($colorVariant->fresh()->sku)->toBe('0001-L');
 });
 
 // Mandatory per test-quality-checklist.md: assertNoJavaScriptErrors() on every step of one
