@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { numericField } from "@/lib/form-values";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -53,7 +54,7 @@ export function RetentionForm({
         // configuración entera, no un parche de uno de sus campos.
         body: JSON.stringify({
           enabled: form.get("enabled") === "on",
-          cadenceDays: Number(form.get("cadenceDays")),
+          cadenceDays: numericField(form.get("cadenceDays")),
         }),
       });
       if (!response.ok) {

@@ -13,9 +13,18 @@ const UpdateSetSchema = z
   .object({
     themeId: z.uuid().optional(),
     name: z.string().trim().min(1).optional(),
-    pieceCount: z.number().int().positive().optional(),
+    pieceCount: z
+      .number("Indica cuántas piezas tiene el set.")
+      .int("El número de piezas es un número entero.")
+      .positive("El número de piezas debe ser positivo.")
+      .optional(),
     setNum: z.string().trim().min(1).nullish(),
-    year: z.number().int().min(1949).max(2100).nullish(),
+    year: z
+      .number("El año es un número, como 1999.")
+      .int("Escribe el año con cuatro cifras, como 1999.")
+      .min(1949, "LEGO no fabricaba sets antes de 1949.")
+      .max(2100, "Ese año todavía no ha llegado.")
+      .nullish(),
     recommendedAge: z.string().trim().min(1).nullish(),
     difficulty: z.string().trim().min(1).nullish(),
     referenceValue: money.nullish(),

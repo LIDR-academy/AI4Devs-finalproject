@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { numericField, optionalNumericField } from "@/lib/form-values";
 import {
   Dialog,
   DialogClose,
@@ -133,10 +134,8 @@ export function SetFormDialog({
       if (value !== "") return value;
       return editing ? null : undefined;
     };
-    const optionalNumber = (name: string) => {
-      const value = optional(name);
-      return typeof value === "string" ? Number(value) : value;
-    };
+    const optionalNumber = (name: string) =>
+      optionalNumericField(form.get(name), { editing });
 
     try {
       const response = await fetch(editing ? `/api/sets/${set.id}` : "/api/sets", {
@@ -145,7 +144,7 @@ export function SetFormDialog({
         body: JSON.stringify({
           themeId: text("themeId"),
           name: text("name"),
-          pieceCount: Number(text("pieceCount")),
+          pieceCount: numericField(form.get("pieceCount")),
           setNum: optional("setNum"),
           year: optionalNumber("year"),
           recommendedAge: optional("recommendedAge"),

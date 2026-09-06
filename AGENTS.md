@@ -1296,6 +1296,30 @@ project. Read it at the start of every session.
   que ya están de vuelta en el almacén. O el título deja de decir "fuera", o la columna
   pasa a `HELD_COPY_STATES`.
 
+- **Mensajes de validación en castellano llano (2026-09-06):** los fallos de Zod
+  viajan al cliente en `errors[]` y el formulario los pinta junto al campo, así que los
+  lee una persona — y el alta contestaba "Too big: expected number to be <=12" en el
+  mes de caducidad. La defensa era acordarse de poner mensaje propio en cada regla
+  (`plans/[code]` lo dice por escrito); en la tarjeta del alta se olvidó.
+  **Ahora el defecto es correcto:** `src/http/validation-messages.ts` instala un
+  `z.config({ customError })` con frases sin jerga, importado desde `parse-body.ts`.
+  **No se usa `z.locales.es()`**: traduce literalmente y deja el mismo lenguaje de
+  programador en español ("Demasiado pequeño: se esperaba que texto tuviera >=2
+  caracteres"). Un mensaje escrito en el esquema **sigue mandando** sobre el mapa (red,
+  no techo), y se añadieron a medida donde el rango es la explicación (mes/año de la
+  tarjeta, año del set, cadencia de retención).
+  **Dos hallazgos de camino.** (1) Cuatro rutas —`login`, `register` y las dos de
+  restablecimiento— repetían a mano el bloque de `safeParse` que `parseJsonBody` existe
+  para evitar, y por eso se saltaban el punto único; ya pasan por él. (2)
+  **`JSON.stringify` convierte `NaN` en `null`**, así que `Number("")` → 0 y
+  `Number("abc")` → `null` hacían indistinguibles "no escribí nada" y "escribí letras".
+  `lib/form-values.ts` (`numericField`) conserva la diferencia — vacío es `null`, y lo
+  que no es número viaja **como el texto escrito**—, y lo usan los cinco formularios
+  que mandaban números.
+  **Verificado en verde:** `tsc`, `eslint`, `vitest run` (462, 12 nuevos), `next build`
+  y una pasada real contra `/api/auth/register`: mes 13, campos vacíos, letras y
+  casillas sin marcar responden todos en castellano.
+
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → **Vercel +
 Supabase** (`ADR-0003`, 2026-08-22, sustituye la VM única de `ADR-0001` §5); auth →

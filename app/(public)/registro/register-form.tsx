@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Terms } from "@/components/terms";
+import { numericField } from "@/lib/form-values";
 import { Button } from "@/components/ui/button";
 import { simultaneousSets } from "@/lib/status";
 import type { PublicPlan } from "@/repositories/catalog.repository";
@@ -117,8 +118,8 @@ export function RegisterForm({
           card: {
             brand: text("brand"),
             last4: text("last4"),
-            expMonth: Number(text("expMonth")),
-            expYear: Number(text("expYear")),
+            expMonth: numericField(form.get("expMonth")),
+            expYear: numericField(form.get("expYear")),
           },
           planCode,
         }),

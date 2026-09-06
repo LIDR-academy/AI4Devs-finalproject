@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { ValidationError } from "@/domain/errors";
+import { parseJsonBody } from "@/http/parse-body";
 import { toProblemResponse } from "@/http/problem";
 import { prismaAuthRepository } from "@/repositories/auth.repository.prisma";
 import { prismaNotificationRepository } from "@/repositories/notification.repository.prisma";
@@ -34,22 +34,7 @@ const ConfirmSchema = z
  */
 export async function POST(request: Request) {
   try {
-    const raw: unknown = await request.json().catch(() => {
-      throw new ValidationError(
-        [{ field: "body", issue: "Se esperaba un cuerpo JSON." }],
-        "Petición mal formada."
-      );
-    });
-
-    const parsed = ConfirmSchema.safeParse(raw);
-    if (!parsed.success) {
-      throw new ValidationError(
-        parsed.error.issues.map((issue) => ({
-          field: issue.path.join(".") || "body",
-          issue: issue.message,
-        }))
-      );
-    }
+    const data = await parseJsonBody(request, ConfirmSchema);
 
     await resetPassword(
       {
@@ -57,7 +42,7 @@ export async function POST(request: Request) {
         resets: prismaPasswordResetRepository,
         emit: emitterFor({ notifications: prismaNotificationRepository }),
       },
-      { token: parsed.data.token, password: parsed.data.password }
+      { token: data.token, password: data.password }
     );
 
     // No se abre sesión: acaban de cerrarse todas, incluida la que abriría este

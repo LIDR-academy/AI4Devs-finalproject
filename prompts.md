@@ -1553,3 +1553,49 @@ cuenta los cuatro estados que ocupan plaza de plan, y dos de ellos —`EN_INSPEC
 `EN_HIGIENIZACION`— son copias que ya están de vuelta en el almacén. El número es el
 correcto para saber si el cliente puede pedir otro set, pero el título "Sets fuera" las
 nombra mal. O cambia el título, o la columna pasa a `HELD_COPY_STATES`.
+
+---
+
+### [2026-09-06] — Los errores de validación hablaban en inglés y en jerga
+
+**Prompt:** "En formularios de cliente veo que los errores de validación deberían ser
+en castellano en lenguaje no técnico, evitar «Invalid input: expected number, received
+null» o «Too big: expected number to be <=12». ¿Lo revisas?"
+
+**Resumen.** Los fallos de Zod viajan al cliente dentro de `errors[]` (RFC 9457,
+ADR-0002 §2) y el formulario los pinta **tal cual** junto a su campo. Es decir: lo que
+escribe Zod lo lee una persona. Y sus mensajes por defecto están en inglés y hablan de
+tipos y operadores. La defensa hasta hoy era acordarse de escribir un mensaje propio en
+cada regla —`plans/[code]` lo dice por escrito en un comentario—, y en la tarjeta del
+alta se olvidó. Los dos mensajes citados son exactamente `expMonth` y `expYear`.
+
+**La decisión de fondo: que el defecto sea el correcto.** Un `z.config({ customError })`
+en `src/http/validation-messages.ts`, importado desde `parse-body.ts` —por donde pasa
+toda la validación de peticiones—, con frases que no mencionan tipos: "Este dato es
+obligatorio", "Tiene que ser 12 o menos", "Escribe al menos 8 caracteres", "Aquí va un
+número". **No se usa `z.locales.es()`**, que existe: traduce literalmente y deja el
+mismo lenguaje de programador en otro idioma ("Demasiado pequeño: se esperaba que texto
+tuviera >=2 caracteres"). El problema no era el idioma, era hablarle de tipos a quien
+está rellenando un formulario. El mensaje escrito en el esquema **sigue mandando** sobre
+el mapa —comprobado en un test—: el genérico es una red, no un techo, así que donde el
+rango es la explicación se puso a medida ("El mes va del 1 (enero) al 12 (diciembre)").
+
+**Dos cosas aparecieron por el camino.** La primera: **cuatro rutas** —`login`,
+`register` y las dos de restablecimiento— repetían a mano el bloque de `safeParse` que
+`parseJsonBody` existe precisamente para evitar, y por eso se saltaban el punto único
+donde ahora se instalan los mensajes. Ya pasan por él, y de paso se van veinte líneas de
+copia y pega por ruta.
+
+La segunda explica el "received null" del prompt, que era lo que no cuadraba:
+**`JSON.stringify` convierte `NaN` en `null`**. Los formularios hacían `Number(campo)`,
+así que un campo vacío llegaba como `0` —un valor perfectamente válido— y unas letras
+llegaban como `null`, indistinguibles de no haber escrito nada. El servidor no podía
+contestar bien porque no le llegaba con qué distinguirlo. `lib/form-values.ts`
+(`numericField`) conserva la diferencia: vacío es `null` —"este dato es obligatorio"— y
+lo que no es un número viaja **como el texto que se escribió** —"aquí va un número"—.
+Lo usan los cinco formularios que mandaban números.
+
+**Verificación:** 462 unitarios (12 nuevos, incluido uno que barre catorce esquemas y
+exige que ningún mensaje contenga `invalid|expected|received|too big|<=`) y una pasada
+real contra `/api/auth/register` con mes 13, campos vacíos, letras y casillas sin
+marcar: todos responden en castellano.

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { ValidationError } from "@/domain/errors";
 import { resolveBaseUrl } from "@/http/base-url";
+import { parseJsonBody } from "@/http/parse-body";
 import { toProblemResponse } from "@/http/problem";
 import { consoleMailer } from "@/mail/console-mailer";
 import { prismaAuthRepository } from "@/repositories/auth.repository.prisma";
@@ -28,22 +28,7 @@ const RequestSchema = z.object({
  */
 export async function POST(request: Request) {
   try {
-    const raw: unknown = await request.json().catch(() => {
-      throw new ValidationError(
-        [{ field: "body", issue: "Se esperaba un cuerpo JSON." }],
-        "Petición mal formada."
-      );
-    });
-
-    const parsed = RequestSchema.safeParse(raw);
-    if (!parsed.success) {
-      throw new ValidationError(
-        parsed.error.issues.map((issue) => ({
-          field: issue.path.join(".") || "body",
-          issue: issue.message,
-        }))
-      );
-    }
+    const data = await parseJsonBody(request, RequestSchema);
 
     await requestPasswordReset(
       {
@@ -53,7 +38,7 @@ export async function POST(request: Request) {
         emit: emitterFor({ notifications: prismaNotificationRepository }),
       },
       {
-        email: parsed.data.email,
+        email: data.email,
         baseUrl: resolveBaseUrl(request),
         ipAddress: request.headers.get("x-forwarded-for"),
       }

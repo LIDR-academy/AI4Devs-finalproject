@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { numericField } from "@/lib/form-values";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -62,8 +63,8 @@ function PlanCard({ plan }: { plan: EditablePlan }) {
           // forma "14.99" y convertirlo a número aquí introduciría binario flotante
           // en un importe.
           monthlyPrice: String(form.get("monthlyPrice") ?? "").replace(",", "."),
-          maxSimultaneousSets: Number(form.get("maxSimultaneousSets")),
-          queueBonusDays: Number(form.get("queueBonusDays")),
+          maxSimultaneousSets: numericField(form.get("maxSimultaneousSets")),
+          queueBonusDays: numericField(form.get("queueBonusDays")),
         }),
       });
       if (!response.ok) {

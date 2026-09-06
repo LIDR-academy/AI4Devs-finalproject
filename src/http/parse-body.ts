@@ -1,6 +1,9 @@
 import type { z } from "zod";
 
 import { ValidationError } from "@/domain/errors";
+// Importado por su efecto: instala los mensajes de validación en castellano como
+// defecto de Zod. Va aquí porque por aquí pasa toda la validación de peticiones.
+import "@/http/validation-messages";
 
 /**
  * Lee y valida el cuerpo JSON de una petición contra un esquema Zod.

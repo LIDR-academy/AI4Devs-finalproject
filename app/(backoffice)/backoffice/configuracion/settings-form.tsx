@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { numericField } from "@/lib/form-values";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -35,7 +36,7 @@ export function SettingsForm({ settings }: { settings: Record<string, number> })
   const [saving, setSaving] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  async function save(key: string, value: number) {
+  async function save(key: string, value: number | string | null) {
     setSaving(key);
     setMessage(null);
     try {
@@ -64,8 +65,7 @@ export function SettingsForm({ settings }: { settings: Record<string, number> })
           className="flex flex-col gap-1.5"
           onSubmit={(event) => {
             event.preventDefault();
-            const input = new FormData(event.currentTarget).get("value");
-            save(key, Number(input));
+            save(key, numericField(new FormData(event.currentTarget).get("value")));
           }}
         >
           {/* La aclaración va **debajo** de la fila y no dentro de la columna del

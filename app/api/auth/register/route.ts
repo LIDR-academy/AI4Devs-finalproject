@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { ValidationError } from "@/domain/errors";
+import { parseJsonBody } from "@/http/parse-body";
 import { toProblemResponse } from "@/http/problem";
 import { prismaAuthRepository } from "@/repositories/auth.repository.prisma";
 import { prismaSubscriberRepository } from "@/repositories/subscriber.repository.prisma";
@@ -32,8 +32,18 @@ const RegisterSchema = z.object({
   card: z.object({
     brand: z.string().trim().min(2, "Indica la marca de la tarjeta."),
     last4: z.string().regex(/^\d{4}$/, "Deben ser los 4 últimos dígitos."),
-    expMonth: z.number().int().min(1).max(12),
-    expYear: z.number().int().min(2026).max(2100),
+    // Mensajes propios y no el respaldo genérico: aquí el rango es la explicación.
+    // "Tiene que ser 12 o menos" es correcto y no dice qué se esperaba escribir.
+    expMonth: z
+      .number("Indica el mes de caducidad de la tarjeta.")
+      .int("El mes va del 1 (enero) al 12 (diciembre).")
+      .min(1, "El mes va del 1 (enero) al 12 (diciembre).")
+      .max(12, "El mes va del 1 (enero) al 12 (diciembre)."),
+    expYear: z
+      .number("Indica el año de caducidad de la tarjeta.")
+      .int("Escribe el año con cuatro cifras, como 2030.")
+      .min(2026, "Ese año ya ha pasado: revisa la caducidad de la tarjeta.")
+      .max(2100, "Escribe el año con cuatro cifras, como 2030."),
   }),
 
   // El plan es obligatorio: el alta deja la cuenta operativa o no es un alta (spec
@@ -51,22 +61,7 @@ const RegisterSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const raw: unknown = await request.json().catch(() => {
-      throw new ValidationError(
-        [{ field: "body", issue: "Se esperaba un cuerpo JSON." }],
-        "Petición mal formada."
-      );
-    });
-
-    const parsed = RegisterSchema.safeParse(raw);
-    if (!parsed.success) {
-      throw new ValidationError(
-        parsed.error.issues.map((issue) => ({
-          field: issue.path.join(".") || "body",
-          issue: issue.message,
-        }))
-      );
-    }
+    const data = await parseJsonBody(request, RegisterSchema);
 
     const { userId, planCode } = await registerSubscriber(
       {
@@ -74,7 +69,7 @@ export async function POST(request: Request) {
         subscriptions: prismaSubscriptionRepository,
         auth: prismaAuthRepository,
       },
-      parsed.data
+      data
     );
 
     // 201 con el destino: no se abre sesión automáticamente, el alta y el acceso son

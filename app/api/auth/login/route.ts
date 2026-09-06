@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 
 import { homeSurface, surfacePath } from "@/domain/auth/roles";
-import { ValidationError } from "@/domain/errors";
+import { parseJsonBody } from "@/http/parse-body";
 import { toProblemResponse } from "@/http/problem";
 import { SESSION_COOKIE_NAME, sessionCookieOptions } from "@/http/session-cookie";
 import { prismaAuthRepository } from "@/repositories/auth.repository.prisma";
@@ -19,28 +19,13 @@ const LoginSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const raw: unknown = await request.json().catch(() => {
-      throw new ValidationError(
-        [{ field: "body", issue: "Se esperaba un cuerpo JSON." }],
-        "Petición mal formada."
-      );
-    });
-
-    const parsed = LoginSchema.safeParse(raw);
-    if (!parsed.success) {
-      throw new ValidationError(
-        parsed.error.issues.map((issue) => ({
-          field: issue.path.join(".") || "body",
-          issue: issue.message,
-        }))
-      );
-    }
+    const data = await parseJsonBody(request, LoginSchema);
 
     const { token, expiresAt, user } = await login(
       { repository: prismaAuthRepository },
       {
-        email: parsed.data.email,
-        password: parsed.data.password,
+        email: data.email,
+        password: data.password,
         userAgent: request.headers.get("user-agent"),
         // Detrás del proxy de la plataforma la IP real llega en X-Forwarded-For.
         ipAddress: request.headers.get("x-forwarded-for"),
