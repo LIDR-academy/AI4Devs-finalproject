@@ -53,5 +53,5 @@
       `next build`, `npm run test:e2e` (55) y una pasada real con la suscriptora
       cancelada de la semilla (201 al contratar, 409 al repetir), revirtiendo después
       su suscripción para no gastar el fixture
-- [ ] 4.3 Archivar el change: es lo único pendiente, y aplica los deltas a
+- [x] 4.3 Archivar el change: es lo único pendiente, y aplica los deltas a
       `openspec/specs/accounts-roles` y `openspec/specs/subscriptions`

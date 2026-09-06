@@ -1220,7 +1220,8 @@ project. Read it at the start of every session.
   ningún entregable pendiente.** Para cualquier cambio de estado de una copia, usar
   `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
 
-- **Recuperar contraseña (2026-09-06, cambio OpenSpec `recuperar-contrasena`):** el
+- **Recuperar contraseña (2026-09-06, cambio OpenSpec `recuperar-contrasena`,
+  archivado el 2026-09-07):** el
   login ya no es una puerta sin retorno. Enlace de un solo uso al correo de la cuenta,
   **caducidad 1 h**, del que en la base solo vive el **hash** (`password_reset_tokens`,
   sexta migración; el esquema pasa a **23 modelos** / 18 enums) — la misma figura que la sesión opaca de `ADR-0002`. Reglas que no
@@ -1349,7 +1350,8 @@ project. Read it at the start of every session.
   Añade a `subscriptions` el requisito "Contratar un plan sin suscripción vigente"
   (crea, no reactiva; antigüedad desde cero; nunca dos vigentes a la vez).
   **Sus tareas nacen marcadas**: el código se arregló antes, porque había un usuario
-  encerrado. Queda **archivarlo**, que es lo que aplica los deltas a
+  encerrado. **Archivado el 2026-09-07** como
+  `2026-09-07-contratar-plan-desde-el-portal`; los deltas ya están en
   `openspec/specs/`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
