@@ -136,11 +136,20 @@ endpoint, así que no pueden divergir. Lo que cambia es quién mira el reloj.
 
 ### 5. Credenciales de la instancia desplegada
 
-La semilla usa **un único hash para todas las cuentas**, así que `SEED_PASSWORD` no
-es "la clave del admin" sino una **llave maestra del entorno**: quien la tenga entra
-también como operador y como administrador. Por eso el `readme.md` documenta
-`clickoteca` como contraseña **del entorno local** y las credenciales del despliegue
-se entregan **por el canal del curso**.
+La semilla hashea **una contraseña por rol** (`SEED_PASSWORD_ADMIN`,
+`SEED_PASSWORD_OPERATOR`, `SEED_PASSWORD_SUBSCRIBER`; `SEED_PASSWORD` a secas sirve de
+valor común). Hasta el 2026-09-06 era **un único hash para todas las cuentas**, y eso
+convertía la contraseña en una **llave maestra del entorno**: entregar la de un
+suscriptor de demostración entregaba también la del administrador, que configura el
+sistema y da de baja copias. Separarlas por rol permite entregar las tres a quien
+corrige —media aplicación es el back-office— sin que una filtración de la de suscriptor
+abra el back-office, y permite rotarlas por separado. El `readme.md` documenta
+`clickoteca` como contraseña **del entorno local**; las del despliegue se entregan **por
+el canal del curso**.
+
+**Se fijan en la primera siembra.** El `upsert` de la semilla actualiza nombre y rol,
+no el hash, y en la base solo hay argon2id, que no se invierte: perderlas obliga a
+resetear la instancia. Fue exactamente lo que ocurrió el 2026-09-06.
 
 ---
 

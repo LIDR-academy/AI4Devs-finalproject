@@ -157,7 +157,10 @@ project. Read it at the start of every session.
   (`WHERE status = 'PENDING'`) escrito **a mano en el SQL de la migración**, porque
   Prisma no expresa índices parciales — es el invariante multi-fila de D12.
   **Semilla** (`prisma/seed.ts`, idempotente vía upsert/find-si-falta): 2 planes,
-  5 `SystemSetting`, **13 cuentas** (1 admin, 2 operadores y 10 suscriptores que cubren
+  5 `SystemSetting`, **13 cuentas** con **una contraseña por rol** desde el 2026-09-06
+  (`SEED_PASSWORD_ADMIN` / `_OPERATOR` / `_SUBSCRIBER`, con `SEED_PASSWORD` como valor
+  común y `clickoteca` por defecto en local, que es lo que usa el E2E) — (1 admin,
+  2 operadores y 10 suscriptores que cubren
   los dos planes, los tres estados de suscripción y antigüedades de 1 a 10 meses, para
   ejercitar D7), 20 temas, 35 sets y 59 copias con su `CopyStateTransition`. La semilla
   base solo siembra estados de copia que existen **sin** `Rental` (INTAKE/DISPONIBLE).
@@ -1205,7 +1208,13 @@ project. Read it at the start of every session.
   §8 no queda ninguno abierto, y la cobertura es **18 de 18 historias**. **El log de prompts está al día** (2026-09-06): las seis entradas de la sesión de
   despliegue del 21–22 de agosto están registradas y las secciones estructuradas de
   `prompts.md` ya no tienen huecos; `main` y `project-xvm` avanzan a la punta del
-  trabajo, que es lo que lee quien corrige. **El videotutorial se retira** (decisión
+  trabajo, que es lo que lee quien corrige. **La instancia desplegada se reseteó y
+  volvió a sembrar el 2026-09-06** con el historial de nueve meses y **tres contraseñas
+  nuevas, una por rol**: las anteriores se habían perdido y no eran recuperables —el
+  `upsert` de la semilla no actualiza el hash, y argon2id no se invierte—, así que
+  resetear era la única vía. Están en `default_passwords` (ignorado por git) y **no hay
+  otra copia**: Vercel ya no guarda ninguna `SEED_PASSWORD`. **El videotutorial se
+  retira** (decisión
   del usuario, 2026-09-06): la aplicación desplegada es evaluable directamente, así
   que la grabación no aportaba nada que no se pueda recorrer en vivo. **No queda
   ningún entregable pendiente.** Para cualquier cambio de estado de una copia, usar

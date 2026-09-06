@@ -21,14 +21,33 @@ import { seedRentalHistory } from "./seed-history";
 
 const SEED_DATA_DIR = join(dirname(fileURLToPath(import.meta.url)), "seed-data");
 
-/** Contraseña única para todas las cuentas semilla. Solo desarrollo. */
+/** La que está escrita en el readme. Vale para el entorno local y para nada más. */
+const PUBLIC_DEV_PASSWORD = "clickoteca";
+
 /**
- * Contraseña de las cuentas sembradas. `SEED_PASSWORD` la sustituye, y **hay que usarla
- * en cualquier despliegue accesible desde fuera**: el repositorio es público y
- * `readme.md` documenta la de desarrollo, así que sembrar una URL pública con el valor
- * por defecto equivale a publicar una cuenta de administrador abierta.
+ * Contraseñas de las cuentas sembradas, **una por rol**.
+ *
+ * En local las tres son la misma —`clickoteca`, la que documenta `readme.md` y la que
+ * usa el E2E—, y en un despliegue accesible desde fuera **hay que ponerlas**: el
+ * repositorio es público, así que sembrar una URL abierta con el valor por defecto
+ * equivale a publicar una cuenta de administrador sin candado.
+ *
+ * **Por qué tres y no una.** Con un único hash para todas las cuentas, entregar la
+ * contraseña de un suscriptor de demostración era entregar también la del
+ * administrador —que configura el sistema, da de baja copias y gestiona al personal—,
+ * y no había forma de dar lo uno sin lo otro. Separarlas por rol resuelve eso sin
+ * romper la revisión: quien corrige sigue recibiendo las tres, porque media aplicación
+ * es el back-office, pero cada una abre solo lo suyo y se pueden rotar por separado.
+ *
+ * `SEED_PASSWORD` sigue funcionando como valor común para las tres: era la variable
+ * anterior y un despliegue que ya la tuviera puesta no cambia de comportamiento.
  */
-const DEV_PASSWORD = process.env.SEED_PASSWORD || "clickoteca";
+const SEED_PASSWORDS = {
+  ADMIN: process.env.SEED_PASSWORD_ADMIN || process.env.SEED_PASSWORD || PUBLIC_DEV_PASSWORD,
+  OPERATOR: process.env.SEED_PASSWORD_OPERATOR || process.env.SEED_PASSWORD || PUBLIC_DEV_PASSWORD,
+  SUBSCRIBER:
+    process.env.SEED_PASSWORD_SUBSCRIBER || process.env.SEED_PASSWORD || PUBLIC_DEV_PASSWORD,
+} as const;
 
 type SeedSet = {
   setNum: string;
@@ -338,7 +357,13 @@ const USERS: SeedUser[] = [
 ];
 
 async function seedUsers() {
-  const passwordHash = await hashPassword(DEV_PASSWORD);
+  // Un hash por rol, no por cuenta: argon2id es deliberadamente caro y las trece
+  // cuentas comparten tres contraseñas, así que tres llamadas bastan.
+  const hashByRole = {
+    ADMIN: await hashPassword(SEED_PASSWORDS.ADMIN),
+    OPERATOR: await hashPassword(SEED_PASSWORDS.OPERATOR),
+    SUBSCRIBER: await hashPassword(SEED_PASSWORDS.SUBSCRIBER),
+  } as const;
   const ids = new Map<string, string>();
 
   for (const seed of USERS) {
@@ -347,7 +372,7 @@ async function seedUsers() {
       update: { fullName: seed.fullName, role: seed.role },
       create: {
         email: seed.email,
-        passwordHash,
+        passwordHash: hashByRole[seed.role],
         fullName: seed.fullName,
         role: seed.role,
         isAdult: true,
@@ -423,10 +448,14 @@ async function main() {
   console.log("[seed] Completado:");
   console.log(`  planes            ${plans}`);
   console.log(`  ajustes nuevos    ${settings}`);
-  // La de desarrollo se imprime porque es pública y ahorra ir a buscarla; una puesta a
-  // mano, no: acabaría en el historial de la terminal y en cualquier log de CI.
-  const comoEsLaClave = process.env.SEED_PASSWORD ? "la de SEED_PASSWORD" : `"${DEV_PASSWORD}"`;
-  console.log(`  usuarios          ${userIds.size} (contraseña: ${comoEsLaClave})`);
+  // La pública se imprime porque ya está en el readme y ahorra ir a buscarla; una
+  // puesta a mano, **no**: acabaría en el historial de la terminal y en cualquier log.
+  const comoEsLaClave = (rol: keyof typeof SEED_PASSWORDS) =>
+    SEED_PASSWORDS[rol] === PUBLIC_DEV_PASSWORD ? `"${PUBLIC_DEV_PASSWORD}"` : "configurada";
+  console.log(`  usuarios          ${userIds.size}`);
+  console.log(`    admin           contraseña ${comoEsLaClave("ADMIN")}`);
+  console.log(`    operadores      contraseña ${comoEsLaClave("OPERATOR")}`);
+  console.log(`    suscriptores    contraseña ${comoEsLaClave("SUBSCRIBER")}`);
   console.log(`  temas             ${themes}`);
   console.log(`  sets              ${seededSets}`);
   console.log(`  copias nuevas     ${copies}`);

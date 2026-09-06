@@ -276,17 +276,26 @@ Contraseña común: `clickoteca`. **Es la de tu entorno local y solo la de tu en
 local**, y está escrita aquí porque este repositorio es público: quien clone y siembre
 su propia base entra con ella.
 
-> **La instancia desplegada no usa esta contraseña.** Se sembró con `SEED_PASSWORD`, y
-> sus credenciales **no se publican aquí**: se entregan por el canal del curso. La razón
-> es que la semilla usa **la misma contraseña para las trece cuentas** —un único hash
-> para todas— así que publicarla no sería "dar acceso de demostración" sino dejar abierto
-> también el **administrador**, que configura el sistema, da de baja copias y gestiona el
-> personal. Cualquiera podría vaciar el catálogo la semana de la corrección.
+> **La instancia desplegada no usa esta contraseña.** Tiene las suyas, y **no se
+> publican aquí**: se entregan por el canal del curso.
 >
-> Si vas a desplegar tu propia instancia: `SEED_PASSWORD="…" npm run db:seed`. La
-> contraseña **se fija en la primera siembra** — el `upsert` de la semilla actualiza
-> nombre y rol, no el hash, así que volver a sembrar con otra no cambia las cuentas que
-> ya existan.
+> Son **tres, una por rol** —`SEED_PASSWORD_ADMIN`, `SEED_PASSWORD_OPERATOR` y
+> `SEED_PASSWORD_SUBSCRIBER`—, y la separación no es adorno. Con un único hash para
+> todas las cuentas, entregar la de un suscriptor de demostración era entregar también
+> la del **administrador**, que configura el sistema, da de baja copias y gestiona al
+> personal: no había forma de dar lo uno sin lo otro. Quien corrige sigue recibiendo las
+> tres —media aplicación es el back-office—, pero ahora cada una abre solo lo suyo y se
+> pueden rotar por separado. `SEED_PASSWORD` a secas sigue valiendo como valor común
+> para los tres roles.
+>
+> Si vas a desplegar tu propia instancia:
+> `SEED_PASSWORD_ADMIN="…" SEED_PASSWORD_OPERATOR="…" SEED_PASSWORD_SUBSCRIBER="…" npm run db:seed`.
+>
+> **Y lo que hay que saber antes de equivocarse:** la contraseña **se fija en la primera
+> siembra**. El `upsert` de la semilla actualiza nombre y rol, **no el hash**, así que
+> volver a sembrar con otra no cambia las cuentas que ya existan — y como en la base solo
+> hay hashes argon2id, que no se invierten, perder esas contraseñas obliga a **resetear
+> la instancia** para poder fijar otras. Guárdalas donde no se pierdan.
 
 Las antigüedades distintas están elegidas para poder ejercitar la regla de sets
 restringidos (D7) sin tocar la base a mano. La procedencia del catálogo y qué campos son

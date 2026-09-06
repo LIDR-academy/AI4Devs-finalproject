@@ -1379,3 +1379,51 @@ paralelo podían provocar sin necesidad de ninguna semilla.
 sembrada**, con la semilla ejecutada dos veces seguidas para comprobar que es idempotente
 (mismos recuentos exactos). Sincronizados `readme.md` §1.4 —con la tabla de las trece
 cuentas y qué situación ejercita cada una—, `AGENTS.md` y `ADR-0003`.
+
+### [2026-09-06] — La contraseña perdida, y por qué la única salida era resetear
+**Prompts:** "¿Qué debería hacer para sembrar la instancia de Vercel?" → "La contraseña
+que tenía apuntada del despliegue en Vercel no me funciona. ¿Cómo la puedo recuperar?" →
+"Quiero resetear la instancia entera del despliegue" → "Quiero una contraseña para el
+admin, otra para los operadores y otra para los usuarios de prueba."
+**Resumen de la respuesta:** **No se podía recuperar, y conviene entender por qué antes de
+seguir probando.** En la base solo hay hashes argon2id, que no se invierten; y el `upsert`
+de la semilla actualiza nombre y rol **pero no el hash**, así que cambiar `SEED_PASSWORD`
+y volver a sembrar no habría hecho absolutamente nada sobre cuentas que ya existían. Al
+buscar el valor apareció además la causa de fondo: **`SEED_PASSWORD` ya no existía en
+ningún entorno de Vercel** —ni producción ni *development*—, así que no había ningún sitio
+de registro; la única copia del mundo era un `.env.vercel` de hacía dos semanas.
+**Lo que hizo la decisión fácil fue mirar antes de tocar.** Una sonda de solo lectura
+contra la base desplegada dijo: **5 usuarios, 0 alquileres, 59 copias** — ni un dato que
+no hubiera puesto la propia semilla. Nadie había usado la instancia, así que el reset no
+se llevaba nada por delante y podía además meter el historial de nueve meses de una sola
+pasada. Sin esa comprobación, la misma decisión habría sido a ciegas.
+**Prisma paró la maniobra, y con razón.** `migrate reset` detecta que lo invoca un agente
+y se niega hasta que el usuario consiente explícitamente, exigiendo que se le expliquen
+antes el comando exacto, que la acción es irreversible y si el destino es producción o no.
+Lo era —es la base detrás de `clickoteca.vercel.app`—, y decirlo con esas palabras, junto
+con el recuento de lo que había dentro, es lo que permitió al usuario decidir con criterio
+en vez de firmar un cheque en blanco. Es un candado que **debería existir en más sitios**.
+**Y el encargo cambió la decisión de seguridad del proyecto.** Hasta hoy la semilla usaba
+**un único hash para las trece cuentas**, y en `ADR-0003` está escrito que se valoró
+separarlas y se descartó. El problema de aquella decisión era real: entregar la contraseña
+de un suscriptor de demostración era entregar también la del **administrador**, que
+configura el sistema y da de baja copias, y no había forma de dar lo uno sin lo otro. Ahora
+hay **tres contraseñas, una por rol** (`SEED_PASSWORD_ADMIN`, `_OPERATOR`, `_SUBSCRIBER`,
+con `SEED_PASSWORD` a secas como valor común para no romper nada). Quien corrige sigue
+recibiendo las tres —media aplicación es el back-office—, pero cada una abre solo lo suyo
+y se pueden rotar por separado. En local las tres siguen siendo `clickoteca`, que es lo que
+usa el E2E, así que el entorno de desarrollo no se entera.
+**El reset dejó un hueco que hay que anotar:** `migrate reset` aplicó las cinco migraciones
+pero **no ejecutó la semilla**, y la instancia se quedó unos minutos con la base vacía
+—comprobado, no supuesto: la sonda devolvió ceros en todas las tablas—. Se sembró a
+continuación a mano. Quien repita esto no debe dar por hecho que `reset` siembra: hay que
+mirar.
+**Estado final de la instancia desplegada**, verificado contra la base: 13 cuentas con
+**3 hashes distintos** (uno por rol), 66 copias, 29 alquileres, 186 transiciones, 87
+avisos, el alquiler más antiguo de hace 270 días, y los dos controles de coherencia
+—solapes de copia y alquileres anteriores a su suscripción— a cero. Las tres contraseñas
+quedan en `default_passwords`, ignorado por git, **y no hay otra copia**.
+**Verificación:** 406 unitarios y **46 E2E en verde** contra una base local recreada con el
+código nuevo — que es lo que prueba de verdad el reparto por rol, porque las cuentas
+antiguas conservaban el hash viejo. Sincronizados `readme.md` §1.4, `.env.example`,
+`ADR-0003` §5 y `AGENTS.md`.
