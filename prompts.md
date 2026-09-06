@@ -573,11 +573,124 @@ Número de tickets, desglose por bloque, horas totales y por bloque, cuántos so
 
 ### Response:
 
-Añdadido tickets en la carpeta docs/backlog/C1/tickets/
+Añdadido tickets en la carpeta docs/backlog/C10/tickets/
 
 </br>
 
 **Prompt 2:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Actúa como Architect / Tech Lead para UNA sola épica: C1 — Incident Management. Raíz del repositorio: d:\repositories\ai4devs\proyecto_final\AI4Devs-finalproject El producto es Sport ITSM.
+
+Carga el skill architect-tech-lead (Skill, skill="architect-tech-lead") y ejecútalo entero en DRILL MODE para la clave de épica C1.
+
+Entregables:
+
+- docs/backlog/C1/tickets/T-C1-nn.md — un fichero por ticket
+- docs/backlog/C1/tickets/README.md — índice de tickets en orden de implementación
+- docs/backlog/C1/test-plan.md — el test plan de la épica
+
+IMPORTANTE: todo se escribe EN INGLÉS, con terminología estándar de Service Desk / ITSM. Este prompt está en español, los entregables no: los criterios Given/When/Then alimentan los ficheros .feature y el estándar de lenguaje del proyecto obliga a inglés técnico.
+
+#### Arranque — lee en este orden
+
+1. docs/backlog/C1/user-stories.md — las 32 historias US-C1-01 … US-C1-32. Ese documento es el dueño de los IDs de historia, de su trazabilidad a FR-INC-\*, de su fase y de sus fronteras de alcance. NO lo edites, NO renumeres una US-, NO inventes historias. Lee entero su apartado "Scope boundary", su tabla "Phase boundary" y sus 10 Findings: condicionan un tercio de los tickets.
+2. docs/backlog/epic-map.md — el apartado "### C1 · Incident Management" (dependencias declaradas e inferidas) Y el apartado "## Foundation ownership (priced once)", que te dice lo que esta épica NO paga.
+3. docs/backlog/C10/tickets/ — los 67 tickets ya emitidos de C10. NO los repitas: son el precedente de formato y la prueba de qué cimentación ya está pagada.
+4. CLAUDE.md §3 y docs/product/ARCHITECTURE.md §5 (estructura Nx, tags de tres ejes, matriz de boundaries), §8 (reglas de aislamiento entre contextos) y §9 (autorización, eventos de dominio, ClockPort). De ahí sale el campo `layer:` de cada ticket.
+5. El paso de "leer el código" ES UNA OPERACIÓN VACÍA: no hay package.json, ni apps/, ni libs/, ni un solo test. No busques código y no informes de discrepancias con él.
+
+#### Greenfield
+
+Las 32 historias son greenfield y ninguna lleva línea "Today:". Ningún ticket es de gap ni de defect: ninguno declara "lo que ya funciona". Todos llevan `shape: greenfield`.
+
+#### Cimentación — lee esto con cuidado, C1 no es C10
+
+La cimentación del WORKSPACE está imputada a C10 y solo a C10 ("priced once"): Nx, pnpm, lint/boundaries/tags, las 4 aplicaciones, libs/shared/{contracts,domain,ui,util}, el design system y el esquema base de PostgreSQL con su cadena de migraciones. **NO emitas ni un solo ticket para nada de eso.** Volver a pagarlo es exactamente lo que la regla "priced once" existe para impedir, y sus tickets ya están escritos en docs/backlog/C10/tickets/.
+
+Lo que SÍ es cimentación de C1: levantar las **seis librerías del contexto `incident`** (domain, application, infrastructure, feature, ui, data-access) con sus tres tags correctos, vía generadores Nx. Ninguna historia lo respalda y el Business Analyst hizo bien en no escribirla. Emítelo como tickets de cimentación según la regla de la skill: `story: —`, `foundation: true`, y el origen citado en `## Context` — ARCHITECTURE.md §5.1 (que lista las seis librerías del contexto) y el párrafo "What actually remains" de C1 en el epic map.
+
+Sus `## Acceptance criteria` son verificaciones mecánicas, no escenarios de usuario: la librería existe con los tres tags, `pnpm nx lint` pasa, y `pnpm nx graph` no muestra ninguna dependencia que la matriz de §5.3 prohíba.
+
+#### Fronteras de contexto — el error más caro de esta épica
+
+C1 depende de nueve épicas y casi ninguna existe. Para cada costura, entrega SOLO el lado del Incident, declara la dependencia en `## Context` y NO implementes la mitad ajena:
+
+- US-C1-17 — `incident` NUNCA importa `sla`. Publica señales de pausa/reanudación; el SlaPolicyAdapter en apps/api es el único objeto que conoce ambos (ARCHITECTURE.md §8). El cálculo del reloj es de C7.
+- US-C1-15 — el modelo de estados se realiza con el primitivo `StateModel` de libs/shared/domain (creado por C10, configurado por C12). No construyas un motor de workflow.
+- US-C1-20 — enlazar al Major Incident padre es lado Incident; declarar, coordinar y cerrar el Major Incident es C13. No escribas tickets de FR-MIM-\*.
+- US-C1-21 — Problem (C3), Change (C4), Release (C5) y CI (C6) son fase 2 y no existen. Entrega la referencia tipada y su degradación explícita, nada del lado destino.
+- US-C1-24/25/26 — los Resolver Groups son de C14: se referencian, no se definen. El disparo automático de escalado por umbral de SLA lo levantan FR-SLA-07 y FR-WFL-05 (C7/C12); C1 ejecuta la ACCIÓN de escalado al recibir el evento.
+- US-C1-27 — la conversión necesita el lado Service Request de C2. Solo lado Incident.
+- US-C1-29/30 — la búsqueda de conocimiento, el ranking y el modelo de artículo son de C9. C1 llama a un puerto y registra la deflexión.
+- Notificaciones (C16) y entradas de auditoría (C18) se consumen vía eventos de dominio publicados post-commit: C1 publica, ellas registran.
+
+#### FR-INC-05 — no aplanes el comportamiento distintivo del producto
+
+Las historias US-C1-11, 12, 13 y 14 hacen falsables cinco propiedades del flag de "competición en curso". Los tickets deben conservarlas, no resumirlas en "implementar el flag": justificación obligatoria forzada en el dominio; elevación configurable del Impact que RE-DERIVA la Priority por la matriz y nunca escribe una Priority directamente; set, cambio y limpieza auditados con la cadena causal en un solo evento; y sobre todo **US-C1-12**, cuyos casos negativos son el ticket más importante de la épica: el campo se rechaza en servidor en toda vía de entrada, NO existe ninguna ruta de escritura automatizada (ni calendario, ni feed de fixtures de SCMS, ni regla temporal, ni evento de umbral de SLA, ni importación), y un test unitario afirma que invocar la escritura con un actor de sistema es rechazado.
+
+#### Orden — es parte del entregable
+
+Los tickets van numerados EN ORDEN DE IMPLEMENTACIÓN: T-C1-01 es lo primero que se construye. El orden lo manda la dependencia técnica real, no el número de la historia. Esqueleto de bloques; refínalo si la dependencia lo exige y explica por qué en el README:
+
+1.  Cimentación del contexto: las 6 librerías `incident` con tags.
+2.  Registro base e intake: numeración de referencia (US-05), intake de requester (US-01), intake de agente en un solo flujo (US-02), sujeto e instancia de competición (US-03), adjuntos (US-04).
+3.  Categorización: taxonomía configurable (US-06), puerta de salida de `New` (US-07).
+4.  Priorización: configuración de la matriz (US-09), derivación en servidor (US-08), override con justificación (US-10).
+5.  Flag de competición en curso: uplift configurable (US-14), activación (US-11), solo-agente y nunca automático (US-12), cambio y limpieza (US-13).
+6.  Ciclo de vida: modelo de estados (US-15), puerta de resolución (US-16), señales de parada/reanudación del reloj (US-17).
+7.  Cierre: confirmación o rechazo del requester (US-18), auto-cierre (US-19).
+8.  Colaboración: comentario público vs work note interna (US-22), vista del requester (US-23).
+9.  Asignación y escalado: reasignación con historial (US-24), escalado funcional (US-25), jerárquico y automático (US-26).
+10. First Contact Resolution (US-32) — depende del historial de asignación de US-24.
+11. Enlazado: Incidents y Major Incident padre (US-20), contextos diferidos (US-21).
+12. Regla de alcance en el intake (US-28).
+13. Conocimiento: sugerencias (US-29), registro de deflexión (US-30).
+14. Fase 3: conversión Incident ↔ Service Request (US-27), detección de duplicados (US-31).
+
+El README.md lista los tickets en ese orden, agrupados por bloque, una línea por ticket (id, título, historia, capa, agente, estimación) y el total de horas por bloque y de la épica.
+
+#### Fases — léelas, no las derives
+
+A diferencia de C10, CADA historia de C1 lleva ya un campo `- **Phase:**`. Cópialo al campo `phase:` del ticket tal cual. Hay cuatro valores en uso: `disputed 0/1 (F6)` (US-01…07), `1 (MVP)` (la mayoría), `3 (§14.5)` (US-27, US-31) y `unphased (F9)` (US-28, 29, 30).
+
+**NO resuelvas el corte de fase 0/1 del hallazgo F6.** El §14.2 del PRD sitúa FR-INC-01/02/03 en fase 0 y el §14.3 sitúa FR-INC-01→13 y 18 en el MVP de fase 1, solapándose sin declarar la frontera. Esa decisión es del Product Owner. Los tickets de US-01…07 conservan `disputed 0/1`.
+
+#### Preguntas abiertas que NO debes resolver tú
+
+Seis hallazgos bloquean o condicionan ocho historias. No inventes ninguna de estas decisiones: entrega la parte no bloqueada, marca el ticket con `blocked_by: Fnn` en el frontmatter y explica en `## Context` qué decisión falta y quién debe tomarla.
+
+- **F24** → US-C1-11. La elevación del Impact no está definida en el techo de la escala: si el Incident ya está en el Impact máximo, nadie ha dicho si se satura o si se rechaza el flag. El ticket exige comportamiento determinista y prohíbe el no-op silencioso, pero NO elige.
+- **F25** → US-C1-28. FR-INC-15 dice "reject **or** flag" sin decidirlo, y no dice dónde viven las reglas de detección. La historia asume que son datos de configuración y que rechazar-vs-marcar también se configura: es asunción pendiente de confirmar.
+- **F27** → US-C1-22. Nadie ha dicho si el tipo de una entrada (comentario público / work note interna) puede cambiarse después de creada. Es una divulgación en un sentido y una retractación en el otro. Recomendación de la historia: inmutable, corrección por entrada nueva.
+- **F28** → US-C1-32. "La primera interacción" no está definida, así que FCR no tiene definición testable. Entrega lo inequívoco (historial de asignación y tier resolutor); la frontera de interacción queda bloqueada.
+- **F29** → US-C1-01 y US-C1-03. FR-INC-01 es ambiguo sobre si un requester puede fijar el sujeto de competición estructurado. La lectura de las historias es: requester en texto libre, agente fija la referencia estructurada. Si se confirma lo contrario cambian el formulario y los permisos.
+- **F30** → US-C1-10 y US-C1-13. El override de Priority (FR-INC-04) y la re-derivación por el flag (FR-INC-05) pueden contradecirse y el PRD no dice cuál gana. Las historias asumen que el override se mantiene hasta que un agente vuelve explícitamente al valor derivado, y exigen un test explícito. Dos implementaciones razonables dan recuentos de P1 distintos.
+
+Los hallazgos **F23** (la mitigación del riesgo R1 está sin fase mientras el intake que protege es fase 1) y **F26** (el registro de deflexión de FR-INC-16 choca con FR-KNW-06, que es fase 3) son de fasing, no bloquean la implementación: recógelos en el README como riesgos de secuencia.
+
+#### Restricciones
+
+- IDs T-C1-01, T-C1-02, … con dos dígitos y solo con este prefijo.
+- No renumeres ni inventes IDs US- / FR- / NFR-.
+- Máximo 3h por ticket. Si superas el cap, escribe la razón en `## Context`.
+- El campo `agent:` solo admite `backend-engineer` o `frontend-engineer`, los únicos que existen en .claude/agents/. NO existen ci-cd-expert ni testing-implementer: para el código de test E2E / API-E2E nombra la capa y la plataforma, no un agente inexistente.
+- No escribas tickets de ninguna otra épica, ni de FR-MIM-\* (C13), ni de los lados destino de C2, C3, C4, C5, C6, C7, C9, C12, C14, C16 o C18.
+- No escribas código, ni tests, ni migraciones: te paras en los tickets y el test plan.
+- Escribe únicamente bajo docs/backlog/C1/. No modifiques user-stories.md ni epic-map.md, ni nada bajo docs/backlog/C10/.
+
+#### Informa al terminar
+
+Número de tickets, desglose por bloque, horas totales y por bloque, cuántos son de cimentación del contexto, qué historias han quedado bloqueadas y por qué hallazgo, y cualquier historia demasiado vaga para estimar — di cuál y por qué, sin reescribirla.
+
+### Response:
+
+Añdadido tickets en la carpeta docs/backlog/C1/tickets/
+
+</br>
 
 **Prompt 3:**
 
