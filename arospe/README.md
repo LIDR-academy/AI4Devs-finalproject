@@ -1,5 +1,7 @@
 # Arospe: blog and ecommerce management dashboard
 
+[![Tests](https://github.com/shojen/AI4Devs-finalproject/actions/workflows/tests.yml/badge.svg?branch=feature-entrega2-ARP)](https://github.com/shojen/AI4Devs-finalproject/actions/workflows/tests.yml?query=branch%3Afeature-entrega2-ARP)
+[![Lint](https://github.com/shojen/AI4Devs-finalproject/actions/workflows/lint.yml/badge.svg?branch=feature-entrega2-ARP)](https://github.com/shojen/AI4Devs-finalproject/actions/workflows/lint.yml?query=branch%3Afeature-entrega2-ARP)
 ![PHP](https://img.shields.io/badge/PHP-8.5-777BB4?logo=php&logoColor=white)
 ![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)
 ![Livewire](https://img.shields.io/badge/Livewire-4-4E56A6?logo=livewire&logoColor=white)
@@ -7,7 +9,7 @@
 
 Arospe is a Laravel + Livewire dashboard for managing a blog and an ecommerce operation (products, orders, taxes, and related entities). This README is aimed at a developer joining the team and covers everything needed to get the project running locally.
 
-> The badges above are static (not live CI status). This repo's `.github/workflows/` (`lint.yml`, `tests.yml`) live under `arospe/`, not at the git repository root, so GitHub Actions does not currently pick them up automatically — worth confirming with the team if that's intentional.
+> The Tests/Lint badges above are live GitHub Actions status for the `feature-entrega2-ARP` branch — update the `branch=` query param (or drop it to track the repository's default branch) once this work merges. `.github/workflows/` lives at the git repository root (`../.github/workflows/`), not under `arospe/`, since GitHub Actions only discovers workflows there.
 
 ## Tech stack
 
