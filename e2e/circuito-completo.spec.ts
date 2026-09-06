@@ -201,11 +201,23 @@ test("circuito completo: alquiler, devolución, inspección, higiene y oferta a 
   await page.waitForURL("/");
   await login(page, "operador@clickoteca.test");
 
-  await page.getByRole("button", { name: "Recepcionar" }).first().click();
-  await expect(page.getByRole("heading", { name: /Por inspeccionar/i })).toBeVisible();
+  // Cada botón se ancla **a esta copia** por su nombre accesible ("Recepcionar: <set>",
+  // que la cola de trabajo pone justamente para esto). Con `.first()` bastaba mientras
+  // la cola solo tuviera lo que montaba esta prueba; en cuanto hay más trabajo en curso
+  // —otra prueba en paralelo, o una base sembrada con historial— el primer botón es el
+  // de otra copia, y la prueba avanzaba la equivocada. El fallo aparecía tres pasos más
+  // allá, en la oferta a Bruno que nunca llegaba.
+  const accion = (etiqueta: string) =>
+    page.getByRole("button", { name: `${etiqueta}: ${target!.name}` });
 
-  await page.getByRole("button", { name: "Inspección OK" }).first().click();
-  await expect(page.getByRole("heading", { name: /Por higienizar/i })).toBeVisible();
+  // Y por lo mismo se espera al **botón siguiente de esta copia**, no al encabezado del
+  // grupo: con otras copias en inspección, "Por inspeccionar" ya está en la página antes
+  // de pulsar nada y no probaría que el paso haya ocurrido.
+  await accion("Recepcionar").click();
+  await expect(accion("Inspección OK")).toBeVisible();
+
+  await accion("Inspección OK").click();
+  await expect(accion("Higienizada")).toBeVisible();
 
   // Se espera a que la transición **llegue al servidor** antes de seguir. Los dos
   // pasos anteriores se anclaban en el encabezado del grupo siguiente; este no tiene
@@ -218,7 +230,7 @@ test("circuito completo: alquiler, devolución, inspección, higiene y oferta a 
       (response) =>
         response.url().includes("/transitions") && response.request().method() === "POST"
     ),
-    page.getByRole("button", { name: "Higienizada" }).first().click(),
+    accion("Higienizada").click(),
   ]);
 
   // ── 5. La copia liberada se ofrece a Bruno, que la acepta ──────────────────

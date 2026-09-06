@@ -157,10 +157,19 @@ project. Read it at the start of every session.
   (`WHERE status = 'PENDING'`) escrito **a mano en el SQL de la migración**, porque
   Prisma no expresa índices parciales — es el invariante multi-fila de D12.
   **Semilla** (`prisma/seed.ts`, idempotente vía upsert/find-si-falta): 2 planes,
-  7 `SystemSetting`, 5 usuarios (uno por rol; suscriptores con 8 meses / 1 mes / sin
-  suscripción para ejercitar D7), 20 temas, 35 sets y 59 copias con su
-  `CopyStateTransition`. Solo se siembran estados de copia que existen **sin**
-  `Rental` (INTAKE/DISPONIBLE/INCOMPLETA/BAJA). El catálogo real vive commiteado en
+  5 `SystemSetting`, **13 cuentas** (1 admin, 2 operadores y 10 suscriptores que cubren
+  los dos planes, los tres estados de suscripción y antigüedades de 1 a 10 meses, para
+  ejercitar D7), 20 temas, 35 sets y 59 copias con su `CopyStateTransition`. La semilla
+  base solo siembra estados de copia que existen **sin** `Rental` (INTAKE/DISPONIBLE).
+  **El pasado lo pone `prisma/seed-history.ts`** (ampliación de 2026-09-06): 29
+  alquileres a lo largo de nueve meses con sus devoluciones, inspecciones, envíos,
+  incidencias, colas y avisos, más el circuito parado en sus cuatro puntos a la vez.
+  Tres reglas lo gobiernan: **todo cambio de estado pasa por `applyTransition`** y todo
+  aviso por `notificationsFor` (nada se escribe a mano, así que el historial es un
+  recorrido legal de PRD §15.5); **el historial da de alta sus propias 7 copias** sobre
+  sets que ya tenían dos o más, para no mover los huecos que busca el E2E ("un set con
+  una sola copia libre", "un set con dos o más"); y las fechas cuadran con la
+  suscripción que paga cada alquiler. El catálogo real vive commiteado en
   `prisma/seed-data/sets.json` (extraído de los CSV públicos de Rebrickable) para
   sembrar **sin red**; edad/dificultad/valor son curados a mano.
   **Hashing**: `@node-rs/argon2` (prebuilds, sin compilador) en

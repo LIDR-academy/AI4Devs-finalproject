@@ -136,7 +136,7 @@ endpoint, así que no pueden divergir. Lo que cambia es quién mira el reloj.
 
 ### 5. Credenciales de la instancia desplegada
 
-La semilla usa **un único hash para las cinco cuentas**, así que `SEED_PASSWORD` no
+La semilla usa **un único hash para todas las cuentas**, así que `SEED_PASSWORD` no
 es "la clave del admin" sino una **llave maestra del entorno**: quien la tenga entra
 también como operador y como administrador. Por eso el `readme.md` documenta
 `clickoteca` como contraseña **del entorno local** y las credenciales del despliegue

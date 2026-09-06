@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 import { hashPassword } from "../src/domain/auth/password";
 import { prisma } from "../src/db/prisma";
 
+import { seedRentalHistory } from "./seed-history";
+
 /**
  * Semilla de desarrollo (tarea 1.3).
  *
@@ -227,14 +229,22 @@ type SeedUser = {
   subscription?: {
     plan: "BASIC" | "PREMIUM";
     startedMonthsAgo: number;
-    /** Por defecto `ACTIVE`; `CANCELLED` sirve para ejercitar el rechazo sin plan. */
-    status?: "ACTIVE" | "CANCELLED";
+    /**
+     * Por defecto `ACTIVE`. `CANCELLED` ejercita el rechazo sin plan; `PAUSED` es el
+     * tercer estado del enum, que sin una cuenta que lo tuviera no se veía en ninguna
+     * pantalla.
+     */
+    status?: "ACTIVE" | "PAUSED" | "CANCELLED";
   };
 };
 
 const USERS: SeedUser[] = [
   { email: "admin@clickoteca.test", fullName: "Admin Clickoteca", role: "ADMIN" },
   { email: "operador@clickoteca.test", fullName: "Olga Operadora", role: "OPERATOR" },
+  // Segundo operador: sin él, la columna "quién" de cada transición y de cada informe de
+  // condición siempre diría lo mismo, y una trazabilidad con un único actor no demuestra
+  // que se esté trazando algo.
+  { email: "operador2@clickoteca.test", fullName: "Marc Oliva", role: "OPERATOR" },
   {
     email: "ana@example.test",
     fullName: "Ana Ruiz",
@@ -261,6 +271,69 @@ const USERS: SeedUser[] = [
     // que lo canceló: es el fixture del rechazo `NO_ACTIVE_SUBSCRIPTION` al solicitar
     // un set. Sembrarla sin ninguna fila de suscripción contradiría la propia spec.
     subscription: { plan: "BASIC", startedMonthsAgo: 6, status: "CANCELLED" },
+  },
+
+  // ── Los siete que dan cuerpo a la cartera ─────────────────────────────────
+  //
+  // Ana, Bruno y Carla son fixtures con un papel concreto en las pruebas (la veterana,
+  // el recién llegado, la que canceló) y por eso son tres. Para *mirar* la aplicación
+  // hacen falta más: una lista de clientes de tres filas no enseña cómo se comporta la
+  // pantalla, y sin antigüedades variadas no se distingue a quién le abre la regla de
+  // los sets restringidos. Estos siete cubren los dos planes, los tres estados de una
+  // suscripción y antigüedades de tres a diez meses. Su historial vive en
+  // `seed-history.ts`.
+  {
+    email: "diego@example.test",
+    fullName: "Diego Salas",
+    role: "SUBSCRIBER",
+    address: { line1: "Gran Vía 78, 5º", city: "Bilbao", postalCode: "48011" },
+    subscription: { plan: "PREMIUM", startedMonthsAgo: 10 },
+  },
+  {
+    email: "elena@example.test",
+    fullName: "Elena Prat",
+    role: "SUBSCRIBER",
+    address: { line1: "Rambla Nova 12, 1r 2a", city: "Tarragona", postalCode: "43003" },
+    subscription: { plan: "BASIC", startedMonthsAgo: 7 },
+  },
+  {
+    email: "fran@example.test",
+    fullName: "Fran Ibáñez",
+    role: "SUBSCRIBER",
+    address: { line1: "Calle Larios 9, 4ºA", city: "Málaga", postalCode: "29015" },
+    subscription: { plan: "BASIC", startedMonthsAgo: 5 },
+  },
+  {
+    email: "gemma@example.test",
+    fullName: "Gemma Roca",
+    role: "SUBSCRIBER",
+    address: { line1: "Carrer del Bisbe 3", city: "Girona", postalCode: "17004" },
+    subscription: { plan: "PREMIUM", startedMonthsAgo: 4 },
+  },
+  {
+    email: "hugo@example.test",
+    fullName: "Hugo Márquez",
+    role: "SUBSCRIBER",
+    address: { line1: "Avenida de la Constitución 21", city: "Sevilla", postalCode: "41004" },
+    // Suscripción **en pausa**: el tercer estado del enum, que hasta ahora no tenía
+    // ninguna cuenta y por tanto no se veía en la lista de clientes ni en el portal.
+    subscription: { plan: "BASIC", startedMonthsAgo: 9, status: "PAUSED" },
+  },
+  {
+    email: "irene@example.test",
+    fullName: "Irene Vidal",
+    role: "SUBSCRIBER",
+    address: { line1: "Paseo de Sagasta 40, 2º izq.", city: "Zaragoza", postalCode: "50006" },
+    subscription: { plan: "PREMIUM", startedMonthsAgo: 6 },
+  },
+  {
+    email: "jorge@example.test",
+    fullName: "Jorge Ferrán",
+    role: "SUBSCRIBER",
+    address: { line1: "Calle Uría 33, 6ºC", city: "Oviedo", postalCode: "33003" },
+    // Justo en el umbral de los tres meses: es quien prueba que la regla de antigüedad
+    // de los sets restringidos se mira por el borde y no por el centro.
+    subscription: { plan: "BASIC", startedMonthsAgo: 3 },
   },
 ];
 
@@ -343,6 +416,9 @@ async function main() {
   const { themeIdBySet, total: themes } = await seedThemes(sets);
   const seededSets = await seedSets(sets, themeIdBySet);
   const copies = await seedCopies(userIds.get("operador@clickoteca.test")!);
+  // Después del inventario a propósito: el historial da de alta **sus** copias y necesita
+  // saber cuáles existen ya para no tocar los sets de copia única.
+  const history = await seedRentalHistory(userIds);
 
   console.log("[seed] Completado:");
   console.log(`  planes            ${plans}`);
@@ -354,6 +430,12 @@ async function main() {
   console.log(`  temas             ${themes}`);
   console.log(`  sets              ${seededSets}`);
   console.log(`  copias nuevas     ${copies}`);
+  if (history.skipped) {
+    console.log("  historial         ya sembrado (no se toca)");
+  } else {
+    console.log(`  alquileres        ${history.rentals} (+${history.copies} copias del historial)`);
+    if (history.exhaustedSet) console.log(`  set agotado       ${history.exhaustedSet} (con cola)`);
+  }
 }
 
 main()

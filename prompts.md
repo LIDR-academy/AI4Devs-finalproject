@@ -1320,3 +1320,62 @@ curso.
 Se anotó en los tres sitios que lo daban por pendiente —`readme.md` §1.3, `documents/PRD.md`
 §9 y `AGENTS.md`— como decisión con fecha, no borrando la línea: el proyecto **no tiene ya
 ningún entregable abierto**.
+
+### [2026-09-06] — La semilla, con nueve meses de operación a la espalda
+**Prompt:** "Quiero revisar la aplicación, y quiero un seed de la base de datos que
+incluya, aparte del administrador, dos operadores al azar y 10 usuarios registrados con
+distintos niveles de suscripción y un historial completo de alquileres y devoluciones de
+mínimo 2 meses de antigüedad."
+**Resumen de la respuesta:** La semilla llegaba hasta las cuentas y el catálogo, y ahí se
+paraba: **la base nacía sin pasado**. Para *probar* el circuito bastaba; para *revisarlo*
+no, que es un uso distinto — el portal decía "aún no has alquilado nada", la cola de
+trabajo del operador estaba vacía y el historial de cualquier copia era una sola línea.
+Ahora hay **13 cuentas** (1 admin, 2 operadores y 10 suscriptores que cubren los dos
+planes, los tres estados de suscripción y antigüedades de 1 a 10 meses) y **29 alquileres
+repartidos por nueve meses**, con sus devoluciones, inspecciones, envíos, incidencias,
+colas y avisos.
+**La decisión que sostiene todo lo demás: nada se escribe a mano.** Cada cambio de estado
+pasa por `applyTransition` —el mismo camino que usa la aplicación, con su *compare-and-swap*
+y su registro de auditoría— y cada aviso por `notificationsFor`, la función pura del
+emisor real. La alternativa, escribir los estados finales directamente, habría sido más
+corta y habría producido **historiales imposibles**: copias que aparecen en
+`EN_HIGIENIZACION` sin haber pasado por inspección, alquileres cerrados sin devolución. Y
+sobre todo, habría creado una segunda versión de "cómo se mueve una copia" que divergiría
+de la primera en cuanto alguien tocara la máquina de estados. Las 186 transiciones
+sembradas usan **12 pares distintos, y los 12 están en la tabla de PRD §15.5**.
+**El historial trae sus propias copias, y esa es la segunda regla.** Las 59 de la semilla
+base no se tocan: las 7 que hacen falta las da de alta el módulo con fecha pasada, sobre
+sets que ya tenían dos o más. La razón es el E2E, que busca literalmente "un set con
+**una sola** copia libre" y "un set con **dos o más**": un historial que consumiera
+inventario existente le movería el suelo, y el fallo aparecería a semanas vista y en otra
+pantalla. Con la regla puesta, tras sembrar siguen quedando 11 sets del primer tipo y 12
+del segundo.
+**Lo que se decidió no sembrar, y por qué.** No hay cargos: `Payment` es un modelo que
+**ni se escribe ni se lee en ninguna parte** de la aplicación, así que sembrarlo sería
+inventar filas cuyo único sitio en el mundo es la base de datos. El encargo era el
+historial de alquileres y devoluciones, y ahí es donde se ha quedado.
+**Cuadrar en el tiempo cuesta más de lo que parece.** Ningún alquiler empieza antes de la
+suscripción que lo paga ni después de cancelarla; ninguna copia está en dos manos a la
+vez —una copia sirve a varios ciclos, pero solo si el anterior terminó—; y un set
+restringido solo lo alquila quien tenía la antigüedad exigida **entonces**, no ahora. Las
+cuatro comprobaciones salen a cero contra la base sembrada.
+**El circuito queda parado en sus cuatro puntos a la vez** —una copia adjudicada sin
+preparar, otra en casa del suscriptor, otra en devolución y otra en inspección—, más una
+devolución incompleta que se repuso, una copia de baja por daño y un set agotado
+(`Hogwarts Castle`) con su cola de dos. Ese último detalle no es adorno: **una cola solo
+es coherente si el set no tiene copias libres**, porque con una libre el sistema ya la
+habría ofrecido. Y se eligió un set **restringido** para agotarlo justamente porque son
+los únicos que el E2E descarta por definición.
+**Y una fragilidad que el historial destapó, que era el verdadero hallazgo.** El recorrido
+completo pulsaba `"Recepcionar"`, `"Inspección OK"` y `"Higienizada"` con `.first()`, lo
+que solo funciona si la cola de trabajo contiene únicamente lo que esa prueba montó. Con
+otras copias en curso, el primer botón es el de otra copia: la prueba avanzaba la
+equivocada y el fallo salía **tres pasos más allá**, en una oferta a Bruno que nunca
+llegaba. La cola de trabajo ya ponía el nombre del set en el nombre accesible de cada
+botón —"Recepcionar: <set>"— precisamente para esto, y la prueba no lo estaba usando. Con
+el ancla puesta, el fallo desaparece; y de paso desaparece una carrera que dos pruebas en
+paralelo podían provocar sin necesidad de ninguna semilla.
+**Verificación:** 406 unitarios, `tsc`, `eslint` y **46 E2E en verde contra la base
+sembrada**, con la semilla ejecutada dos veces seguidas para comprobar que es idempotente
+(mismos recuentos exactos). Sincronizados `readme.md` §1.4 —con la tabla de las trece
+cuentas y qué situación ejercita cada una—, `AGENTS.md` y `ADR-0003`.

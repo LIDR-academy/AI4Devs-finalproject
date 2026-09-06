@@ -201,13 +201,11 @@ y pide el siguiente—.
 
 ### **1.4. Instrucciones de instalación:**
 
-> **Estado actual del repositorio.** El **scaffolding Next.js 16 está generado**
-> (App Router, TypeScript, en la raíz del repo) y el modelo de datos está
-> implementado en Prisma (`prisma/schema.prisma`, 22 modelos / 18 enums). Toda la
-> arquitectura está decidida y documentada (ver §2 y
-> `documents/ADR-0001`/`ADR-0002`). Las funcionalidades de negocio están **en
-> desarrollo**: los pasos siguientes levantan el entorno y la app, pero las
-> pantallas y endpoints de dominio se van añadiendo por fases.
+> **Estado actual del repositorio.** El MVP está **completo y desplegado**: las 45
+> tareas hechas, las **18 de 18 historias** con recorrido por interfaz y la aplicación
+> en marcha en <https://clickoteca.vercel.app> (§0.4). Los pasos de abajo levantan el
+> mismo sistema en local, con una base sembrada que ya trae meses de operación a la
+> espalda.
 
 Requisitos: **Node.js 22.22+** (Next 16 admite 20.9+, pero Testcontainers 12 —
 usado en los tests de integración — exige ≥22.22), **Docker** (para el Postgres
@@ -246,16 +244,33 @@ debe devolver `{"status":"ok"}`.
 
 `npm run db:seed` deja el entorno listo para trastear: los 2 planes de §D9, los 5
 parámetros configurables del sistema, **35 sets reales** del dataset público de
-Rebrickable con sus temas, **59 copias** repartidas por estado (disponibles,
-incompletas, en alta y de baja) y **5 cuentas**, una por rol:
+Rebrickable con sus temas, **66 copias**, **13 cuentas** y un **historial de nueve
+meses de operación** — 29 alquileres con sus devoluciones, inspecciones, envíos e
+incidencias.
+
+**El personal:**
 
 | Cuenta | Rol | Situación |
 | --- | --- | --- |
-| `admin@clickoteca.test` | ADMIN | Configuración y bajas de copia |
-| `operador@clickoteca.test` | OPERATOR | Cola de trabajo del back-office |
-| `ana@example.test` | SUBSCRIBER | Premium con 8 meses — supera la antigüedad mínima |
-| `bruno@example.test` | SUBSCRIBER | Basic con 1 mes — **no** llega a la antigüedad mínima |
-| `carla@example.test` | SUBSCRIBER | Suscripción **cancelada** — sin plan activo, no puede alquilar |
+| `admin@clickoteca.test` | ADMIN | Configuración, bajas de copia y gestión de personal |
+| `operador@clickoteca.test` | OPERATOR | Olga Operadora — cola de trabajo del back-office |
+| `operador2@clickoteca.test` | OPERATOR | Marc Oliva — el segundo turno; los informes de condición se reparten entre los dos |
+
+**Los diez suscriptores**, elegidos para cubrir los dos planes, los tres estados de
+una suscripción y antigüedades de uno a diez meses:
+
+| Cuenta | Plan | Antigüedad | Situación ahora mismo |
+| --- | --- | --- | --- |
+| `ana@example.test` | Premium | 8 meses | 3 alquileres cerrados; supera la antigüedad mínima para sets restringidos |
+| `bruno@example.test` | Basic | 1 mes | Un solo alquiler; **no** llega a la antigüedad mínima |
+| `carla@example.test` | Basic | 6 meses | Suscripción **cancelada** — no puede alquilar |
+| `diego@example.test` | Premium | 10 meses | El cliente más antiguo: 4 cerrados, uno de ellos ganado en la cola; **2 plazas ocupadas** |
+| `elena@example.test` | Basic | 7 meses | Una devolución **incompleta**: faltaban piezas, se repusieron |
+| `fran@example.test` | Basic | 5 meses | Un set **adjudicado sin preparar** — la fila que espera en «Por preparar» |
+| `gemma@example.test` | Premium | 4 meses | Ha pulsado «Devolver»: la copia está **en devolución** |
+| `hugo@example.test` | Basic | 9 meses | Suscripción **en pausa**, sin nada fuera |
+| `irene@example.test` | Premium | 6 meses | Una copia **sobre la mesa de inspección** y otra que acabó de **baja** por daño |
+| `jorge@example.test` | Basic | 3 meses | En cola con **penalización**: dejó caducar una oferta |
 
 Contraseña común: `clickoteca`. **Es la de tu entorno local y solo la de tu entorno
 local**, y está escrita aquí porque este repositorio es público: quien clone y siembre
@@ -263,7 +278,7 @@ su propia base entra con ella.
 
 > **La instancia desplegada no usa esta contraseña.** Se sembró con `SEED_PASSWORD`, y
 > sus credenciales **no se publican aquí**: se entregan por el canal del curso. La razón
-> es que la semilla usa **la misma contraseña para las cinco cuentas** —un único hash
+> es que la semilla usa **la misma contraseña para las trece cuentas** —un único hash
 > para todas— así que publicarla no sería "dar acceso de demostración" sino dejar abierto
 > también el **administrador**, que configura el sistema, da de baja copias y gestiona el
 > personal. Cualquiera podría vaciar el catálogo la semana de la corrección.
@@ -273,10 +288,38 @@ su propia base entra con ella.
 > nombre y rol, no el hash, así que volver a sembrar con otra no cambia las cuentas que
 > ya existan.
 
-Las tres antigüedades distintas están elegidas para poder ejercitar la regla de sets
+Las antigüedades distintas están elegidas para poder ejercitar la regla de sets
 restringidos (D7) sin tocar la base a mano. La procedencia del catálogo y qué campos son
 curados a mano se detallan en
 [`prisma/seed-data/README.md`](prisma/seed-data/README.md).
+
+##### El historial, y por qué se puede confiar en él
+
+Sin pasado, la aplicación se revisa vacía: el portal dice «aún no has alquilado nada»,
+la cola de trabajo del operador no tiene ninguna fila y el historial de una copia es una
+sola línea. `prisma/seed-history.ts` le pone nueve meses de operación encima — 186
+transiciones de estado, 52 informes de condición, 54 envíos, 2 incidencias, 3 entradas de
+cola y 87 avisos — con tres reglas que lo hacen creíble en vez de decorativo:
+
+1. **Ningún estado se escribe a mano.** Cada cambio pasa por `applyTransition`, el mismo
+   camino que usa la aplicación, así que el historial de cualquier copia es un recorrido
+   legal de la máquina de estados de PRD §15.5 — y los avisos salen de la misma función
+   pura (`notificationsFor`) que usa el emisor real.
+2. **El historial trae sus propias copias.** Las 59 de la semilla base no se tocan: las
+   7 restantes las da de alta este módulo con fecha pasada, sobre sets que ya tenían dos
+   o más. Es lo que permite que el E2E siga encontrando lo que busca —«un set con una
+   sola copia libre», «un set con dos o más»— después de sembrar.
+3. **Todo cuadra en el tiempo.** Ningún alquiler empieza antes de la suscripción que lo
+   paga ni después de cancelarla, ninguna copia está en dos manos a la vez, y un set
+   restringido solo lo alquila quien ya tenía la antigüedad exigida **entonces**.
+
+El resultado deja el circuito **parado en sus cuatro puntos a la vez** —una copia
+adjudicada sin preparar, otra en casa del suscriptor, otra en devolución y otra en
+inspección—, de modo que el back-office tiene trabajo real desde el primer arranque. Y
+un set agotado (`Hogwarts Castle`) con su cola de dos, que es la única situación en que
+una cola es coherente: con una copia libre, el sistema ya la habría ofrecido.
+
+Es idempotente como el resto de la semilla: si el historial ya está, no se duplica.
 
 #### Base de datos local con Docker
 
