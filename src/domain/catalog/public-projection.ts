@@ -10,6 +10,12 @@
  *  - el **valor de referencia**, que es el coste de reposición: información interna
  *    de negocio, no un atributo de catálogo.
  *
+ * Sí entra `restricted`: es una **condición de acceso del catálogo**, del mismo tipo
+ * que la edad recomendada, y no ninguna de las tres cosas de arriba. Para el visitante
+ * es incluso información de venta —hay sets que se ganan con antigüedad—. Lo que
+ * sigue exigiendo sesión es saber **desde cuándo** puede llevárselo quien pregunta,
+ * porque eso depende de su suscripción y no del set.
+ *
  * La frontera se traza aquí, en la forma de los datos, y no en el catálogo entero:
  * eso da descubribilidad y SEO sin enseñar el inventario.
  */
@@ -24,6 +30,8 @@ export interface PublicSet {
   recommendedAge: string | null;
   difficulty: string | null;
   boxPhotoUrl: string | null;
+  /** Si exige antigüedad mínima de suscripción para alquilarlo (D7). */
+  restricted: boolean;
 }
 
 /** Campos del modelo `Set` que la proyección pública puede leer. */
@@ -36,6 +44,7 @@ export const PUBLIC_SET_FIELDS = [
   "recommendedAge",
   "difficulty",
   "boxPhotoUrl",
+  "restricted",
 ] as const;
 
 /**
@@ -43,7 +52,7 @@ export const PUBLIC_SET_FIELDS = [
  * puedan afirmarlo explícitamente: una fuga aquí es un fallo de la spec, no un
  * detalle estético.
  */
-export const NON_PUBLIC_SET_FIELDS = ["referenceValue", "published", "restricted"] as const;
+export const NON_PUBLIC_SET_FIELDS = ["referenceValue", "published"] as const;
 
 /**
  * Proyección **autenticada**: lo mismo que ve el visitante **más** la disponibilidad
@@ -64,6 +73,4 @@ export interface AuthenticatedSet extends PublicSet {
    * encolado. Nunca revela quién ocupa las demás posiciones.
    */
   queuePosition: number | null;
-  /** Si el set exige antigüedad mínima de suscripción (D7). */
-  restricted: boolean;
 }

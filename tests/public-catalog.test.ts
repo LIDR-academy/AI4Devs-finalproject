@@ -25,6 +25,7 @@ const SET: PublicSet = {
   recommendedAge: "16+",
   difficulty: "Experto",
   boxPhotoUrl: "https://cdn.rebrickable.com/media/sets/75192-1.jpg",
+  restricted: false,
 };
 
 const PLANS: PublicPlan[] = [
@@ -55,7 +56,6 @@ function fakeRepository(options: { published?: PublicSet[]; total?: number } = {
         queueLength: 4,
         // Solo "ana" está en la cola, en tercera posición.
         queuePosition: userId === "ana" ? 3 : null,
-        restricted: true,
       };
     },
     async listPublicPlans() {
@@ -84,6 +84,14 @@ describe("proyección pública del catálogo (D13)", () => {
     }
   });
 
+  it("la restricción por antigüedad sí es pública: es del set, no del inventario", () => {
+    // Estuvo en la lista de campos internos hasta el change `sets-restringidos-a-la-
+    // vista`. Sacarlo de ahí es una decisión de spec, y esto es lo que la fija: sin
+    // esta afirmación, devolverlo a la lista pasaría desapercibido.
+    expect(NON_PUBLIC_SET_FIELDS as readonly string[]).not.toContain("restricted");
+    expect(PUBLIC_SET_FIELDS as readonly string[]).toContain("restricted");
+  });
+
   it("expone exactamente los atributos de catálogo que pide la spec", async () => {
     const { repository } = fakeRepository();
     const { sets } = await browsePublicCatalog({ repository });
@@ -96,6 +104,7 @@ describe("proyección pública del catálogo (D13)", () => {
         "name",
         "pieceCount",
         "recommendedAge",
+        "restricted",
         "setNum",
         "theme",
         "year",

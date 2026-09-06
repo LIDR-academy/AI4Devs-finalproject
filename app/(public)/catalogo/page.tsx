@@ -1,8 +1,10 @@
 import Link from "next/link";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { currentSession } from "@/http/auth-context";
 import { prismaCatalogRepository } from "@/repositories/catalog.repository.prisma";
+import { prismaSettingsRepository } from "@/repositories/settings.repository.prisma";
 import { browsePublicCatalog } from "@/use-cases/catalog/browse-public-catalog";
 
 export const metadata = {
@@ -23,12 +25,15 @@ export default async function CatalogPage({
   const page = Math.max(1, Number(pageParam) || 1);
   const limit = 24;
 
-  const [{ sets, total }, session] = await Promise.all([
+  const [{ sets, total }, session, { restrictedSetMinMonths }] = await Promise.all([
     browsePublicCatalog(
       { repository: prismaCatalogRepository },
       { limit, offset: (page - 1) * limit }
     ),
     currentSession(),
+    // El umbral se lee, no se escribe a mano: lo configura el admin y esta frase
+    // tiene que envejecer con él.
+    prismaSettingsRepository.load(),
   ]);
 
   const lastPage = Math.max(1, Math.ceil(total / limit));
@@ -83,6 +88,12 @@ export default async function CatalogPage({
               <div className="h-40 w-full rounded bg-[var(--muted)]" aria-hidden="true" />
             )}
             <div className="space-y-1">
+              {/* La condición es un atributo del set —igual para todos, con sesión o
+                  sin ella—, así que se marca aquí. **Desde cuándo** puede llevárselo
+                  quien mira depende de su suscripción y vive en la ficha. */}
+              {set.restricted ? (
+                <Badge tone="info">A partir de {restrictedSetMinMonths} meses</Badge>
+              ) : null}
               <h2 className="font-medium leading-tight">
                 <Link href={`/catalogo/${set.id}`} className="after:absolute after:inset-0 hover:underline">
                   {set.name}

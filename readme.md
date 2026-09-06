@@ -100,6 +100,10 @@ y pide el siguiente—.
   ciclo de vida de 9 estados: `INTAKE → DISPONIBLE ⇄ OFRECIDA → ALQUILADA →
   EN_DEVOLUCION → EN_INSPECCION → EN_HIGIENIZACION`, con ramas a `INCOMPLETA` y
   `BAJA`).
+- **Sets por antigüedad, a la vista:** los sets restringidos se señalan en el
+  catálogo con la antigüedad que exigen —también al visitante: es un atributo del set,
+  no inventario— y la ficha dice **desde cuándo** podrá llevárselo quien mira. No se
+  ocultan: la antigüedad es un premio por seguir suscrito, y esconderla no la motiva.
 - **Solicitud de sets y cola de reservas justa:** si hay copia disponible se
   asigna directa; si no, el suscriptor entra en una cola ordenada por **prioridad
   aditiva** (antigüedad de espera + bono de plan, nunca multiplicativa) — la
@@ -697,8 +701,8 @@ original fue de estabilidad: el pool de compilación de `next dev` se caía bajo
 de varios navegadores y dejaba el servidor devolviendo 500 en unas rutas y colgando
 otras. `E2E_DEV=1` conserva el objetivo antiguo para iterar sobre una pantalla.
 
-> **Estado: en verde.** **467 tests unitarios y de integración** en 34 ficheros
-> (`npm test`) y **55 E2E** en 12 ficheros (`npm run test:e2e`): 51 en escritorio y
+> **Estado: en verde.** **474 tests unitarios y de integración** en 34 ficheros
+> (`npm test`) y **56 E2E** en 12 ficheros (`npm run test:e2e`): 52 en escritorio y
 > los 4 del *smoke* repetidos en un viewport de móvil — el recorrido completo se
 > queda fuera del proyecto móvil a propósito, porque comparte la base sembrada con
 > el de escritorio y ejecutar los dos a la vez es una carrera por la misma copia.

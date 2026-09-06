@@ -47,7 +47,21 @@ export type IneligibilityReason =
 
 export type Eligibility =
   | { eligible: true }
-  | { eligible: false; reason: IneligibilityReason; detail: string };
+  | {
+      eligible: false;
+      reason: IneligibilityReason;
+      detail: string;
+      /**
+       * Desde cuándo dejará de aplicar el motivo. Solo lo lleva
+       * `SUBSCRIPTION_TOO_RECENT`, que es el único que se resuelve **solo con
+       * esperar**: los otros tres dependen de una acción —contratar, devolver, o que
+       * termine una inspección— y no tienen fecha que prometer.
+       *
+       * Va como `Date` y no como frase: el formato es de la capa que pinta, que ya
+       * tiene sus `Intl`. Así el mismo cálculo sirve para la ficha y para la API.
+       */
+      availableFrom?: Date;
+    };
 
 export interface EligibilityInput {
   subscription: {
@@ -70,6 +84,36 @@ export function monthsBetween(from: Date, to: Date): number {
   // Si aún no se ha alcanzado el día del mes, el mes no está completo.
   if (to.getDate() < from.getDate()) months -= 1;
   return Math.max(0, months);
+}
+
+/**
+ * Primer instante en que una suscripción iniciada en `startedAt` alcanza
+ * `minMonths` de antigüedad.
+ *
+ * Es la **inversa exacta** de `monthsBetween`, y por eso no es "sumar meses" a secas.
+ * Dos trampas, las dos encontradas por el barrido del test y ninguna leyendo el código:
+ *
+ *  1. **El día que no existe en el mes de destino.** Con un alta el **30 de enero** y
+ *     un mes, el 30 de febrero no existe. `setMonth` desborda al **2 de marzo**, pero
+ *     `monthsBetween` ya da el mes por completo el **1 de marzo** —el día 1 es menor
+ *     que el 30, sí, pero han pasado dos meses de calendario—. Sumar y dejar que
+ *     desborde llegaba un día tarde. Cuando el día no cabe, la respuesta es el **día 1
+ *     del mes siguiente**.
+ *  2. **La hora.** `monthsBetween` compara año, mes y día e **ignora la hora**, así que
+ *     quien se suscribió a mediodía cumple a las 00:00 de ese día. Conservar la hora
+ *     del alta hacía esperar medio día de más.
+ */
+export function restrictedAvailableFrom(startedAt: Date, minMonths: number): Date {
+  const month = startedAt.getMonth() + minMonths;
+  const day = startedAt.getDate();
+
+  // `new Date(y, m, d)` normaliza sola: un 30 de febrero cae en marzo. Que el día
+  // resultante no sea el pedido es justo la señal de que el día no cabía.
+  const target = new Date(startedAt.getFullYear(), month, day);
+  if (target.getDate() !== day) {
+    return new Date(startedAt.getFullYear(), month + 1, 1);
+  }
+  return target;
 }
 
 export function checkEligibility(input: EligibilityInput): Eligibility {
@@ -113,6 +157,10 @@ export function checkEligibility(input: EligibilityInput): Eligibility {
         eligible: false,
         reason: "SUBSCRIPTION_TOO_RECENT",
         detail: `Este set requiere ${input.restrictedSetMinMonths} meses de antigüedad de suscripción; llevas ${months}.`,
+        availableFrom: restrictedAvailableFrom(
+          subscription.startedAt,
+          input.restrictedSetMinMonths
+        ),
       };
     }
   }

@@ -125,7 +125,10 @@ Reglas adicionales:
   **completada** (copia en `DISPONIBLE`); mientras tanto, esa copia sigue
   contando contra el límite del plan.
 - Antigüedad mínima configurable (p. ej. 3 meses) para sets marcados como
-  restringidos por precio/categoría.
+  restringidos por precio/categoría. **Se muestran en el catálogo señalados con la
+  antigüedad que exigen** —también al visitante: es un atributo del set, no
+  disponibilidad— y **nunca se ocultan**; la ficha le dice a quien no llega **desde
+  qué fecha** podrá alquilarlo.
 - No se puede pausar/cancelar la suscripción con una copia en su poder — ver
   §4.7 (camino feliz de cancelación).
 - Límite de colas simultáneas por usuario, configurable (default 1, ampliable
@@ -365,7 +368,7 @@ estándar:
 | ID | Nombre | Actor principal | Descripción breve |
 |---|---|---|---|
 | UC-P01 | Ver catálogo de sets | Visitante | Navega la lista de sets disponibles en el catálogo. |
-| UC-P02 | Ver detalle de set | Visitante | Consulta la ficha del set (foto, nº de piezas, tema, dificultad). La **disponibilidad y la posición en cola** solo son visibles para suscriptores autenticados (proyección pública vs. autenticada, `design.md` D13). |
+| UC-P02 | Ver detalle de set | Visitante | Consulta la ficha del set (foto, nº de piezas, tema, dificultad, y si exige antigüedad mínima). La **disponibilidad y la posición en cola** solo son visibles para suscriptores autenticados (proyección pública vs. autenticada, `design.md` D13). |
 | UC-P03 | Registrarse | Visitante | Alta como suscriptor: datos personales, declaración de mayoría de edad, tarjeta simulada, dirección de envío (obligatoria) y aceptación de condiciones. |
 | UC-P04 | Iniciar sesión | Visitante | Autenticación con credenciales. Precondición implícita de todos los UCs del Suscriptor. |
 | UC-P05 | Cambiar de plan | Suscriptor | Cambia entre BASIC (14,99 €/mes, 1 set) y PREMIUM (24,99 €/mes, hasta 2 sets simultáneos). La contratación inicial ocurre en el alta (UC-P03); bajar de plan se rechaza si tiene más sets fuera de los que permite el plan nuevo. |

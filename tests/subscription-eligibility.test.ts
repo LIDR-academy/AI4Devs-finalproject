@@ -6,6 +6,7 @@ import {
   checkEligibility,
   monthsBetween,
   occupiesPlanSlot,
+  restrictedAvailableFrom,
   type EligibilityInput,
 } from "@/domain/subscriptions/eligibility";
 
@@ -102,7 +103,24 @@ describe("antigüedad mínima para sets restringidos", () => {
     if (!result.eligible) {
       expect(result.detail).toContain("3 meses");
       expect(result.detail).toContain("llevas 1");
+      // Y **desde cuándo**, que es lo único accionable: la espera no depende de nadie.
+      // Al comienzo del día: la regla cuenta días de calendario, no horas.
+      expect(result.availableFrom).toEqual(new Date(2026, 7, 15));
     }
+  });
+
+  it("los motivos que no se resuelven esperando no prometen fecha", () => {
+    // Contratar un plan, devolver un set o esperar a que termine una inspección
+    // dependen de una acción, no del calendario: una fecha ahí sería inventada.
+    const sinPlan = checkEligibility(input({ subscription: null }));
+    const planLleno = checkEligibility(
+      input({ currentCopyStates: ["ALQUILADA"], set: { restricted: false } })
+    );
+
+    expect(sinPlan.eligible).toBe(false);
+    expect(planLleno.eligible).toBe(false);
+    if (!sinPlan.eligible) expect(sinPlan.availableFrom).toBeUndefined();
+    if (!planLleno.eligible) expect(planLleno.availableFrom).toBeUndefined();
   });
 
   it("acepta a quien justo cumple la antigüedad", () => {
@@ -197,5 +215,69 @@ describe("pausar o cancelar la suscripción", () => {
     const result = canEndSubscription(["ALQUILADA", "ALQUILADA"]);
     expect(result.eligible).toBe(false);
     if (!result.eligible) expect(result.detail).toContain("2 sets");
+  });
+});
+
+describe("desde cuándo se cumple la antigüedad", () => {
+  /**
+   * La propiedad que de verdad importa, y la única que sobrevive a un cambio de
+   * implementación: la fecha devuelta es el **primer instante** que cumple. Se
+   * comprueba contra `monthsBetween`, que es quien define qué es un mes completo.
+   */
+  function esElPrimerInstante(startedAt: Date, minMonths: number) {
+    const desde = restrictedAvailableFrom(startedAt, minMonths);
+    const unPocoAntes = new Date(desde.getTime() - 1);
+    return {
+      cumple: monthsBetween(startedAt, desde) >= minMonths,
+      antesNoCumple: monthsBetween(startedAt, unPocoAntes) < minMonths,
+      desde,
+    };
+  }
+
+  it("es el primer instante que cumple, en un mes corriente", () => {
+    const veredicto = esElPrimerInstante(new Date(2026, 4, 15, 10, 0, 0), 3);
+    expect(veredicto.desde).toEqual(new Date(2026, 7, 15));
+    expect(veredicto.cumple).toBe(true);
+    expect(veredicto.antesNoCumple).toBe(true);
+  });
+
+  it("un alta el día 31 espera al mes siguiente, no al día 30", () => {
+    // 31 de enero + 3 meses: el 30 de abril **no** cumple —el día 30 es menor que el
+    // 31, así que ese mes no está completo— y el primer instante bueno es el 1 de mayo.
+    const startedAt = new Date(2026, 0, 31, 10, 0, 0);
+    const desde = restrictedAvailableFrom(startedAt, 3);
+
+    expect(monthsBetween(startedAt, new Date(2026, 3, 30, 10, 0, 0))).toBe(2);
+    expect(desde).toEqual(new Date(2026, 4, 1));
+    expect(esElPrimerInstante(startedAt, 3).cumple).toBe(true);
+    expect(esElPrimerInstante(startedAt, 3).antesNoCumple).toBe(true);
+  });
+
+  it("un alta el día 30 con febrero de por medio no espera un día de más", () => {
+    // El caso que destapó el barrido: el 30 de febrero no existe. Sumar el mes y dejar
+    // que la fecha desbordara daba el 2 de marzo, y `monthsBetween` ya cumple el 1.
+    const startedAt = new Date(2026, 0, 30, 12, 0, 0);
+    expect(restrictedAvailableFrom(startedAt, 1)).toEqual(new Date(2026, 2, 1));
+  });
+
+  it("empieza al comienzo del día, no a la hora del alta", () => {
+    // `monthsBetween` compara año, mes y día e ignora la hora: quien se suscribió a
+    // las 23:45 cumple a las 00:00 de ese día. Conservar la hora del alta habría
+    // hecho esperar casi un día de más, y sin que nada lo delatara.
+    const startedAt = new Date(2026, 4, 15, 23, 45, 12);
+    expect(restrictedAvailableFrom(startedAt, 1)).toEqual(new Date(2026, 5, 15));
+  });
+
+  it("cumple la propiedad para cualquier día de alta del año y varios umbrales", () => {
+    // Barrido: 365 fechas de alta por cuatro umbrales. Es donde apareceria un mes de
+    // 30 días, un febrero o un año bisiesto que la forma ingenua no cubriera.
+    for (let dia = 0; dia < 365; dia++) {
+      const startedAt = new Date(2026, 0, 1 + dia, 12, 0, 0);
+      for (const meses of [1, 3, 6, 12]) {
+        const veredicto = esElPrimerInstante(startedAt, meses);
+        expect(veredicto.cumple, `${startedAt.toDateString()} +${meses}`).toBe(true);
+        expect(veredicto.antesNoCumple, `${startedAt.toDateString()} +${meses}`).toBe(true);
+      }
+    }
   });
 });

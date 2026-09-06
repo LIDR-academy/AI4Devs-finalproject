@@ -98,3 +98,54 @@ test("un set que no está en el catálogo responde 404, exista o no", async ({ p
   const response = await page.goto("/catalogo/00000000-0000-0000-0000-000000000000");
   expect(response?.status()).toBe(404);
 });
+
+/**
+ * Sets restringidos por antigüedad — change `sets-restringidos-a-la-vista`.
+ *
+ * **Lo que protege.** Una cuarta parte del catálogo exige antigüedad, y hasta ahora
+ * eso solo se descubría abriendo la ficha y leyendo un rechazo sin salida: decía
+ * cuántos meses faltaban, no desde cuándo. Y en la rejilla, un set restringido era
+ * indistinguible del resto.
+ *
+ * Bruno es el fixture del suscriptor reciente (`prisma/seed.ts`: un mes de
+ * antigüedad, no llega a los tres). La prueba solo lee: no alquila ni encola.
+ */
+test("un set restringido se distingue en el catálogo y dice desde cuándo", async ({ page }) => {
+  const marca = /A partir de \d+ meses/;
+
+  /** Busca una tarjeta restringida; el catálogo pagina de 24 en 24. */
+  async function fichaRestringida(): Promise<string> {
+    for (const pagina of [1, 2]) {
+      await page.goto(`/catalogo?page=${pagina}`);
+      const tarjeta = page.getByRole("listitem").filter({ hasText: marca }).first();
+      if ((await tarjeta.count()) > 0) {
+        const nombre = (await tarjeta.getByRole("link").textContent())?.trim();
+        expect(nombre, "la tarjeta restringida debería enlazar a su ficha").toBeTruthy();
+        return nombre!;
+      }
+    }
+    throw new Error("El catálogo sembrado debería tener algún set restringido.");
+  }
+
+  const nombre = await fichaRestringida();
+
+  await test.step("la condición se ve sin sesión: es un atributo del set", async () => {
+    // Que la vea el visitante es el cambio de proyección que este change autoriza.
+    await page.getByRole("link", { name: nombre }).click();
+    await page.waitForURL(FICHA);
+    await expect(page.getByText(marca).first()).toBeVisible();
+  });
+
+  await test.step("a quien no llega, la ficha le dice la fecha", async () => {
+    const url = page.url();
+    await login(page, "bruno@example.test");
+    await page.goto(url);
+
+    const box = page.getByRole("region", { name: "Disponibilidad" });
+    // La fecha, no solo "te faltan 2 meses": es lo único accionable del rechazo.
+    await expect(
+      box.getByText(/Podrás llevártelo a partir del \d{1,2} de \w+ de \d{4}/)
+    ).toBeVisible();
+    await expect(box.getByRole("button", { name: /Pedir este set/i })).toHaveCount(0);
+  });
+});

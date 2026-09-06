@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { StatusBadge } from "@/components/status-badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { can } from "@/domain/auth/permissions";
@@ -33,8 +34,11 @@ import { JoinQueueButton, LeaveQueueButton, RequestSetButton } from "./set-actio
  * proyección pública.
  */
 
+/** Fecha larga y en castellano: "14 de marzo de 2027" se lee, "14/3/27" se descifra. */
+const DATE = new Intl.DateTimeFormat("es-ES", { dateStyle: "long" });
+
 /** Lo que la página necesita saber, ya resuelto: evita repetir el `if (session)`. */
-type SetView =
+type SetView = { restrictedSetMinMonths: number } & (
   | { projection: "public"; set: PublicSet }
   | {
       projection: "authenticated";
@@ -47,14 +51,24 @@ type SetView =
       confirmationWindowHours: number;
       /** Plazas del plan de quien mira; `null` si no tiene suscripción o es back-office. */
       maxSimultaneousSets: number | null;
-    };
+    }
+);
 
 async function loadView(setId: string): Promise<SetView> {
   const session = await currentSession();
   const catalog = { repository: prismaCatalogRepository };
 
   if (!session) {
-    return { projection: "public", set: await viewPublicSet(catalog, setId) };
+    const [set, settings] = await Promise.all([
+      viewPublicSet(catalog, setId),
+      // La condición del set se enseña también sin sesión: es un atributo de catálogo.
+      prismaSettingsRepository.load(),
+    ]);
+    return {
+      projection: "public",
+      set,
+      restrictedSetMinMonths: settings.restrictedSetMinMonths,
+    };
   }
 
   const set = await viewSetAsSubscriber(catalog, { setId, userId: session.user.id });
@@ -63,14 +77,15 @@ async function loadView(setId: string): Promise<SetView> {
   // veredicto de elegibilidad devolvería "necesitas una suscripción activa", que es
   // cierto y no es lo que necesitan leer.
   if (!can(session.user.role, "rental.request")) {
-    const { offerConfirmationWindowHours } = await prismaSettingsRepository.load();
+    const settings = await prismaSettingsRepository.load();
     return {
       projection: "authenticated",
       set,
       eligibility: null,
       queueEntryId: null,
-      confirmationWindowHours: offerConfirmationWindowHours,
+      confirmationWindowHours: settings.offerConfirmationWindowHours,
       maxSimultaneousSets: null,
+      restrictedSetMinMonths: settings.restrictedSetMinMonths,
     };
   }
 
@@ -95,6 +110,7 @@ async function loadView(setId: string): Promise<SetView> {
     queueEntryId: entry?.id ?? null,
     confirmationWindowHours: config.offerConfirmationWindowHours,
     maxSimultaneousSets: subscription?.maxSimultaneousSets ?? null,
+    restrictedSetMinMonths: config.restrictedSetMinMonths,
   };
 }
 
@@ -163,6 +179,13 @@ export default async function SetDetailPage({
               {set.recommendedAge ? ` · ${set.recommendedAge}` : ""}
               {set.difficulty ? ` · ${set.difficulty}` : ""}
             </p>
+            {set.restricted ? (
+              // La condición se enseña siempre, también al visitante: es del set, y
+              // saber que hay sets que se ganan con antigüedad es parte de la oferta.
+              <Badge tone="info">
+                A partir de {view.restrictedSetMinMonths} meses de suscripción
+              </Badge>
+            ) : null}
           </header>
 
           <DecisionBox view={view} />
@@ -330,7 +353,19 @@ function Decision({
             rompe de verdad. El aviso no necesita `role="status"` propio: la caja
             entera ya es una región `aria-live`. */}
         <div className="rounded-md border border-[var(--tone-warning-border)] bg-[var(--tone-warning)] p-3 text-sm text-[var(--tone-warning-foreground)]">
-          {eligibility.detail}
+          {/* De los cuatro motivos, este era el único sin salida: constataba la falta
+              de antigüedad y no decía cuándo dejaba de aplicar. La fecha es lo único
+              accionable que hay, porque la espera no depende de nadie más. */}
+          {eligibility.availableFrom ? (
+            <>
+              <p className="font-medium">
+                Podrás llevártelo a partir del {DATE.format(eligibility.availableFrom)}
+              </p>
+              <p>{eligibility.detail}</p>
+            </>
+          ) : (
+            eligibility.detail
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           {eligibility.reason === "NO_ACTIVE_SUBSCRIPTION" ? (

@@ -18,6 +18,7 @@ const PUBLIC_SET_SELECT = {
   recommendedAge: true,
   difficulty: true,
   boxPhotoUrl: true,
+  restricted: true,
   theme: { select: { name: true } },
 } as const;
 
@@ -30,6 +31,7 @@ type PublicSetRow = {
   recommendedAge: string | null;
   difficulty: string | null;
   boxPhotoUrl: string | null;
+  restricted: boolean;
   theme: { name: string };
 };
 
@@ -70,11 +72,9 @@ export const prismaCatalogRepository: CatalogRepository = {
   async findAuthenticatedSetById({ setId, userId }) {
     const row = await prisma.set.findFirst({
       where: { id: setId, ...PUBLISHED },
-      select: { ...PUBLIC_SET_SELECT, restricted: true },
+      select: PUBLIC_SET_SELECT,
     });
     if (!row) return null;
-
-    const { restricted, ...publicPart } = row;
 
     // La cola se lee ordenada por entrada efectiva (D11) y se busca la posición del
     // usuario en memoria: son unas pocas filas por set y así el orden es exactamente
@@ -92,12 +92,11 @@ export const prismaCatalogRepository: CatalogRepository = {
     const index = queue.findIndex((entry) => entry.userId === userId);
 
     return {
-      ...toPublicSet(publicPart),
+      ...toPublicSet(row),
       availableCopies,
       totalCopies,
       queueLength: queue.length,
       queuePosition: index === -1 ? null : index + 1,
-      restricted,
     };
   },
 

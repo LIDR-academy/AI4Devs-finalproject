@@ -1354,6 +1354,29 @@ project. Read it at the start of every session.
   `2026-09-07-contratar-plan-desde-el-portal`; los deltas ya están en
   `openspec/specs/`.
 
+- **Sets restringidos a la vista (2026-09-07, change `sets-restringidos-a-la-vista`):**
+  una cuarta parte del catálogo (9 de 35 con el umbral por defecto de 3 meses) exige
+  antigüedad, y solo se descubría abriendo la ficha, que además no decía **cuándo**
+  dejaba de aplicar — era el único de los cuatro motivos de no elegibilidad **sin
+  salida**. Decisión: **mostrar con la condición, nunca ocultar**; ocultarlos haría que
+  un visitante viera más catálogo que un suscriptor, y escondería el premio que la
+  regla existe para motivar.
+  **`restricted` pasa a la proyección pública** —sale de `NON_PUBLIC_SET_FIELDS`, donde
+  llevaba desde D13—: es un atributo del set, no inventario ni nivel `Copy`. La marca
+  de la rejilla es **estática** (la condición del set, igual para todos, la rejilla
+  sigue siendo la misma página para cualquiera) y la **fecha es personal** y vive en la
+  ficha, que ya se personaliza.
+  **`restrictedAvailableFrom` es la inversa exacta de `monthsBetween`, y cuesta más de
+  lo que parece.** El test de barrido —365 fechas de alta × 4 umbrales, exigiendo que
+  la fecha cumpla y que un milisegundo antes no— **tumbó dos implementaciones**: (1)
+  sumar meses y dejar desbordar llega **un día tarde** cuando el día no existe en el
+  mes destino (alta el 30 de enero: el 30 de febrero no existe, la suma cae en el 2 de
+  marzo y `monthsBetween` ya cumple el 1); (2) conservar la hora del alta hace esperar
+  medio día de más, porque `monthsBetween` compara días de calendario e **ignora la
+  hora**. Si se toca cualquiera de las dos funciones, el barrido es lo que lo detecta.
+  **Verificado en verde:** `tsc`, `eslint`, `vitest run` (474), `next build` y
+  `npm run test:e2e` (56).
+
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → **Vercel +
 Supabase** (`ADR-0003`, 2026-08-22, sustituye la VM única de `ADR-0001` §5); auth →

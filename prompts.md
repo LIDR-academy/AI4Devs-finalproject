@@ -1648,3 +1648,50 @@ forma de acreditar identidad al volver —lo era cuando se escribió, porque el 
 camino pasaba por el alta pública, sin sesión— y ahora reconoce las dos, más un
 requisito nuevo en `subscriptions` para contratar sin suscripción vigente. Queda
 archivarlo.
+
+---
+
+### [2026-09-07] — Sets restringidos: ¿ocultarlos o avisar desde cuándo?
+
+**Prompt:** "Como suscriptor, en el catálogo hay sets que no puedo alquilar por falta
+de antigüedad. ¿Qué sería mejor: no mostrarlos, o poner una advertencia de
+«disponibles solo a partir de X fecha» calculada según antigüedad?" → "Me convence.
+Spec e implementa."
+
+**Resumen.** La respuesta fue **advertencia con fecha, nunca ocultar**, con tres
+razones y un matiz que no estaba en la pregunta.
+
+Ocultar rompe cosas que ya estaban decididas. La primera es la más clara: la rejilla se
+sirve de la **proyección pública** para todo el mundo, así que esconder los restringidos
+a quien no llega haría que **iniciar sesión reduzca** lo que se ve — un visitante vería
+más catálogo que un suscriptor. La frontera de D13 es la disponibilidad, no la
+existencia. La segunda: la antigüedad es un **premio** por seguir suscrito, y un
+catálogo que esconde el premio no lo motiva. La tercera: son **9 de 35 sets** con el
+umbral por defecto, una cuarta parte recortada justo a quien acaba de pagar su primera
+cuota.
+
+**El matiz: la marca es del set y la fecha es de quien mira.** Poner la fecha personal
+en las 24 tarjetas convertiría una página idéntica para todos —y cacheable— en una
+distinta por usuario. Así que en la rejilla va la condición ("A partir de 3 meses",
+leída del ajuste, no escrita a mano) y en la ficha la fecha, que es donde se toma la
+decisión. De paso, el motivo de antigüedad era **el único de los cuatro sin salida**:
+los otros tres ofrecen una acción y este solo constataba.
+
+**El cambio de spec que esto exige** es sacar `restricted` de `NON_PUBLIC_SET_FIELDS`,
+donde estaba desde D13 junto al valor de referencia. Es una decisión, no un detalle: hay
+un test que afirmaba que no era público, y se **cambió la afirmación en vez de
+borrarla**.
+
+**Y una lección del cálculo.** `restrictedAvailableFrom` parece "sumar meses" y no lo
+es: tiene que ser la **inversa exacta** de `monthsBetween`. El test de barrido —365
+fechas de alta por cuatro umbrales, exigiendo que la fecha cumpla y que un milisegundo
+antes no— **tumbó dos implementaciones mías** antes de la buena. La primera sumaba
+meses y dejaba desbordar la fecha: llega **un día tarde** cuando el día no existe en el
+mes destino (alta el 30 de enero → el 30 de febrero no existe → la suma cae en el 2 de
+marzo, y `monthsBetween` ya da el mes por completo el 1). La segunda conservaba la hora
+del alta: media jornada de espera de más, porque `monthsBetween` compara días de
+calendario e ignora la hora. Ninguna de las dos se veía leyendo el código.
+
+**Verificación:** 474 unitarios (7 nuevos) y 56 E2E en verde, con un recorrido que
+comprueba que la marca se ve **sin sesión** y que a Bruno —el fixture del suscriptor
+reciente— la ficha le da la fecha.
