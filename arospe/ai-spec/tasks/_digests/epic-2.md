@@ -590,3 +590,52 @@ re-derive, never the full prose of a finalized story.
   generator's UI. Full mechanism at
   [docs/database/schema.md#product_variants](../../../docs/database/schema.md#product_variants) and
   [docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy](../../../docs/architecture/authorization.md#product-variant-actions-gate-against-the-parent-product-not-a-new-policy).
+
+## Story 0030a — Attribute value rename: usage warning and SKU-collision error rendering (amendment to 0030, found and recommended by 0031's Phase 1 debate)
+
+- **`App\Models\ProductAttributeValue::variantUsageCounts(array $valueIds): array<string, int>`** —
+  public, `static`, bulk, one query for the whole set (`GROUP BY product_attribute_value_id` over
+  `product_variant_values`, no `DISTINCT` needed since the pivot's own composite PK already makes
+  `(variant, value)` unique). Keyed by value id; an id with no variants is simply **absent** from the
+  returned array, not present with `0` — story 0030a.
+- **This is the third, distinct query shape over `product_variant_values` in this domain — do not
+  reuse or refactor any of the three into another.** `SyncProductAttributeValues::firstValueInUse()`
+  (private, per-id early-exit, for a delete refusal — story 0029a) and
+  `ProductAttributeType::variantUsageCount()` (public, single scalar, `DISTINCT`-summed across a whole
+  type — story 0029a) both exist to **refuse cheaply**; `variantUsageCounts()` exists to **display**
+  a count per row without an N+1. Full three-way table at
+  [docs/database/schema.md#product_attribute_values](../../../docs/database/schema.md#product_attribute_values) —
+  story 0030a.
+- **A generic, single `@error('sku')` outlet is the established convention for rendering ANY
+  `sku`-keyed `ValidationException` on a screen that has no SKU field of its own.** Reuse this pattern
+  — one `<flux:callout>` bound to the bag key, no per-message branching — the next time a screen must
+  surface a refusal from a cascade it doesn't own (here: 0029's already-shipped
+  `SyncProductAttributeValues::reDeriveVariantSkusForRenamedValues()`/`DeriveVariantSku::checked()`,
+  which throws exactly four `sku`-keyed messages: `derived_sku_taken`, `derived_sku_empty_segment`,
+  `derived_sku_too_long`, or the translated unique-violation race message) — story 0030a.
+- **When adding a `<flux:callout :heading="...">` (or any Flux-folded tag attribute) that echoes a
+  message containing an interpolated, unsanitized value, bind it colon-bound (`:heading="$message"`),
+  never double-brace (`heading="{{ $message }}"`).** The double-brace form double-HTML-encodes a
+  literal quote character inside the message under a Flux-folded tag (verified by `Blade::render()`
+  execution) — found here because `derived_sku_empty_segment`'s own copy contains a quote. The
+  colon-bound form renders correctly and stays fully escaped (no `{!! !!}` needed or safe here, since
+  the interpolated `:value` segment inside these messages is unsanitized, unrestricted attribute-value
+  text) — story 0030a.
+- **Server-derived, per-row display data for a component's one deliberately client-writable array
+  (here, `App\Livewire\Products\AttributeTypes\Index::$values`) goes in its own separate `#[Locked]`
+  property, never as a new key inside that array.** Keeps the existing `@continue` malformed-row guard
+  untouched and keeps the `#[Locked]`-every-server-derived-property rule intact — a Phase 2 review
+  correction to this story's own first draft, recorded here so the pattern is not re-derived — story
+  0030a.
+- **Both `openCreateModal()`/`openEditModal()` on this component now call `resetValidation()` as their
+  last statement** — dismissing this modal via its `wire:model`-bound `$showModal` property directly
+  (bypassing `closeModal()`) previously left a stale error from a prior refused save rendering against
+  an unrelated type on reopen, since Livewire persists the error bag across that round trip. Any
+  modal-opener method on a component with a client-dismissable `$showModal` should do the same — story
+  0030a.
+- **This story ships NO migration, NO new column, NO new permission, NO route, NO new translation
+  key for any of the four SKU-refusal messages (all reused as-is from story 0029), and does NOT touch
+  `SyncProductAttributeValues::firstValueInUse()`.** Full mechanism at
+  [docs/api/routes.md#product-attribute-typesindex--the-fifth-permission-gated-route](../../../docs/api/routes.md#product-attribute-typesindex--the-fifth-permission-gated-route)
+  and
+  [docs/database/schema.md#product_attribute_values](../../../docs/database/schema.md#product_attribute_values).
