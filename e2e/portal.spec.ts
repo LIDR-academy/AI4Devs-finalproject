@@ -115,3 +115,45 @@ test("suscripción: cambiar de plan, pausar, reactivar y cancelar", async ({ pag
     await expect(actual.getByText("Activa", { exact: true })).toBeVisible();
   });
 });
+
+/**
+ * El recorrido que hace de verdad quien canceló y sigue dentro.
+ *
+ * **Lo que protege.** La prueba de arriba cubría la vuelta llamando a la API de alta,
+ * y por ahí funcionaba; por la interfaz no había salida. "Ver los planes" llevaba a
+ * `/planes`, cuyos botones apuntaban al alta, y la página de alta **redirige al portal
+ * a quien ya tiene sesión**: el botón parecía no hacer nada y se volvía al punto de
+ * partida. Ahora la contratación vive en el portal, que es donde el suscriptor ya está.
+ */
+test("quien canceló vuelve a contratar desde la interfaz, sin cerrar la sesión", async ({
+  page,
+  request,
+}) => {
+  const email = `recontrata-${Date.now()}@example.test`;
+  await registrarSuscriptora(request, email, "BASIC");
+  await login(page, email);
+
+  await test.step("cancelar deja la cuenta sin plan", async () => {
+    await page.goto("/portal/suscripcion");
+    await page.getByRole("button", { name: "Cancelar la suscripción" }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Sí, cancelar" }).click();
+    await expect(page.getByText("No tienes ningún plan activo")).toBeVisible();
+  });
+
+  await test.step("desde los planes, el botón lleva a contratar y no rebota al portal", async () => {
+    await page.goto("/planes");
+    await page.getByRole("link", { name: "Empezar con Premium" }).click();
+
+    // Antes esto acababa en /portal por la redirección del alta.
+    await page.waitForURL(/\/portal\/suscripcion\?plan=PREMIUM/);
+    await expect(page.getByRole("heading", { name: "Contratar un plan" })).toBeVisible();
+  });
+
+  await test.step("contratar abre la suscripción sobre la misma cuenta", async () => {
+    await page.getByRole("button", { name: "Contratar Premium" }).click();
+
+    const actual = page.getByRole("region", { name: "Plan actual" });
+    await expect(actual.getByText("Premium", { exact: true })).toBeVisible();
+    await expect(actual.getByText("Activa", { exact: true })).toBeVisible();
+  });
+});

@@ -697,8 +697,8 @@ original fue de estabilidad: el pool de compilación de `next dev` se caía bajo
 de varios navegadores y dejaba el servidor devolviendo 500 en unas rutas y colgando
 otras. `E2E_DEV=1` conserva el objetivo antiguo para iterar sobre una pantalla.
 
-> **Estado: en verde.** **462 tests unitarios y de integración** en 34 ficheros
-> (`npm test`) y **54 E2E** en 12 ficheros (`npm run test:e2e`): 50 en escritorio y
+> **Estado: en verde.** **467 tests unitarios y de integración** en 34 ficheros
+> (`npm test`) y **55 E2E** en 12 ficheros (`npm run test:e2e`): 51 en escritorio y
 > los 4 del *smoke* repetidos en un viewport de móvil — el recorrido completo se
 > queda fuera del proyecto móvil a propósito, porque comparte la base sembrada con
 > el de escritorio y ejecutar los dos a la vez es una carrera por la misma copia.

@@ -6,7 +6,12 @@ import { requireSurfacePage } from "@/http/auth-context";
 import { simultaneousSets, subscriptionStatus } from "@/lib/status";
 import { prismaSubscriptionRepository } from "@/repositories/subscription.repository.prisma";
 
-import { PlanSwitcher, SubscriptionStatusActions, type PlanOption } from "../subscription-actions";
+import {
+  PlanContractor,
+  PlanSwitcher,
+  SubscriptionStatusActions,
+  type PlanOption,
+} from "../subscription-actions";
 
 export const metadata = { title: "Tu suscripción" };
 
@@ -29,30 +34,60 @@ const EUR = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" 
  * (`HELD_COPY_STATES`). Con una copia en inspección se puede pausar pero no bajar de
  * plan, porque retener la suscripción por nuestro proceso interno sería injusto.
  */
-export default async function PortalSuscripcionPage() {
+export default async function PortalSuscripcionPage({
+  searchParams,
+}: {
+  /** `?plan=PREMIUM` — el plan que eligió en `/planes`. */
+  searchParams: Promise<{ plan?: string }>;
+}) {
   const { user } = await requireSurfacePage("portal");
 
-  const [subscription, plans, copyStates] = await Promise.all([
+  const [{ plan: preselected }, subscription, plans, copyStates] = await Promise.all([
+    searchParams,
     prismaSubscriptionRepository.findCurrentSubscription(user.id),
     prismaSubscriptionRepository.listPlans(),
     prismaSubscriptionRepository.currentCopyStates(user.id),
   ]);
 
-  // Sin suscripción vigente no hay nada que gestionar: una cancelada ya no rige y el
-  // repositorio la da por inexistente. Es un vacío de tipo "todavía no", con salida.
+  // Sin suscripción vigente no hay nada que **gestionar**, pero sí algo que hacer:
+  // contratar. Antes esto solo enlazaba a `/planes`, cuyos botones llevan al alta, que
+  // redirige al portal a quien ya tiene sesión — la vuelta entera sin salida. La
+  // contratación vive aquí, que es donde el suscriptor ya está.
   if (!subscription) {
+    const options: PlanOption[] = plans
+      .filter((plan) => plan.active)
+      .map((plan) => ({
+        code: plan.code,
+        name: plan.name,
+        monthlyPrice: plan.monthlyPrice,
+        maxSimultaneousSets: plan.maxSimultaneousSets,
+        // Contratar no tiene veredicto que calcular: sin plan no hay sets fuera, así
+        // que no hay nada que devolver antes.
+        blocked: null,
+      }));
+
     return (
       <div className="flex flex-col gap-6">
         <h1 className="text-2xl font-bold tracking-tight">Tu suscripción</h1>
         <div className="flex flex-col gap-2 rounded-md border p-4">
           <StatusBadge status={subscriptionStatus("CANCELLED")} />
           <p className="text-sm text-[var(--muted-foreground)]">
-            No tienes ningún plan activo, así que no puedes llevarte sets.{" "}
-            <Link href="/planes" className="underline">
-              Ver los planes
-            </Link>
+            No tienes ningún plan activo, así que no puedes llevarte sets. Contrata uno
+            y sigues con la misma cuenta, tu historial incluido.
           </p>
         </div>
+
+        <section className="flex flex-col gap-3" aria-labelledby="contratar">
+          <h2 id="contratar" className="text-lg font-semibold">
+            Contratar un plan
+          </h2>
+          <PlanContractor options={options} preselected={preselected} />
+          <p className="text-sm text-[var(--muted-foreground)]">
+            <Link href="/planes" className="underline">
+              Ver la comparativa de planes
+            </Link>
+          </p>
+        </section>
       </div>
     );
   }

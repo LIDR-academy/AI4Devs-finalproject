@@ -26,6 +26,7 @@ function fakeSubscriptions(plans: PlanConfig[] = PLANS): SubscriptionRepository 
   return {
     async findCurrentSubscription() { return null; },
     async currentCopyStates() { return []; },
+    async openSubscription() { return null; },
     async updateStatus() { return null; },
     async updatePlan() { return null; },
     async changePlan() { return null; },

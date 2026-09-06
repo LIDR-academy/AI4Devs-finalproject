@@ -12,6 +12,7 @@ import type { RetentionCandidate, RetentionConfig, RetentionRepository } from "@
 import {
   changePlan,
   changeSubscriptionStatus,
+  openSubscription,
   updatePlanConfig,
 } from "@/use-cases/subscriptions/manage-subscription";
 import { sendRetentionReminders } from "@/use-cases/subscriptions/retention-reminders";
@@ -36,6 +37,22 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
   ) {}
 
   async findCurrentSubscription() {
+    return this.subscription;
+  }
+  async openSubscription({ userId, planId, startedAt }: { userId: string; planId: string; startedAt: Date }) {
+    // Igual que el adaptador: si ya hay una vigente, no se abre otra.
+    if (this.subscription) return null;
+    const plan = this.plans.find((p) => p.id === planId);
+    if (!plan) return null;
+    this.subscription = {
+      id: "sub-nueva",
+      userId,
+      planCode: plan.code,
+      status: "ACTIVE",
+      startedAt,
+      maxSimultaneousSets: plan.maxSimultaneousSets,
+      queueBonusDays: plan.queueBonusDays,
+    };
     return this.subscription;
   }
   async currentCopyStates() {
@@ -126,6 +143,81 @@ describe("pausar o cancelar la suscripción", () => {
     await expect(
       changeSubscriptionStatus(deps(null), { userId: "user-1", status: "PAUSED" })
     ).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+/**
+ * La vuelta de quien canceló, ya con sesión.
+ *
+ * Lo que protege: el callejón que motivó esto. Cancelar dejaba al suscriptor dando
+ * vueltas entre su portal y `/planes` —cuyos botones llevan al alta, que redirige a
+ * quien tiene sesión—, y `PUT /api/subscriptions/me` respondía 404 porque una
+ * suscripción cancelada ya no rige y no había ninguna que tocar.
+ */
+describe("contratar un plan sin suscripción vigente", () => {
+  it("abre una suscripción activa en el plan elegido", async () => {
+    const d = deps(null);
+    const opened = await openSubscription(d, { userId: "user-1", planCode: "PREMIUM" });
+
+    expect(opened).toMatchObject({
+      userId: "user-1",
+      planCode: "PREMIUM",
+      status: "ACTIVE",
+      maxSimultaneousSets: 2,
+    });
+    // Cuenta desde hoy, no desde la suscripción vieja: la antigüedad para los sets
+    // restringidos y para la cola se gana con la suscripción que rige.
+    expect(opened.startedAt).toEqual(AT);
+  });
+
+  it("queda en auditoría con su plan, y el código legible fuera de entityId", async () => {
+    const d = deps(null);
+    const opened = await openSubscription(d, { userId: "user-1", planCode: "BASIC" });
+
+    expect(d.audit.entries).toHaveLength(1);
+    expect(d.audit.entries[0]).toMatchObject({
+      actorId: "user-1",
+      action: "subscription.opened",
+      entityType: "Subscription",
+      // `entityId` es una columna UUID: el código del plan va en `metadata`.
+      entityId: opened.id,
+      metadata: { planCode: "BASIC" },
+    });
+  });
+
+  // ── Caminos de error ───────────────────────────────────────────────────────
+
+  it("rechaza contratar cuando ya hay una suscripción vigente", async () => {
+    const d = deps(SUBSCRIPTION);
+    const error = await openSubscription(d, { userId: "user-1", planCode: "PREMIUM" }).catch(
+      (caught: unknown) => caught
+    );
+
+    expect(error).toBeInstanceOf(InvariantViolationError);
+    expect((error as InvariantViolationError).code).toBe("NOT_ELIGIBLE");
+    // Y le dice qué hacer en su lugar, que es cambiar de plan.
+    expect((error as InvariantViolationError).message).toContain("Cambia de plan");
+    expect(d.audit.entries).toHaveLength(0);
+  });
+
+  it("rechaza un plan que no existe", async () => {
+    const d = deps(null);
+    await expect(
+      openSubscription(d, { userId: "user-1", planCode: "GOLD" })
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("rechaza un plan retirado, aunque su código exista", async () => {
+    const d = deps(null);
+    d.subscriptions.plans = d.subscriptions.plans.map((plan) =>
+      plan.code === "BASIC" ? { ...plan, active: false } : plan
+    );
+
+    await expect(
+      openSubscription(d, { userId: "user-1", planCode: "BASIC" })
+    ).rejects.toBeInstanceOf(NotFoundError);
+    // Sin contratar nada: el rechazo es antes de tocar la base.
+    expect(await d.subscriptions.findCurrentSubscription()).toBeNull();
   });
 });
 

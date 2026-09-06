@@ -21,6 +21,12 @@ export const AUDIT_ACTIONS = [
   "plan.updated",
   /** Cambio de plan de un suscriptor sobre su propia suscripción (BASIC ⇄ PREMIUM). */
   "subscription.plan_changed",
+  /**
+   * Contratación de un plan por quien no tenía ninguna suscripción vigente: la vuelta
+   * de quien canceló. No es una reactivación —la cancelada no revive—, y por eso tiene
+   * acción propia y no comparte la de `user.reactivated`.
+   */
+  "subscription.opened",
 
   // Catálogo.
   "set.published",

@@ -54,6 +54,57 @@ export async function changeSubscriptionStatus(
 }
 
 /**
+ * Contrata un plan para quien **no tiene ninguna suscripción vigente**: la vuelta de
+ * quien canceló, ya identificado por su sesión.
+ *
+ * Existía el camino equivalente en el alta pública —volver a suscribirse acreditando la
+ * contraseña (spec `accounts-roles`)—, pero solo servía **sin sesión**: dentro, la
+ * página de alta redirige al portal, así que quien había cancelado daba vueltas entre
+ * "ver los planes" y su portal sin ninguna salida.
+ *
+ * Aquí no hace falta contraseña: la sesión ya acredita quién es. Y no se "reactiva" la
+ * cancelada —una suscripción cancelada ya no rige, y así lo dice la spec—, se abre una
+ * nueva sobre la misma cuenta, conservando la dirección de envío y la tarjeta que ya
+ * tenía. El día que quiera cambiarlas, son datos suyos, no de la suscripción.
+ */
+export async function openSubscription(
+  { subscriptions, audit, now = () => new Date() }: ManageSubscriptionDeps,
+  input: { userId: string; planCode: string }
+): Promise<ActiveSubscription> {
+  const target = (await subscriptions.listPlans()).find(
+    (plan) => plan.code === input.planCode && plan.active
+  );
+  if (!target) throw new NotFoundError("El plan no existe o ya no se ofrece.");
+
+  const opened = await subscriptions.openSubscription({
+    userId: input.userId,
+    planId: target.id,
+    startedAt: now(),
+  });
+
+  // `null` significa que ya tenía una vigente, y lo decide la transacción del
+  // repositorio: comprobarlo aquí antes dejaría hueco a que dos peticiones a la vez
+  // abrieran dos suscripciones. Quien ya tiene una lo que quiere es cambiar de plan.
+  if (!opened) {
+    throw new InvariantViolationError(
+      "NOT_ELIGIBLE",
+      "Ya tienes una suscripción vigente. Cambia de plan desde tu suscripción."
+    );
+  }
+
+  await audit.record({
+    actorId: input.userId,
+    action: "subscription.opened",
+    entityType: "Subscription",
+    entityId: opened.id,
+    metadata: { planCode: opened.planCode },
+    at: now(),
+  });
+
+  return opened;
+}
+
+/**
  * Cambia de plan la suscripción del propio usuario (spec `subscriptions` → "Cambio de
  * plan").
  *

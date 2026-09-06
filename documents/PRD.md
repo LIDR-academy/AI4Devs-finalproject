@@ -67,6 +67,11 @@ realizó y **cuándo** (auditoría).
   persona**: no hay invitación por correo. Puede cambiar el rol de un empleado o
   suspenderlo, pero **no reponer la contraseña de nadie** — para eso está el enlace de
   recuperación. Toda alta y todo cambio de rol quedan en auditoría.
+- **Volver a contratar desde dentro.** Quien canceló y sigue con sesión abierta
+  contrata un plan nuevo desde su portal, conservando cuenta e historial. No se
+  "reactiva" la cancelada —ya no rige—: se abre otra sobre la misma cuenta, con la
+  dirección y la tarjeta que ya tenía. Sin sesión, el camino equivalente sigue siendo
+  el alta acreditando la contraseña.
 - **Recuperar el acceso.** Quien olvida su contraseña pide desde el login un enlace
   a la dirección de su cuenta: un solo uso, caducidad de 1 hora, y al gastarse se
   cierran todas las sesiones abiertas. La respuesta a la solicitud es **la misma

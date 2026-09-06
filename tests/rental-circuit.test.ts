@@ -76,6 +76,7 @@ function subscriptionsFor(
   return {
     async findCurrentSubscription() { return subscription; },
     async currentCopyStates() { return states as never; },
+    async openSubscription() { return null; },
     async updateStatus() { return null; },
     async changePlan() { return null; },
     async listPlans() { return []; },

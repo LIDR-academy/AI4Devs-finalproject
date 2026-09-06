@@ -1599,3 +1599,49 @@ Lo usan los cinco formularios que mandaban números.
 exige que ningún mensaje contenga `invalid|expected|received|too big|<=`) y una pasada
 real contra `/api/auth/register` con mes 13, campos vacíos, letras y casillas sin
 marcar: todos responden en castellano.
+
+---
+
+### [2026-09-06] — Cancelar dejaba encerrado a quien seguía con sesión
+
+**Prompt:** "Iniciando sesión como suscriptor cancelado, al ir a los planes y
+seleccionar un plan «Basic» o «Premium» no tiene efecto."
+
+**Resumen.** No es que el botón fallara: es que no había ningún sitio al que llevar.
+El bucle, reproducido contra el servidor: el portal de quien canceló dice "ver los
+planes" → `/planes` → sus botones apuntan al alta → y **la página de alta redirige al
+portal a quien ya tiene sesión** (307 comprobado). Se daba la vuelta entera y se
+volvía al punto de partida. Y la API no ofrecía salida:
+`PUT /api/subscriptions/me` responde **404** tanto para `status` como para `planCode`,
+porque una suscripción cancelada ya no rige y no hay ninguna que tocar.
+
+**Lo llamativo es por qué no se detectó.** El camino de "volver a suscribirse" **sí**
+existía —alta con la contraseña de la cuenta, spec `accounts-roles`— y el E2E lo
+cubría… llamando a la API de alta directamente. Por HTTP funcionaba; por la interfaz
+no había forma de llegar. La prueba pasaba y el usuario estaba encerrado.
+
+**La decisión: contratar es crear, no reactivar.** `POST /api/subscriptions/me`
+(`openSubscription`) abre una suscripción nueva para el usuario en sesión. **Sin
+contraseña**, porque la sesión ya acredita quién es —esa exigencia del alta pública
+existe justo porque allí no hay sesión—. Y **no reactiva la cancelada**: la spec dice
+que una cancelada no revive, así que se abre otra sobre la misma cuenta, con la
+dirección y la tarjeta que ya tenía, y con `startedAt` de hoy — la antigüedad para
+sets restringidos y para la cola se gana con la suscripción que rige, no con la que se
+canceló. La comprobación de "no tiene otra vigente" va **dentro de la transacción**,
+como ya hacía `resubscribe`: fuera, dos peticiones simultáneas abrirían dos.
+
+**Y el otro extremo del bucle:** el botón de `/planes` ahora **depende de quién mire**
+— visitante al alta, suscriptor a su portal, y al personal no se le enseña botón,
+porque un operador no contrata planes. Sin esto, el arreglo del portal seguiría
+escondido detrás de una redirección.
+
+**Verificación:** 467 unitarios (5 nuevos sobre el caso de uso) y 55 E2E, con el
+recorrido de interfaz completo —cancelar, ir a planes, pulsar, contratar— comprobado
+**en los dos sentidos**: devolviendo el enlace viejo, la prueba se pone roja esperando
+una URL que nunca llega. Más una pasada real con Carla, la cancelada de la semilla:
+201 al contratar y 409 al intentarlo dos veces. Se revirtió su suscripción para
+dejarla como fixture de "sin plan activo".
+
+**Queda una pregunta de proceso:** la spec nombra la contraseña como la forma de
+acreditar identidad al volver, y ahora hay una segunda —la sesión—. Formalizarlo pide
+un change de OpenSpec, no editar `openspec/specs/` a mano; queda anotado en AGENTS.md.

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Terms } from "@/components/terms";
 import { Button } from "@/components/ui/button";
+import { currentSession } from "@/http/auth-context";
 import { simultaneousSets } from "@/lib/status";
 import { prismaCatalogRepository } from "@/repositories/catalog.repository.prisma";
 import { listMembershipPlans } from "@/use-cases/catalog/browse-public-catalog";
@@ -28,7 +29,16 @@ const EUR = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" 
  * las tres cosas que el visitante puede consultar, junto con el catálogo y el alta.
  */
 export default async function PlansPage() {
-  const plans = await listMembershipPlans({ repository: prismaCatalogRepository });
+  const [plans, session] = await Promise.all([
+    listMembershipPlans({ repository: prismaCatalogRepository }),
+    currentSession(),
+  ]);
+
+  // El destino del botón depende de quién mire. Enviar a todo el mundo al alta era el
+  // callejón que se comía la pulsación de quien ya tenía sesión: la página de alta
+  // redirige al portal, así que "Empezar con Basic" no hacía nada visible.
+  const subscriber = session?.user.role === "SUBSCRIBER";
+  const staff = session !== null && !subscriber;
 
   return (
     <section className="flex flex-col gap-8">
@@ -62,11 +72,26 @@ export default async function PlansPage() {
                   : "Orden de cola por tiempo de espera"}
               </li>
             </ul>
-            <Button asChild className="mt-auto">
-              {/* El plan viaja en la URL: quien lo eligió aquí no debería tener que
-                  volver a elegirlo en el alta. Se puede cambiar allí igualmente. */}
-              <Link href={`/registro?plan=${plan.code}`}>Empezar con {plan.name}</Link>
-            </Button>
+            {staff ? (
+              // Operadores y admins no contratan planes: el botón les mentiría.
+              <p className="mt-auto text-sm text-[var(--muted-foreground)]">
+                Los planes se contratan desde una cuenta de suscriptor.
+              </p>
+            ) : (
+              <Button asChild className="mt-auto">
+                {/* El plan viaja en la URL: quien lo eligió aquí no debería tener que
+                    volver a elegirlo en el destino. Se puede cambiar allí igualmente. */}
+                <Link
+                  href={
+                    subscriber
+                      ? `/portal/suscripcion?plan=${plan.code}`
+                      : `/registro?plan=${plan.code}`
+                  }
+                >
+                  Empezar con {plan.name}
+                </Link>
+              </Button>
+            )}
           </li>
         ))}
       </ul>

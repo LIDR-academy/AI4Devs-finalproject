@@ -5,7 +5,11 @@ import { parseJsonBody } from "@/http/parse-body";
 import { toProblemResponse } from "@/http/problem";
 import { prismaAuditRepository } from "@/repositories/audit.repository.prisma";
 import { prismaSubscriptionRepository } from "@/repositories/subscription.repository.prisma";
-import { changePlan, changeSubscriptionStatus } from "@/use-cases/subscriptions/manage-subscription";
+import {
+  changePlan,
+  changeSubscriptionStatus,
+  openSubscription,
+} from "@/use-cases/subscriptions/manage-subscription";
 
 const INSTANCE = "/api/subscriptions/me";
 
@@ -23,6 +27,11 @@ const UpdateSchema = z
     "Indica el estado o el plan que quieres cambiar."
   );
 
+/** Contratar exige plan y nada más: la identidad la pone la sesión. */
+const OpenSchema = z.object({
+  planCode: z.enum(["BASIC", "PREMIUM"], "Elige el plan que quieres contratar."),
+});
+
 function deps() {
   return { subscriptions: prismaSubscriptionRepository, audit: prismaAuditRepository };
 }
@@ -33,6 +42,28 @@ export async function GET() {
     const { user } = await requireSession();
     const subscription = await prismaSubscriptionRepository.findCurrentSubscription(user.id);
     return Response.json({ subscription });
+  } catch (error) {
+    return toProblemResponse(error, INSTANCE);
+  }
+}
+
+/**
+ * Contrata un plan cuando no hay ninguna suscripción vigente — la vuelta de quien
+ * canceló, ya con sesión.
+ *
+ * `POST` y no `PUT`: aquí **se crea** una suscripción nueva, no se modifica la que
+ * hay. Una cancelada no se reactiva (spec `accounts-roles` → "Volver a suscribirse"),
+ * y por eso el `PUT` responde 404 a quien no tiene ninguna: no había nada que tocar, y
+ * hasta ahora tampoco forma de empezar otra sin cerrar la sesión.
+ */
+export async function POST(request: Request) {
+  try {
+    const { user } = await requireSession();
+    const { planCode } = await parseJsonBody(request, OpenSchema);
+
+    const subscription = await openSubscription(deps(), { userId: user.id, planCode });
+
+    return Response.json({ subscription }, { status: 201 });
   } catch (error) {
     return toProblemResponse(error, INSTANCE);
   }

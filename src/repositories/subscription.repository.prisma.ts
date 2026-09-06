@@ -83,6 +83,24 @@ export const prismaSubscriptionRepository: SubscriptionRepository = {
     return rentals.map((rental) => rental.copy.state as CopyState);
   },
 
+  async openSubscription({ userId, planId, startedAt }) {
+    return prisma.$transaction(async (tx) => {
+      // La comprobación va **dentro** de la transacción: fuera, dos peticiones
+      // simultáneas verían "no tiene ninguna" a la vez y acabarían creando dos.
+      const existing = await tx.subscription.findFirst({
+        where: { userId, status: { not: "CANCELLED" } },
+        select: { id: true },
+      });
+      if (existing) return null;
+
+      const created = await tx.subscription.create({
+        data: { userId, planId, status: "ACTIVE", startedAt },
+        select: SUBSCRIPTION_SELECT,
+      });
+      return toSubscription(created as SubscriptionRow);
+    });
+  },
+
   async updateStatus(subscriptionId, status, at) {
     const { count } = await prisma.subscription.updateMany({
       where: { id: subscriptionId },

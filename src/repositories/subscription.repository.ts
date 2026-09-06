@@ -34,6 +34,21 @@ export interface SubscriptionRepository {
    */
   currentCopyStates(userId: string): Promise<readonly CopyState[]>;
 
+  /**
+   * Abre una suscripción **nueva** para quien no tiene ninguna vigente: la vuelta de
+   * quien canceló, ya identificado por su sesión.
+   *
+   * Devuelve `null` si resulta que sí tenía una — y la comprobación va **dentro de la
+   * transacción**, no antes: entre consultarla y escribir cabe otra petición idéntica,
+   * y el resultado serían dos suscripciones sobre la misma cuenta. Es la misma cautela
+   * que ya toma `SubscriberRepository.resubscribe` para el alta pública.
+   */
+  openSubscription(input: {
+    userId: string;
+    planId: string;
+    startedAt: Date;
+  }): Promise<ActiveSubscription | null>;
+
   updateStatus(
     subscriptionId: string,
     status: "ACTIVE" | "PAUSED" | "CANCELLED",

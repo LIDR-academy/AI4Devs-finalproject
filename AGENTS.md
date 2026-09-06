@@ -1320,6 +1320,33 @@ project. Read it at the start of every session.
   y una pasada real contra `/api/auth/register`: mes 13, campos vacíos, letras y
   casillas sin marcar responden todos en castellano.
 
+- **Contratar plan desde el portal tras cancelar (arreglado 2026-09-06):** quien
+  cancelaba y seguía con sesión quedaba **en un bucle cerrado** — su portal decía "ver
+  los planes", `/planes` enlazaba al alta, y la página de alta **redirige al portal a
+  quien tiene sesión**: el botón "no hacía nada". Y la API no ofrecía salida:
+  `PUT /api/subscriptions/me` responde **404** a quien no tiene ninguna vigente, porque
+  una cancelada ya no rige. El camino de "volver a suscribirse" existía **solo sin
+  sesión** (alta + contraseña, spec `accounts-roles`), y el E2E lo cubría **por API**,
+  que es como se le pasó a la interfaz.
+  **Ahora:** `POST /api/subscriptions/me` (`openSubscription`) abre una suscripción
+  para el usuario en sesión — sin contraseña, que la sesión ya acredita quién es—,
+  reutilizando dirección y tarjeta de la cuenta. **No reactiva la cancelada**, abre una
+  nueva: `startedAt` cuenta desde hoy, así que la antigüedad para sets restringidos y
+  cola se gana con la que rige. La comprobación de "no tiene otra vigente" va **dentro
+  de la transacción** del adaptador (mismo motivo que `resubscribe`), y quien ya tiene
+  una recibe 409 `NOT_ELIGIBLE` remitiéndole al cambio de plan. Acción de auditoría
+  nueva: `subscription.opened`.
+  **Interfaz:** la contratación vive en `/portal/suscripcion` (con `?plan=` desde
+  `/planes`), y el botón de `/planes` **depende de quién mire** — visitante al alta,
+  suscriptor al portal, y al personal no se le enseña botón porque no contrata planes.
+  Cubierto por `e2e/portal.spec.ts` con el recorrido de interfaz completo, verificado
+  en los dos sentidos (con el enlace viejo, se pone rojo).
+  **Pendiente de decidir con el usuario:** la spec `accounts-roles` → "Volver a
+  suscribirse con una cuenta existente" nombra la **contraseña** como la forma de
+  acreditar identidad, que era la única cuando se escribió. Ahora hay una segunda —la
+  sesión— y el requisito se queda corto; formalizarlo pide un change de OpenSpec, no
+  editar `openspec/specs/` a mano.
+
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → **Vercel +
 Supabase** (`ADR-0003`, 2026-08-22, sustituye la VM única de `ADR-0001` §5); auth →

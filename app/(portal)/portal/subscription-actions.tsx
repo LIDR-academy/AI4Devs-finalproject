@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 /** Acción sobre la propia suscripción, con su error a la vista. */
-function useSubscription() {
+function useSubscription(method: "PUT" | "POST" = "PUT") {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +27,7 @@ function useSubscription() {
     setError(null);
     try {
       const response = await fetch("/api/subscriptions/me", {
-        method: "PUT",
+        method,
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
       });
@@ -110,6 +110,60 @@ export function PlanSwitcher({ options }: { options: readonly PlanOption[] }) {
       <p className="text-sm text-[var(--muted-foreground)]">
         El cambio es inmediato. Las colas en las que ya estás no se reordenan: la ventaja
         del plan se aplica al entrar en la cola, no después.
+      </p>
+      <ActionError error={error} />
+    </div>
+  );
+}
+
+/**
+ * Contratar un plan cuando no hay ninguna suscripción vigente.
+ *
+ * Es la salida del callejón en que quedaba quien cancelaba: dentro de la sesión, "ver
+ * los planes" llevaba a `/planes`, y sus botones al alta, que redirige al portal a
+ * quien ya tiene sesión. Se daba la vuelta entera sin que pasara nada.
+ *
+ * Va por `POST` porque **se abre una suscripción nueva**: la cancelada no revive.
+ */
+export function PlanContractor({
+  options,
+  preselected,
+}: {
+  options: readonly PlanOption[];
+  /** Plan que traía la URL desde `/planes`, si venía de allí. */
+  preselected?: string;
+}) {
+  const { send, pending, error } = useSubscription("POST");
+
+  return (
+    <div className="flex flex-col gap-3">
+      {options.map((option) => {
+        const elegido = option.code === preselected;
+        return (
+          <div
+            key={option.code}
+            // El que venía elegido de `/planes` se marca, pero no se contrata solo:
+            // abrir una suscripción al cargar una página sería cobrar por una
+            // navegación.
+            className={`flex flex-wrap items-center justify-between gap-3 rounded-md border p-4 ${
+              elegido ? "border-[var(--foreground)]" : ""
+            }`}
+          >
+            <p className="text-sm">
+              <strong>{option.name}</strong> · {EUR.format(Number(option.monthlyPrice))}/mes ·{" "}
+              {option.maxSimultaneousSets === 1
+                ? "1 set a la vez"
+                : `${option.maxSimultaneousSets} sets a la vez`}
+            </p>
+            <Button size="sm" disabled={pending} onClick={() => send({ planCode: option.code })}>
+              {pending ? "Contratando…" : `Contratar ${option.name}`}
+            </Button>
+          </div>
+        );
+      })}
+      <p className="text-sm text-[var(--muted-foreground)]">
+        Se usarán la dirección de envío y la tarjeta que ya tienes en la cuenta. En este
+        MVP el pago está simulado.
       </p>
       <ActionError error={error} />
     </div>
