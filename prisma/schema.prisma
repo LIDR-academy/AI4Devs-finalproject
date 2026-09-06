@@ -1,0 +1,587 @@
+// Clickoteca — MVP · Modelo de datos
+// Stack: PostgreSQL + Prisma (ver AGENTS.md). Especificación en documents/PRD.md §15.
+//
+// Anillos por orden de importancia:
+//   1. Núcleo del circuito E2E : User, Session, Set, Copy, Subscription, Rental,
+//                                ReservationQueueEntry, ReservationOffer
+//   2. Operación y trazabilidad: ConditionReport, Incident, CopyStateTransition,
+//                                AuditLog, Notification, Shipment
+//   3. Configuración y pagos   : Plan, SystemSetting, RetentionReminderConfig,
+//                                PaymentMethod, Payment, Address, Theme, MediaAsset
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // La URL de conexión se configura en prisma.config.ts (Prisma 7), no aquí.
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  SUBSCRIBER
+  OPERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum PlanCode {
+  BASIC
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
+
+/// Ciclo de vida de la Copia (PRD §4.2). Transiciones válidas en PRD §15.5.
+enum CopyState {
+  INTAKE
+  DISPONIBLE
+  OFRECIDA
+  ALQUILADA
+  EN_DEVOLUCION
+  EN_INSPECCION
+  EN_HIGIENIZACION
+  INCOMPLETA
+  BAJA
+}
+
+enum RentalType {
+  SUBSCRIPTION
+  ONE_OFF
+}
+
+enum RentalStatus {
+  ACTIVE
+  RETURN_INITIATED
+  IN_INSPECTION
+  COMPLETED
+}
+
+enum QueueEntryStatus {
+  WAITING
+  OFFERED
+  CONFIRMED
+  EXPIRED
+  LEFT
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum ConditionReportKind {
+  DELIVERY
+  INSPECTION
+}
+
+enum ConditionResult {
+  OK
+  INCOMPLETE
+  DAMAGED
+}
+
+enum IncidentType {
+  DELIVERY_DISCREPANCY
+  INCOMPLETE
+  DAMAGE
+  LOSS
+}
+
+enum IncidentStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum PaymentKind {
+  SUBSCRIPTION_MONTHLY
+  ONE_OFF_RENTAL
+}
+
+enum PaymentStatus {
+  SIMULATED_PAID
+  FAILED
+}
+
+enum ShipmentDirection {
+  OUTBOUND
+  RETURN
+}
+
+enum MediaOwnerType {
+  SET
+  CONDITION_REPORT
+}
+
+enum MediaKind {
+  BOX_PHOTO
+  CHECKLIST_PHOTO
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Anillo 1 · Núcleo del circuito E2E
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Cuenta única con rol (decisión: no se separa Employee en el MVP).
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  email        String     @unique
+  passwordHash String
+  role         Role       @default(SUBSCRIBER)
+  fullName     String
+  isAdult      Boolean    @default(false) // declaración de mayoría de edad (PRD §4.1)
+  // Instante en que se aceptaron las condiciones. Mostrarlas sin dejar constancia de
+  // la aceptación no probaría nada; en el MVP el texto es lorem ipsum, el registro no.
+  acceptedTermsAt DateTime? @db.Timestamptz(6)
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @db.Timestamptz(6)
+
+  addresses        Address[]
+  sessions         Session[]
+  subscriptions    Subscription[]
+  rentals          Rental[]
+  queueEntries     ReservationQueueEntry[]
+  paymentMethods   PaymentMethod[]
+  payments         Payment[]
+  notifications    Notification[]
+  stateTransitions CopyStateTransition[]
+  conditionReports ConditionReport[]
+  reportedIncidents Incident[]              @relation("IncidentReporter")
+  assignedIncidents Incident[]              @relation("IncidentAssignee")
+  auditLogs        AuditLog[]
+  shipmentsMarked  Shipment[]
+  retentionConfigs RetentionReminderConfig[]
+  updatedSettings  SystemSetting[]
+
+  @@index([role])
+  @@map("users")
+}
+
+/// Dirección de envío/contacto. Rental captura un snapshot inmutable al crearse,
+/// por eso editar aquí solo afecta a envíos futuros (PRD §4.1).
+model Address {
+  id         String  @id @default(uuid()) @db.Uuid
+  userId     String  @db.Uuid
+  line1      String
+  city       String
+  postalCode String
+  country    String  @default("ES")
+  isDefault  Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+/// Sesión server-side (ADR-0002 §1). La cookie httpOnly transporta un token opaco
+/// aleatorio; aquí se guarda solo su **hash**, de modo que un volcado de la tabla no
+/// permite suplantar sesiones. Revocar = borrar la fila.
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique // SHA-256 del token que viaja en la cookie
+  expiresAt  DateTime  @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  lastSeenAt DateTime? @db.Timestamptz(6)
+  userAgent  String?
+  ipAddress  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt]) // barrido de sesiones caducadas
+  @@map("sessions")
+}
+
+/// Plan de suscripción configurable (PRD §4.3). El bono de cola es aditivo (§7).
+model Plan {
+  id                 String   @id @default(uuid()) @db.Uuid
+  code               PlanCode @unique
+  name               String
+  monthlyPrice       Decimal  @db.Decimal(10, 2)
+  maxSimultaneousSets Int
+  queueBonus         Int      @default(0) // BASIC +0, PREMIUM +N configurable
+  active             Boolean  @default(true)
+
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id          String             @id @default(uuid()) @db.Uuid
+  userId      String             @db.Uuid
+  planId      String             @db.Uuid
+  status      SubscriptionStatus @default(ACTIVE)
+  startedAt   DateTime           @default(now()) @db.Timestamptz(6)
+  cancelledAt DateTime?          @db.Timestamptz(6)
+
+  user     User      @relation(fields: [userId], references: [id])
+  plan     Plan      @relation(fields: [planId], references: [id])
+  rentals  Rental[]
+  payments Payment[]
+
+  @@index([userId, status])
+  @@map("subscriptions")
+}
+
+/// Tema del catálogo (jerarquía del dataset Rebrickable). Auto-relación padre/hijo.
+model Theme {
+  id       String  @id @default(uuid()) @db.Uuid
+  name     String
+  parentId String? @db.Uuid
+
+  parent   Theme?  @relation("ThemeHierarchy", fields: [parentId], references: [id])
+  children Theme[] @relation("ThemeHierarchy")
+  sets     Set[]
+
+  @@index([parentId])
+  @@map("themes")
+}
+
+/// Modelo de catálogo. No publicable sin valor de referencia (PRD §4.2).
+model Set {
+  id             String  @id @default(uuid()) @db.Uuid
+  themeId        String  @db.Uuid
+  setNum         String? @unique // referencia del dataset de Rebrickable (p. ej. "75192-1"); null si es alta manual
+  name           String
+  year           Int?
+  pieceCount     Int
+  recommendedAge String? // curado a mano para el subconjunto semilla
+  difficulty     String? // curado a mano
+  // Opcional a propósito: un Set puede catalogarse antes de tasarlo, pero **no puede
+  // publicarse sin este dato** (spec `catalog-inventory`). Si fuese obligatorio en la
+  // base, esa regla de negocio no existiría — sería imposible llegar a infringirla.
+  referenceValue Decimal? @db.Decimal(10, 2) // base para alquiler puntual y reclamaciones
+  boxPhotoUrl    String?
+  restricted     Boolean @default(false) // sujeto a antigüedad mínima
+  published      Boolean @default(false)
+
+  theme            Theme                    @relation(fields: [themeId], references: [id])
+  copies           Copy[]
+  queueEntries     ReservationQueueEntry[]
+  retentionConfig  RetentionReminderConfig?
+
+  @@index([themeId])
+  @@index([published])
+  @@map("sets")
+}
+
+/// Unidad física concreta de un Set. Portadora del estado del ciclo de vida.
+model Copy {
+  id         String    @id @default(uuid()) @db.Uuid
+  setId      String    @db.Uuid
+  state      CopyState @default(INTAKE)
+  acquiredAt DateTime  @default(now()) @db.Timestamptz(6)
+  retiredAt  DateTime? @db.Timestamptz(6) // fijado al pasar a BAJA
+
+  set              Set                   @relation(fields: [setId], references: [id])
+  rentals          Rental[]
+  offers           ReservationOffer[]
+  conditionReports ConditionReport[]
+  incidents        Incident[]
+  stateTransitions CopyStateTransition[]
+
+  @@index([setId, state])
+  @@map("copies")
+}
+
+/// Alquiler de una copia por un usuario. subscriptionId nulo => alquiler puntual.
+model Rental {
+  id               String       @id @default(uuid()) @db.Uuid
+  copyId           String       @db.Uuid
+  userId           String       @db.Uuid
+  subscriptionId   String?      @db.Uuid
+  type             RentalType
+  status           RentalStatus @default(ACTIVE)
+  shippingAddress  Json         // snapshot inmutable de Address al enviar
+  price            Decimal?     @db.Decimal(10, 2) // solo alquiler puntual
+  startedAt        DateTime     @default(now()) @db.Timestamptz(6)
+  returnInitiatedAt DateTime?   @db.Timestamptz(6)
+  receivedAt       DateTime?    @db.Timestamptz(6)
+  completedAt      DateTime?    @db.Timestamptz(6)
+
+  copy         Copy              @relation(fields: [copyId], references: [id])
+  user         User              @relation(fields: [userId], references: [id])
+  subscription Subscription?     @relation(fields: [subscriptionId], references: [id])
+  offer        ReservationOffer?
+  conditionReports ConditionReport[]
+  incidents    Incident[]
+  shipments    Shipment[]
+  payments     Payment[]
+
+  @@index([userId, status])
+  @@index([copyId])
+  @@map("rentals")
+}
+
+/// Entrada en la cola de reservas de un Set. Una cola por Set (agrupada por setId).
+/// Orden por `effectiveEntryAt` inmutable (design.md D11): calculado una vez al
+/// encolar como `enqueuedAt − appliedBonus`; sin recálculo periódico (orden invariante
+/// en el tiempo por ser la prioridad aditiva).
+model ReservationQueueEntry {
+  id              String           @id @default(uuid()) @db.Uuid
+  setId           String           @db.Uuid
+  userId          String           @db.Uuid
+  status          QueueEntryStatus @default(WAITING)
+  enqueuedAt      DateTime         @default(now()) @db.Timestamptz(6) // entrada real (cruda)
+  appliedBonus    Int              @default(0) // bono de plan congelado al encolar (auditoría)
+  effectiveEntryAt DateTime        @db.Timestamptz(6) // = enqueuedAt − appliedBonus (+ penalty); inmutable
+  priorityPenalty Int              @default(0) // desplazamiento aplicado tras dejar caducar una oferta
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(6)
+
+  set    Set                @relation(fields: [setId], references: [id])
+  user   User               @relation(fields: [userId], references: [id])
+  offers ReservationOffer[]
+
+  // Orden de servicio: menor effectiveEntryAt primero, desempate por id (D11).
+  @@index([setId, status, effectiveEntryAt, id])
+  @@index([userId])
+  @@map("reservation_queue_entries")
+}
+
+/// Oferta de una copia al cabeza de cola dentro de la ventana de confirmación.
+/// Una entrada puede recibir varias ofertas a lo largo del tiempo.
+model ReservationOffer {
+  id             String      @id @default(uuid()) @db.Uuid
+  queueEntryId   String      @db.Uuid
+  copyId         String      @db.Uuid
+  rentalId       String?     @unique @db.Uuid // alquiler creado al aceptar
+  status         OfferStatus @default(PENDING)
+  offeredAt      DateTime    @default(now()) @db.Timestamptz(6)
+  windowExpiresAt DateTime   @db.Timestamptz(6)
+  reminderSentAt DateTime?   @db.Timestamptz(6)
+  respondedAt    DateTime?   @db.Timestamptz(6)
+
+  queueEntry ReservationQueueEntry @relation(fields: [queueEntryId], references: [id])
+  copy       Copy                  @relation(fields: [copyId], references: [id])
+  rental     Rental?               @relation(fields: [rentalId], references: [id])
+
+  @@index([queueEntryId])
+  @@index([copyId])
+  @@index([status, windowExpiresAt])
+  @@map("reservation_offers")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Anillo 2 · Operación y trazabilidad
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Historia de estados de una copia (auditoría "quién/cuándo", PRD §7).
+model CopyStateTransition {
+  id        String    @id @default(uuid()) @db.Uuid
+  copyId    String    @db.Uuid
+  actorId   String    @db.Uuid
+  fromState CopyState
+  toState   CopyState
+  reason    String?
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+
+  copy  Copy @relation(fields: [copyId], references: [id])
+  actor User @relation(fields: [actorId], references: [id])
+
+  @@index([copyId, createdAt])
+  @@map("copy_state_transitions")
+}
+
+/// Registro de condición: en la entrega (checklist/foto previa al envío) o en la
+/// inspección de devolución (PRD §4.4).
+model ConditionReport {
+  id         String              @id @default(uuid()) @db.Uuid
+  copyId     String              @db.Uuid
+  rentalId   String?             @db.Uuid // null en alta de copia
+  operatorId String              @db.Uuid
+  kind       ConditionReportKind
+  checklist  Json?
+  // Lo que no cabe en una casilla: qué pieza falta, qué está roto. El catálogo de
+  // comprobaciones es cerrado a propósito (wireframes §4.3) y esto es su válvula.
+  notes      String?
+  result     ConditionResult
+  createdAt  DateTime            @default(now()) @db.Timestamptz(6)
+
+  copy     Copy    @relation(fields: [copyId], references: [id])
+  rental   Rental? @relation(fields: [rentalId], references: [id])
+  operator User    @relation(fields: [operatorId], references: [id])
+
+  @@index([copyId])
+  @@index([rentalId])
+  @@map("condition_reports")
+}
+
+/// Incidencia: discrepancia reportada por el suscriptor (sin imputársela) o
+/// copia incompleta/dañada/perdida detectada por el operador (PRD §4.4).
+model Incident {
+  id           String         @id @default(uuid()) @db.Uuid
+  copyId       String         @db.Uuid
+  rentalId     String?        @db.Uuid
+  reportedById String         @db.Uuid
+  assignedToId String?        @db.Uuid
+  type         IncidentType
+  status       IncidentStatus @default(OPEN)
+  notes        String?
+  createdAt    DateTime       @default(now()) @db.Timestamptz(6)
+
+  copy       Copy    @relation(fields: [copyId], references: [id])
+  rental     Rental? @relation(fields: [rentalId], references: [id])
+  reportedBy User    @relation("IncidentReporter", fields: [reportedById], references: [id])
+  assignedTo User?   @relation("IncidentAssignee", fields: [assignedToId], references: [id])
+
+  @@index([status])
+  @@index([copyId])
+  @@map("incidents")
+}
+
+/// Adjuntos (fotos). Referencia polimórfica: ownerType + ownerId (SET o
+/// CONDITION_REPORT). Sin FK a nivel de BD; la integridad se valida en la app.
+model MediaAsset {
+  id        String         @id @default(uuid()) @db.Uuid
+  ownerType MediaOwnerType
+  ownerId   String         @db.Uuid
+  url       String
+  kind      MediaKind
+  createdAt DateTime       @default(now()) @db.Timestamptz(6)
+
+  @@index([ownerType, ownerId])
+  @@map("media_assets")
+}
+
+/// Notificación al suscriptor o al back-office (PRD §4.6).
+model Notification {
+  id                String    @id @default(uuid()) @db.Uuid
+  userId            String    @db.Uuid
+  type              String    // QUEUE_TURN | OFFER_REMINDER | RENTAL_CONFIRMED | ...
+  /// Clave de idempotencia (p. ej. "QUEUE_TURN:<offerId>:<userId>"). El índice único
+  /// es lo que garantiza que un evento reintentado no genere dos avisos: sin él,
+  /// "no se duplican" dependería de que ningún camino se ejecutara dos veces.
+  dedupeKey         String?   @unique
+  payload           Json?
+  relatedEntityType String?
+  relatedEntityId   String?   @db.Uuid
+  sentAt            DateTime  @default(now()) @db.Timestamptz(6)
+  readAt            DateTime? @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+/// Auditoría genérica de acciones administrativas (config, gestión de empleados).
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String   @db.Uuid
+  action     String
+  entityType String
+  entityId   String?  @db.Uuid
+  metadata   Json?
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  actor User @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@map("audit_logs")
+}
+
+/// Movimiento logístico simulado; el operador lo marca manualmente (PRD §5).
+model Shipment {
+  id                 String            @id @default(uuid()) @db.Uuid
+  rentalId           String            @db.Uuid
+  direction          ShipmentDirection
+  status             String
+  markedByOperatorId String?           @db.Uuid
+  createdAt          DateTime          @default(now()) @db.Timestamptz(6)
+
+  rental           Rental @relation(fields: [rentalId], references: [id])
+  markedByOperator User?  @relation(fields: [markedByOperatorId], references: [id])
+
+  @@index([rentalId])
+  @@map("shipments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Anillo 3 · Configuración y pagos (simulados)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Método de pago simulado (tarjeta tokenizada ficticia, PRD §5).
+model PaymentMethod {
+  id        String  @id @default(uuid()) @db.Uuid
+  userId    String  @db.Uuid
+  brand     String
+  last4     String
+  expMonth  Int
+  expYear   Int
+  isDefault Boolean @default(false)
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@index([userId])
+  @@map("payment_methods")
+}
+
+/// Cargo simulado: cuota mensual de suscripción o alquiler puntual.
+model Payment {
+  id              String        @id @default(uuid()) @db.Uuid
+  userId          String        @db.Uuid
+  subscriptionId  String?       @db.Uuid
+  rentalId        String?       @db.Uuid
+  paymentMethodId String?       @db.Uuid
+  amount          Decimal       @db.Decimal(10, 2)
+  kind            PaymentKind
+  status          PaymentStatus @default(SIMULATED_PAID)
+  createdAt       DateTime      @default(now()) @db.Timestamptz(6)
+
+  user          User           @relation(fields: [userId], references: [id])
+  subscription  Subscription?  @relation(fields: [subscriptionId], references: [id])
+  rental        Rental?        @relation(fields: [rentalId], references: [id])
+  paymentMethod PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+
+  @@index([userId, createdAt])
+  @@map("payments")
+}
+
+/// Activación por el admin de recordatorios de retención para un Set (PRD §4.6).
+model RetentionReminderConfig {
+  id                 String  @id @default(uuid()) @db.Uuid
+  setId              String  @unique @db.Uuid
+  enabled            Boolean @default(false)
+  cadenceDays        Int     @default(7)
+  activatedByAdminId String? @db.Uuid
+
+  set             Set   @relation(fields: [setId], references: [id])
+  activatedByAdmin User? @relation(fields: [activatedByAdminId], references: [id])
+
+  @@map("retention_reminder_configs")
+}
+
+/// Parámetros configurables del sistema (clave-valor). Ej.: confirmationWindowMin,
+/// reminderCadence, maxQueuesPerUser, restrictedSetMinMonths, premiumQueueBonus.
+model SystemSetting {
+  key         String   @id
+  value       Json
+  updatedById String?  @db.Uuid
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+
+  updatedBy User? @relation(fields: [updatedById], references: [id])
+
+  @@map("system_settings")
+}
