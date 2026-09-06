@@ -182,15 +182,20 @@ test('an actor without products.delete is refused with AuthorizationException, a
 
     Log::shouldHaveReceived('warning')
         ->withArgs(function (string $message, array $context) use ($unauthorized): bool {
-            $encoded = json_encode($context);
-
+            // Flaky-test fix: this file's own $type is seeded with exactly 12 variants, and the
+            // real guarantee under test is that the COUNT never leaks into the log context --
+            // i.e. no 'count' key at all, per D-A2. The previous assertion additionally
+            // stringified the WHOLE context (including actor_id/target_id, both random UUIDv7
+            // strings) and searched it for the literal substring '12', which fails whenever
+            // either UUID happens to contain '12' by chance -- measured at ~9% of runs, unrelated
+            // to whether the count actually leaked. array_key_exists('count', ...) below is
+            // already the precise, deterministic check; dropped the substring scan rather than
+            // widen it to a fragile allow-list of "safe" keys.
             return $message === 'Privileged action refused'
                 && ($context['actor_id'] ?? null) === $unauthorized->id
                 && ($context['ability'] ?? null) === 'delete'
                 && ($context['target_type'] ?? null) === 'product_attribute_type'
-                && ! array_key_exists('count', $context)
-                && $encoded !== false
-                && ! str_contains($encoded, '12');
+                && ! array_key_exists('count', $context);
         })
         ->once();
 
