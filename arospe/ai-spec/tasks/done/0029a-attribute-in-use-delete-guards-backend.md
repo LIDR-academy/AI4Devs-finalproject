@@ -7,7 +7,7 @@ variant is built on must be **hard-refused with a message stating the exact coun
 privilege level, with no confirm-and-proceed path — instead of the raw MySQL `1451` an administrator
 meets today.
 
-This story exists because **[0029](../0029-product-variants-backend.md)** ships the
+This story exists because **[0029](0029-product-variants-backend.md)** ships the
 `product_variant_values` pivot whose `restrictOnDelete()` FK makes the refusal a database fact. The FK
 holds integrity on its own; what is missing in front of it is the *message*. Story **0028** built the
 seam for one half of this deliberately — `App\Actions\Products\DeleteProductAttributeType` exists as
@@ -44,14 +44,14 @@ Covers the "Attribute values in use by variants cannot be removed" half of
 backend | includes database-expert: **no**
 
 No table, column, index, FK, enum or migration. Every FK this story depends on is
-[0029](../0029-product-variants-backend.md)'s and is already in place by the time this story starts. What
+[0029](0029-product-variants-backend.md)'s and is already in place by the time this story starts. What
 this story adds is two counting queries, two refusals and one component property's real value — all
 application code. `database-expert` was convened for 0029 and its findings (**V-12** especially) are
 inherited rather than re-derived.
 
 ## Three Amigos participants
 
-Inherited from [0029](../0029-product-variants-backend.md)'s 2026-08-18 debate — `product-owner` (lead),
+Inherited from [0029](0029-product-variants-backend.md)'s 2026-08-18 debate — `product-owner` (lead),
 `database-expert`, `backend-expert`, with `backend-qa`'s contribution performed inline by
 `product-owner` after the platform refused that dispatch. **No new debate was run for this split**:
 every decision below already existed in 0029's D-10 and is carried over verbatim except where marked
@@ -275,7 +275,7 @@ ordering holds there for free — but verify it rather than assume it.
 ## Scope fences: what this story must NOT do
 
 - No new table, column, index, FK or migration — every one it needs is
-  [0029](../0029-product-variants-backend.md)'s.
+  [0029](0029-product-variants-backend.md)'s.
 - No Livewire component, route, Blade view, sidebar entry or browser test. The one component touch is
   a property's value, not its contract; the markup rendering the blocked-delete message is 0030's.
 - **No `Gate` call added to `SyncProductAttributeValues`** — see **D-A2**.
@@ -302,7 +302,7 @@ ordering holds there for free — but verify it rather than assume it.
 | Path | What & why |
 | --- | --- |
 | `app/Actions/Products/DeleteProductAttributeType.php` | the type-level in-use guard (**D-A1** path 1), inserted **between** the existing `authorize()` call and the `DB::transaction()` (**D-A2**), plus a `1451`-narrowed catch as the race backstop (**D-A4**) |
-| `app/Actions/Products/SyncProductAttributeValues.php` | the per-value in-use guard in its **delete branch** (**D-A1** path 2). ⚠️ **This story edits a file [0029](../0029-product-variants-backend.md) also edits** — 0029 owns the *rename* branch (its **D-4.6.1**), this story owns the *delete* branch. 0029 lands first (see [Dependencies](#dependencies-and-risks)) |
+| `app/Actions/Products/SyncProductAttributeValues.php` | the per-value in-use guard in its **delete branch** (**D-A1** path 2). ⚠️ **This story edits a file [0029](0029-product-variants-backend.md) also edits** — 0029 owns the *rename* branch (its **D-4.6.1**), this story owns the *delete* branch. 0029 lands first (see [Dependencies](#dependencies-and-risks)) |
 | `app/Models/ProductAttributeType.php` | gains `variantUsageCount(): int` — **D-A3**'s type query, `COUNT(DISTINCT variant)` and never a pivot-row count |
 | `app/Livewire/Products/AttributeTypes/Index.php` | `$deletingTypeUsageCount` gets its real value from `variantUsageCount()` (**D-A6**). One query; the property's declaration, type and `#[Locked]` are unchanged |
 | `lang/en/products.php`, `lang/es/products.php` | **Extend, never recreate.** Two keys, both `trans_choice` per 0024b **D-14**: `products.variants.value_in_use` and `products.variants.type_in_use`, each interpolating `:count`. Key-for-key identical in both locales |
@@ -401,7 +401,7 @@ the leak is the finding, not the exception type.
 ### Explicitly not tested
 
 Per [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md): the `restrictOnDelete()` FK's own
-behaviour (that is [0029](../0029-product-variants-backend.md)'s
+behaviour (that is [0029](0029-product-variants-backend.md)'s
 `ProductVariantReferentialIntegrityTest`, and duplicating it here would make two stories fail for one
 schema change); `Rule::exists`'s generated SQL; attribute type/value CRUD itself (0028); any markup or
 modal (0030).
@@ -481,7 +481,7 @@ is the message in front of it.
 
 ### Dependencies
 
-- **[0029](../0029-product-variants-backend.md) — hard, blocking, and must reach Phase 7 first.** This
+- **[0029](0029-product-variants-backend.md) — hard, blocking, and must reach Phase 7 first.** This
   story counts rows in `product_variant_values`, which 0029 creates. There is nothing to count and
   nothing to guard until it exists.
 - ⚠️ **File overlap with 0029, in the same class.** Both stories edit
@@ -516,7 +516,7 @@ is the message in front of it.
 
 ## Provenance
 
-Split out of [0029](../0029-product-variants-backend.md) on **2026-09-04**, at Phase 2, after
+Split out of [0029](0029-product-variants-backend.md) on **2026-09-04**, at Phase 2, after
 `code-reviewer` failed that story on INVEST **"Small"**. Every decision here is 0029's **D-10**,
 carried over rather than re-debated — including `database-expert`'s **V-12** (executed proof that a
 type delete aborts with `1451` and deletes nothing) and `backend-expert`'s discovery of the second
