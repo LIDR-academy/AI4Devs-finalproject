@@ -219,4 +219,17 @@
             {{ __('products.editor.save') }}
         </flux:button>
     </div>
+
+    {{-- Story 0031, D-1: the variant builder is a NESTED CHILD component, rendered only once the
+    product exists -- $productId is already in Blade scope, so App\Livewire\Products\Editor needs
+    no change of its own. --}}
+    <flux:separator class="my-8" />
+
+    @if ($productId !== null)
+        <livewire:products.variant-builder :product-id="$productId" wire:key="variant-builder-{{ $productId }}" />
+    @else
+        <flux:callout icon="information-circle">
+            {{ __('products.variants.builder.requires_saved_product') }}
+        </flux:callout>
+    @endif
 </div>
