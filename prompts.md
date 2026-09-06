@@ -284,6 +284,20 @@ Añdadido a DATA-MODEL.md este nuevo apartado y rellenado "3.2. Descripción de 
 
 **Prompt 1:**
 
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Utiliza el agente sport-itsm-product-owner. Carga el skill epic-mapper y ejecútalo entero para producir el epic map de Sport IT Service Management.
+
+Devuelve el contenido completo de epic-map.md en inglés, siguiendo el formato de salida del skill.
+
+### Response:
+
+Añdadido epic-map.md
+
+</br>
+
 **Prompt 2:**
 
 **Prompt 3:**

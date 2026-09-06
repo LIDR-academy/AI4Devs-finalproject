@@ -1,6 +1,6 @@
 # Epic Map — Sport ITSM
 
-> **Generated:** 2026-09-06 · **HEAD:** `aa1ea0e` · **PRD last modified:** `uncommitted (working tree)` · **Sources:** `docs/product/PRD.md` §5, §7, §8, §12, §14 · `CLAUDE.md` §3 · `docs/product/ARCHITECTURE.md` §4–§5
+> **Generated:** 2026-09-06 · **HEAD:** `815672f` · **PRD last modified:** commit `815672f` (2026-09-06) · **Sources:** `docs/product/PRD.md` §5, §7, §8, §12, §14 · `CLAUDE.md` §3 · `docs/product/ARCHITECTURE.md` §4–§5
 >
 > Drilling an epic against a stale map produces stale counts. If the PRD has moved since the stamp above, **regenerate by invoking `sport-itsm-product-owner` in Mode 2**.
 
@@ -10,11 +10,11 @@ This map was produced by the `epic-mapper` skill with the deviations mandated by
 
 | Skill step | Status in this run | Reason |
 | --- | --- | --- |
-| `CaptureStamp()` | Applied, with `prdLastCommit = uncommitted (working tree)` | `docs/product/PRD.md` is not yet tracked by git. A map without provenance is invalid, so the untracked state is stamped explicitly. |
+| `CaptureStamp()` | Applied; stamp refreshed to `815672f` after the PRD was committed | The analysis was performed at `aa1ea0e` against a then-untracked PRD. `docs/product/PRD.md` was subsequently committed at `815672f` **byte-identical**, so the stamp was advanced without re-running the analysis. Finding **F12** is thereby resolved. |
 | Read `docs/product/prd.md` | Applied against `docs/product/PRD.md` | Uppercase filename in this repository. |
 | Read `docs/product/implementation-baseline.md` | **Not applicable** | The file does not exist; the workspace is greenfield. |
 | Read `docs/standards/base-standards.md` §4 | Substituted by `CLAUDE.md` §3 + `docs/product/ARCHITECTURE.md` §4–§5 | This repository's authoritative Nx layer/boundary baseline. |
-| `CrossCheckAgainstCode()` | **Skipped** | No implementation exists at `aa1ea0e`: no `package.json`, no `apps/`, no `libs/`. Nothing to spot-check, no baseline to disagree with. |
+| `CrossCheckAgainstCode()` | **Skipped** | No implementation exists at `815672f`: no `package.json`, no `apps/`, no `libs/`. Nothing to spot-check, no baseline to disagree with. |
 | PRD **Icon legend** (build states) | **Absent from the PRD — expected, not drift** | Nothing has been built, so no build-state legend is warranted. Every requirement is treated as 🔴 Not built. |
 | `SizeEpics()` | Applied in **greenfield** mode | Size = full requirement count **plus** the Nx libraries the epic must create from nothing (`domain` / `application` / `infrastructure` / `contracts` backend, `feature` / `ui` / `data-access` frontend), not a remaining-work delta. |
 | `RecommendOrder()` | Applied as an **architectural build sequence** | With everything unbuilt the order is driven by dependency depth, not by remaining-work deltas. |
@@ -301,7 +301,7 @@ The key **is** the PRD's own capability ID from the §7 subsection title (`### 7
 
 ## Findings — PRD vs code
 
-**Not applicable — greenfield, no implementation exists at `aa1ea0e`.** There is no `package.json`, no `apps/`, no `libs/` and no `docs/product/implementation-baseline.md`. `CrossCheckAgainstCode()` was skipped as mandated, no requirement was spot-checked, and no PRD-vs-code disagreement can exist. Any PRD-vs-code table printed for this run would be fabricated.
+**Not applicable — greenfield, no implementation exists at `815672f`.** There is no `package.json`, no `apps/`, no `libs/` and no `docs/product/implementation-baseline.md`. `CrossCheckAgainstCode()` was skipped as mandated, no requirement was spot-checked, and no PRD-vs-code disagreement can exist. Any PRD-vs-code table printed for this run would be fabricated.
 
 ## Findings — PRD internal consistency
 
@@ -325,4 +325,4 @@ These are reported, not fixed. `docs/product/PRD.md` was not modified.
 | # | Severity | Finding | Impact |
 | --- | --- | --- | --- |
 | **F11** | Medium | **`readme.md` §1.2 vs PRD §3.3 — event-aware SLA drift.** The upstream capability list (echoed in the Product Owner agent's domain anchor) describes "SLA Management & Escalation (**event-aware around live windows**)" and names "event protection during critical live windows (registration deadlines, match days, finals)" as a value driver. The PRD explicitly reverses this: §3.3 places "competition calendar management and time-based service policies" **out of scope** — "Sport ITSM does not maintain, import or reason over a competition calendar. It defines no 'live window', no event-driven SLA modulation and no deployment freeze period." `FR-CHG-07` was retired for exactly this reason, and `ARCHITECTURE.md` **ADR-006** ratifies it. | The PRD, the retired ID and the ADR agree with each other and disagree with `readme.md` §1.2. The PRD is the more recent and more specific decision, so this map follows it: **no epic in this map contains live-window, calendar or freeze-window work.** Recommend updating `readme.md` §1.2 (and the agent's domain anchor) so the upstream text stops advertising a capability the product has decided not to build. Competition impact is an agent judgment on the ticket (`FR-INC-05`), not a calendar lookup. |
-| **F12** | Info | **`docs/product/PRD.md` is untracked.** The file is not committed, so `prdLastCommit` is stamped `uncommitted (working tree)` rather than a sha. | This map cannot be reliably compared against a future PRD revision until the PRD is committed. Commit `docs/product/PRD.md`, then regenerate this map so the provenance stamp carries a real sha and date. |
+| **F12** | ~~Info~~ **Resolved** | ~~`docs/product/PRD.md` is untracked, so `prdLastCommit` is stamped `uncommitted (working tree)` rather than a sha.~~ The PRD was committed at `815672f` (2026-09-06), byte-identical to the revision analyzed here. | Resolved. The stamp now carries a real sha and date, so this map can be compared against future PRD revisions. Regenerate when `docs/product/PRD.md` moves past `815672f`. |
