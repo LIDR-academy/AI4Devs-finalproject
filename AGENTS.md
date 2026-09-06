@@ -1178,7 +1178,7 @@ project. Read it at the start of every session.
   2.1 (autenticación), 2.2 (matriz de permisos), 2.3 (baja de copia solo admin) y 2.4
   (auditoría), 2.5 (alta de suscriptor), 2.6 (visitante) y 2.7 (tests) hechas —
   **MVP completo: las 45 tareas de `clickoteca-mvp` hechas y verificadas**
-  (hoy **385 tests unitarios + 41 E2E**, `openspec validate --strict` en verde). Lo que queda
+  (hoy **406 tests unitarios + 46 E2E**, `openspec validate --strict` en verde). Lo que queda
   fuera del MVP: **diseño visual y UX** —los **tres entregables de diseño están hechos**:
   flujos por rol (`documents/ux-flows.md`), sistema de diseño
   (`documents/design-system.md`) y **wireframes** (`documents/wireframes.md`, 2026-08-20);
@@ -1193,7 +1193,10 @@ project. Read it at the start of every session.
   (2026-08-20): la cola de trabajo tiene el grupo "Por preparar" y la lista de
   comprobación está ratificada en el dominio. **§8.4 y §8.7 cerrados el 2026-08-21**
   (posición en cola y pantalla de HU-16) y **§8.3 anotado**: de los siete hallazgos de
-  §8 no queda ninguno abierto, y la cobertura es **18 de 18 historias**. Lo único
+  §8 no queda ninguno abierto, y la cobertura es **18 de 18 historias**. **El log de prompts está al día** (2026-09-06): las seis entradas de la sesión de
+  despliegue del 21–22 de agosto están registradas y las secciones estructuradas de
+  `prompts.md` ya no tienen huecos; `main` y `project-xvm` avanzan a la punta del
+  trabajo, que es lo que lee quien corrige. Lo único
   pendiente del proyecto es el **videotutorial**. Para cualquier cambio de estado de una copia, usar
   `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
 

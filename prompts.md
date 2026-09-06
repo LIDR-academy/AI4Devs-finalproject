@@ -66,11 +66,20 @@ se usará PostgreSQL o similar."
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-**Prompt 1:**
+**Prompt 1:** "Empecemos. ¿Qué recomiendas como librerías de UI? Algo ligero para
+móviles, pero potente para web, con aspecto moderno" — la sesión que, además de las
+librerías, fijó el **layout del repositorio**: proyecto Next.js único con la app en la
+raíz, `backend/prisma/schema.prisma` → `prisma/schema.prisma` y los primitivos de shadcn
+en `components/ui/*`. Ver log [2026-08-11].
 
-**Prompt 2:**
+**Prompt 2:** "lo siguiente del plan es la navegación en los dos layouts
+(wireframes.md §8.5)" — los destinos de cada superficie se declaran en
+`lib/navigation.ts`, filtrados por la matriz de permisos, y se pintan desde el layout del
+portal y el del back-office en vez de vivir dentro de una página.
 
-**Prompt 3:**
+**Prompt 3:** "actualiza openspec antes de seguir" — el archivado del MVP reparte la
+estructura documental: `openspec/changes/` queda para lo que está en curso y
+`openspec/specs/` pasa a contener las 6 capabilities con sus 32 requisitos.
 
 ### **2.4. Infraestructura y despliegue**
 
@@ -78,25 +87,47 @@ se usará PostgreSQL o similar."
 escalará a producción, con lo que sugiere distintos proveedores donde alojar
 la aplicación y la base de datos, si puede ser de forma gratuita, como MVP."
 
-**Prompt 2:**
+**Prompt 2:** "Limpia y cierra. Como base de datos he creado en Vercel una llamada
+'supabase-clickoteca'. ¿Hay que modificar muchas cosas del proyecto?" — de aquí salen las
+**dos URLs** (pooler de transacción para la aplicación, conexión directa para las
+migraciones), `DATABASE_POOL_MAX` sin valor por defecto y el script `db:deploy`.
 
-**Prompt 3:**
+**Prompt 3:** "Verifica que la documentación, incluyendo readme, refleja los cambios de
+VM a Vercel. La URL pública de la aplicación ahora será clickoteca.vercel.app. Y que
+OpenSpec está debidamente actualizado." — nace `ADR-0003`, y `ADR-0001` §5 se queda con un
+banner de *sustituida* y sus negativas tachadas pero visibles.
 
 ### **2.5. Seguridad**
 
-**Prompt 1:**
+**Prompt 1:** "¿Queda algún aspecto a revisar de la arquitectura?" — de esa sesión de
+decisiones sale `ADR-0002`: **sesión server-side** con cookie `httpOnly` que transporta un
+token opaco (en la base solo su SHA-256, así que un volcado de la tabla no permite
+suplantar sesiones), `argon2id` para las contraseñas y contrato de errores RFC 9457.
 
-**Prompt 2:**
+**Prompt 2:** "`admin@clickoteca.test` ¿tiene la misma password que en desarrollo?" → "¿Y
+el resto de cuentas tienen ese mismo seed password?" — sí: la semilla usa **un único hash
+para las cinco cuentas**, de modo que la contraseña publicada en el readme no era la de un
+suscriptor de demostración sino una llave maestra que entra como administrador. Nace
+`SEED_PASSWORD` y las credenciales de la instancia desplegada dejan de publicarse.
 
-**Prompt 3:**
+**Prompt 3:** "Tengo una cuenta Hobby. Vercel me lista las variables de entorno que ha
+creado junto con la base de datos: …" — higiene de secretos: `.gitignore` pasa a ignorar
+`.env*` entero en vez de una lista de variantes (`.env.vercel` de `vercel env pull` se
+colaba), el código no lee las `STORAGE_*` de la integración, y queda anotado que
+`vercel env pull` baja esos valores como `[SENSITIVE]`.
 
 ### **2.6. Tests**
 
-**Prompt 1:**
+**Prompt 1:** "puedes arrancar el docker?" — primera ejecución de verdad de la suite E2E,
+que destapó tres problemas; el stack (Vitest, Playwright y Testcontainers para un Postgres
+real) se había cerrado en la sesión de librerías, ver log [2026-08-11].
 
-**Prompt 2:**
+**Prompt 2:** "continue" — con el arnés en rojo por el pool de compilación de `next dev`,
+se cambió el objetivo en vez de bajar el paralelismo: Playwright hace `next build` y
+levanta el **paquete autónomo** en el puerto 3100, que es un artefacto de producción.
 
-**Prompt 3:**
+**Prompt 3:** "continue" — `@axe-core/playwright` entra en el E2E y audita nueve
+pantallas, cerrando el hueco de accesibilidad que `ux-flows.md` §9 tenía anotado.
 
 ---
 
@@ -113,17 +144,28 @@ otras entidades son importantes en un sistema de este tipo? Usa diagramas mermai
 [...] Adopta 'User único con rol' y 'score materializado + recálculo', incorpora una
 nueva sección en PRD.md y genera el esquema prisma en `backend/prisma`."
 
-**Prompt 3:**
+**Prompt 3:** "Empecemos. ¿Qué recomiendas como librerías de UI? Algo ligero para
+móviles, pero potente para web, con aspecto moderno" — la misma sesión cerró la **versión
+de Prisma**, movió el esquema a `prisma/schema.prisma` y dejó la URL de conexión en
+`prisma.config.ts` en vez de en el bloque `datasource`.
 
 ---
 
 ### 4. Especificación de la API
 
-**Prompt 1:**
+**Prompt 1:** "Para el frontend y el backend estoy valorando para MVP Next.js como mejor
+opción." — al evaluar el encaje se eligió el modelo de API: **Route Handlers en
+`app/api/*` con Zod → OpenAPI**, es decir una API REST pública de verdad, en lugar de las
+Server Actions/RPC hacia las que empuja Next.
 
-**Prompt 2:**
+**Prompt 2:** "Vamos a por W4" — y con ella la decisión de **no** escribir `GET /api/sets`:
+las pantallas del back-office son Server Components que leen el repositorio, y la API
+pública se amplía cuando la pida alguien de fuera, no por simetría.
 
-**Prompt 3:**
+**Prompt 3:** "Estoy probando de hacer un deployment en Vercel. Da el siguiente error:
+[module not found en `src/db/prisma.ts`] … Sí, commitea y monta el endpoint de cron" —
+nace `GET /api/cron/:job`, con `Authorization: Bearer $CRON_SECRET` comparado en tiempo
+constante y **cerrado por defecto**: sin la variable el endpoint responde 404.
 
 ---
 
@@ -145,21 +187,36 @@ tiene la última decisión → aplica la reconciliación."
 
 ### 6. Tickets de Trabajo
 
-**Prompt 1:**
+**Prompt 1:** "La selección de plan debe realizarse en HU-01. HU-02 debería ser un cambio
+de plan" — de aquí sale el cambio OpenSpec `plan-obligatorio-en-alta`, con su propuesta,
+sus deltas de spec y sus **18 tareas**.
 
-**Prompt 2:**
+**Prompt 2:** "sigamos" — ejecución de las 18: el alta acepta `planCode`, lo valida contra
+los planes activos y crea la suscripción **dentro de la misma transacción** que el
+usuario, la dirección y la tarjeta.
 
-**Prompt 3:**
+**Prompt 3:** "resolvamos los bloqueos" + "Añadir que si alguien se quiere dar de alta con
+un correo previamente cancelado, se debe poder dar de alta de nuevo (o si provee la
+password correcta, reactivar la suscripción)" — los dos bloqueantes de `wireframes.md`
+§8.1 y §8.2, y la vuelta de quien canceló.
 
 ---
 
 ### 7. Pull Requests
 
-**Prompt 1:**
+**Prompt 1:** "Reemplaza los esquemas PlantUML del PRD por Mermaid. Luego, como arquitecto
+de software, genera el modelo de datos organizando entidades y relaciones por orden de
+importancia […] y genera el esquema Prisma en `backend/prisma`." — hito **`7c37834`**
+(*Pull Request 1 — Modelo de datos*); el mismo prompt de §3.
 
-**Prompt 2:**
+**Prompt 2:** "Siguiendo con la arquitectura del sistema, genera en `documents` los
+diagramas C4 a partir de los specs actuales para revisión, junto con un Architecture
+Decision Record (ADR)." — hito **`7985b78`** (*Pull Request 2 — Arquitectura*), junto con
+las decisiones de concurrencia, orden de cola y contrato de errores dictadas después.
 
-**Prompt 3:**
+**Prompt 3:** "Para el frontend y el backend estoy valorando para MVP Next.js como mejor
+opción." — hito **`a5edc4b`** (*Pull Request 3 — Cierre de arquitectura y stack*): el
+mismo prompt de §4, que además cerró las *Open questions* de arquitectura.
 
 ---
 
@@ -1086,3 +1143,161 @@ allí no hay `localhost` que valga.
 credencial y con la equivocada, 404 sin `CRON_SECRET` y con un trabajo inventado, y 200
 con resumen contable en los dos trabajos buenos. Sincronizados `ADR-0001` §4,
 `readme.md` §2.4 y `.env.example`.
+
+### [2026-08-21] — Un Postgres gestionado son dos URLs
+**Prompt:** "Limpia y cierra. Como base de datos he creado en Vercel una llamada
+'supabase-clickoteca'. ¿Hay que modificar muchas cosas del proyecto?"
+**Resumen de la respuesta:** Poco código y una idea nueva: **con un pooler de
+transacciones delante —Supabase, Neon— hacen falta dos URLs, no una**. La aplicación se
+conecta al pooler; las migraciones no pueden, porque necesitan una sesión estable para
+tomar el *advisory lock* y ejecutar DDL. `prisma.config.ts` prefiere `DIRECT_URL` cuando
+existe y cae a `DATABASE_URL` cuando no —leyendo `process.env` y **no** `env()`, que lanza
+si la variable falta y aquí faltar es lo normal: en la máquina de desarrollo y en el E2E
+solo hay una base—.
+**`DATABASE_POOL_MAX` se queda deliberadamente sin número por defecto:** el valor correcto
+depende de dónde corre el proceso. En una VM hay un proceso y le conviene un pool holgado;
+en serverless hay tantos pools como instancias vivas, y diez conexiones por instancia
+agotan el límite del proveedor. Cualquier número fijado a ciegas empeora uno de los dos
+casos, así que se pide explícitamente en el entorno que lo necesita.
+**Y `db:deploy`,** porque `db:migrate` es `prisma migrate dev` —interactivo, capaz de
+recrear la base— y contra una base remota no se usa.
+Nada de esto cambia el despliegue en la VM: sin `DIRECT_URL` ni `DATABASE_POOL_MAX`, el
+comportamiento es exactamente el de antes.
+
+### [2026-08-21] — Los crons, a lo que el plan Hobby admite
+**Prompts:** "Vercel me ha creado un nuevo repositorio forkeado de un commit anterior,
+desde el que hace los upgrades. ¿Cuál sería la mejor estrategia de gestión para tener
+ambos controlados?" / "Tengo una cuenta Hobby. Vercel me lista las variables de entorno
+que ha creado junto con la base de datos: `STORAGE_POSTGRES_PRISMA_URL`,
+`STORAGE_POSTGRES_URL_NON_POOLING`, …"
+**Resumen de la respuesta:** **Vercel no degrada una expresión de cron demasiado
+frecuente: hace fallar el despliegue entero.** En Hobby son dos crons y solo diarios, así
+que el `*/5` heredado del scheduler de la VM impedía desplegar. Se recortan a diarios y
+**el precio queda escrito para no redescubrirlo**: la caducidad de ofertas se vuelve
+imprecisa —una ventana de 48 h puede cerrarse casi un día tarde— y el recordatorio de
+mitad de ventana puede llegar tarde o no llegar. El dominio lo aguanta porque **todo se
+decide por marcas de tiempo y no por contadores**, que es también lo que hace que una
+ejecución perdida se cure sola en la siguiente — y Vercel avisa de que la entrega es
+*best effort*.
+**Dos decisiones sobre la integración de Supabase:** `DATABASE_URL` se rellena a mano con
+el valor de `STORAGE_POSTGRES_PRISMA_URL`, y `DIRECT_URL` vive solo en el `.env` local,
+porque quien migra es la máquina de desarrollo. **El código no lee las `STORAGE_*`**:
+acoplaría el proyecto a los nombres de una integración concreta, y el mismo código tiene
+que arrancar en la VM y en local.
+**Sobre el repositorio duplicado:** el `clickoteca` que creó Vercel es un commit "Initial
+commit" **sin ancestro común**, con el árbol de `d169b2d`. Mantener los dos en paralelo
+significa fusionar a mano historias que no comparten raíz, así que se archiva y el
+despliegue se apunta al repositorio de trabajo.
+
+### [2026-08-21] — El build que compila entero y muere al final: `standalone` fuera de Vercel
+**Prompts:** "Sigue con un *build failed*: [log de Vercel, commit `3cdce76`]" / "Running
+onBuildComplete from Vercel / Error: ENOENT: no such file or directory, open
+'/vercel/path0/.next/next-server.js.nft.json'"
+**Resumen de la respuesta:** El modo `standalone` se lleva el trazado a
+`.next/standalone/` y **deja de emitir `.next/next-server.js.nft.json`**, que es justo el
+fichero que abre el paso `onBuildComplete` de Vercel para armar sus funciones. De ahí el
+síntoma desconcertante: el build compila entero, genera las 28 páginas y **muere al
+final** con un ENOENT sobre un json que no menciona `standalone` por ningún lado. Despista
+todavía más que el log traiga `Applying modifyConfig from Vercel`, como si Vercel ya
+hubiera ajustado la configuración.
+**Lo decide `process.env.VERCEL`,** que define su propio entorno de build: en la VM, en
+local y en el E2E sigue saliendo el paquete autónomo —el artefacto que despliega `systemd`
+y el que prueba Playwright—; en Vercel, no.
+**Comprobado en las dos direcciones** (sin `VERCEL` sale `.next/standalone`; con
+`VERCEL=1` sale `next-server.js.nft.json`) y **fijado en `tests/next-config.test.ts`**,
+porque el síntoma no lleva a la causa por ningún camino razonable: sin una prueba que lo
+sostenga, alguien lo revierte por "limpieza".
+**Verificación:** 406 unitarios, `tsc`, `eslint`, `next build` y 46 E2E.
+
+### [2026-08-21] — La contraseña que no puede publicarse, y el TLS del pooler
+**Prompts:** "`admin@clickoteca.test` ¿tiene la misma password que en desarrollo?" / "¿Y
+el resto de cuentas tienen ese mismo seed password?" / "Déjalo claro en la documentación y
+ya"
+**Resumen de la respuesta:** Sí, y ese *sí* era el problema. **La semilla usa un único
+hash para las cinco cuentas**, así que `clickoteca` —escrita en el readme de un
+repositorio público— no es la clave de un suscriptor de demostración: es **una llave
+maestra del entorno** que entra también como operador y como administrador, y ADMIN toca
+la configuración del sistema, las bajas de copia y las cuentas del personal. Sembrar con
+ella un despliegue accesible desde fuera es publicar una cuenta de administrador abierta.
+**Tres cambios y una decisión.** `SEED_PASSWORD` sustituye la constante, con el valor
+público por defecto para que el entorno local y el E2E sigan igual, y **el resumen de la
+semilla solo imprime la contraseña cuando es la pública** —una puesta a mano acabaría en
+el historial de la terminal y en cualquier log—. El readme dice ahora que `clickoteca` es
+**la del entorno local** y que las credenciales de la instancia desplegada **no se
+publican aquí**, sino que se entregan por el canal del curso. Se valoró hashear por cuenta
+para poder entregar solo la del suscriptor y **se descartó**: media aplicación es el
+back-office, y quien corrige tiene que verlo.
+**Ojo con una consecuencia de que la semilla sea idempotente:** el `upsert` actualiza
+nombre y rol, **no el hash**, así que la contraseña se decide en la primera siembra.
+**El `.gitignore`, del listado al patrón:** `.env` y `.env*.local` dejaban fuera justo los
+ficheros que se crean sin pensar y traen credenciales de verdad —`.env.vercel` de
+`vercel env pull`, `.env.production`, `.env.supabase`—. Se ignora `.env*` entero y se
+rescata la plantilla.
+**Y el TLS del pooler, que es una trampa de manual:** `pg` v8.16+ interpreta
+`sslmode=require` como `verify-full`, y el certificado del pooler de Supabase encadena a
+una raíz que Node no lleva en su almacén; sin `uselibpqcompat=true` la conexión muere con
+"self-signed certificate in certificate chain". **Lo traicionero es dónde aparece:** no al
+migrar —el motor de Prisma usa la semántica de libpq y pasa— sino en la aplicación, que va
+por el mismo `pg` del *driver adapter*. Es decir, **despliegue en verde y fallo en el
+primer query**. El parámetro devuelve a `require` su significado de libpq (cifra, no
+verifica) y es además la forma que sobrevive al cambio anunciado para `pg` v9; la
+alternativa estricta —CA de Supabase con `verify-full` y `sslrootcert`— queda anotada.
+Se anota también que **`vercel env pull` baja las variables de una integración como
+`[SENSITIVE]`**: comparar dos de ellas no prueba nada, y para saber si una credencial vale
+hay que intentar conectar.
+
+### [2026-08-22] — El pooler de sesión no aguanta serverless
+**Prompts:** "No puedo cambiar el pooler. Según documentación, el pooler *transaction* usa
+el puerto 6543." / "Verifica que los `Promise.all` no tienen ningún mal efecto" / "Ponlo a
+1 y commitea"
+**Resumen de la respuesta:** `/backoffice/catalogo` daba la página de error de Next en el
+despliegue (digest 2243060452). Detrás estaba `(EMAXCONNSESSION) max clients reached in
+session mode - max clients are limited to pool_size: 15`: **`DATABASE_URL` apuntaba al
+pooler de sesión**, donde cada cliente retiene una conexión de servidor y **el techo de
+clientes *es* el `pool_size`**. Con `DATABASE_POOL_MAX=3`, cinco instancias de función lo
+llenaban — y esa pantalla era la primera en caer porque pedía tres conexiones de golpe.
+**La variable pasa al pooler de transacción (`:6543`) y el pool por instancia a 1.** Lo
+segundo importa más de lo que parece: el techo **no lo marca la concurrencia de peticiones
+sino ese número por el de instancias vivas**, y una instancia congelada no ejecuta
+temporizadores, así que el `idleTimeoutMillis` de `pg` nunca cierra la conexión y el hueco
+queda tomado hasta que Vercel la recicla.
+**Verificado a las bravas:** una sonda de 30 conexiones aceptaba **1** tras una prueba de
+carga y **30** justo después de redesplegar — que es, de paso, la palanca de emergencia si
+vuelve a pasar.
+**El cambio de código ya no hacía falta para la conexión, y se queda por la otra razón:**
+los tres *reads* de `listManaged` van en un `$transaction`, así que la lista y los
+recuentos de la cabecera **ven la misma foto** —antes, un alta a medio camino los
+descuadraba— y de paso caben en una conexión. La página encadena sus dos llamadas por lo
+mismo.
+**Los `Promise.all` del resto de la app se revisaron y quedan como están:** ninguna
+transacción usa el cliente global —no hay interbloqueo de pool posible— y ninguno recorre
+una lista. Con el pool a 1 se serializan solos, y el coste no se nota: páginas calientes
+en ~280 ms, dominadas por la red.
+
+### [2026-08-22] — El despliegue es Vercel, y la documentación aún decía VM
+**Prompt:** "Verifica que la documentación, incluyendo readme, refleja los cambios de VM a
+Vercel. La URL pública de la aplicación ahora será clickoteca.vercel.app. Y que OpenSpec
+está debidamente actualizado."
+**Resumen de la respuesta:** La aplicación llevaba días en
+**https://clickoteca.vercel.app** y el corpus entero seguía describiendo la VM de Oracle
+con Caddy, `systemd` y Postgres en `localhost`. Los detalles operativos sí estaban al día
+—crons, pooler, `uselibpqcompat`—, pero **la decisión de hosting no, que es justo lo que
+lee quien corrige**.
+**La decisión se registra en `ADR-0003` en vez de reescribir `ADR-0001` §5.** Esa sección
+se queda con un banner de *sustituida* y **sus negativas tachadas pero visibles** —ops
+propio, punto único de fallo, riesgo de reclamación—, porque son precisamente las que
+motivaron el salto: borrarlas dejaría el ADR sin explicar por qué se cambió de idea. El
+ADR nuevo lleva las dos URLs (pooler de transacción para el runtime, de sesión para las
+migraciones), `DATABASE_POOL_MAX=1` con su aritmética, los crons diarios del plan Hobby y
+por qué `standalone` se apaga en Vercel.
+**El readme** abre §0.4 con la URL desplegada —y con que las credenciales de esa instancia
+no se publican aquí—, cambia los dos diagramas por la topología real y añade el *runbook*
+de un despliegue nuevo, incluido el redespliegue como palanca si vuelve el `EMAXCONN`. C4,
+`ADR-0002`, PRD y `AGENTS.md`, en consecuencia.
+**De paso caen dos afirmaciones que ya no eran ciertas:** la tipografía sin webfont no se
+justifica "porque el destino es una VM libre de Oracle" sino por la petición bloqueante en
+la primera pintura, y los comentarios que hablaban de Caddy o del scheduler "de la VM"
+pasan a nombrar lo que hay.
+**OpenSpec no se toca, a propósito:** los seis specs son de comportamiento —colas,
+ofertas, notificaciones— y ninguno menciona hosting ni despliegue, así que el cambio no
+altera ningún requisito. Sigue en verde con `--strict`.

@@ -621,11 +621,14 @@ original fue de estabilidad: el pool de compilación de `next dev` se caía bajo
 de varios navegadores y dejaba el servidor devolviendo 500 en unas rutas y colgando
 otras. `E2E_DEV=1` conserva el objetivo antiguo para iterar sobre una pantalla.
 
-> **Estado:** el arnés está montado y en verde con tests de humo; la batería de
-> casos de dominio se escribe junto a cada capability. El **criterio de éxito del
-> MVP** (PRD §10) es la **cobertura de caminos de error**, no KPIs de escala, y el
-> diseño lo habilita: el dominio (máquina de estados, política de cola) es un
-> módulo TS puro testable sin levantar infraestructura.
+> **Estado: en verde.** **406 tests unitarios y de integración** en 30 ficheros
+> (`npm test`) y **46 E2E** en 10 ficheros (`npm run test:e2e`): 42 en escritorio y
+> los 4 del *smoke* repetidos en un viewport de móvil — el recorrido completo se
+> queda fuera del proyecto móvil a propósito, porque comparte la base sembrada con
+> el de escritorio y ejecutar los dos a la vez es una carrera por la misma copia.
+> El **criterio de éxito del MVP** (PRD §10) es la **cobertura de caminos de error**,
+> no KPIs de escala, y el diseño lo habilita: el dominio (máquina de estados,
+> política de cola) es un módulo TS puro testable sin levantar infraestructura.
 
 Casos de test prioritarios:
 
