@@ -71,6 +71,18 @@ jobs:
           coverage: xdebug
           extensions: imagick
 
+      # GitHub-hosted Ubuntu runners ship libheif without its AVIF encoder plugin (the
+      # encoder plugins were split into optional packages and are not installed by
+      # default) — see https://github.com/actions/runner-images/issues/13728, closed by
+      # GitHub as "not planned". Without this, Imagick can still DECODE avif but silently
+      # writes a 0-byte blob on ENCODE instead of throwing, which is why
+      # GenerateImageConversionsTest's avif byte-signature assertions fail here while
+      # passing under Sail (whose php8.5-imagick apt install pulls this in as a
+      # Recommends). Installed as its own step so it stays independent of how Setup PHP
+      # resolves the imagick extension.
+      - name: Install libheif AVIF encoder plugin
+        run: sudo apt-get update && sudo apt-get install -y libheif-plugin-aomenc
+
       - name: Setup Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
