@@ -426,28 +426,41 @@ test('renaming a value into a colliding derived sku shows the callout and keeps 
 
 // Mandatory per test-quality-checklist.md: assertNoJavaScriptErrors() on every step of one
 // continuous smoke pass, distinct from the behavior-specific tests above.
+//
+// 2026-09-06: wrapped the real-browser flow in retry(3, ..., 250) -- this repo's established
+// mitigation (tests/Browser/Media/GalleryTest.php, tests/Browser/UsersIndexTest.php) for a genuine
+// click -> Livewire round trip -> modal-action timing race that occasionally exceeds
+// Pest\Browser\Playwright\Playwright::$timeout's fixed 5000ms ceiling. This one failed only under
+// GitHub Actions' CI run (`Timeout 5000ms exceeded` at the repeater's `->click('@add-value')`,
+// tests/Browser/Products/AttributeTypesIndexTest.php:443 at the time), never locally: 4/4 isolated
+// runs under Sail passed cleanly in ~9s each with no flake -- the same CI-only, --parallel-runner
+// resource-contention signature already documented in
+// docs/testing/frontend/playwright-setup.md's "A bare wait(n) is not a polling primitive" section,
+// not a reproducible bug in this test or the repeater it exercises.
 test('the attribute types screen produces no javascript errors across one continuous smoke pass', function () {
     $actor = attributeTypesBrowserActor();
     $this->actingAs($actor);
 
     $type = attributeTypesBrowserSeed('Material', ['Cotton']);
 
-    visit('/products/attribute-types')
-        ->assertNoJavaScriptErrors()
-        ->click('New attribute type')
-        ->assertNoJavaScriptErrors()
-        ->click('Cancel')
-        ->assertNoJavaScriptErrors()
-        ->click('@edit-type-'.$type->id)
-        ->assertNoJavaScriptErrors()
-        ->click('@add-value')
-        ->assertNoJavaScriptErrors()
-        ->click('[aria-label="Remove Value"]')
-        ->assertNoJavaScriptErrors()
-        ->click('Cancel')
-        ->assertNoJavaScriptErrors()
-        ->click('@delete-type-'.$type->id)
-        ->assertNoJavaScriptErrors()
-        ->click('Cancel')
-        ->assertNoJavaScriptErrors();
+    retry(3, function () use ($type) {
+        visit('/products/attribute-types')
+            ->assertNoJavaScriptErrors()
+            ->click('New attribute type')
+            ->assertNoJavaScriptErrors()
+            ->click('Cancel')
+            ->assertNoJavaScriptErrors()
+            ->click('@edit-type-'.$type->id)
+            ->assertNoJavaScriptErrors()
+            ->click('@add-value')
+            ->assertNoJavaScriptErrors()
+            ->click('[aria-label="Remove Value"]')
+            ->assertNoJavaScriptErrors()
+            ->click('Cancel')
+            ->assertNoJavaScriptErrors()
+            ->click('@delete-type-'.$type->id)
+            ->assertNoJavaScriptErrors()
+            ->click('Cancel')
+            ->assertNoJavaScriptErrors();
+    }, 250);
 });
