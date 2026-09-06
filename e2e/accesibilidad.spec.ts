@@ -56,6 +56,10 @@ const PAGINAS_PUBLICAS = [
   { ruta: "/planes", nombre: "planes" },
   { ruta: "/registro", nombre: "alta" },
   { ruta: "/login", nombre: "login" },
+  { ruta: "/recuperar-contrasena", nombre: "recuperar contraseña" },
+  // Con token en la URL: sin él la página pinta el aviso y no el formulario, que es
+  // justo lo que hay que auditar aquí.
+  { ruta: "/restablecer-contrasena?token=auditoria", nombre: "nueva contraseña" },
 ];
 
 for (const { ruta, nombre } of PAGINAS_PUBLICAS) {

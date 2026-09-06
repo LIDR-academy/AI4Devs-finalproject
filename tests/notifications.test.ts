@@ -62,7 +62,12 @@ const EVENTS: DomainEvent[] = [
   { type: "copy.incomplete", copyId: "c1", setName: "Falcon", rentalId: "r1" },
   { type: "copy.retired", copyId: "c1", setName: "Falcon", reason: "rota" },
   { type: "delivery.discrepancy", copyId: "c1", rentalId: "r1", setName: "Falcon", notes: "faltan piezas" },
+  { type: "password-reset.requested", userId: "ana", tokenId: "t1", expiresAt: WINDOW },
+  { type: "password.changed", userId: "ana", tokenId: "t1" },
 ];
+
+/** Los tres que van al back-office; el resto son del titular de la cuenta. */
+const BACKOFFICE_EVENTS = EVENTS.slice(7, 10);
 
 describe("mapa de eventos a notificaciones (7.1)", () => {
   it("todo evento del dominio produce al menos una notificación", () => {
@@ -117,7 +122,7 @@ describe("eventos al suscriptor (7.2)", () => {
 
 describe("eventos internos al back-office (7.3)", () => {
   it("la copia incompleta y la baja van al back-office, no al suscriptor", () => {
-    for (const event of EVENTS.slice(7)) {
+    for (const event of BACKOFFICE_EVENTS) {
       expect(notificationsFor(event)[0].audience).toEqual({ kind: "backoffice" });
     }
   });
@@ -138,6 +143,31 @@ describe("eventos internos al back-office (7.3)", () => {
     expect(repeat.sent).toBe(0);
     expect(repeat.duplicates).toBe(2);
     expect(notifications.rows).toHaveLength(2);
+  });
+});
+
+describe("avisos de seguridad de la cuenta", () => {
+  it("avisan al titular, no al back-office", () => {
+    for (const event of EVENTS.slice(10)) {
+      expect(notificationsFor(event)[0].audience).toEqual({ kind: "user", userId: "ana" });
+    }
+  });
+
+  it("la solicitud dice hasta cuándo sirve el enlace, pero no lleva el enlace", () => {
+    const [planned] = notificationsFor(EVENTS[10]);
+    expect(planned.type).toBe("PASSWORD_RESET_REQUESTED");
+    expect(planned.payload).toEqual({ expiresAt: WINDOW.toISOString() });
+  });
+
+  it("solicitar y cambiar son dos avisos distintos del mismo enlace", async () => {
+    const notifications = new FakeNotificationRepository();
+    await emit({ notifications, now: () => AT }, EVENTS[10]);
+    await emit({ notifications, now: () => AT }, EVENTS[11]);
+
+    expect(notifications.rows.map((r) => r.type)).toEqual([
+      "PASSWORD_RESET_REQUESTED",
+      "PASSWORD_CHANGED",
+    ]);
   });
 });
 

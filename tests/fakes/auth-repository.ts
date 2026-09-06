@@ -14,7 +14,8 @@ export class FakeAuthRepository implements AuthRepository {
   readonly touched: Array<{ sessionId: string; at: Date }> = [];
   private sequence = 0;
 
-  constructor(private readonly users: AuthUserWithSecret[] = []) {}
+  /** Público para que el doble del restablecimiento comparta la misma lista. */
+  constructor(readonly users: AuthUserWithSecret[] = []) {}
 
   async findUserByEmail(email: string) {
     return this.users.find((user) => user.email === email) ?? null;

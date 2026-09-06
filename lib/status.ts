@@ -252,6 +252,8 @@ const NOTIFICATION = {
   RETURN_RECEIVED: "Hemos recibido tu devolución",
   RETURN_COMPLETED: "Devolución cerrada",
   RETENTION_REMINDER: "Llevas un tiempo con este set",
+  PASSWORD_RESET_REQUESTED: "Se ha pedido restablecer tu contraseña",
+  PASSWORD_CHANGED: "Tu contraseña ha cambiado",
   COPY_INCOMPLETE: "Copia incompleta",
   COPY_RETIRED: "Copia dada de baja",
   DELIVERY_DISCREPANCY_REPORTED: "Un cliente ha reportado una discrepancia",

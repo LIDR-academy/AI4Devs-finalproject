@@ -7,8 +7,9 @@
 > No se inventan pantallas ni reglas nuevas: donde la documentación deja algo
 > abierto, la historia lo refleja como tal.
 >
-> Última actualización: 2026-08-16 — HU-01 absorbe la elección de plan, HU-02 pasa a
-> ser **cambio** de plan y el **alquiler puntual sale del alcance**
+> Última actualización: 2026-09-06 — se añade **HU-01b** (recuperar el acceso tras
+> olvidar la contraseña). Antes, 2026-08-16: HU-01 absorbe la elección de plan, HU-02
+> pasa a ser **cambio** de plan y el **alquiler puntual sale del alcance**
 > (ver `ux-flows.md` §8.1).
 
 ## Cómo leer este documento
@@ -86,6 +87,37 @@ Las historias se agrupan por las tres superficies de actores del sistema
   - **Dado** un suscriptor que actualiza su dirección,
     **cuando** guarda el cambio,
     **entonces** afecta a envíos **futuros** y no a los ya registrados.
+
+---
+
+### HU-01b · Recuperar el acceso tras olvidar la contraseña `Must`
+**Como** persona con cuenta que ha olvidado su contraseña
+**quiero** recibir en mi correo un enlace para elegir una nueva
+**para** volver a entrar sin depender de nadie.
+
+- **Trazabilidad:** `accounts-roles` / `notifications` · `PRD.md` §4.1, §4.6
+- **Decisión (2026-09-06):** sin MFA y **sin proveedor de correo**: el transporte de
+  esta entrega escribe el mensaje en el log de la aplicación. El enlace **no se
+  guarda en ninguna tabla** —solo su hash—, así que el log es el único sitio donde
+  existe. Ver `openspec/changes/recuperar-contrasena/design.md`.
+- **Criterios de aceptación:**
+  - **Dado** alguien que pide un enlace para una dirección con cuenta activa,
+    **cuando** envía la solicitud,
+    **entonces** recibe en esa dirección un enlace de un solo uso que caduca en 1
+    hora, y cualquier enlace anterior suyo deja de servir.
+  - **Dado** alguien que pide un enlace para una dirección **desconocida** o para una
+    cuenta **suspendida**,
+    **cuando** envía la solicitud,
+    **entonces** no se envía nada y ve **exactamente el mismo mensaje** que si la
+    cuenta existiera — la pantalla no dice quién está dado de alta.
+  - **Dado** un enlace vigente,
+    **cuando** su titular elige una contraseña nueva válida,
+    **entonces** la contraseña queda sustituida, el enlace se gasta y **se cierran
+    todas las sesiones abiertas** de la cuenta.
+  - **Dado** un enlace caducado, ya usado o inventado,
+    **cuando** se intenta usar,
+    **entonces** el sistema lo rechaza **con el mismo mensaje en los tres casos**, no
+    cambia la contraseña y ofrece pedir otro.
 
 ---
 
@@ -427,8 +459,12 @@ Las historias se agrupan por las tres superficies de actores del sistema
   visitante) → HU-01 → HU-05 (alta, plan, solicitud, cola, confirmación) →
   HU-11/HU-08 (entrega/devolución) → HU-12/HU-13 (inspección/higiene) → HU-06
   (visibilidad) → HU-09 (cierre), con HU-17 como motor de equidad transversal.
-- **Fuera de alcance** (no generan historia, `PRD.md` §5): pasarela de pago
-  real, logística real, marketplace P2P, reposición automática de piezas,
+- **HU-01b no está en el circuito E2E**: no es un paso del recorrido de alquiler,
+  sino la única salida de un callejón —olvidar la contraseña dejaba la cuenta muerta,
+  porque argon2id no se invierte—. Se cubre en tests de caso de uso y, en E2E, solo en
+  lo observable desde fuera: el enlace del correo no viaja por HTTP a propósito.
+- **Fuera de alcance** (no generan historia, `PRD.md` §5): **MFA** en el acceso;
+  pasarela de pago real, logística real, marketplace P2P, reposición automática de piezas,
   verificación de identidad real, penalización económica por pérdida, y —desde el
   **2026-08-16**— el **alquiler puntual sin suscripción**: alquilar exige plan.
 - **Pendiente en la documentación** (no inventado aquí): sistema de diseño y

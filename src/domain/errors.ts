@@ -22,6 +22,10 @@ export const ERROR_CODES = [
   // Es un código propio, y no `NOT_ELIGIBLE`, porque lo que resuelve cada caso es
   // distinto: aquí hay que devolver sets, allí hace falta un plan activo.
   "PLAN_DOWNGRADE_BLOCKED",
+  // Enlace de restablecimiento caducado, ya gastado o inexistente. Los tres casos
+  // comparten código a propósito: distinguirlos convertiría el endpoint en un oráculo
+  // de tokens, y a quien lo sufre le da igual — el enlace no vale y hay que pedir otro.
+  "RESET_TOKEN_INVALID",
   "INTERNAL",
 ] as const;
 
@@ -93,6 +97,22 @@ export class NotFoundError extends DomainError {
   readonly code = "NOT_FOUND" as const;
 
   constructor(message = "Recurso no encontrado.") {
+    super(message);
+  }
+}
+
+/**
+ * El enlace de restablecimiento no sirve: caducado, ya usado o inventado → 410 Gone.
+ *
+ * El mensaje es **el mismo** para los tres casos, por lo mismo que el login no
+ * distingue email desconocido de contraseña incorrecta.
+ */
+export class ResetTokenInvalidError extends DomainError {
+  readonly code = "RESET_TOKEN_INVALID" as const;
+
+  constructor(
+    message = "Este enlace ya no sirve. Pide uno nuevo para restablecer tu contraseña."
+  ) {
     super(message);
   }
 }

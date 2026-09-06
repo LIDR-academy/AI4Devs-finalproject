@@ -1220,6 +1220,43 @@ project. Read it at the start of every session.
   ningún entregable pendiente.** Para cualquier cambio de estado de una copia, usar
   `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
 
+- **Recuperar contraseña (2026-09-06, cambio OpenSpec `recuperar-contrasena`):** el
+  login ya no es una puerta sin retorno. Enlace de un solo uso al correo de la cuenta,
+  **caducidad 1 h**, del que en la base solo vive el **hash** (`password_reset_tokens`,
+  sexta migración; el esquema pasa a **23 modelos** / 18 enums) — la misma figura que la sesión opaca de `ADR-0002`. Reglas que no
+  se pueden relajar sin romper el diseño: la solicitud responde **202 y el mismo cuerpo
+  siempre** (email desconocido, cuenta suspendida y fallo del transporte incluidos), o
+  la pantalla se convierte en el oráculo de enumeración que el login evita; cada
+  solicitud **invalida las anteriores**; el consumo es un **CAS** sobre
+  `usedAt IS NULL`; y gastar el enlace **cierra todas las sesiones** del usuario
+  (`deleteSessionsForUser`, que llevaba desde la tarea 2.1 sin llamante). Caducado, ya
+  usado e inexistente comparten código y mensaje: `RESET_TOKEN_INVALID` → **410**, el
+  primer código nuevo del enum de `ADR-0002` §2 desde el MVP.
+  **Transporte de correo:** puerto `Mailer` en **`src/mail/`** —no en `repositories`,
+  que es persistencia— con **adaptador de consola** (decisión del usuario: sin
+  proveedor externo). Registra el mensaje **entero** porque **el enlace no está en
+  ninguna tabla**: guardarlo en la fila de `Notification` anularía el hash, así que el
+  log —consola de `next dev`, runtime logs en Vercel— es el único sitio donde existe.
+  Dos avisos nuevos del buzón (`PASSWORD_RESET_REQUESTED`, `PASSWORD_CHANGED`) llevan
+  la caducidad, nunca el token. **Sin MFA y sin barrido periódico** (un token caducado
+  es inerte y el plan Hobby ya gasta sus dos crons). **Sin rate limiting** — deuda
+  anotada en el `design.md` del cambio.
+  **Verificado en verde:** `tsc --noEmit`, `eslint .`, `vitest run` (441), `next build`,
+  `npm run test:e2e` (53, con `axe` sobre las dos pantallas nuevas) y
+  `openspec validate --strict`, más una pasada manual del flujo entero contra la base
+  local sembrada.
+  **Documentación sincronizada:** `readme.md` (§1.2, §2.1/§2.2/§2.3 con el recuento de
+  modelos, §2.4 con `APP_URL`, §2.5, §2.6, §4 y §5), `PRD.md` (§4.1, §4.6, §15 anillo 1
+  y §15.1), `user_stories.md` (**HU-01b**), `ux-flows.md` (rutas públicas),
+  `ADR-0001` (recuento), `ADR-0002` (§1 y el enum de `code`: ampliarlo es una decisión
+  deliberada, no está congelado), `C4-architecture.md` (el sistema externo de correo
+  deja de ser "mockeado" y aparece el adaptador) y `.env.example`.
+  **Caveat de flujo encontrado:** un `next dev` de vida larga se queda con el cliente
+  Prisma **anterior** a la migración y devuelve 500 (`passwordResetToken` undefined);
+  hay que reiniciarlo. Y Next 16 **no deja levantar un segundo `next dev`** en el mismo
+  directorio: para verificar sin tocar el servidor del usuario, `npm run build` +
+  `start:standalone` en otro puerto.
+
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → **Vercel +
 Supabase** (`ADR-0003`, 2026-08-22, sustituye la VM única de `ADR-0001` §5); auth →

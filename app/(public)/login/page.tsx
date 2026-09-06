@@ -12,13 +12,13 @@ export const metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; restablecida?: string }>;
 }) {
   // Quien ya tiene sesión no debería ver el formulario: se le manda a su superficie.
   const session = await currentSession();
   if (session) redirect(surfacePath(homeSurface(session.user.role)));
 
-  const { next } = await searchParams;
+  const { next, restablecida } = await searchParams;
 
   return (
     <section className="flex flex-col items-start gap-6">
@@ -28,6 +28,13 @@ export default async function LoginPage({
           Accede con tu cuenta de Clickoteca.
         </p>
       </div>
+      {restablecida ? (
+        // Llega desde `/restablecer-contrasena`, que cierra todas las sesiones: sin
+        // este aviso, encontrarse el formulario de acceso parecería que algo falló.
+        <p role="status" className="max-w-prose rounded-md border p-3 text-sm">
+          Tu contraseña ha cambiado. Entra con la nueva.
+        </p>
+      ) : null}
       <LoginForm next={next} />
     </section>
   );

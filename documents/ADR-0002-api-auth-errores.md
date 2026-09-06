@@ -31,6 +31,14 @@ códigos HTTP.
   sesión se persiste en Postgres (tabla de sesiones). Que la base sea local o
   gestionada no cambia nada aquí: el cambio de hosting (`ADR-0003`) no toca este ADR.
 - **Passwords con argon2id** (bcrypt aceptable como alternativa).
+- **Recuperación de contraseña (añadido 2026-09-06, cambio `recuperar-contrasena`):**
+  enlace por correo con la **misma figura** que la sesión —token aleatorio del que la
+  base guarda solo el hash—, de un solo uso y con caducidad de 1 hora. Gastarlo
+  **borra todas las sesiones** del usuario, que es la contrapartida natural de haber
+  elegido sesión server-side: aquí la revocación masiva es una sentencia, no una lista
+  de tokens repudiados. La solicitud responde **igual exista o no la cuenta**, para no
+  deshacer por la puerta de al lado la decisión de que el login no distinga email
+  desconocido de contraseña incorrecta. **Sin MFA** en el MVP.
 - **Autorización por rol** (`SUBSCRIBER | OPERATOR | ADMIN`) en middleware
   **server-side**: es la **frontera de seguridad real**. La segmentación por rol
   del back-office en Next (route groups + middleware, `ADR-0001` §3) es
@@ -51,6 +59,10 @@ la complejidad cross-origin que tendría un split PaaS.
 - **Miembro de extensión `code`**: enum de dominio **estable y cerrado**, p. ej.
   `COPY_STATE_CONFLICT`, `QUEUE_LIMIT_EXCEEDED`, `OFFER_EXPIRED`, `NOT_ELIGIBLE`,
   `VALIDATION_ERROR`, `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `INTERNAL`.
+  Ampliado después con `NO_ACTIVE_SUBSCRIPTION` y `PLAN_DOWNGRADE_BLOCKED` (409,
+  cambio `plan-obligatorio-en-alta`) y `RESET_TOKEN_INVALID` (**410 Gone**, cambio
+  `recuperar-contrasena`). Que el enum sea cerrado no significa congelado: significa
+  que ampliarlo es una decisión deliberada y queda escrita aquí.
 - **Validación** (422): array `errors[]` de `{ field, issue }`.
 - **Mapa dominio → HTTP centralizado** (un `errorMap`): 401 no-auth, 403 rol, 404,
   **409 conflictos CAS** (`design.md` D12), 422 validación, 400 request malformada.

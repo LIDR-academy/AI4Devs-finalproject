@@ -1427,3 +1427,51 @@ quedan en `default_passwords`, ignorado por git, **y no hay otra copia**.
 código nuevo — que es lo que prueba de verdad el reparto por rol, porque las cuentas
 antiguas conservaban el hash viejo. Sincronizados `readme.md` §1.4, `.env.example`,
 `ADR-0003` §5 y `AGENTS.md`.
+
+---
+
+### [2026-09-06] — Recuperar contraseña: enlace de un solo uso al correo de la cuenta
+
+**Prompt:** "Quisiera añadir la funcionalidad de recordar contraseña en la ventana de
+login, enviando al correo de origen un enlace de reestablecimiento. De momento no es
+necesario MFA."
+
+**Resumen.** La ventana de acceso solo tenía una puerta: `argon2id` no se invierte y no
+había ninguna pantalla para reponer credenciales, así que un olvido dejaba la cuenta
+muerta —lo dice el propio `.env.example` sobre las semillas—. Antes de escribir nada se
+consultaron las dos decisiones que cambiaban el trabajo: **transporte de correo** (no
+existía ninguno; el usuario eligió el **stub de consola**, sin proveedor externo) y
+**flujo** (propuesta OpenSpec primero, `recuperar-contrasena`, y después implementar).
+
+**Lo que decidió el diseño, y por qué.** La pieza ya existía a medias en el proyecto: la
+sesión opaca de `ADR-0002` es exactamente la misma figura —un secreto portador del que en
+la base solo se guarda el SHA-256—, así que el enlace **se copia de ella** en vez de
+inventarse. De ahí salen las cinco decisiones que sostienen el flujo: tabla propia
+(`password_reset_tokens`) y no columnas en `users`, para que un enlace gastado siga siendo
+reconocible; **respuesta idéntica exista o no la cuenta** —el login lleva desde el primer
+día evitando ser un oráculo de enumeración y esta pantalla no podía deshacerlo desde la
+puerta de al lado, así que ni el email desconocido ni la cuenta suspendida se distinguen,
+y **ni siquiera un fallo del transporte** cambia la respuesta—; **cada solicitud invalida
+las anteriores**; el consumo es un **CAS** (`WHERE usedAt IS NULL`), no una comprobación
+previa; y gastar el enlace **cierra todas las sesiones abiertas**, que es lo que quiere
+quien sospecha que alguien más entró — el método `deleteSessionsForUser` llevaba desde
+la tarea 2.1 escrito para este momento, sin que lo llamara nadie.
+
+**La consecuencia incómoda, aceptada a propósito:** el enlace **no se guarda en ninguna
+tabla**. Meterlo en la fila de `Notification` habría hecho cómodo el desarrollo y anulado
+por completo el hash —quien viera la tabla entraría en cualquier cuenta—, así que el
+adaptador de consola registra el mensaje **entero** y el log es el único sitio donde el
+enlace existe. Los dos avisos nuevos del buzón (`PASSWORD_RESET_REQUESTED`,
+`PASSWORD_CHANGED`) llevan la caducidad, nunca el token.
+
+Código nuevo: dominio puro `password-reset.ts`, puerto `Mailer` en `src/mail/` —fuera de
+`repositories`, que es persistencia— con adaptador de consola y mensaje como función pura,
+repositorio con su adaptador Prisma y su doble en memoria, dos casos de uso, dos Route
+Handlers (202 constante / 410 `RESET_TOKEN_INVALID`, código nuevo del enum de `ADR-0002`)
+y dos pantallas en español, con el enlace "¿Has olvidado la contraseña?" junto al campo del
+login. **Verificación:** `tsc`, `eslint`, **441 unitarios** (35 nuevos) y **53 E2E** en
+verde, incluida la auditoría `axe` de las dos pantallas nuevas, más `openspec validate`.
+El E2E no completa el circuito a propósito: el token no viaja por HTTP y exponerlo "solo
+para los tests" sería regalar una puerta trasera — el camino feliz se prueba donde el
+doble del transporte sí ve el mensaje.
+

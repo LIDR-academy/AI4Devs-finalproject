@@ -62,6 +62,10 @@ realizó y **cuándo** (auditoría).
   aceptación de condiciones (texto *lorem ipsum* en el MVP).
 - Actualizar la dirección de envío afecta a envíos futuros, no a los ya
   registrados.
+- **Recuperar el acceso.** Quien olvida su contraseña pide desde el login un enlace
+  a la dirección de su cuenta: un solo uso, caducidad de 1 hora, y al gastarse se
+  cierran todas las sesiones abiertas. La respuesta a la solicitud es **la misma
+  exista o no la cuenta** (no se revela quién está dado de alta). Sin MFA en el MVP.
 
 ### 4.2 Catálogo e inventario
 - **Set** (modelo de catálogo: foto, nº de piezas, edad recomendada, tema,
@@ -154,6 +158,8 @@ mitad de ventana, confirmación de alquiler, recordatorio amable de retención
 devolución recibida (en inspección), devolución completada (ya puede pedir
 otro).
 Al back-office: devolución incompleta detectada, copia dada de baja.
+Seguridad de la cuenta: se ha pedido restablecer la contraseña, la contraseña ha
+cambiado (ninguno lleva el enlace dentro — sirven para detectar un intento ajeno).
 
 ### 4.7 Otras funcionalidades del suscriptor
 - **"Mis sets"**: vista con los sets actualmente en préstamo, histórico de
@@ -553,8 +559,9 @@ paréntesis. El esquema ejecutable vive en `prisma/schema.prisma`.
 
 Las entidades se organizan en **tres anillos por orden de importancia**:
 
-- **Anillo 1 — Núcleo del circuito E2E:** `User`, `Session`, `Set`, `Copy`,
-  `Subscription`, `Rental`, `ReservationQueueEntry`, `ReservationOffer`.
+- **Anillo 1 — Núcleo del circuito E2E:** `User`, `Session`, `PasswordResetToken`,
+  `Set`, `Copy`, `Subscription`, `Rental`, `ReservationQueueEntry`,
+  `ReservationOffer`.
 - **Anillo 2 — Operación y trazabilidad:** `ConditionReport`, `Incident`,
   `CopyStateTransition`, `AuditLog`, `Notification`, `Shipment`.
 - **Anillo 3 — Configuración y pagos (simulados):** `Plan`, `SystemSetting`,
@@ -571,6 +578,12 @@ Las entidades se organizan en **tres anillos por orden de importancia**:
 - **`Session` para la sesión server-side** (`ADR-0002` §1): la cookie `httpOnly`
   transporta un token opaco y la tabla guarda solo su **hash**, de modo que un
   volcado de la base no permite suplantar sesiones. Revocar es borrar la fila.
+- **`PasswordResetToken` para recuperar el acceso**: misma figura que `Session` y por
+  la misma razón — el enlace que viaja en el correo es un token aleatorio del que la
+  tabla guarda solo el **hash**. Caduca en 1 hora y se marca `usedAt` al gastarse en
+  vez de borrarse, para poder responder "este enlace ya se usó" a quien reabre el
+  correo, y para dejar rastro de un incidente. Gastar uno cierra todas las `Session`
+  del usuario.
 - **`Set.setNum` (referencia de Rebrickable, único y opcional)**: conserva la
   procedencia de cada ficha del catálogo semilla y hace idempotente la carga de
   datos; `null` en los sets dados de alta a mano desde el back-office.

@@ -155,6 +155,7 @@ model User {
 
   addresses        Address[]
   sessions         Session[]
+  passwordResets   PasswordResetToken[]
   subscriptions    Subscription[]
   rentals          Rental[]
   queueEntries     ReservationQueueEntry[]
@@ -209,6 +210,27 @@ model Session {
   @@index([userId])
   @@index([expiresAt]) // barrido de sesiones caducadas
   @@map("sessions")
+}
+
+/// Enlace de restablecimiento de contraseña. Igual que `Session`, guarda el **hash**
+/// del token, nunca el token que viaja en el correo.
+///
+/// La fila **no se borra al gastarse**: se marca `usedAt`. Un enlace consumido tiene
+/// que seguir siendo reconocible para responder "ya se usó" —y no "no existe"— a quien
+/// reabre el mismo correo dos veces, y es el rastro que queda de un incidente.
+model PasswordResetToken {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  tokenHash   String    @unique // SHA-256 del token que viaja en el enlace
+  expiresAt   DateTime  @db.Timestamptz(6)
+  usedAt      DateTime? @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  requestedIp String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId]) // invalidar los enlaces vivos de una cuenta al emitir otro
+  @@map("password_reset_tokens")
 }
 
 /// Plan de suscripción configurable (PRD §4.3). El bono de cola es aditivo (§7).

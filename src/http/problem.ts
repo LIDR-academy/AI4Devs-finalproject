@@ -38,6 +38,9 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
   NOT_ELIGIBLE: 409,
   NO_ACTIVE_SUBSCRIPTION: 409,
   PLAN_DOWNGRADE_BLOCKED: 409,
+  // 410 y no 409: el enlace existió y ya no. No hay conflicto que resolver ni campo
+  // que corregir — lo único útil que puede ofrecer el cliente es pedir otro.
+  RESET_TOKEN_INVALID: 410,
   INTERNAL: 500,
 };
 
@@ -53,6 +56,7 @@ const TITLE_BY_CODE: Record<ErrorCode, string> = {
   NOT_ELIGIBLE: "No cumples los requisitos",
   NO_ACTIVE_SUBSCRIPTION: "Necesitas un plan activo",
   PLAN_DOWNGRADE_BLOCKED: "Tienes más sets de los que permite ese plan",
+  RESET_TOKEN_INVALID: "El enlace ya no sirve",
   INTERNAL: "Error interno",
 };
 

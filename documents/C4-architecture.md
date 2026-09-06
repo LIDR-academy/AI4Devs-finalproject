@@ -41,7 +41,7 @@ C4Context
 
     System_Ext(payments, "Pasarela de pagos (SIMULADA)", "Non-goal del MVP: los cargos de cuota mensual y alquiler puntual se registran como pagos simulados.")
     System_Ext(logistics, "Logística de mensajería (MANUAL)", "Non-goal del MVP: el movimiento físico (envío/recogida) lo marca a mano un operador; el estado de envío se registra pero no se automatiza.")
-    System_Ext(email, "Correo / mensajería saliente (SIMULADA)", "Non-goal del MVP: las notificaciones se persisten in-app; el envío por email queda mockeado.")
+    System_Ext(email, "Correo / mensajería saliente (SIN PROVEEDOR)", "Los avisos del ciclo se persisten in-app. El único correo que sale de la aplicación es el enlace de restablecimiento de contraseña, y su adaptador escribe el mensaje en el log: no hay proveedor contratado en el MVP.")
 
     Rel(subscriber, clickoteca, "Explora catálogo, gestiona suscripción y alquileres", "HTTPS")
     Rel(operator, clickoteca, "Opera el ciclo de vida de las copias", "HTTPS")
@@ -49,7 +49,7 @@ C4Context
 
     Rel(clickoteca, payments, "Registra cargos", "simulado")
     Rel(clickoteca, logistics, "Registra envíos/recogidas", "manual (operador)")
-    Rel(clickoteca, email, "Emite notificaciones", "in-app / email simulado")
+    Rel(clickoteca, email, "Avisos in-app; correo solo para restablecer contraseña", "sin proveedor: al log")
 
     UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
 ```
@@ -87,12 +87,12 @@ C4Container
     System_Boundary(clickoteca, "Clickoteca — Vercel + Supabase (mismo origen)") {
         Container(web, "Aplicación Next.js (front + API)", "Next.js App Router, TypeScript; funciones serverless en Vercel", "SSR/RSC responsive mobile-first, WCAG 2.1 AA. Portal del Suscriptor y Back-office segmentados por rol (route groups + proxy.ts). API REST pública en app/api/* documentada en OpenAPI; arquitectura en capas: Route Handlers → casos de uso → repositorios → dominio.")
         Container(scheduler, "Trabajos programados", "TypeScript; GET /api/cron/:job disparado por Vercel Cron (en local, proceso node-cron)", "Caducidad de ventanas de oferta y recordatorios de retención y de mitad de ventana. Mismo catálogo de trabajos para los dos disparadores (src/use-cases/scheduler/jobs.ts); solo cambia quién mira el reloj. El orden de cola NO se recalcula (D11).")
-        ContainerDb(db, "Base de datos", "PostgreSQL gestionado (Supabase) + Prisma; pooler de transacción", "22 modelos / 18 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones persistidas.")
+        ContainerDb(db, "Base de datos", "PostgreSQL gestionado (Supabase) + Prisma; pooler de transacción", "23 modelos / 18 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones persistidas.")
     }
 
     System_Ext(payments, "Pasarela de pagos (SIMULADA)", "Mock")
     System_Ext(logistics, "Logística (MANUAL)", "Operador")
-    System_Ext(email, "Correo saliente (SIMULADO)", "Mock")
+    System_Ext(email, "Correo saliente (SIN PROVEEDOR)", "Adaptador que escribe en el log")
 
     Rel(subscriber, web, "Usa", "HTTPS")
     Rel(backoffice, web, "Usa", "HTTPS")
@@ -103,7 +103,7 @@ C4Container
 
     Rel(web, payments, "Registra pagos", "simulado")
     Rel(web, logistics, "Registra envíos", "manual")
-    Rel(web, email, "Encola notificaciones", "in-app / simulado")
+    Rel(web, email, "Avisos in-app; el enlace de restablecimiento, al log", "sin proveedor")
 
     UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
 ```
@@ -160,13 +160,14 @@ C4Component
     Person(backoffice, "Operador / Admin", "")
     ContainerDb(db, "PostgreSQL + Prisma", "", "Estado del dominio")
     Container(scheduler, "Procesos programados", "", "Caducidades / recordatorios")
+    System_Ext(email, "Correo saliente", "Sin proveedor en el MVP")
 
     Container_Boundary(api, "API (Route Handlers Next.js)") {
 
         Component(router, "Capa HTTP (Route Handlers)", "Next app/api/* + Zod + OpenAPI", "Enrutado, validación de request/response con Zod contra el contrato OpenAPI, serialización.")
         Component(authz, "Auth y autorización", "Middleware", "Autenticación y control de acceso por rol (SUBSCRIBER/OPERATOR/ADMIN).")
 
-        Component(ucAccounts, "Casos de uso · Cuentas y roles", "Application", "Registro, login, perfil y dirección de envío (afecta a envíos futuros).")
+        Component(ucAccounts, "Casos de uso · Cuentas y roles", "Application", "Registro, login, restablecimiento de contraseña por enlace de un solo uso, perfil y dirección de envío (afecta a envíos futuros).")
         Component(ucCatalog, "Casos de uso · Catálogo e inventario", "Application", "Sets vs Copias, publicación (exige valor de referencia), alta de copias.")
         Component(ucSubs, "Casos de uso · Suscripciones", "Application", "Planes BASIC/PREMIUM, alquiler puntual, elegibilidad, cancelación (camino feliz).")
         Component(ucRentals, "Casos de uso · Alquileres y devoluciones", "Application", "Solicitud/asignación, condición de entrega, devolución, inspección e higienización.")
@@ -179,7 +180,8 @@ C4Component
 
         Component(payAdapter, "Adaptador de pagos (simulado)", "Infra", "Registra pagos simulados.")
         Component(shipAdapter, "Adaptador de logística (manual)", "Infra", "Registra envíos/recogidas marcados por operador.")
-        Component(notifDispatch, "Despachador de notificaciones", "Infra", "Persiste la notificación in-app; email mockeado.")
+        Component(notifDispatch, "Despachador de notificaciones", "Infra", "Persiste la notificación in-app.")
+        Component(mailAdapter, "Adaptador de correo", "Infra (src/mail)", "Puerto Mailer con un solo adaptador: escribe el mensaje en el log. Cambiar de transporte no toca dominio ni casos de uso.")
     }
 
     Rel(subscriber, router, "Solicita", "JSON/HTTPS")
@@ -208,6 +210,9 @@ C4Component
     Rel(ucQueue, repos, "Persiste")
     Rel(ucNotif, notifDispatch, "Envía")
 
+    Rel(ucAccounts, mailAdapter, "Envía el enlace de restablecimiento")
+    Rel(mailAdapter, email, "Entrega el mensaje", "log en el MVP")
+
     Rel(ucSubs, payAdapter, "Registra cargo simulado")
     Rel(ucRentals, shipAdapter, "Registra envío manual")
 
@@ -234,7 +239,9 @@ C4Component
   casos de uso de cola/notificaciones que la API, coherente con que corra como
   proceso Node aparte que comparte esa capa (nivel 2).
 - **Adaptadores de infraestructura** aíslan lo simulado (pagos, logística,
-  email): sustituirlos por integraciones reales en el futuro no toca el dominio.
+  email): sustituirlos por integraciones reales en el futuro no toca el dominio. El de
+  correo es el que más cerca está de esa sustitución — el puerto `Mailer` ya existe y
+  su único adaptador escribe en el log, así que contratar proveedor es añadir otro.
 
 ---
 
@@ -242,7 +249,7 @@ C4Component
 
 | Capability (`specs/*`)   | Casos de uso PRD          | Componente API (nivel 3)                  |
 |--------------------------|---------------------------|-------------------------------------------|
-| `accounts-roles`         | UC-P03/P04/P11, UC-B08/B13/B14 | Casos de uso · Cuentas y roles       |
+| `accounts-roles`         | UC-P03/P04/P11, UC-B08/B13/B14 | Casos de uso · Cuentas y roles + adaptador de correo |
 | `catalog-inventory`      | UC-P01/P02, UC-B02        | Casos de uso · Catálogo e inventario      |
 | `subscriptions`          | UC-P05/P14, UC-B10/B11    | Casos de uso · Suscripciones              |
 | `rentals-returns`        | UC-P06/P12/P13, UC-B03–B07/B09 | Casos de uso · Alquileres y devoluciones |

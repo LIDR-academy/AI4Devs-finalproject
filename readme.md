@@ -90,6 +90,11 @@ y pide el siguiente—.
   puede cambiar después (`BASIC ⇄ PREMIUM`), y bajar exige haber devuelto los sets
   que no quepan en el nuevo. **Alquilar exige plan activo**: el alquiler puntual sin
   suscripción salió del alcance el 2026-08-16.
+- **Recuperación del acceso:** quien olvida su contraseña pide desde el login un
+  enlace a la dirección de su cuenta — un solo uso, caducidad de **1 hora**, y al
+  gastarse se **cierran todas las sesiones abiertas**. La respuesta es la misma exista
+  o no la cuenta, para no revelar quién está dado de alta. Sin MFA. El transporte de
+  correo del MVP **escribe el mensaje en el log** (ver §2.5).
 - **Catálogo e inventario en dos niveles:** **Set** (modelo de catálogo, no
   publicable sin valor de referencia) vs. **Copia** (unidad física con su propio
   ciclo de vida de 9 estados: `INTAKE → DISPONIBLE ⇄ OFRECIDA → ALQUILADA →
@@ -396,12 +401,12 @@ C4Container
     System_Boundary(clickoteca, "Clickoteca — Vercel + Supabase (mismo origen)") {
         Container(web, "Aplicación Next.js (front + API)", "Next.js App Router, TypeScript; funciones serverless en Vercel", "SSR/RSC responsive mobile-first, WCAG 2.1 AA. Portal del Suscriptor y Back-office segmentados por rol (route groups + proxy.ts). API REST pública en app/api/* con OpenAPI; capas: Route Handlers → casos de uso → repositorios → dominio.")
         Container(scheduler, "Trabajos programados", "TypeScript; GET /api/cron/:job vía Vercel Cron (en local, proceso node-cron)", "Caducidad de ventanas de oferta y recordatorios. El orden de cola NO se recalcula (D11).")
-        ContainerDb(db, "Base de datos", "PostgreSQL gestionado (Supabase) + Prisma; pooler de transacción", "22 modelos / 18 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones.")
+        ContainerDb(db, "Base de datos", "PostgreSQL gestionado (Supabase) + Prisma; pooler de transacción", "23 modelos / 18 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones.")
     }
 
     System_Ext(payments, "Pasarela de pagos (SIMULADA)", "Mock")
     System_Ext(logistics, "Logística (MANUAL)", "Operador")
-    System_Ext(email, "Correo saliente (SIMULADO)", "Mock")
+    System_Ext(email, "Correo saliente (SIN PROVEEDOR)", "Adaptador que escribe en el log")
 
     Rel(subscriber, web, "Usa", "HTTPS")
     Rel(backoffice, web, "Usa", "HTTPS")
@@ -410,7 +415,7 @@ C4Container
     Rel(scheduler, web, "Comparte la capa de casos de uso", "módulo compartido")
     Rel(web, payments, "Registra pagos", "simulado")
     Rel(web, logistics, "Registra envíos", "manual")
-    Rel(web, email, "Encola notificaciones", "in-app / simulado")
+    Rel(web, email, "Avisos in-app; el enlace de restablecimiento, al log", "sin proveedor")
 
     UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
 ```
@@ -442,8 +447,8 @@ C4Container
 | **Dominio** | Entidades + políticas TS | Máquina de estados de la Copia (9 estados), política de cola aditiva con entrada efectiva inmutable, elegibilidad y auditoría. |
 | **Repositorios** | Prisma | Acceso a datos por agregado; encapsula Prisma tras interfaces. |
 | **Scheduler** | Node + node-cron | Caducidad de ofertas y recordatorios; reutiliza los mismos casos de uso. |
-| **Adaptadores de infra** | Mocks / manual | Pagos simulados, logística manual y despacho de notificaciones (in-app; email mockeado). |
-| **Base de datos** | PostgreSQL + Prisma | 22 modelos / 18 enums; incluye tabla de sesiones. |
+| **Adaptadores de infra** | Mocks / manual / log | Pagos simulados, logística manual, avisos in-app y un puerto `Mailer` (`src/mail/`) cuyo único adaptador escribe el correo en el log. |
+| **Base de datos** | PostgreSQL + Prisma | 23 modelos / 18 enums; incluye las tablas de sesiones y de enlaces de restablecimiento. |
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
@@ -477,7 +482,7 @@ AI4Devs-finalproject-xvm/
 ├── lib/                      # Presentación: `status.ts`, `navigation.ts`, helper `cn`
 ├── scheduler/index.ts        # Proceso node-cron aparte
 ├── prisma/
-│   ├── schema.prisma         # Modelo de datos ejecutable (22 modelos / 18 enums)
+│   ├── schema.prisma         # Modelo de datos ejecutable (23 modelos / 18 enums)
 │   ├── migrations/           # Historial de migraciones SQL
 │   ├── seed.ts               # Semillas idempotentes
 │   └── seed-data/sets.json   # Catálogo semilla (subconjunto de Rebrickable)
@@ -624,7 +629,9 @@ algún día importa: descargar la CA de Supabase y usar `verify-full` con `sslro
 2. Añadir la base (integración de Supabase) y definir `DATABASE_URL` a mano con la URL
    del **pooler de transacción** (`:6543`) más `uselibpqcompat=true`. Las variables
    `STORAGE_*` que crea la integración no las lee el código.
-3. `DATABASE_POOL_MAX=1` y un `CRON_SECRET` largo y aleatorio.
+3. `DATABASE_POOL_MAX=1`, un `CRON_SECRET` largo y aleatorio, y **`APP_URL`** con la
+   URL pública del despliegue: es el origen del enlace de restablecimiento de
+   contraseña, y sin ella se deduce de la cabecera `Host`, que la pone quien llama.
 4. Desde la máquina de desarrollo, con `DIRECT_URL` apuntando a la conexión de sesión
    (`:5432`): `npm run db:deploy` y `SEED_PASSWORD="…" npm run db:seed`. La contraseña
    **se fija en la primera siembra** (el `upsert` no actualiza el hash de una cuenta que
@@ -632,6 +639,11 @@ algún día importa: descargar la CA de Supabase y usar `verify-full` con `sslro
 5. Comprobar: `GET /api/health` responde `{"status":"ok"}`, y
    `curl -H "Authorization: Bearer $CRON_SECRET" .../api/cron/offers` devuelve el
    resumen del trabajo.
+
+> **El correo de restablecimiento no sale de Vercel.** El adaptador de esta entrega
+> escribe el mensaje en el log, así que el enlace se lee en los *runtime logs* del
+> despliegue y en ningún otro sitio — en la base solo está su hash (§2.5). Es
+> deliberado, no un olvido de configuración.
 
 > **Si vuelve a aparecer `EMAXCONN`** (conexiones agotadas), la palanca es un
 > **redespliegue**: destruye las instancias congeladas y libera de golpe los huecos que
@@ -645,6 +657,13 @@ Decidido en `documents/ADR-0002`:
   `Secure` + `SameSite=Lax`; el estado de sesión se persiste en Postgres. La
   **revocación es trivial** (se borra la sesión) — por eso no JWT.
 - **Passwords con argon2id** (bcrypt como alternativa aceptable).
+- **Recuperación de contraseña por correo:** enlace de un solo uso, caducidad de **1
+  hora**, del que en la base solo se guarda el **hash** —igual que el token de sesión—.
+  La respuesta a la solicitud es **idéntica exista o no la cuenta**, para que la
+  pantalla no sirva de oráculo para enumerar direcciones dadas de alta, y gastar el
+  enlace **cierra todas las sesiones abiertas** del usuario. El transporte de correo es
+  un puerto (`src/mail/`) cuyo adaptador actual **escribe el mensaje en el log**: el
+  enlace se lee en la consola de `next dev` o en los runtime logs del despliegue.
 - **Autorización por rol en `proxy.ts` server-side:** es la frontera de seguridad
   real; la segmentación por rutas de Next es *defense-in-depth* / UX, no seguridad.
   En Next 16 el `proxy` corre siempre en runtime Node, así que resuelve la sesión
@@ -676,8 +695,8 @@ original fue de estabilidad: el pool de compilación de `next dev` se caía bajo
 de varios navegadores y dejaba el servidor devolviendo 500 en unas rutas y colgando
 otras. `E2E_DEV=1` conserva el objetivo antiguo para iterar sobre una pantalla.
 
-> **Estado: en verde.** **406 tests unitarios y de integración** en 30 ficheros
-> (`npm test`) y **46 E2E** en 10 ficheros (`npm run test:e2e`): 42 en escritorio y
+> **Estado: en verde.** **441 tests unitarios y de integración** en 32 ficheros
+> (`npm test`) y **53 E2E** en 11 ficheros (`npm run test:e2e`): 49 en escritorio y
 > los 4 del *smoke* repetidos en un viewport de móvil — el recorrido completo se
 > queda fuera del proyecto móvil a propósito, porque comparte la base sembrada con
 > el de escritorio y ejecutar los dos a la vez es una carrera por la misma copia.
@@ -1019,8 +1038,9 @@ components:
               code:
                 type: string
                 enum: [COPY_STATE_CONFLICT, QUEUE_LIMIT_EXCEEDED, OFFER_EXPIRED,
-                       NOT_ELIGIBLE, VALIDATION_ERROR, UNAUTHENTICATED, FORBIDDEN,
-                       NOT_FOUND, INTERNAL]
+                       NOT_ELIGIBLE, NO_ACTIVE_SUBSCRIPTION, PLAN_DOWNGRADE_BLOCKED,
+                       RESET_TOKEN_INVALID, VALIDATION_ERROR, UNAUTHENTICATED,
+                       FORBIDDEN, NOT_FOUND, INTERNAL]
 paths:
 
   /api/sets/{setId}/queue:
@@ -1134,7 +1154,8 @@ paths:
 
 Se seleccionan las tres que capturan los rasgos distintivos de Clickoteca (cola
 justa, ventana de confirmación y doble paso operativo con registro de condición).
-El catálogo completo está en `documents/user_stories.md` (HU-00..HU-17, en Gherkin).
+El catálogo completo está en `documents/user_stories.md` (HU-00..HU-17 más HU-01b,
+recuperar el acceso, en Gherkin).
 
 **Historia de Usuario 1 — HU-04 · Unirse a la cola de reservas**
 
@@ -1251,7 +1272,7 @@ Tickets derivados de las historias anteriores y de las tareas del cambio OpenSpe
 > equivaldrían a sendas PRs.
 
 **Pull Request 1 — Modelo de datos** (`7c37834`)
-Esquema Prisma (22 modelos / 18 enums), PRD §15 (tres anillos de importancia +
+Esquema Prisma (23 modelos / 18 enums), PRD §15 (tres anillos de importancia +
 diagramas ER + máquina de estados de la copia) y sincronización con las specs.
 
 **Pull Request 2 — Arquitectura** (`7985b78`)

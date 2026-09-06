@@ -19,6 +19,10 @@ export const NOTIFICATION_TYPES = [
   "RETURN_RECEIVED",
   "RETURN_COMPLETED",
   "RETENTION_REMINDER",
+  // Seguridad de la cuenta. Ninguno lleva el enlace dentro: son el rastro que permite
+  // a la titular legítima enterarse de un movimiento que no ha hecho ella.
+  "PASSWORD_RESET_REQUESTED",
+  "PASSWORD_CHANGED",
   // Al back-office.
   "COPY_INCOMPLETE",
   "COPY_RETIRED",
@@ -68,6 +72,14 @@ export type DomainEvent =
       /** Se incluye para que el aviso pueda repetirse en cada ciclo de la cadencia. */
       cycle: string;
     }
+  | {
+      type: "password-reset.requested";
+      userId: string;
+      /** Identifica el enlace emitido. El token en claro **no** viaja en el evento. */
+      tokenId: string;
+      expiresAt: Date;
+    }
+  | { type: "password.changed"; userId: string; tokenId: string }
   | { type: "copy.incomplete"; copyId: string; setName: string; rentalId: string | null }
   | { type: "copy.retired"; copyId: string; setName: string; reason: string | null }
   | {
@@ -176,6 +188,34 @@ export function notificationsFor(event: DomainEvent): readonly PlannedNotificati
           // X días, así que la clave cambia con cada ciclo pero sigue impidiendo dos
           // envíos dentro del mismo.
           dedupeKey: `RETENTION_REMINDER:${event.rentalId}:${event.cycle}`,
+        },
+      ];
+
+    case "password-reset.requested":
+      return [
+        {
+          audience: { kind: "user", userId: event.userId },
+          type: "PASSWORD_RESET_REQUESTED",
+          // Va la caducidad, no el enlace: el aviso sirve para reconocer un intento
+          // ajeno, no para completarlo. El enlace solo existe en el correo (design.md §2).
+          payload: { expiresAt: event.expiresAt.toISOString() },
+          relatedEntityType: "PasswordResetToken",
+          relatedEntityId: event.tokenId,
+          dedupeKey: `PASSWORD_RESET_REQUESTED:${event.tokenId}`,
+        },
+      ];
+
+    case "password.changed":
+      return [
+        {
+          audience: { kind: "user", userId: event.userId },
+          type: "PASSWORD_CHANGED",
+          payload: {},
+          relatedEntityType: "PasswordResetToken",
+          relatedEntityId: event.tokenId,
+          // Por token y no por usuario: la contraseña puede restablecerse muchas veces
+          // y cada vez merece su aviso, pero un enlace solo se gasta una.
+          dedupeKey: `PASSWORD_CHANGED:${event.tokenId}`,
         },
       ];
 
