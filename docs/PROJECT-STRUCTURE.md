@@ -6,7 +6,7 @@
 
 Sport ITSM is delivered as a **single Nx 21.6 monorepo**, managed with **pnpm** as the only package manager, holding the whole system: the NestJS **API** (`apps/api`), the Angular **Web Client** (`apps/web`), their two Cypress + Cucumber acceptance suites, and every bounded-context library under `libs/`. It is a **modular monolith**: one deployable API process, one deployable web client and one PostgreSQL system of record, with the modularity enforced logically by the workspace structure rather than physically by network hops.
 
-The layout is a direct projection of the architecture. Each ITSM capability is a **bounded context** with its own folder under `libs/`, and inside that folder the **hexagonal layers** are separate Nx libraries: `domain` (pure model and ports), `application` (use cases), `infrastructure` (outbound adapters) on the backend side, and `feature` / `ui` / `data-access` on the frontend side. `libs/shared/` holds the shared kernel and the typed contracts that are the only permitted coupling between the two platforms. In this repository the **folder structure *is* the architecture**: a file's path determines the tags of the project it belongs to, and those tags determine what it is allowed to import.
+The layout is a direct projection of the architecture. Each ITSM capability is a **bounded context** with its own folder under `libs/`, and inside that folder the **hexagonal layers** are separate Nx libraries: `domain` (pure model and ports), `application` (use cases), `infrastructure` (outbound adapters) on the backend side, and `feature` / `ui` / `data-access` on the frontend side. `libs/shared/` holds the shared kernel, the typed contracts that are the only permitted coupling between the two platforms, and `libs/shared/ui`, the in-house design system reused by every context. In this repository the **folder structure *is* the architecture**: a file's path determines the tags of the project it belongs to, and those tags determine what it is allowed to import.
 
 ## 2. Directory tree
 
@@ -80,7 +80,7 @@ AI4Devs-finalproject/
 │  │  ├─ src/
 │  │  │  ├─ main.ts                             # bootstrapApplication(AppComponent, appConfig)
 │  │  │  ├─ index.html
-│  │  │  ├─ styles.scss                         # Angular Material theme + design tokens
+│  │  │  ├─ styles.scss                         # global SCSS design tokens + base theme
 │  │  │  └─ app/
 │  │  │     ├─ app.component.ts                 # shell
 │  │  │     ├─ app.config.ts                    # provideRouter, provideHttpClient(withInterceptors), Transloco, ErrorHandler
@@ -107,6 +107,8 @@ AI4Devs-finalproject/
 │  │  │        └─ errors/error-code.ts           # stable error codes shared FE+BE
 │  │  ├─ domain/                     # platform:shared scope:shared type:domain - shared kernel primitives
 │  │  │  └─ src/lib/{identity.ts,ticket-reference.vo.ts,priority.vo.ts,domain-event.ts,state-model.ts,clock.port.ts}
+│  │  ├─ ui/                         # platform:frontend scope:shared type:ui - in-house design system (ADR-010)
+│  │  │  └─ src/lib/{button/,form-field/,dialog/,menu/,table/,tabs/,toast/,badge/,chip/,a11y/{focus-trap.directive.ts,live-announcer.service.ts},styles/_tokens.scss}
 │  │  └─ util/                       # platform:shared scope:shared type:util - pure helpers
 │  │
 │  ├─ incident/                      # one folder per bounded context
@@ -170,7 +172,7 @@ AI4Devs-finalproject/
 │
 ├─ docs/
 │  ├─ PRD.md                         # product requirements (behavioral authority for the MVP)
-│  ├─ ARCHITECTURE.md                # target architecture: C4, context map, hexagon, ADR-001..009
+│  ├─ ARCHITECTURE.md                # target architecture: C4, context map, hexagon, ADR-001..010
 │  ├─ COMPONENTS.md                  # main components (companion to readme §2.2)
 │  ├─ PROJECT-STRUCTURE.md           # this document (companion to readme §2.3)
 │  └─ adr/                           # ADRs promoted to individual files when scaffolding starts
@@ -206,6 +208,7 @@ AI4Devs-finalproject/
 | `libs/<context>/data-access` | The only outbound edge of the client: typed API services and signal stores. |
 | `libs/shared/contracts` | The single typed API surface shared by frontend and backend — DTO shapes, enums and error codes. Types only. |
 | `libs/shared/domain` | Shared kernel primitives genuinely used by three or more contexts (`Identity`, `TicketReference`, `Priority`, `DomainEvent`, `StateModel`, `ClockPort`). Deliberately kept small. |
+| `libs/shared/ui` | The in-house **design system**: domain-agnostic presentational components reusable by any context (button, form field, dialog/overlay, menu, table, tabs, toast, badge, chip), the SCSS design-token layer and the hand-written accessibility primitives (focus-trap/restore directive, `aria-live` announcer). Angular code with a shared scope, therefore tagged `platform:frontend scope:shared type:ui`, not `platform:shared` (ADR-010). It injects no service and performs no I/O. |
 | `libs/shared/util` | Pure, dependency-free helpers. |
 | `docs/` | Engineering documentation: PRD, architecture, components, this structure document, and `docs/adr/` for Architecture Decision Records. |
 | `openspec/` | The canonical source of **product behavior** — capability specs and in-flight change proposals with their spec deltas. Never architecture, never stack. |
@@ -233,7 +236,7 @@ The tree is not an arbitrary organization: it is the **Nx monorepo + DDD bounded
 
 1. **The first level under `libs/` is a bounded context.** Each ITSM capability owns a folder and a ubiquitous language. Nothing cross-cutting is allowed to live above it except the deliberately minimal `libs/shared/`.
 2. **The second level is a hexagonal layer.** `domain` / `application` / `infrastructure` are the backend hexagon; `feature` / `ui` / `data-access` are the frontend slice. A file's layer is therefore visible from its path, and so is the set of imports it is permitted.
-3. **Every project carries three tags** — `platform:` (`backend` / `frontend` / `shared`), `scope:` (`<context>` / `shared`) and `type:` (`domain`, `application`, `infrastructure`, `feature`, `ui`, `data-access`, `contracts`, `util`, plus `app` and `e2e` for the four applications, ADR-002). Libraries are created only with Nx generators and explicit `--tags`, so structure and tags never drift.
+3. **Every project carries three tags** — `platform:` (`backend` / `frontend` / `shared`), `scope:` (`<context>` / `shared`) and `type:` (`domain`, `application`, `infrastructure`, `feature`, `ui`, `data-access`, `contracts`, `util`, plus `app` and `e2e` for the four applications, ADR-002). Libraries are created only with Nx generators and explicit `--tags`, so structure and tags never drift. The one nuance worth memorizing: `libs/shared/ui` is `platform:frontend`, not `platform:shared` — a shared *scope* never implies a shared *platform* (ADR-010).
 4. **`@nx/enforce-module-boundaries` in `eslint.config.mjs` turns the three axes into build-time rules.** The `type:` matrix implements the inward-only dependency rule (`infrastructure → application → domain`, never the reverse); the `scope:` rule implements context isolation (a context may depend only on itself and `scope:shared`); the `platform:` rule keeps frontend and backend from ever importing each other. An illegal import fails `pnpm nx lint`.
 5. **`apps/api` is the only escape hatch, and it is a designed one.** Tagged `scope:shared`, `type:app`, it is the composition root: the single place that sees more than one context, because that is where a context's outbound port is bound to an adapter delegating to another context's application layer (ADR-003). No library may depend on an app, so the privilege cannot spread.
 

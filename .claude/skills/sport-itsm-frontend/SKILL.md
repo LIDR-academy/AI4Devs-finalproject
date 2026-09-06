@@ -1,6 +1,6 @@
 ---
 name: sport-itsm-frontend
-description: Frontend engineering standard for Sport ITSM — the Angular/TypeScript web client for the ITSM platform supporting the Sports Competition Management System (SCMS). Use this skill whenever writing, reviewing, or structuring frontend code: standalone Angular components, signals-based state, Reactive Forms, Angular Material/CDK UI, HttpClient with functional interceptors, Transloco i18n, routing, and tests. Encodes the exact stack, conventions, commands, and guardrails.
+description: Frontend engineering standard for Sport ITSM — the Angular/TypeScript web client for the ITSM platform supporting the Sports Competition Management System (SCMS). Use this skill whenever writing, reviewing, or structuring frontend code: standalone Angular components, signals-based state, Reactive Forms, the in-house HTML + SCSS component layer (no third-party component library), hand-written accessibility, HttpClient with functional interceptors, Transloco i18n, routing, and tests. Encodes the exact stack, conventions, commands, and guardrails.
 ---
 
 # Sport ITSM — Frontend Engineering Standard
@@ -27,11 +27,11 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 - **pnpm** — the only supported package manager (shared Nx workspace with the backend). Use `pnpm` for installs and `pnpm nx …` for Nx targets. Do not introduce `npm`/`yarn` lockfiles.
 
 ## UI Framework
-- **Angular Material 20** — primary component library. Prefer Material components over hand-rolled equivalents.
-- **Angular CDK** — overlays, drag-and-drop, layout utilities, and **a11y** utilities.
-- **FullCalendar 6** — calendar/scheduling view.
-- **Leaflet** — maps for venue locations.
-- **SCSS** — stylesheets; use Material theming, avoid deep-`::ng-deep` overrides.
+- **In-house component layer — no third-party component library.** Angular Material, Angular CDK, PrimeNG, Nebular, Bootstrap components and equivalents are **not used** and must not be introduced without an approved change. Every visual building block (button, field, dialog, menu, table, tabs, toast, badge, chip…) is authored in this repository as a **standalone Angular component with `OnPush`**, a plain HTML template and a component-scoped SCSS file, using `input()` / `output()` / `model()` signal APIs. Shared primitives live in `libs/shared/ui`; context-specific presentational components live in the per-context `type:ui` libs.
+- **FullCalendar 6** — calendar/scheduling view. Domain-specific library, not a generic component library — allowed.
+- **Leaflet** — maps for venue locations. Domain-specific library, not a generic component library — allowed.
+- **SCSS** — the only styling technology: **centralized design tokens** exposed as CSS custom properties (color, spacing, typography, radius, elevation, motion, z-index) in the app-level theme, consumed by component-scoped styles. No hardcoded colors/spacing in components, no `::ng-deep`, no global element overrides outside the theme layer.
+- **Accessibility is hand-written** — native semantics first, then ARIA, keyboard handling and focus management implemented in our own components (see *HTTP, Errors & Accessibility* below). There is no CDK helper to fall back on, so a11y is part of every component's definition of done.
 
 ## State & Data
 - **Angular Signals** — primary local **and** shared state. Shared state lives in injectable services exposing `signal`/`computed`; expose read-only signals (`.asReadonly()`) and mutate through methods. **Do not** add NgRx unless a genuine need is agreed via a change.
@@ -80,10 +80,19 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 
 - **Functional interceptors** via `withInterceptors([...])`: a **JWT interceptor** (attaches the bearer token) and a **locale interceptor** (sets `Accept-Language`).
 - **Global error handling**: a global **`ErrorHandler`** plus an **HTTP error interceptor** that maps failures to user-facing, Transloco-translated messages. Views expose explicit **loading / error / empty** states — never leave the UI in an undefined state on failure.
-- **Accessibility**: use **Angular CDK a11y** (`FocusTrap`, `LiveAnnouncer`, `cdkTrapFocus`, roving tabindex) and correct ARIA roles. Interactive UI must be keyboard-accessible; announce async state changes to assistive tech.
+- **Accessibility — implemented by hand, target WCAG 2.1 AA.** No CDK a11y helpers are available, so each component owns its own accessible behavior:
+  - **Native semantics first** — `<button>`, `<a href>`, `<input>`/`<label>`, `<table>`, `<dialog>`, headings and landmarks before any `role`. Only add ARIA when no native element expresses the pattern.
+  - **Correct roles and states** — `role`, `aria-expanded`, `aria-selected`, `aria-current`, `aria-controls`, `aria-describedby`, `aria-invalid`/`aria-errormessage` on form controls, `aria-disabled` (never a bare `disabled` on something that must stay focusable).
+  - **Keyboard interaction per the WAI-ARIA Authoring Practices** for each pattern (menu, listbox, combobox, tabs, dialog, tree, grid): arrow-key navigation with **roving `tabindex`**, `Home`/`End`, `Enter`/`Space` activation, `Escape` to dismiss. Nothing is mouse-only.
+  - **Focus management written explicitly** — overlays (dialog, drawer, menu, popover) implement their own **focus trap** (cycle `Tab`/`Shift+Tab` across the focusable set), move focus to the overlay on open, **restore focus to the invoking element on close**, and mark background content `inert`/`aria-hidden`. Visible `:focus-visible` styling everywhere.
+  - **Async announcements** — a shared, hand-written live-region service in `libs/shared/ui` renders `aria-live="polite"` (and `assertive` for errors) regions so loading, save, validation and SLA-breach state changes reach assistive tech.
+  - Verify with keyboard-only walkthroughs and automated axe checks in Cypress.
 
 # Styling
-- **SCSS** with Angular Material theming. Prefer component-scoped styles; avoid `::ng-deep`. Keep design tokens/theme centralized.
+- **SCSS only, token-driven.** A single centralized theme layer declares the **design tokens** as CSS custom properties (color roles, spacing scale, typography scale, radii, elevation, motion durations, z-index layers) plus SCSS mixins/functions for reuse; components consume tokens (`var(--…)`) and never hardcode raw values.
+- **Component-scoped styles** — one `.scss` per component, default view encapsulation. **Never** use `::ng-deep`; expose customization points as tokens or `input()`-driven classes instead. Global CSS is limited to the reset/base and the token layer.
+- **Responsive layout** with CSS Grid/Flexbox and container/media queries driven by token breakpoints — no layout utility library.
+- Support light/dark and high-contrast by re-declaring token values, not by branching component styles.
 
 ---
 
@@ -113,6 +122,8 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 - **Do NOT** ship components without `OnPush`.
 - **Do NOT** swallow HTTP errors or leave undefined loading/error states.
 - **Do NOT** ship inaccessible UI (missing keyboard support, focus management, or ARIA).
+- **Do NOT** introduce a third-party component library — Angular Material, Angular CDK, PrimeNG, Nebular, Bootstrap components, Tailwind UI kits or equivalents — without an approved change. Build the component in `libs/shared/ui` or the context's `type:ui` lib instead. (`FullCalendar` and `Leaflet` are domain-specific and stay.)
+- **Do NOT** use `::ng-deep`, hardcode colors/spacing/typography in component styles, or add global CSS outside the reset/token layer — style through the centralized design tokens.
 - **Do NOT** deep-import across Nx projects or disable ESLint module-boundary rules.
 - **Do NOT** hand-format against Prettier, or add stylistic ESLint rules that conflict with it.
 - **Do NOT** introduce `npm`/`yarn` lockfiles or a second package manager.

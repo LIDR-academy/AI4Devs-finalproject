@@ -37,7 +37,7 @@ Authoritative source: **`sport-itsm-backend`** skill.
 |---|---|
 | Framework | **Angular 20.3** — standalone components, **signals**, built-in control flow |
 | Language | **TypeScript 5.9** (strict); **RxJS 7.8** used sparingly (signals-first) |
-| UI | **Angular Material 20** + **Angular CDK** (a11y/overlays); **FullCalendar 6** (scheduling), **Leaflet** (venue maps); SCSS + Material theming |
+| UI | **In-house components** — no third-party component library; plain HTML templates + **SCSS** with design tokens, hand-written a11y (native semantics + ARIA); **FullCalendar 6** (scheduling), **Leaflet** (venue maps) |
 | State / Data | Angular **Signals** (local + shared via services); **Reactive Forms**; **HttpClient** with functional interceptors |
 | i18n | **Transloco** (UI strings); locale interceptor sets `Accept-Language` |
 | Testing | **Jest** + `jest-preset-angular`; **Cypress 15** + Cucumber E2E |
@@ -91,17 +91,18 @@ libs/
   shared/
     contracts/            # DTOs/API types shared FE+BE        (type:contracts)
     domain/               # shared kernel primitives          (type:domain)
+    ui/                   # shared design system (FE)         (type:ui)
     util/                 # pure helpers                      (type:util)
 ```
 
-Baseline contexts: `incident`, `service-request`, `problem`, `change`, `release`, `asset-config`, `sla`, `service-catalog`, `knowledge`, `identity-access`, plus `shared`. Generate only the libs a context actually uses, always via Nx generators. Every project is tagged on **three axes** — `platform:` (`backend`/`frontend`/`shared`), `scope:` (`<context>`/`shared`), `type:` (from the list above) — enforced by `@nx/enforce-module-boundaries`. Cross-project imports go through each lib's `index.ts` barrel; dependencies point **inward only** and cross-context/FE-BE sharing goes exclusively through `shared/contracts`.
+Baseline contexts: `incident`, `service-request`, `problem`, `change`, `release`, `asset-config`, `sla`, `service-catalog`, `knowledge`, `identity-access`, plus `shared`. Generate only the libs a context actually uses, always via Nx generators. Every project is tagged on **three axes** — `platform:` (`backend`/`frontend`/`shared`), `scope:` (`<context>`/`shared`), `type:` (from the list above) — enforced by `@nx/enforce-module-boundaries`. Cross-project imports go through each lib's `index.ts` barrel; dependencies point **inward only** and cross-context/FE-BE sharing goes exclusively through `shared/contracts`; cross-context UI reuse goes through `libs/shared/ui`, the in-house design system, tagged `platform:frontend`, `scope:shared`, `type:ui` (a shared *scope* does not imply a `platform:shared` *tag*).
 
 ### Style rules
 
 - **Formatting:** Prettier 3 (single quotes, semicolons) — formatting is Prettier's job; never hand-format or add stylistic ESLint rules that conflict with it.
 - **Linting:** ESLint 9 flat config (`eslint.config.mjs`) with module boundaries + `angular-eslint` on the frontend.
 - **Backend idioms:** constructor-based DI, ports bound to adapters via injection tokens; thin controllers (HTTP only, no business logic); validated DTOs everywhere; `ConfigService` over `process.env`; pino over `console.log`.
-- **Frontend idioms:** standalone components + `provide*`; `inject()` over constructor DI; signals for state, `computed()`/sparing `effect()`; `OnPush` on every component; control flow (`@if`/`@for` with `track`/`@switch`); Reactive Forms; functional HTTP interceptors.
+- **Frontend idioms:** standalone components + `provide*`; `inject()` over constructor DI; signals for state, `computed()`/sparing `effect()`; `OnPush` on every component; control flow (`@if`/`@for` with `track`/`@switch`); Reactive Forms; functional HTTP interceptors. Visual components are **hand-built** — plain HTML templates + component-scoped SCSS in `libs/shared/ui` and the per-context `type:ui` libs, themed through centralized SCSS design tokens (CSS custom properties), with accessibility written by hand (native semantics first, then ARIA roles/states, keyboard handling, focus management, `aria-live`) to WCAG 2.1 AA.
 - **Craft:** SOLID + clean-code universals (DRY/KISS/YAGNI, small functions, guard clauses, immutability, typed errors, ubiquitous-language naming) per `sport-itsm-engineering-principles`.
 
 ### What NOT to do
@@ -111,7 +112,8 @@ Baseline contexts: `incident`, `service-request`, `problem`, `change`, `release`
 - **Do NOT** create a project without the three tags, or disable/relax `@nx/enforce-module-boundaries` to make a bad dependency compile — fix the design.
 - **Do NOT** introduce a second package manager (`npm`/`yarn` lockfiles) or bump pinned majors without an approved change.
 - **Backend:** no `synchronize: true`; no unconditional migration auto-run in staging/prod (gate to development); no raw `process.env` in feature code; no unvalidated/`any` request bodies; no `console.log`; no `/api` prefix on health endpoints and no Swagger outside dev; no hardcoded user-facing strings (route via `nestjs-i18n`).
-- **Frontend:** no `NgModule`s; no legacy `*ngIf`/`*ngFor`/`*ngSwitch`; no `[(ngModel)]` with mutable objects; no class-based `HTTP_INTERCEPTORS`; no components without `OnPush`; no swallowed HTTP errors or undefined loading/error states; no hardcoded UI strings (use Transloco); no NgRx without an approved change.
+- **Frontend:** no `NgModule`s; no legacy `*ngIf`/`*ngFor`/`*ngSwitch`; no `[(ngModel)]` with mutable objects; no class-based `HTTP_INTERCEPTORS`; no components without `OnPush`; no swallowed HTTP errors or undefined loading/error states; no hardcoded UI strings (use Transloco); no NgRx without an approved change; no injected service, store or `HttpClient` in a `type:ui` lib; no domain-aware component in `libs/shared/ui` (context vocabulary lives in that context's own `type:ui` lib).
+- **Frontend — no third-party component library.** Do **NOT** introduce Angular Material, Angular CDK, PrimeNG, Nebular, Bootstrap components, Tailwind UI kits or any equivalent without an approved change. Every visual component is hand-built in `libs/shared/ui` or a per-context `type:ui` lib with a plain HTML template + SCSS; `FullCalendar` (scheduling) and `Leaflet` (maps) are domain-specific libraries, not a generic component library, and remain allowed. Do **NOT** reach for `::ng-deep` or hardcoded colors/spacing — style through the centralized design tokens.
 
 ---
 
@@ -156,7 +158,7 @@ Skills are **reusable knowledge/guardrails**, invokable by any agent or the main
 | **`sport-itsm-architecture`** | System / structure | DDD + Hexagonal + Nx: bounded contexts, layer rules, tag scheme (`platform:`/`scope:`/`type:`), the module-boundary constraint matrix, shared contracts. |
 | **`sport-itsm-engineering-principles`** | Craft (class/function) | SOLID + clean-code universals (DRY, KISS, YAGNI, naming, small functions, immutability, error handling) in TypeScript. Stack-agnostic. |
 | **`sport-itsm-backend`** | Stack (backend) | NestJS 11 / TypeORM / PostgreSQL exact stack, conventions, commands, and guardrails. |
-| **`sport-itsm-frontend`** | Stack (frontend) | Angular 20 / signals / Material exact stack, conventions, commands, and guardrails. |
+| **`sport-itsm-frontend`** | Stack (frontend) | Angular 20 / signals / in-house SCSS component layer exact stack, conventions, commands, and guardrails. |
 | **`nestjs-best-practices`** | Framework technique (external) | Generic NestJS best-practice rules with examples (DI, security, performance…). Reference library. |
 | **`angular-developer`** | Framework technique (external, official) | Generic modern-Angular technique (signals, forms, DI, SSR, a11y, testing). Reference library. |
 

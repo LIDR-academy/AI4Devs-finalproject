@@ -57,15 +57,19 @@ libs/
   shared/
     contracts/      # type:contracts   (DTOs / API types shared FE+BE)
     domain/         # type:domain      (shared kernel primitives)
+    ui/             # type:ui          (in-house design system; platform:frontend)
     util/           # type:util        (pure helpers)
 ```
 
 Not every context needs every lib — generate only what a context actually uses. Use **Nx generators** to scaffold libs so tags and paths stay consistent.
 
-# 5. Shared Contracts
+# 5. Shared Contracts & Shared UI
 
 - A single source of truth for the API surface (request/response DTOs, enums, error codes) lives in `libs/shared/contracts` (`type:contracts`, `platform:shared`).
 - Contracts contain **types only** — no logic, no framework. Both the backend (to shape controllers/DTOs) and the frontend (to type HttpClient calls) import contracts, keeping FE and BE in lockstep.
+- The **in-house design system** lives in `libs/shared/ui` (`platform:frontend`, `scope:shared`, `type:ui`): domain-agnostic presentational primitives reusable by any context — button, form field, dialog/overlay, menu, table, tabs, toast, badge, chip — plus the SCSS design-token layer and the hand-written accessibility primitives (focus-trap/restore directive, `aria-live` announcer service). There is no third-party component library.
+- `libs/shared/ui` is **state in, events out**: signal `input()` / `output()`, `OnPush`, no injected service, no store, no `HttpClient`, no I/O. It may depend only on `scope:shared` `type:util`; it may **not** depend on `type:contracts` (the `type:ui` row of the matrix in §6 forbids it), on any `type:data-access`, `type:feature`, `type:application` or `type:infrastructure`, on any bounded context (`scope:<context>`), or on any backend project — and no backend project may depend on it.
+- **Shared UI vs context UI:** a component belongs in `libs/shared/ui` when it is domain-agnostic and could serve any context; it belongs in a context's own `type:ui` lib when it speaks that context's ubiquitous language (`PriorityBadge`, `SlaCountdown`, `StateChip`, `WorkNoteList`, `CompetitionSubjectPicker`). Context UI libs compose shared UI primitives, never the reverse.
 
 # 6. Nx Tags & Module Boundaries (enforced)
 
@@ -91,6 +95,7 @@ Enforce with `@nx/enforce-module-boundaries` in `eslint.config.mjs`. Dependency 
 Plus:
 - **scope:** a `scope:<context>` project may depend only on the same `scope:<context>` and `scope:shared`.
 - **platform:** `platform:frontend` and `platform:backend` may **not** depend on each other; both may depend on `platform:shared` (contracts/util).
+- **shared scope is not shared platform:** `platform:shared` is reserved for framework-free code both platforms can import (contracts, shared kernel, util). An Angular library whose scope is shared — `libs/shared/ui` — is tagged **`platform:frontend`, `scope:shared`, `type:ui`**. No exception is needed: the `type:` matrix already lets every `platform:frontend` project depend on it (`type:feature` → `ui`, a context's own `type:ui` → `ui`, and the `apps/web` shell), the scope rule allows `scope:<context>` → `scope:shared`, and the platform rule keeps every backend project out.
 
 These two matrices together enforce the dependency rule (§3) and context isolation (§1) mechanically.
 
@@ -102,6 +107,7 @@ These two matrices together enforce the dependency rule (§3) and context isolat
 - Scaffold libs with correct tags:
   - `pnpm nx g @nx/js:lib <context>-domain --directory=libs/<context>/domain --tags=platform:backend,scope:<context>,type:domain`
   - `pnpm nx g @nx/angular:lib <context>-feature --directory=libs/<context>/feature --tags=platform:frontend,scope:<context>,type:feature`
+  - `pnpm nx g @nx/angular:lib shared-ui --directory=libs/shared/ui --tags=platform:frontend,scope:shared,type:ui`
 
 # 8. Architecture Decision Records
 
@@ -119,3 +125,5 @@ Record significant, hard-to-reverse structural decisions as short **ADRs** (cont
 - **Do NOT** relax or disable `@nx/enforce-module-boundaries` to make a bad dependency compile — fix the design.
 - **Do NOT** let frontend and backend libraries depend on each other — share only via `platform:shared`.
 - **Do NOT** create a "god" shared lib — keep `shared` minimal and justified.
+- **Do NOT** tag `libs/shared/ui` as `platform:shared` — it is Angular code, and a shared *scope* never implies a `platform:shared` *tag*.
+- **Do NOT** put domain-aware components, injected services or any I/O in `libs/shared/ui` — context vocabulary belongs in that context's own `type:ui` lib.

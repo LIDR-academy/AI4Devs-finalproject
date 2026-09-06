@@ -136,7 +136,7 @@ flowchart TB
     USER["Requesters and Service Organization<br/>browser, desktop and mobile"]
 
     subgraph boundary["Sport ITSM system boundary"]
-        WEB["<b>Web Client</b> - apps/web<br/>Angular 20.3, standalone components, signals,<br/>Angular Material 20, Reactive Forms, Transloco<br/>Self-Service Portal, Agent Workspace, Admin Console"]
+        WEB["<b>Web Client</b> - apps/web<br/>Angular 20.3, standalone components, signals,<br/>in-house SCSS component library, Reactive Forms, Transloco<br/>Self-Service Portal, Agent Workspace, Admin Console"]
         API["<b>API</b> - apps/api<br/>NestJS 11 on Express 4, Node.js 20 LTS<br/>Inbound HTTP adapter plus composition root<br/>global prefix /api, Swagger at /api/docs in dev,<br/>health at /health/live and /health/ready"]
         DB[("<b>PostgreSQL 16</b><br/>single system of record<br/>tickets, SLA timers, catalog, knowledge,<br/>CMDB, approvals, append-only audit<br/>TypeORM 0.3, synchronize always false")]
     end
@@ -218,6 +218,7 @@ flowchart TB
         SK["shared/domain<br/>Identity, TicketReference, ImpactLevel,<br/>UrgencyLevel, Priority, DomainEvent,<br/>StateModel, DateTimeRange"]
         CT["shared/contracts<br/>DTOs, enums, error codes<br/>published language, FE and BE"]
         UT["shared/util<br/>pure helpers"]
+        SUI["shared/ui<br/>in-house design system: primitives,<br/>design tokens, a11y directives<br/>platform:frontend"]
     end
 
     subgraph core["Core contexts"]
@@ -290,7 +291,7 @@ flowchart TB
     class INC,SRQ,SLA,PRB,CHG,REL,CMD corec
     class CAT,KNW supp
     class IAM,APR,NOT,AUD,RPT gen
-    class SK,CT,UT kern
+    class SK,CT,UT,SUI kern
 ```
 
 **Legend.** Solid arrows are **synchronous** collaborations expressed as an outbound port owned by the upstream consumer. Dashed arrows are **asynchronous** collaborations carried by **domain events** published in-process. In both cases the arrow is a *conceptual* dependency: at the Nx level neither context imports the other (see §5.4).
@@ -327,6 +328,7 @@ libs/
   shared/
     contracts/            platform:shared   scope:shared  type:contracts    DTOs, enums, error codes - FE + BE
     domain/               platform:shared   scope:shared  type:domain       shared kernel primitives
+    ui/                   platform:frontend scope:shared  type:ui           in-house design system - primitives, tokens, a11y
     util/                 platform:shared   scope:shared  type:util          pure helpers
 
   incident/
@@ -364,6 +366,8 @@ Every project carries **exactly three tags**, no exceptions.
 | `scope:` | `scope:<context>` for each context in §4.1, or `scope:shared` |
 | `type:` | `type:domain`, `type:application`, `type:infrastructure`, `type:feature`, `type:ui`, `type:data-access`, `type:contracts`, `type:util`, plus `type:app` and `type:e2e` for applications — see [ADR-002](#adr-002--typeapp-and-typee2e-added-to-the-type-axis) |
 
+> **`scope:shared` does not imply `platform:shared`.** `platform:shared` is reserved for framework-free code that both platforms can import — `shared/contracts`, `shared/domain`, `shared/util`. `libs/shared/ui`, the in-house design system, is Angular code with a shared scope and is therefore tagged **`platform:frontend`, `scope:shared`, `type:ui`** (see [ADR-010](#adr-010--libssharedui-is-the-in-house-design-system-tagged-platformfrontend--scopeshared)). Read the platform tag per project, never per folder.
+
 ### 5.3 Type constraint matrix (enforced by `@nx/enforce-module-boundaries`)
 
 The baseline matrix from the architecture standard, extended with the two application types.
@@ -388,6 +392,8 @@ Plus the two orthogonal rules:
 
 `type:app` is the only type allowed to reach across contexts, and it does so **because it is the composition root** (§5.4). Its scope tag is `scope:shared`, so the scope rule does not block it.
 
+`libs/shared/ui` is the only library that combines `scope:shared` with `platform:frontend`, and it needs **no exception** to the matrix above. Every `platform:frontend` project may depend on it — a context's `type:feature`, a context's own `type:ui` and the `apps/web` shell — because the `type:` rows already allow `feature → ui`, `ui → ui` and `app → ui`, and the scope rule allows `scope:<context> → scope:shared`. It may itself depend only on `scope:shared` `type:util`: its own `type:ui` row forbids `contracts`, `data-access`, `feature`, `application` and `infrastructure`, so its component inputs are primitives and locally declared unions, never contract enums. And no backend project can reach it, because the platform rule forbids `platform:backend → platform:frontend`.
+
 ### 5.4 Allowed dependency graph
 
 ```mermaid
@@ -402,6 +408,10 @@ flowchart TB
         FFEAT["type:feature<br/>routed containers, orchestration"]
         FUI["type:ui<br/>presentational, OnPush"]
         FDA["type:data-access<br/>HttpClient + signals store"]
+    end
+
+    subgraph shfe["platform:frontend - scope:shared"]
+        SUI["type:ui - libs/shared/ui<br/>design-system primitives, tokens,<br/>focus-trap directive, aria-live announcer"]
     end
 
     subgraph sh["platform:shared - scope:shared"]
@@ -434,6 +444,10 @@ flowchart TB
     FDA --> CTR
     FUI --> SUTL
     FDA --> SUTL
+    WEBAPP --> SUI
+    FFEAT --> SUI
+    FUI --> SUI
+    SUI --> SUTL
 
     CTR --> SUTL
     SDOM --> SUTL
@@ -449,7 +463,7 @@ flowchart TB
     classDef bad fill:#b42318,stroke:#7a1710,color:#ffffff
     class BDOM dom
     class BAPP,FFEAT app
-    class BINF,FDA,FUI inf
+    class BINF,FDA,FUI,SUI inf
     class CTR,SDOM,SUTL shd
     class FORBID1,FORBID2,FORBID3 bad
 ```
@@ -475,6 +489,10 @@ pnpm nx g @nx/js:lib shared-domain --directory=libs/shared/domain \
   --tags=platform:shared,scope:shared,type:domain
 pnpm nx g @nx/js:lib shared-util --directory=libs/shared/util \
   --tags=platform:shared,scope:shared,type:util
+
+# Shared UI - the in-house design system; Angular code, therefore platform:frontend
+pnpm nx g @nx/angular:lib shared-ui --directory=libs/shared/ui \
+  --tags=platform:frontend,scope:shared,type:ui
 
 # Backend hexagon for one context
 pnpm nx g @nx/js:lib incident-domain --directory=libs/incident/domain \
@@ -703,6 +721,7 @@ flowchart TB
     subgraph shf["libs/shared"]
         CTRF["type:contracts<br/>LogIncidentRequest, IncidentDetailResponse,<br/>PriorityLevel, IncidentState, ErrorCode"]
         UTLF["type:util"]
+        SUIF["type:ui - shared/ui<br/>Button, FormField, Dialog, Menu, Table,<br/>Tabs, Toast, Badge, Chip, design tokens,<br/>focusTrap directive, live announcer"]
     end
 
     API["apps/api - HTTPS JSON"]
@@ -716,6 +735,10 @@ flowchart TB
     DA --> CTRF
     DA --> UTLF
     UIL --> UTLF
+    BOOT --> SUIF
+    FEAT --> SUIF
+    UIL --> SUIF
+    SUIF --> UTLF
     DA -->|"typed HttpClient calls"| ITC
     ITC --> API
 
@@ -723,7 +746,7 @@ flowchart TB
     classDef ui fill:#0e7c66,stroke:#064e40,color:#ffffff
     classDef shd fill:#6f42c1,stroke:#432874,color:#ffffff
     class BOOT,ITC,GUARD,FEAT app
-    class UIL,DA ui
+    class UIL,DA,SUIF ui
     class CTRF,UTLF shd
 ```
 
@@ -733,13 +756,14 @@ flowchart TB
 |---|---|
 | **`data-access` is the only outbound edge.** | Nothing but a `data-access` lib may inject `HttpClient`. Feature and UI libs never touch the network. The boundary matrix enforces it: `type:ui` cannot depend on `type:data-access` at all. |
 | **`ui` libs are pure functions of their inputs.** | Signal `input()` / `output()`, `ChangeDetectionStrategy.OnPush`, no injected service, no store. They can depend only on other `type:ui` and `type:util`. |
+| **The design system is shared; domain vocabulary is not.** | `libs/shared/ui` (`platform:frontend`, `scope:shared`, `type:ui`) holds the domain-agnostic primitives every context reuses — button, form field, dialog/overlay, menu, table, tabs, toast, badge, chip — plus the SCSS design-token layer and the a11y primitives. A component that names an ITSM concept (`PriorityBadge`, `SlaCountdown`, `StateChip`, `WorkNoteList`, `CompetitionSubjectPicker`) belongs to its context's own `type:ui` lib, which composes the shared primitives — never the reverse (ADR-010). |
 | **`feature` libs orchestrate.** | They read `computed()` selectors from the store, drive Reactive Forms, and render explicit **loading / error / empty** states. No `type:feature` lib may reach into another context's `data-access`. |
 | **Cross-context UI composition happens in `apps/web`.** | An agent workspace page that shows Incident data next to SLA countdown and Approval status is assembled by the shell, or by a feature lib consuming only contracts — never by cross-context deep imports. |
 | **State lives in signals.** | Injectable store services expose `signal(...).asReadonly()` and `computed()`. RxJS appears only for genuine streams, bridged with `toSignal()`. No NgRx. |
 | **Contracts are the single typing authority.** | `IncidentApiService` methods are typed exclusively with `libs/shared/contracts`. A backend contract change breaks the frontend build at compile time — that is the intended coupling. |
 | **The client holds no security decision.** | `roleGuard` hides routes for usability; every authorization decision is re-taken server-side (NFR-SEC-02). Internal work notes are filtered by the **API**, never by an `@if` in a template (NFR-SEC-04). |
 | **No hardcoded strings.** | Transloco keys everywhere; the locale interceptor propagates the same locale to the API so server messages match the UI. |
-| **Accessibility is structural.** | Angular CDK a11y utilities (`FocusTrap`, `LiveAnnouncer`) live in `type:ui` libs so WCAG 2.1 AA behavior is reused rather than reimplemented (NFR-USE-03). |
+| **Accessibility is structural.** | There is no third-party component library and therefore no CDK a11y helper: the hand-written focus-trap/restore directive and the `aria-live` announcer service live in `libs/shared/ui`, next to the in-house components, so WCAG 2.1 AA behavior is reused rather than reimplemented per screen (NFR-USE-03). |
 
 ### 7.3 Surfaces
 
@@ -902,6 +926,12 @@ Each decision below should be promoted to a file under `docs/adr/` when scaffold
 **Decision.** `ClockPort` in `shared/domain`; no `new Date()` in domain or application code. Timer state is derived from persisted UTC timestamps, never from in-memory counters or scheduled-job liveness.
 **Consequences.** SLA behavior becomes deterministically testable, and a process restart cannot lose or double-count elapsed time.
 
+### ADR-010 — `libs/shared/ui` is the in-house design system, tagged `platform:frontend` + `scope:shared`
+
+**Context.** With no third-party component library, every visual primitive — button, form field, dialog/overlay, menu, table, tabs, toast, badge, chip — plus the theming tokens and the WCAG 2.1 AA behaviors (focus trap/restore, `aria-live` announcements) must be hand-built. Duplicating them in each context's `type:ui` lib would violate DRY and make NFR-USE-03 unverifiable; placing them in `shared/domain` or `shared/util` would put Angular inside framework-free libraries. The shared kernel baseline (`contracts`, `domain`, `util`) is `platform:shared`, which an Angular library cannot be.
+**Decision.** Add `libs/shared/ui` to the shared kernel as a fourth shared library, tagged **`platform:frontend`, `scope:shared`, `type:ui`**. It holds domain-agnostic presentational components, the SCSS design-token layer and the a11y primitives (focus-trap/restore directive, `aria-live` announcer). It is state in, events out: no injected service, no store, no `HttpClient`, no I/O, and no dependency beyond `scope:shared` `type:util` — not even `type:contracts`, per its `type:ui` row (§5.3). Domain-aware presentational components stay in each context's own `type:ui` lib. `platform:shared` remains reserved for framework-free code both platforms import.
+**Consequences.** The `scope:shared` group is no longer uniformly `platform:shared`, so the platform tag must be read per project — which is precisely why this is recorded rather than assumed. In exchange the design system is written once, no boundary exception is needed (`feature → ui`, `ui → ui`, `app → ui` and the scope rule already permit every legal edge, while the platform rule keeps the backend out), and accessibility behavior is reused instead of reimplemented per screen.
+
 ---
 
 ## 11. Out of Scope for the MVP
@@ -949,7 +979,8 @@ Per PRD §14.3, out of the MVP: Problem, Change, Release and CMDB management; em
 4. Does it introduce a `scope:<context>` → `scope:<other-context>` edge? If yes, invert it into a port resolved at the composition root (ADR-003).
 5. Does it add logic to `shared/contracts`? If yes, reject (ADR-007).
 6. Does it grow `shared/domain` beyond primitives genuinely used by three or more contexts? If yes, push it down into the owning context.
-7. Does it warrant an ADR — new context, tag-scheme change, new cross-context integration, new external dependency?
+7. Is it a presentational component library? Domain-agnostic primitives belong in `libs/shared/ui` (`platform:frontend`, `scope:shared`, `type:ui`, ADR-010); anything that names an ITSM concept belongs in its context's own `type:ui` lib.
+8. Does it warrant an ADR — new context, tag-scheme change, new cross-context integration, new external dependency?
 
 ### 12.3 Current verification status
 
