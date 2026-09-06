@@ -254,7 +254,7 @@ Honest accounting of what this architecture costs:
 - **Eventual consistency in the cross-cutting path.** Audit and notification writes sit outside the ticket transaction. Mitigated with an in-process dispatcher with retry and audit-completeness assertions in acceptance tests, but it is a real trade-off against strict transactional auditing.
 - **Learning curve.** DDD + hexagonal + Nx tags is a steep onboarding cost, and the discipline degrades quickly if boundary violations are silenced instead of fixed.
 
-> **Status:** this is the **target architecture**. The Nx workspace (`apps/`, `libs/`) has not been scaffolded yet, so the boundary rules above have not been verified with `pnpm nx lint` / `pnpm nx graph`.
+> **Status:** this is the **target architecture**. The Nx workspace has been bootstrapped (`T-C10-01`: `package.json`, `nx.json`, `tsconfig.base.json`, `pnpm-lock.yaml`), but it is still **empty** — no `apps/` and no `libs/` has been generated, and neither the three-axis tag scheme nor the `@nx/enforce-module-boundaries` configuration is in place yet (`T-C10-02`, `T-C10-03`). The boundary rules above have therefore not been verified with `pnpm nx lint`, and `pnpm nx graph` currently reports zero projects.
 
 ### **2.2. Descripción de componentes principales:**
 
@@ -415,7 +415,7 @@ Every integration is a **port with an adapter**, so none of them is a hard runti
 | **SCMS Identity Provider / SSO** | Authentication and profile/entitlement attributes | `IdentityProviderPort` in `identity-access/domain`; local-credential adapter first, SSO adapter later (FR-IAM-04) |
 | **Email gateway** | Outbound notification delivery | Adapter behind the `notification` context's outbound port (SMTP/HTTPS) |
 
-> **Status:** as in §2.1, these components describe the **target architecture**. No Nx workspace, `apps/` or `libs/` exists in the repository yet, so no component listed above has been scaffolded or verified with `pnpm nx lint` / `pnpm nx graph`.
+> **Status:** as in §2.1, these components describe the **target architecture**. The Nx workspace itself exists (`T-C10-01`), but no `apps/` and no `libs/` has been generated, so **not one component listed above has been scaffolded**: `pnpm nx show projects` returns nothing and `pnpm nx graph` reports zero projects. Nothing has been verified with `pnpm nx lint` either, which is not configured yet (`T-C10-02`).
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
@@ -665,20 +665,116 @@ The consequence worth stating plainly: **in this repository the folder structure
 - **`docs/`** is the engineering counterpart: the PRD, the architecture document, the component reference, the project-structure document, and `docs/adr/` where the structural decisions currently embedded in `ARCHITECTURE.md` §10 are promoted to individual ADR files once scaffolding starts.
 - **`.claude/`** holds the AI operating model: **agents** (`sport-itsm-product-owner`, `sport-itsm-architect`) are roles, and **skills** are the layered, reusable guardrails they consume — business (`service-desk-expert`), system (`sport-itsm-architecture`), craft (`sport-itsm-engineering-principles`), stack (`sport-itsm-backend`, `sport-itsm-frontend`) and documentation (`feature-docs`). `CLAUDE.md` at the root is the entry point that ties them together.
 
-#### 2.3.6 Governance commands
+#### 2.3.6 Useful commands
 
-| Purpose                         | Command                                                                       |
-| ------------------------------- | ----------------------------------------------------------------------------- |
-| Install                         | `pnpm install`                                                                |
-| Serve                           | `pnpm nx serve api` / `pnpm nx serve web`                                     |
-| Unit tests                      | `pnpm nx test <project>`                                                      |
-| Lint, including boundary checks | `pnpm nx lint <project>`                                                      |
-| Acceptance                      | `pnpm nx e2e api-e2e` / `pnpm nx e2e web-e2e`                                 |
-| Changed-only CI gate            | `pnpm nx affected -t lint test build`                                         |
-| Inspect the dependency graph    | `pnpm nx graph`                                                               |
-| Schema evolution                | `pnpm typeorm migration:generate\|run\|revert -d apps/api/src/data-source.ts` |
+Every command runs from the **repository root**, through **pnpm + Nx**. **Node 20 LTS** is required (pinned in `.nvmrc` and in `package.json` → `engines`) and **pnpm is the only supported package manager** — running `npm install` or `yarn` here would produce a second lockfile and is forbidden.
 
-> **Status:** as in §2.1 and §2.2, this is the **target structure**. The repository currently contains only `docs/`, `.claude/`, `CLAUDE.md`, `readme.md` and `prompts.md`; there is no Nx workspace, no `package.json`, no `apps/`, no `libs/` and no `openspec/` directory yet. Every path above is prescriptive design intent that scaffolding must produce, and none of the boundary rules has been verified with `pnpm nx lint` / `pnpm nx graph`.
+The **Availability** column distinguishes what runs *today*, on the bootstrapped-but-empty workspace, from what only becomes meaningful once `apps/` and `libs/` are generated.
+
+**Workspace and toolchain**
+
+| Command | What it does | Availability |
+| --- | --- | --- |
+| `pnpm install` | Installs every workspace dependency and writes/refreshes the single `pnpm-lock.yaml`. First command after any clone. | Now |
+| `pnpm nx report` | Prints the resolved Node, pnpm, Nx and TypeScript versions plus every installed Nx plugin. Fastest way to confirm the pinned toolchain of §2 of `CLAUDE.md`. | Now |
+| `pnpm nx reset` | Clears the local Nx cache (`.nx/cache`) and stops the Nx daemon. Use when the cache or the project graph looks stale. | Now |
+
+**Structure, boundaries and the dependency graph**
+
+| Command | What it does | Availability |
+| --- | --- | --- |
+| `pnpm nx show projects` | Lists every Nx project in the workspace. Empty output means no app or library has been generated yet. | Now |
+| `pnpm nx graph` | Opens the interactive dependency graph in a browser. The visual check that a context depends only on itself and `scope:shared`. | Now |
+| `pnpm nx graph --file=tmp/graph.json` | Writes the same graph as JSON without opening a browser — the CI-friendly and scriptable form. | Now |
+| `pnpm nx lint <project>` | Runs ESLint **including `@nx/enforce-module-boundaries`**. This is the command that turns the three-axis tag scheme of §2.3.4 into a build failure. | After `T-C10-02` / `T-C10-03` |
+| `pnpm nx affected -t lint test build` | Runs lint, test and build only for the projects affected by the current change, against `defaultBase` (`main`). The CI gate. | Once projects exist |
+
+**Serve, build and test**
+
+| Command | What it does | Availability |
+| --- | --- | --- |
+| `pnpm nx serve api` / `pnpm nx serve web` | Runs the NestJS API / the Angular web client in development mode with watch. | Once `apps/` exist |
+| `pnpm nx build api` / `pnpm nx build web` | Produces the production bundle of each application under `dist/`. | Once `apps/` exist |
+| `pnpm nx test <project>` | Runs the Jest unit/component suite of one project (`incident-domain`, `api`, `web`…). | Once projects exist |
+| `pnpm nx e2e api-e2e` / `pnpm nx e2e web-e2e` | Runs the Cypress + Cucumber acceptance suites (Gherkin `*.feature` + `*.steps.ts`). | Once `*-e2e` apps exist |
+
+**Schema evolution (TypeORM)**
+
+The data source lives at `apps/api/src/data-source.ts`. `synchronize` is always `false`: migrations are the **only** mechanism for schema change.
+
+| Command | What it does | Availability |
+| --- | --- | --- |
+| `pnpm typeorm migration:generate -d apps/api/src/data-source.ts <path/Name>` | Diffs the entity model against the database and writes a new timestamped migration. | Once `apps/api` exists |
+| `pnpm typeorm migration:run -d apps/api/src/data-source.ts` | Applies every pending migration. | Once `apps/api` exists |
+| `pnpm typeorm migration:revert -d apps/api/src/data-source.ts` | Rolls back the last applied migration. | Once `apps/api` exists |
+
+##### Bootstrap verification
+
+The four checks below are the acceptance criteria of ticket **`T-C10-01` · Bootstrap the Nx workspace with pnpm and strict TypeScript**. They are purely mechanical and they all run **today**, on the empty workspace — re-run them after any clone, any toolchain upgrade or any change to `package.json`, `nx.json` or `tsconfig.base.json`.
+
+**AC1 — `pnpm install` succeeds and leaves exactly one lockfile.** No `package-lock.json` and no `yarn.lock` may be produced anywhere.
+
+```bash
+pnpm install
+find . -path ./node_modules -prune -o -path ./.git -prune -o \
+  \( -name 'pnpm-lock.yaml' -o -name 'package-lock.json' -o -name 'yarn.lock' \) -print
+```
+
+```powershell
+# PowerShell equivalent of the lockfile scan
+Get-ChildItem -Recurse -File -Include pnpm-lock.yaml,package-lock.json,yarn.lock |
+  Where-Object { $_.FullName -notmatch '\node_modules\|\\.git\' } |
+  Select-Object -ExpandProperty FullName
+```
+
+Expected: `pnpm install` exits `0`, and the scan returns `./pnpm-lock.yaml` as the only workspace lockfile. (A pre-existing `package-lock.json` is vendored inside `.claude/skills/nestjs-best-practices/scripts/` — it belongs to a skill asset, not to this workspace, and is not produced by the install.)
+
+**AC2 — the pinned toolchain is the one actually resolved.**
+
+```bash
+pnpm nx report
+```
+
+Expected — Nx **21.6.x**, TypeScript **5.9.x**, Node **20.x**:
+
+```
+Node           : 20.17.0
+pnpm           : 10.18.3
+nx             : 21.6.11
+@nx/js         : 21.6.11
+@nx/workspace  : 21.6.11
+@nx/devkit     : 21.6.11
+typescript     : 5.9.3
+```
+
+**AC3 — `tsconfig.base.json` is strict.** Every project tsconfig extends it, so these four flags are inherited workspace-wide.
+
+```bash
+node -e "const c=JSON.parse(require('fs').readFileSync('tsconfig.base.json','utf8')).compilerOptions; \
+['strict','noImplicitOverride','noUnusedLocals','noFallthroughCasesInSwitch'].forEach(k=>console.log(k.padEnd(30),'=',c[k]))"
+```
+
+Expected — all four `true`:
+
+```
+strict                         = true
+noImplicitOverride             = true
+noUnusedLocals                 = true
+noFallthroughCasesInSwitch     = true
+```
+
+**AC4 — the project graph is operational before any project exists.** Proves the Nx graph engine works, and that the bootstrap ticket did not smuggle in an app or a library.
+
+```bash
+pnpm nx graph --file=tmp/graph.json
+node -e "const g=JSON.parse(require('fs').readFileSync('tmp/graph.json','utf8')); \
+console.log('projects:', Object.keys(g.graph.nodes).length)"
+pnpm nx show projects
+```
+
+Expected: the command exits `0`, writes `tmp/graph.json` (a gitignored path), prints `projects: 0`, and `pnpm nx show projects` returns nothing.
+
+> **Status:** the workspace **bootstrap is done** (`T-C10-01`): `package.json`, `nx.json`, `tsconfig.base.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `.nvmrc` and `.gitignore` exist at the root, and the four checks above pass. Everything else on this page remains **target structure**: there is no `apps/`, no `libs/`, no `openspec/` directory, and no ESLint/Prettier configuration or three-axis tag scheme yet (`T-C10-02`, `T-C10-03`). Consequently none of the boundary rules of §2.3.4 has been verified with `pnpm nx lint`, and every path under `apps/` and `libs/` is still prescriptive design intent that scaffolding must produce.
 
 ### **2.4. Infraestructura y despliegue**
 
@@ -1940,7 +2036,7 @@ Indexes are chosen for stated non-functional requirements, not speculatively:
 
 **Phase 2 is deliberately not modelled.** `problem`, `change`, `release` and `asset-config` (PRD §14.4) have their behavior specified but their schema left to the phase-2 design, so it is shaped by real phase-1 experience rather than speculation. What phase 1 already guarantees for them: `incident_link` and `sr_link` already accept `problem`, `change`, `release` and `configuration_item` as target record types, holding opaque `uuid`s with no FK (FR-INC-10), and `apr_workflow.record_type` already accepts `change` and `release`. Adding those contexts is therefore **additive** — new schemas and new tables, with **no phase-1 table restructured**.
 
-> **Status:** as in §2.1, §2.2 and §2.3, this is the **target data model**. The Nx workspace has not been scaffolded, there is no `apps/api/src/data-source.ts`, **no TypeORM entity and no migration exists**, and no database has ever been created. None of the constraints, partial indexes, partitions or `GRANT`/`REVOKE` statements above has been executed or measured; NFR-PRF-02 and NFR-PRF-04 must be proven with `EXPLAIN (ANALYZE, BUFFERS)` against a seeded volume before either is claimed.
+> **Status:** as in §2.1, §2.2 and §2.3, this is the **target data model**. The Nx workspace has been bootstrapped but holds no project, so there is no `apps/api` and no `apps/api/src/data-source.ts`, **no TypeORM entity and no migration exists**, and no database has ever been created. None of the constraints, partial indexes, partitions or `GRANT`/`REVOKE` statements above has been executed or measured; NFR-PRF-02 and NFR-PRF-04 must be proven with `EXPLAIN (ANALYZE, BUFFERS)` against a seeded volume before either is claimed.
 
 ### **3.2. Descripción de entidades principales:**
 

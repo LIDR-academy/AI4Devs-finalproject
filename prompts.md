@@ -700,6 +700,58 @@ Añdadido tickets en la carpeta docs/backlog/C1/tickets/
 
 **Prompt 1:**
 
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Actúa como sport-itsm-architect e implementa UN SOLO ticket: docs/backlog/C10/tickets/T-C10-01.md · Bootstrap the Nx workspace with pnpm and strict TypeScript Raíz del repositorio: d:\repositories\ai4devs\proyecto_final\AI4Devs-finalproject
+
+#### El ticket es el contrato
+
+Lee docs/backlog/C10/tickets/T-C10-01.md entero. Su `## Scope` es exhaustivo y su lista de "Out of scope" es vinculante. Lee también CLAUDE.md §2 (versiones pinneadas: Node 20 LTS, Nx 21.6, TypeScript 5.9, pnpm como único gestor) y §3 (comandos y estructura de carpetas). No leas el resto del backlog: el ticket es autocontenido.
+
+#### Lo que NO debes hacer — es el riesgo real de este ticket
+
+Vas a arrancar un workspace Nx y la tentación de dejarlo "completo y usable" es enorme. No lo hagas:
+
+- **ESLint 9 flat config y Prettier 3 son T-C10-02.** No los configures.
+- **El esquema de tags de tres ejes y la matriz de boundaries son T-C10-03.** No los configures.
+- **Ninguna aplicación y ninguna librería.** Ni `apps/api`, ni `apps/web`, ni nada bajo `libs/`. El criterio de aceptación exige explícitamente que `pnpm nx graph` reporte CERO proyectos.
+
+Adelantarte convierte tickets greenfield en tickets de gap dentro de un proyecto que todavía no tiene una línea de código, y el backlog entero deja de reflejar la realidad. Haz exactamente el Scope, ni un paso más. Si crees que algo del Scope es imposible sin invadir otro ticket, para y dilo en vez de resolverlo por tu cuenta.
+
+#### Precaución con el directorio
+
+El repositorio NO está vacío: contiene CLAUDE.md, readme.md, prompts.md, skills-lock.json, docs/ y .claude/. `create-nx-workspace` espera normalmente un directorio limpio. Bajo ninguna circunstancia borres, muevas, sobrescribas ni renombres nada de lo existente. Si el generador se niega a operar sobre un directorio no vacío, para y dime el error exacto y la orden que has usado — no improvises una salida que toque los ficheros que ya están.
+
+#### Verificación — ejecútala, no la afirmes
+
+Los cuatro criterios de aceptación son comprobaciones mecánicas. Ejecuta cada comando de verdad y pega su salida:
+
+1. `pnpm install` completa sin error y produce SOLO `pnpm-lock.yaml` — ni `package-lock.json` ni `yarn.lock` en ningún punto del árbol.
+2. `pnpm nx report` imprime Nx 21.6, TypeScript 5.9 y Node 20.x.
+3. `tsconfig.base.json` tiene `compilerOptions.strict: true`, además de `noImplicitOverride`, `noUnusedLocals` y `noFallthroughCasesInSwitch`.
+4. `pnpm nx graph --file=tmp/graph.json` funciona y reporta cero proyectos.
+
+Si alguno falla, dilo con su salida completa. Un criterio que no has ejecutado se reporta como no ejecutado, nunca como pasado.
+
+#### Restricciones
+
+- No modifiques nada bajo docs/ ni bajo .claude/. El ticket no se edita ni se marca como hecho.
+- No instales dependencias que el Scope no pida.
+- No hagas commit ni push salvo que te lo pida explícitamente.
+- Si necesitas red y no la tienes, para y dilo.
+
+#### Informa al terminar
+
+Qué ficheros has creado, la salida de las cuatro verificaciones, y cualquier decisión que hayas tomado que el ticket no cubría — en particular si has elegido entre preset integrado y package-based, o cómo has resuelto la colisión con el directorio no vacío.
+
+### Response:
+
+Añdadido tickets en la carpeta docs/backlog/C1/tickets/
+
+</br>
+
 **Prompt 2:**
 
 **Prompt 3:**
