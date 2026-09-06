@@ -17,8 +17,8 @@ frontend (related_task_id: **0028**) | includes database-expert: **no**
 > delete modal and both empty states all land in the **same single Blade file**,
 > `resources/views/livewire/products/attribute-types.blade.php`. Every candidate split (list vs.
 > modal vs. repeater) would mean a second story editing the first story's markup — the
-> two-stories-one-file collision [0006](done/0006-users-list-editor-ui.md) and
-> [0039](0039-payment-methods-ui.md) already documented and avoided.
+> two-stories-one-file collision [0006](0006-users-list-editor-ui.md) and
+> [0039](../0039-payment-methods-ui.md) already documented and avoided.
 
 ## Debate decisions (confirmed before writing this story)
 
@@ -32,7 +32,7 @@ frontend (related_task_id: **0028**) | includes database-expert: **no**
 | 6 | Rendering `deletingTypeUsageCount` | **Render nothing usage-related at all.** That property is `#[Locked]` and **always `0` until story 0029**. A "used by 0 variants" line would be filler that also *implies a check exists when it does not*. This is the same discipline D7 states for code ("do not stub a model method that hardcodes `return 0`") applied to copy. The confirmation reads like the Users one ("This cannot be undone"). 0029 adds the count. |
 | 7 | The zero-value type state | **A real, reachable state with its own inline empty treatment**, on the assumption 0028's **Q2a** is confirmed (a valueless type is legal and inert, matching story 0010's zero-permission role precedent). Inside the modal the repeater shows an explicit "No values yet" line rather than a blank gap; in the list the row renders a zero count. ⚠️ This decision **inherits 0028's Q2** — see [Open questions](#open-questions) OQ-9. |
 | 8 | UI string language | **English source strings wrapped in `__()`**, matching the whole app today. Generic chrome (`Save`, `Cancel`, `Name`, `Values`) stays as bare `__('...')` literals exactly as [`users.blade.php`](../../resources/views/livewire/users.blade.php) does; only domain copy goes into `lang/*/products.php`. The Spanish switcher arrives with Epic 5. |
-| 9 | Sidebar entry | This story adds navigation — a screen with no way to reach it is not delivered. **Which file it goes in depends on whether [0013](done/0013-sidebar-module-gating-ui.md) has landed by Phase 3**; both branches are specified in [Files to create/modify](#files-to-createmodify). |
+| 9 | Sidebar entry | This story adds navigation — a screen with no way to reach it is not delivered. **Which file it goes in depends on whether [0013](0013-sidebar-module-gating-ui.md) has landed by Phase 3**; both branches are specified in [Files to create/modify](#files-to-createmodify). |
 
 Resolved directly from the docs, no decision needed: **view path** follows the
 [`Index`-in-a-subfolder exception](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
@@ -186,7 +186,7 @@ Feature: Product attribute types screen — list, create/edit modal, values repe
   **If 0028 already shipped a key meaning the same thing, reuse it verbatim — do not add a second.**
   Both locale files stay key-for-key identical.
 - **Navigation — one of two files, depending on what has landed at Phase 3:**
-  - *If [0013](done/0013-sidebar-module-gating-ui.md) has **not** landed (expected):*
+  - *If [0013](0013-sidebar-module-gating-ui.md) has **not** landed (expected):*
     `resources/views/layouts/app/sidebar.blade.php` — **modify.** Add one
     `<flux:sidebar.item icon="swatch" :href="route('product-attribute-types.index')" :current="request()->routeIs('product-attribute-types.*')" wire:navigate>`
     beside the existing Users entry, with a comment noting it is scaffolding 0013's registry will
@@ -507,7 +507,7 @@ false.
 - **OQ-1a (recommended)** — amend **0028** to add `closeModal()` (which resets `$name`, `$values`,
   `$editingTypeId`) and `closeDeleteModal()`. 0028 is still at the `new` stage, so it is free to
   change, and a frontend story must not write backend component code. This is the same fix
-  [0039](0039-payment-methods-ui.md)'s OQ-1 recommends for its own contract gap.
+  [0039](../0039-payment-methods-ui.md)'s OQ-1 recommends for its own contract gap.
 - OQ-1b — leave the reset to `openCreateModal()` instead, and drop the reopen scenario. Cheaper, but
   it leaves stale rows in the component between open and reopen, which is exactly the state-leak
   class 0006's Phase 4 finding F2 was raised about.
@@ -545,7 +545,7 @@ the administrator then removes an earlier row, message *n* would now sit against
 **OQ-6 — navigation grouping for the Products area.** Three product screens are coming (0025
 categories, 0027 products, 0030 this one) and today the sidebar has a single flat `Platform` group.
 - **OQ-6a (recommended)** — this story adds one flat item to `Platform`, exactly as
-  [0039](0039-payment-methods-ui.md) does, with a comment marking it as scaffolding, and leaves the
+  [0039](../0039-payment-methods-ui.md) does, with a comment marking it as scaffolding, and leaves the
   grouping to **0013**, which replaces the whole file with a permission-aware registry. Avoids three
   stories inventing three different groupings.
 - OQ-6b — introduce a `Catalog` group now. Better final shape, but 0025/0027 would then have to

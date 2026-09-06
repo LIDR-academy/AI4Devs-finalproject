@@ -2394,7 +2394,7 @@ and [§2.3](../../docs/PRD/PRD.md#23-shared-media-gallery), and grounded in **fu
 [0029](done/0029-product-variants-backend.md) (2,306 lines, read in full — it was substantially redesigned on
 the same day) and [0027](done/0027-products-list-and-editor-ui.md) (1,512 lines, read in full), plus
 [0028](done/0028-product-attribute-types-and-values-backend.md),
-[0030](0030-product-attribute-types-and-values-ui.md) and
+[0030](done/0030-product-attribute-types-and-values-ui.md) and
 [0020](done/0020-shared-media-gallery-modal-ui.md) for their data and embedding contracts, and the whole of
 [errors-log.md](../../docs/errors-log.md).
 
