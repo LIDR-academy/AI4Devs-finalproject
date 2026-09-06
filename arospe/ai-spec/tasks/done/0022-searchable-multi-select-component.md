@@ -49,8 +49,8 @@ sent to the browser**.
   countries). Owns its resolver, the by-level grouping *content*, and the search query/index. This
   story owns only the *ability* to render grouped results — plus, since 2026-08-18, the **bounded chip
   area** prop in D14 that keeps a many-entry zone from growing the editor unboundedly.
-- **0032 — shipping geography catalog seed** (`ai-spec/tasks/0032-shipping-geography-catalog-seed.md`,
-  already written). Supplies the rows 0034 searches. No coupling to this story at all **except** the
+- **0032 — shipping geography catalog seed** (`ai-spec/tasks/done/0032-shipping-geography-catalog-seed.md`,
+  done). Supplies the rows 0034 searches. No coupling to this story at all **except** the
   shared normalizer in D13, which its catalog rows must be matched through.
 - **0033 — shipping zones backend.** Same D13 relationship as 0032: its geography catalog search must
   fold text through the one shared normalizer, not its own copy of the rule.

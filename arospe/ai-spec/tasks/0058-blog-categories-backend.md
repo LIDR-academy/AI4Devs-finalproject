@@ -380,7 +380,7 @@ posts alike, not an entity folder — this diverges from Epic 2's `ProductCatego
   (`tests/Unit/Actions/NormalizeForSearchTest.php`) and consumed unchanged by 0026, 0032, 0033, 0034
   and 0059. This story must not redefine, wrap, fork or locally override it (**D-12**). It is absent
   from this worktree today, which is **expected and not a blocker** — per
-  [0032's D-N1](0032-shipping-geography-catalog-seed.md) it is 0022's deliverable and is expected to
+  [0032's D-N1](done/0032-shipping-geography-catalog-seed.md) it is 0022's deliverable and is expected to
   exist by the time any consuming story reaches Phase 3. See the Dependencies section.
 - `app/Actions/Auth/LogRefusedPrivilegedAttempt.php` — the shared refusal recorder (story 0015b),
   already constructor-injected into eight domain actions.
@@ -652,7 +652,7 @@ the two taxonomies can be diffed decision by decision. **D-13** and **D-14** are
 - **D-4 — Uniqueness is enforced on a stored `normalized_name` column carrying the `UNIQUE` index —
   not on `name`, and not by a PHP-only comparison behind a raw-`name` index.** This is the story's
   central design decision, and it is **not a stylistic choice**: it is the project-wide convention
-  confirmed by [0032](0032-shipping-geography-catalog-seed.md)'s **D-N1** ("CONFIRMED 2026-08-18",
+  confirmed by [0032](done/0032-shipping-geography-catalog-seed.md)'s **D-N1** ("CONFIRMED 2026-08-18",
   agreed with the product owner across the Epic 2 Phase 1 debates), which requires that every story
   searching or uniquing a name-like column call the single shared `App\Actions\NormalizeForSearch`
   **both at write time** (into a stored `normalized_name`) **and at read time**. Stories 0022, 0026,
@@ -678,7 +678,7 @@ the two taxonomies can be diffed decision by decision. **D-13** and **D-14** are
      means by correctness never depending on collation.
   4. **It is the indexed read path a category filter or picker needs.** `WHERE normalized_name
      LIKE 'term%'` against a real BTREE index is the shape
-     [0032's `geography_entries`](0032-shipping-geography-catalog-seed.md) was designed around for
+     [0032's `geography_entries`](done/0032-shipping-geography-catalog-seed.md) was designed around for
      the same reason; folding every row in PHP per query is not a viable read path.
 
   **`unique('name')` is dropped, not kept alongside.** It is not harmless redundancy: any two rows
@@ -786,7 +786,7 @@ the two taxonomies can be diffed decision by decision. **D-13** and **D-14** are
   **(a) One shared normaliser.** `App\Actions\NormalizeForSearch` (owned by story 0022's D13) is an
   invokable at `app/Actions/NormalizeForSearch.php`, `__invoke(string $value): string`, implemented
   as `trim` → `Str::lower` → `Str::ascii` → collapse whitespace. **0022, 0026, 0032, 0033, 0034 and
-  0059 all share it** — per [0032's D-N1](0032-shipping-geography-catalog-seed.md) — and blog
+  0059 all share it** — per [0032's D-N1](done/0032-shipping-geography-catalog-seed.md) — and blog
   categories join that set rather than starting a second one. The bug class it closes is two
   implementations of the same fold drifting apart *invisibly*, each side's tests staying green
   because each side is internally consistent: if the write path folds accents and a read path only
@@ -863,7 +863,7 @@ the two taxonomies can be diffed decision by decision. **D-13** and **D-14** are
 - No slug, sort order, description, translations table, or any other i18n scaffolding.
 - No second text normaliser and no local fold helper: `App\Actions\NormalizeForSearch` is consumed
   as-is and is neither created nor modified here (**D-12**; it is story 0022's deliverable per
-  [0032's D-N1](0032-shipping-geography-catalog-seed.md)).
+  [0032's D-N1](done/0032-shipping-geography-catalog-seed.md)).
 - No modification to any product-taxonomy file, and no shared/abstract base class extracted between
   the two taxonomies.
 
@@ -874,7 +874,7 @@ the two taxonomies can be diffed decision by decision. **D-13** and **D-14** are
   other blog stories build on.
 - **One shared class it consumes: `App\Actions\NormalizeForSearch`, owned by story 0022** (**D-12**).
   It is absent from this worktree today, and that is **expected and not a blocker** — the question is
-  already settled at project level by [0032's **D-N1**](0032-shipping-geography-catalog-seed.md)
+  already settled at project level by [0032's **D-N1**](done/0032-shipping-geography-catalog-seed.md)
   ("CONFIRMED 2026-08-18"), which establishes the utility as story 0022's deliverable and the single
   source of truth every consuming story calls. Stories 0022, 0026, 0032, 0033, 0034, 0059 and this
   one all consume it on the same terms, and it is expected to exist by the time any of them reaches
@@ -966,7 +966,7 @@ the two taxonomies can be diffed decision by decision. **D-13** and **D-14** are
   the "exactly one normaliser in the tree" invariant is violated at *merge* time even though each
   branch is internally consistent — the same invisible-drift shape **D-12** exists to prevent,
   arriving through version control rather than through code. Mitigated by the fact that ownership is
-  unambiguous (0022's deliverable, per [0032's D-N1](0032-shipping-geography-catalog-seed.md)) and by
+  unambiguous (0022's deliverable, per [0032's D-N1](done/0032-shipping-geography-catalog-seed.md)) and by
   this story creating nothing; the residual is a merge-time review check, not a design question.
 - **R-9 — A vacuous architecture test.** A `->not->toUse()` assertion is a negative claim and is
   green both when the invariant holds and when the test is structurally unable to fail. Whatever
@@ -1076,7 +1076,7 @@ That was wrong, and the revision is not a matter of taste.** Story [0059](0059-b
 (blog tags), debated in parallel by a sibling agent, independently converged on a stored
 `normalized_name` column carrying the `UNIQUE` index, derived through a `saving` model event calling
 the shared normaliser. Checking that claim against the backlog rather than accepting it confirmed the
-stronger fact: [0032](0032-shipping-geography-catalog-seed.md)'s **D-N1** — *"CONFIRMED 2026-08-18"*,
+stronger fact: [0032](done/0032-shipping-geography-catalog-seed.md)'s **D-N1** — *"CONFIRMED 2026-08-18"*,
 agreed with the product owner across the Epic 2 Phase 1 debates — **already establishes this as the
 project-wide convention**, requiring the shared `App\Actions\NormalizeForSearch` at both write time
 and read time precisely so correctness never depends on collation. Stories 0022, 0026, 0032, 0033

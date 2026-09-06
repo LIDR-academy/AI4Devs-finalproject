@@ -29,7 +29,7 @@ place they are formalised, and the scenarios below are written from scratch:
 
 **Boundaries with the sibling Epic 2 stories**, referenced and never redefined here:
 
-- **0032 — geography catalog** ([`0032-shipping-geography-catalog-seed.md`](0032-shipping-geography-catalog-seed.md)).
+- **0032 — geography catalog** ([`0032-shipping-geography-catalog-seed.md`](done/0032-shipping-geography-catalog-seed.md)).
   Owns `geography_entries`: its bigint PK, the `level` discriminator, the self-FK `parent_id`, the
   fixture and the seeder. **This story reads that ancestry chain and changes nothing in it.**
 - **0033 — shipping zones** ([`0033-shipping-zones-backend.md`](0033-shipping-zones-backend.md)).

@@ -1508,7 +1508,7 @@ happen is the decision being silently defaulted either way (**OQ-6**).
 Stated explicitly because both sibling Epic 4 tables have one and a reviewer will look for it. Both
 experts reached the same conclusion independently, on two separate grounds:
 
-1. **`title` is not a uniqueness-gated taxonomy name.** [0032's D-N1](0032-shipping-geography-catalog-seed.md)'s
+1. **`title` is not a uniqueness-gated taxonomy name.** [0032's D-N1](done/0032-shipping-geography-catalog-seed.md)'s
    whole premise is a catalog label that must be unique within its catalog, where "Guías" and "guías"
    are two humans meaning the same thing. Two posts can legitimately share a title (a series, a
    "Part 2"), so there is **no uniqueness rule on `title` at all** — normalized or otherwise — and
@@ -2430,7 +2430,7 @@ See the ✅ note on **D-13**.)*
 
 **One thing this story deliberately does *not* inherit from its Epic 4 siblings, stated so its absence
 is not read as an oversight:** the stored `normalized_name` + `NormalizeForSearch` convention that
-0058's **D-4** and 0059's **D-3** both build on, and which [0032's **D-N1**](0032-shipping-geography-catalog-seed.md)
+0058's **D-4** and 0059's **D-3** both build on, and which [0032's **D-N1**](done/0032-shipping-geography-catalog-seed.md)
 establishes project-wide. Both experts independently concluded it has **no bearing here**, for two
 separate reasons — `title` carries no uniqueness rule at all, and a `Str::slug()` output is already
 normalized by construction — so this story neither stores a fold nor calls the shared normaliser, and

@@ -23,7 +23,7 @@ the one place the recipe does not fit as written — see the box below.
 > categories do not work that way.** Story [0058](0058-blog-categories-backend.md) specifies
 > `blog_categories` with a stored, derived **`normalized_name`** column carrying the sole `UNIQUE`
 > index, written by a `static::saving()` hook calling the shared `App\Actions\NormalizeForSearch` —
-> the project-wide convention [0032's **D-N1**](0032-shipping-geography-catalog-seed.md) confirmed on
+> the project-wide convention [0032's **D-N1**](done/0032-shipping-geography-catalog-seed.md) confirmed on
 > 2026-08-18, which 0058's own **D-4** records that 0023 predates and is *"the outlier, not the
 > standard"*.
 >
@@ -797,7 +797,7 @@ is one no post uses, and its translations are exactly the data that has just bec
 - **[Story 0068](0068-store-languages-catalog-backend.md)** — hard, and not yet implemented. Supplies
   `store_languages`, the `is_default` row the fallback resolves through, and the registry.
 - **Story 0022** — supplies `App\Actions\NormalizeForSearch`, consumed unchanged at both write time (the
-  hook) and read time (the validation rule), per [0032's **D-N1**](0032-shipping-geography-catalog-seed.md).
+  hook) and read time (the validation rule), per [0032's **D-N1**](done/0032-shipping-geography-catalog-seed.md).
 - **Story 0061 depends on this story only incidentally** — it extends `DeleteBlogCategory` in place with
   the in-use guard, which this story does not touch.
 - **No new Composer package.**

@@ -15,11 +15,11 @@ database-expert: **no**
 
 This story creates no table, no migration and no query of its own beyond the resolver's two bounded
 reads over an existing, indexed table (`geography_entries`, owned by
-[0032](0032-shipping-geography-catalog-seed.md)), so `database-expert` is deliberately **not**
+[0032](done/0032-shipping-geography-catalog-seed.md)), so `database-expert` is deliberately **not**
 convened, per [workflow.md](../../docs/workflow.md#task-classification-rule).
 
 > **Scope was widened, deliberately and on record.** Earlier Epic 2 documents describe 0034 as *"the
-> zone geography picker"* ([0032](0032-shipping-geography-catalog-seed.md)) or as owning *"its
+> zone geography picker"* ([0032](done/0032-shipping-geography-catalog-seed.md)) or as owning *"its
 > resolver, the by-level grouping content, and the search query/index"*
 > ([0022](done/0022-searchable-multi-select-component.md)). 0033's **OQ-C** flagged that those are not the
 > same scope, that **0035 already owns `/shipping`**, and recommended widening 0034 to the whole zone

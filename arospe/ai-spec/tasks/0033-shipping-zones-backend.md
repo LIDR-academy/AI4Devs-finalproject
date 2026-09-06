@@ -28,7 +28,7 @@ It does **not** own: the picker's search/filter/empty-state scenarios (0022 + 00
 **Boundaries with the sibling Epic 2 stories**, referenced and never redefined here:
 
 - **0032 — shipping geography catalog seed**
-  ([`0032-shipping-geography-catalog-seed.md`](0032-shipping-geography-catalog-seed.md)). Owns
+  ([`0032-shipping-geography-catalog-seed.md`](done/0032-shipping-geography-catalog-seed.md)). Owns
   `geography_entries` entirely: its **bigint** PK (the one confirmed exception to the UUIDv7
   policy), the `level` discriminator, the self-referencing `parent_id`, the model, the factory,
   the CSV fixtures and the seeder. **This story adds nothing to it and changes nothing in it.**
@@ -1082,7 +1082,7 @@ reviews it as a decision rather than inheriting it. Changing it after data exist
 migration.
 
 **OQ-C — who owns the zone management *screen*? (genuinely unresolved)**
-[0032](0032-shipping-geography-catalog-seed.md) describes **0034** as *"the zone geography
+[0032](done/0032-shipping-geography-catalog-seed.md) describes **0034** as *"the zone geography
 picker"*; [0022](done/0022-searchable-multi-select-component.md) describes it as owning *"its resolver,
 the by-level grouping content, and the search query/index"*; this story's brief calls it *"the
 paired UI story"*. Those are not the same scope, and **0035 already owns `/shipping` and

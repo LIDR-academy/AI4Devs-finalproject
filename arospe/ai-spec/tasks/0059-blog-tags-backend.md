@@ -575,7 +575,7 @@ user-visible yet: the management screen is 0060, and the posts that attach a tag
      simply does not arise here.
   3. **It is the indexed read path story 0063's autocomplete needs.** The post editor's tag field
      queries on every keystroke. `WHERE normalized_name LIKE 'term%'` against a real BTREE index is
-     the shape [0032's `geography_entries`](0032-shipping-geography-catalog-seed.md) was designed
+     the shape [0032's `geography_entries`](done/0032-shipping-geography-catalog-seed.md) was designed
      around for the identical reason — and the `UNIQUE` index serves both the constraint and the
      prefix scan, so no second index is needed. Folding every row in PHP per keystroke is not a
      viable read path.

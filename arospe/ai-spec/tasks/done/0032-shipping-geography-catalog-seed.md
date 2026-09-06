@@ -8,13 +8,13 @@ this repository under `database/data/`, loaded by a chunked seeder. This is pure
 infrastructure — no admin CRUD, no Livewire component, no picker UI, and no `shipping_zones`
 table; those belong to the follow-up stories. The catalog is **physically independent** of the
 future `sales_regions` (fiscal) catalog: no shared table and no foreign key between them, per
-[PRD assumption 4](../../docs/PRD/PRD.md#assumptions--confirmed-decisions), reaffirmed in the
-rewritten [§2.4 Shipping](../../docs/PRD/PRD.md#24-shipping).
+[PRD assumption 4](../../../docs/PRD/PRD.md#assumptions--confirmed-decisions), reaffirmed in the
+rewritten [§2.4 Shipping](../../../docs/PRD/PRD.md#24-shipping).
 
 ## Type
 backend | includes database-expert: yes
 
-**PRD coverage.** [§2.4 Shipping](../../docs/PRD/PRD.md#24-shipping) (rewritten 2026-08-17). This
+**PRD coverage.** [§2.4 Shipping](../../../docs/PRD/PRD.md#24-shipping) (rewritten 2026-08-17). This
 story has **no Gherkin scenarios of its own in the PRD** — the zone CRUD and picker scenarios
 there belong to the follow-up stories. It enables exactly one PRD acceptance criterion:
 
@@ -102,10 +102,10 @@ Feature: Seeded shipping geography catalog
     Then an index covering the search column exists on the catalog table
 ```
 
-> **Why the last scenario leaks a technical term.** [gherkin-guidelines.md rule 2](../../docs/testing/frontend/gherkin-guidelines.md)
+> **Why the last scenario leaks a technical term.** [gherkin-guidelines.md rule 2](../../../docs/testing/frontend/gherkin-guidelines.md)
 > asks scenarios to stay out of implementation detail. This story's whole deliverable *is*
 > implementation detail — there is no user-facing behaviour to describe — so it follows the
-> precedent set by [0014](done/0014-drop-redundant-users-uuid-unique-index.md), whose scenarios name
+> precedent set by [0014](0014-drop-redundant-users-uuid-unique-index.md), whose scenarios name
 > indexes directly. Every other scenario above is still written declaratively with a named actor.
 
 ## Documented functional decisions
@@ -120,7 +120,7 @@ the product owner across the Epic 2 Phase 1 debates on 2026-08-18.
 
 The rule itself is therefore **not defined here**. This story consumes the project's centralized
 text-normalizer utility — a single function that is the one source of truth for what "normalized"
-means — introduced by story [0022](done/0022-searchable-multi-select-component.md): the invokable
+means — introduced by story [0022](0022-searchable-multi-select-component.md): the invokable
 **`App\Actions\NormalizeForSearch`**, at `app/Actions/NormalizeForSearch.php`, with the signature
 `__invoke(string $value): string`, implemented as trim → `Str::lower` → `Str::ascii` → collapse
 whitespace. Three obligations follow:
@@ -140,7 +140,7 @@ whitespace. Three obligations follow:
 
 This is what closes **OQ-6**'s normalization half: `normalized_name` exists so that search
 correctness never depends on the database collation (SQLite/CI `BINARY` vs MySQL/production
-`utf8mb4_unicode_ci` — the same reasoning [errors-log.md](../../docs/errors-log.md) already records
+`utf8mb4_unicode_ci` — the same reasoning [errors-log.md](../../../docs/errors-log.md) already records
 for the deleted-user token revocation query, *"never let a case-insensitive collation be the thing
 that makes a query match"*). A single shared normalizer is what makes that guarantee hold on both
 engines at once. The **collation** half of OQ-6 remains open and is unaffected.
@@ -151,14 +151,14 @@ engines at once. The **collation** half of OQ-6 remains open and is unaffected.
 
 - `database/migrations/<timestamp>_create_geography_entries_table.php` — **new**. One table with a
   `level` discriminator and a nullable self-referencing `parent_id`. `down()` is
-  `Schema::dropIfExists('geography_entries')`, per [migrations.md](../../docs/database/migrations.md#structure).
+  `Schema::dropIfExists('geography_entries')`, per [migrations.md](../../../docs/database/migrations.md#structure).
 
   Column set agreed in the debate:
 
   | Column | Type | Notes |
   | --- | --- | --- |
   | `id` | `bigint` auto-increment PK | **confirmed** — the one deliberate exception to this project's UUIDv7 policy; see *Primary-key type* below |
-  | `level` | `VARCHAR(20)` | cast to `App\Enums\GeographyLevel`; string + PHP enum, never a native MySQL `enum`, per [migrations.md](../../docs/database/migrations.md#when-the-new-columns-default-is-wrong-for-existing-rows-backfill-in-the-same-up) |
+  | `level` | `VARCHAR(20)` | cast to `App\Enums\GeographyLevel`; string + PHP enum, never a native MySQL `enum`, per [migrations.md](../../../docs/database/migrations.md#when-the-new-columns-default-is-wrong-for-existing-rows-backfill-in-the-same-up) |
   | `parent_id` | nullable, self-FK, `restrictOnDelete` | null for countries; country for comunidades; comunidad for municipios |
   | `name` | `VARCHAR(255)` | display name exactly as sourced |
   | `normalized_name` | `VARCHAR(255)` | the search column, computed once at seed time by the project's centralized text-normalizer utility, **`App\Actions\NormalizeForSearch`** (`app/Actions/NormalizeForSearch.php`) — this story defines **no normalization rule of its own**; see **D-N1** |
@@ -168,7 +168,7 @@ engines at once. The **collation** half of OQ-6 remains open and is unaffected.
   | `created_at` / `updated_at` | timestamps | consistency with every other table here |
 
   Indexes: `PRIMARY(id)`; `UNIQUE(iso_alpha2)` and `UNIQUE(ine_code)` — both nullable-unique, the
-  pattern `users.pending_email` already establishes ([schema.md](../../docs/database/schema.md#users):
+  pattern `users.pending_email` already establishes ([schema.md](../../../docs/database/schema.md#users):
   MySQL and SQLite both allow unlimited `NULL`s in a unique index), which is what makes "no
   duplicate entries" a *database* invariant rather than a seeder-only one; an explicit
   `INDEX(parent_id)` following this repo's be-explicit-about-FK-indexes convention
@@ -188,7 +188,7 @@ engines at once. The **collation** half of OQ-6 remains open and is unaffected.
 ### Model
 
 - `app/Models/GeographyEntry.php` — **new**. Attribute-based `#[Fillable]` / `casts()` style per
-  [base-standards.md](../../docs/conventions/base-standards.md#model-conventions) and
+  [base-standards.md](../../../docs/conventions/base-standards.md#model-conventions) and
   `app/Models/User.php`. `casts()` carries `'level' => GeographyLevel::class`. Relations:
   `parent()` (`belongsTo` self) and `children()` (`hasMany` self).
 
@@ -244,7 +244,7 @@ engines at once. The **collation** half of OQ-6 remains open and is unaffected.
   **unconditionally**, next to the existing `RolePermissionSeeder` call. This is real reference
   data that shipping is non-functional without in every environment — not the
   `app()->environment(['local','testing'])`-gated `test@example.com` fixture user. It extends the
-  precedent [schema.md](../../docs/database/schema.md#roles-permissions-model_has_roles-model_has_permissions-role_has_permissions)
+  precedent [schema.md](../../../docs/database/schema.md#roles-permissions-model_has_roles-model_has_permissions-role_has_permissions)
   already records (seeding is a required deployment step); it does not create a new one.
 
   The seeder must also be independently runnable as
@@ -265,7 +265,7 @@ proposed **one table with a `level` discriminator**. This story adopts the **sin
 `database-expert`'s decisive argument: story 0033's zone pivot then needs one plain
 `geography_entry_id` FK column, whereas three tables force either three nullable FKs with an
 app-level "exactly one is set" invariant, or a genuine polymorphic pivot. This repo has direct,
-expensive history with a polymorphic morph key — [ADR 0001](../../docs/decisions/0001-uuid-primary-keys.md)
+expensive history with a polymorphic morph key — [ADR 0001](../../../docs/decisions/0001-uuid-primary-keys.md)
 records the two-step config-rename-then-retype migration the UUID conversion needed just to keep
 `spatie/laravel-permission`'s *existing* morph column working. Introducing a second polymorphic
 relationship voluntarily, when a single FK avoids it, is not a trade this project should make.
@@ -297,7 +297,7 @@ boundaries.
       comunidad row, and every comunidad's `parent_id` resolves to the country "España".
 - [ ] Integration test: the landmark row "Gijón" resolves through its parent chain to "Asturias".
 - [ ] Edge case: a municipio name carrying accents or ñ ("A Coruña", "Ourense") round-trips
-      byte-for-byte. Note this runs on **SQLite** in CI ([database-strategy.md](../../docs/testing/backend/database-strategy.md));
+      byte-for-byte. Note this runs on **SQLite** in CI ([database-strategy.md](../../../docs/testing/backend/database-strategy.md));
       MySQL collation behaviour is a known untested gap, recorded in OQ-6, not silently assumed.
 - [ ] Edge case: a seeded row's `normalized_name` equals the shared normalizer applied to that
       row's own `name` — assert against a **call to the utility**, never against a hardcoded
@@ -317,7 +317,7 @@ boundaries.
       column. **Assert existence only, never performance.** A wall-clock budget is flaky on shared
       CI runners, and an `EXPLAIN`-shaped assertion is engine-coupled — the suite runs on SQLite
       while production is MySQL, so a plan proven on one planner says nothing about the other's.
-      This follows [what-not-to-test.md](../../docs/testing/qa/what-not-to-test.md)'s
+      This follows [what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md)'s
       framework/engine-internals principle; real picker latency belongs to story 0034 with
       realistic volume, not to a Pest assertion here.
 - [ ] Unit test (`tests/Unit/...`, mirroring wherever the CSV parsing helper lands): row/column
@@ -380,20 +380,20 @@ a purpose-built index.
       before this story is closed.
 
 ## Definition of Done
-- [ ] Tests written and green, plus the **full** suite per [contracts.md](../../docs/contracts.md)'s
+- [ ] Tests written and green, plus the **full** suite per [contracts.md](../../../docs/contracts.md)'s
       Full Test Suite Gate Rule.
 - [ ] Code reviewed (code-reviewer).
 - [ ] No security findings (appsec-auditor). Expected focus: that the bundled fixture is treated as
       trusted-but-validated input (a malformed row must fail closed, not write partial data), and
       that adding a seeder to the unconditional `DatabaseSeeder` path stays consistent with
-      [security/seeder-safety.md](../../docs/security/seeder-safety.md)'s production-reachability
+      [security/seeder-safety.md](../../../docs/security/seeder-safety.md)'s production-reachability
       reasoning.
 - [ ] Documentation updated (docs-keeper): a new `geography_entries` section plus ER-diagram entry
-      in [database/schema.md](../../docs/database/schema.md); the fixture/seeder convention in
-      [database/migrations.md](../../docs/database/migrations.md) if the chunked-upsert pattern is
+      in [database/schema.md](../../../docs/database/schema.md); the fixture/seeder convention in
+      [database/migrations.md](../../../docs/database/migrations.md) if the chunked-upsert pattern is
       worth generalizing; `database/data/` added to the directory listing in
-      [conventions/base-standards.md](../../docs/conventions/base-standards.md#directory-structure);
-      and an addendum to [ADR 0001](../../docs/decisions/0001-uuid-primary-keys.md) recording
+      [conventions/base-standards.md](../../../docs/conventions/base-standards.md#directory-structure);
+      and an addendum to [ADR 0001](../../../docs/decisions/0001-uuid-primary-keys.md) recording
       `geography_entries` as the one confirmed exception to the UUIDv7 policy, with the reason
       (high-volume internal lookup table, no independent business identity, never URL-exposed).
 - [ ] Acceptance criteria met.
@@ -434,7 +434,7 @@ permit bundling. Do **not** resolve either by inventing plausible values.
 recommended. The project-wide policy remains **UUIDv7 for every new Epic 2 business entity**; this
 catalog is the **one deliberate exception**, on three grounds: it is a pure high-volume internal
 lookup table (~8,300 rows), its entries have no independent business identity, and they are never
-exposed in a URL. [ADR 0001](../../docs/decisions/0001-uuid-primary-keys.md)'s rationale is
+exposed in a URL. [ADR 0001](../../../docs/decisions/0001-uuid-primary-keys.md)'s rationale is
 enumeration-safe identifiers *exposed publicly*, which does not apply here, while its accepted cost
 — a larger index/FK footprint — would land twice: once on the catalog's own PKs and again on every
 row of story 0033's zone pivot.
@@ -469,7 +469,7 @@ collation half still open)** Choose the table collation (`utf8mb4_0900_ai_ci` or
 the migration: changing it after FK-referenced data exists is a locking, costly `ALTER`. Note also
 that the suite runs on **SQLite** while production runs MySQL, so accent/case-folding behaviour is
 genuinely untested by CI. The `normalized_name` column exists precisely so that search correctness
-does not depend on collation — the same reasoning [errors-log.md](../../docs/errors-log.md) already
+does not depend on collation — the same reasoning [errors-log.md](../../../docs/errors-log.md) already
 records for the deleted-user token revocation query ("never let a case-insensitive collation be the
 thing that makes a query match").
 
@@ -493,7 +493,7 @@ utility; do not resolve them separately.
 - **A hardcoded municipio count is the most likely mistake in Phase 3** — see OQ-1.
 
 ## Provenance
-Written in Phase 1 (Three Amigos) on 2026-08-17 for Epic 2, from the [§2.4 Shipping](../../docs/PRD/PRD.md#24-shipping)
+Written in Phase 1 (Three Amigos) on 2026-08-17 for Epic 2, from the [§2.4 Shipping](../../../docs/PRD/PRD.md#24-shipping)
 section rewritten the same day. Participants: `product-owner`, `backend-expert`, `backend-qa`,
-`database-expert` (added per [workflow.md](../../docs/workflow.md)'s classification rule, since the
+`database-expert` (added per [workflow.md](../../../docs/workflow.md)'s classification rule, since the
 task creates a table and a seeder). No application code was written in this phase.
