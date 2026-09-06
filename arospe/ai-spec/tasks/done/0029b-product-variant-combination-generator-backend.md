@@ -384,7 +384,7 @@ doing less work, and the cap is that.
 
 | Considered | Verdict |
 | --- | --- |
-| A **dry-run / preview** seam (*"show me which rows would succeed before writing"*) | **Not here.** It is 0031's [OQ-5](../0031-product-variants-editor-ui.md#open-questions) and it is a read-only seam over 0029 **D-4.5**'s query; the `skipped`/`refused` summary already tells the administrator what happened *after* |
+| A **dry-run / preview** seam (*"show me which rows would succeed before writing"*) | **Not here.** It is 0031's [OQ-5](0031-product-variants-editor-ui.md#open-questions) and it is a read-only seam over 0029 **D-4.5**'s query; the `skipped`/`refused` summary already tells the administrator what happened *after* |
 | **All-or-nothing** refusal of the batch on any collision | **Rejected** — see **D-G2**. It defeats the "add a colour, generate the rest" case, which is the common one |
 | **Updating** an existing combination's price/stock while generating | **Rejected, firmly.** A generator that silently re-prices variants an administrator has already tuned is a data-loss bug wearing a convenience label. Skipping is the whole point |
 | A **delete-missing** / full-sync mode | **Rejected.** Variants are hard-deleted (0029 **D-6**, no `SoftDeletes`) and carry stock; a sync that deletes is unrecoverable by construction |
