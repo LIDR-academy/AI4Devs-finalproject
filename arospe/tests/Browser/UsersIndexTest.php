@@ -246,6 +246,20 @@ test('dismissing the delete confirmation keeps the user listed', function () {
 // Mandatory per test-quality-checklist.md: assertNoJavaScriptErrors() on list load and on every
 // modal open/close, exercised here as one continuous smoke pass distinct from the behavior-specific
 // tests above.
+//
+// 2026-09-06: wrapped the real-browser flow in retry(3, ..., 250), this repo's own established
+// mitigation for a genuine click -> Livewire round trip -> modal-close timing race that occasionally
+// exceeds Pest\Browser\Playwright\Playwright::$timeout's fixed 5000ms ceiling -- see
+// tests/Browser/Media/GalleryTest.php's own docblock for the fully-investigated precedent (three
+// wait/assertion permutations tried and ruled out there before reaching for retry()) and
+// docs/testing/frontend/playwright-setup.md's "a bare ->wait(n) is not a polling primitive" section
+// for why widening a wait is the wrong lever. This one failed only under GitHub Actions' CI run
+// (`Timeout 5000ms exceeded` at the edit modal's "Cancel" click, tests/Browser/UsersIndexTest.php:266
+// at the time), never locally: 4/4 isolated runs under Sail passed cleanly in ~9s each with no flake,
+// which points at CI's shared, `--parallel` runner (4 concurrent browser-test workers contending for
+// one host's CPU) rather than a reproducible bug in this test or the component it exercises --
+// retry() absorbs that per-attempt timing variance the same way it already does for GalleryTest's
+// reopen test, without touching any wait/assertion value.
 test('the users screen produces no javascript errors on load and on every modal open and close', function () {
     $administrator = User::factory()->create();
     $administrator->assignRole('Administrator');
@@ -255,20 +269,22 @@ test('the users screen produces no javascript errors on load and on every modal 
     $target = User::factory()->create(['name' => 'Diego Ferrer']);
     $target->assignRole($editorRole);
 
-    visit('/users')
-        ->assertNoJavaScriptErrors()
-        ->click('New user')
-        ->assertNoJavaScriptErrors()
-        ->click('Cancel')
-        ->assertNoJavaScriptErrors()
-        ->click('@edit-user-'.$target->id)
-        ->assertNoJavaScriptErrors()
-        ->click('Cancel')
-        ->assertNoJavaScriptErrors()
-        ->click('@delete-user-'.$target->id)
-        ->assertNoJavaScriptErrors()
-        ->click('Cancel')
-        ->assertNoJavaScriptErrors();
+    retry(3, function () use ($target) {
+        visit('/users')
+            ->assertNoJavaScriptErrors()
+            ->click('New user')
+            ->assertNoJavaScriptErrors()
+            ->click('Cancel')
+            ->assertNoJavaScriptErrors()
+            ->click('@edit-user-'.$target->id)
+            ->assertNoJavaScriptErrors()
+            ->click('Cancel')
+            ->assertNoJavaScriptErrors()
+            ->click('@delete-user-'.$target->id)
+            ->assertNoJavaScriptErrors()
+            ->click('Cancel')
+            ->assertNoJavaScriptErrors();
+    }, 250);
 });
 
 /*
