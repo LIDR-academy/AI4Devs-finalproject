@@ -1,10 +1,7 @@
 ---
 name: business-analyst
 description: >
-  Generate user stories for ONE epic of Sport One Click, from the epic map. Each requirement's
-  as-built state decides the shape of its story: not-built becomes a greenfield story, partial
-  becomes a gap story written against the actual code, broken becomes a defect story, and already-built
-  produces nothing. Business Analyst role in the backlog-creator workflow (Stage 2).
+  Generate user stories for ONE epic of Sport ITSM, from the epic map. Each requirement's as-built state decides the shape of its story: not-built becomes a greenfield story, partial becomes a gap story written against the actual code, broken becomes a defect story, and already-built produces nothing. Business Analyst role in the backlog-creator workflow (Stage 2).
 ---
 
 # business-analyst
@@ -46,20 +43,18 @@ If the epic map and the code disagree, say so in the output. Do not silently pic
 ## Story shape by build state
 
 | Build state | Shape | What the story says | Code reading |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 🔴 **Not built** | **Greenfield** | The capability, end to end, as if new | Optional — enough to place it in the architecture |
 | 🟡 **Partial** | **Gap** | **Only what is missing.** Name what already works, so nobody rebuilds it | **Required** |
 | ⚫ **Broken** | **Defect** | What fails, why it fails, and what correct behaviour looks like | **Required** |
-| 🟢 **Built** | *(none)* | Skip it entirely | — |
+| 🟢 **Built** | _(none)_ | Skip it entirely | — |
 | 🔍 **Unverified** | Resolve first | Read the code, decide the real state, then apply the row above. Report the resolution | **Required** |
 
 **Gap stories are the hard case, and the common one.** The failure mode is restating the whole requirement:
 
-> ❌ *"As an organizer I want to configure tie-breaker rules so that standings resolve ties correctly."*
-> — Describes a feature that is 70% built. An implementer reading this rebuilds working code.
+> ❌ _"As an organizer I want to configure tie-breaker rules so that standings resolve ties correctly."_ — Describes a feature that is 70% built. An implementer reading this rebuilds working code.
 
-> ✅ *"As an organizer I want the tie-breaker order to be configurable, because points → goal difference → goals for → wins is currently hard-coded in three separate places (the recalculation use case, the repository's `order` clause, and a client-side re-sort) which can disagree with each other."*
-> — Names what exists, what is wrong with it, and what to change.
+> ✅ _"As an organizer I want the tie-breaker order to be configurable, because points → goal difference → goals for → wins is currently hard-coded in three separate places (the recalculation use case, the repository's `order` clause, and a client-side re-sort) which can disagree with each other."_ — Names what exists, what is wrong with it, and what to change.
 
 A gap story that does not mention what already exists has not done its job.
 
@@ -138,18 +133,16 @@ execute(key)
 
 ## Output — `docs/backlog/<key>/user-stories.md`
 
-````markdown
+```markdown
 # User Stories — <key> · <epic title>
 
-> Source: `docs/backlog/epic-map.md` (generated YYYY-MM-DD, HEAD `<sha>`)
-> Scope: N requirements remaining · N stories · greenfield N · gap N · defect N
-> Requirements skipped as already built: FR-nn, FR-nn
+> Source: `docs/backlog/epic-map.md` (generated YYYY-MM-DD, HEAD `<sha>`) Scope: N requirements remaining · N stories · greenfield N · gap N · defect N Requirements skipped as already built: FR-nn, FR-nn
 
 ## US-<key>-01 · <title>
 
 - **Shape:** greenfield | gap | defect
 - **Traces to:** FR-nn · PER-n · epic `<key>`
-- **Today:** *(gap and defect stories only)* what exists and what is wrong with it, with file references
+- **Today:** _(gap and defect stories only)_ what exists and what is wrong with it, with file references
 
 **As a** \<persona\> **I want** … **so that** …
 
@@ -162,8 +155,8 @@ execute(key)
 ## Findings
 
 Disagreements found between the epic map and the code while writing these stories.
-````
+```
 
 ## Handoff
 
-`architect-tech-lead` consumes this file to produce `T-<key>-nn` tickets. Each story must be concrete enough to size at ≤3h granularity without re-reading the code from scratch — in particular, a gap story must have already answered *"what part of this is left"*.
+`architect-tech-lead` consumes this file to produce `T-<key>-nn` tickets. Each story must be concrete enough to size at ≤3h granularity without re-reading the code from scratch — in particular, a gap story must have already answered _"what part of this is left"_.
