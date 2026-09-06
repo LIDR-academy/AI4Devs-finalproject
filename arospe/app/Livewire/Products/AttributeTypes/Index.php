@@ -103,6 +103,23 @@ class Index extends Component
     public int $deletingTypeUsageCount = 0;
 
     /**
+     * How many product variants each currently-loaded value row backs,
+     * keyed by value id (story 0030a). Populated once by openEditModal()
+     * via ProductAttributeValue::variantUsageCounts() -- one bulk query,
+     * never one query per row. Deliberately a SEPARATE #[Locked] property
+     * rather than a key inside $values: $values is this component's one
+     * deliberately client-writable, un-#[Locked] property (see its own
+     * docblock), and putting a server-derived count there would have
+     * contradicted the "every server-derived property is #[Locked]" rule
+     * this class already follows for $types, and forced the view's
+     * existing @continue guard to also check a new key.
+     *
+     * @var array<string, int>
+     */
+    #[Locked]
+    public array $valueUsageCounts = [];
+
+    /**
      * Mount the component.
      *
      * Deliberately left unlogged, matching every other module screen's
@@ -133,7 +150,13 @@ class Index extends Component
     {
         $logRefusedPrivilegedAttempt->authorize('create', ProductAttributeType::class, targetType: 'product_attribute_type');
 
-        $this->reset(['editingTypeId', 'name', 'values']);
+        $this->reset(['editingTypeId', 'name', 'values', 'valueUsageCounts']);
+        // Phase 4 audit (0030a, finding L-1): the modal can be dismissed via its
+        // wire:model-bound $showModal directly (X / click-outside), bypassing
+        // closeModal() entirely -- Livewire persists the error bag across that
+        // round trip, so a stale 'sku'/'values' message from a PREVIOUS type's
+        // refused save would otherwise render here against an unrelated type.
+        $this->resetValidation();
         $this->showModal = true;
     }
 
@@ -167,6 +190,11 @@ class Index extends Component
                 'value' => $value->value,
             ])
             ->all();
+        $this->valueUsageCounts = ProductAttributeValue::variantUsageCounts($target->values->pluck('id')->all());
+        // Phase 4 audit (0030a, finding L-1): see openCreateModal()'s identical
+        // resetValidation() -- without it, a stale 'sku'/'values' error from a
+        // previously refused save on a DIFFERENT type renders here on reopen.
+        $this->resetValidation();
         $this->showModal = true;
     }
 
@@ -340,7 +368,7 @@ class Index extends Component
     public function closeModal(): void
     {
         $this->showModal = false;
-        $this->reset(['editingTypeId', 'name', 'values']);
+        $this->reset(['editingTypeId', 'name', 'values', 'valueUsageCounts']);
         $this->resetValidation();
     }
 

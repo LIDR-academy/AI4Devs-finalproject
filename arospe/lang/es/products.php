@@ -59,6 +59,9 @@ return [
         'value_in_use' => 'Este valor no se puede eliminar: lo utiliza :count variante.|Este valor no se puede eliminar: lo utilizan :count variantes.',
         'type_in_use' => 'Este tipo no se puede eliminar: lo utiliza :count variante.|Este tipo no se puede eliminar: lo utilizan :count variantes.',
 
+        // Historia 0030a -- clave por clave idéntico a lang/en/products.php.
+        'rename_notice' => 'Renombrar este valor actualizará el SKU de :count variante.|Renombrar este valor actualizará el SKU de :count variantes.',
+
         // Historia 0029b -- clave por clave idéntico a lang/en/products.php.
         'generate' => [
             'empty_type' => 'El tipo de atributo ":type" no tiene valores, por lo que no se puede usar para generar combinaciones.',

@@ -261,6 +261,34 @@
                                         `name` prop use, so this outlet needs no extra wiring. See
                                         the task file's runtime trap 2. --}}
                                         <flux:error name="values.{{ $index }}.value" />
+
+                                        {{-- Story 0030a: a non-blocking, informational notice for
+                                        any row already backing at least one product variant --
+                                        rendered unconditionally whenever the count is positive,
+                                        not only after the text is edited (OQ-C), since the count
+                                        is a property of the STORED value and cannot change
+                                        mid-edit. Read via the same is_string() guard the row's own
+                                        $rowHook above already uses -- NOT the bare
+                                        `$valueUsageCounts[$row['id']] ?? 0` expression, which
+                                        raises a PHP deprecation notice on every addValue()-created
+                                        row (no 'id' key at all, so `$row['id']` on the left of `??`
+                                        is itself the undefined-key access). --}}
+                                        @php
+                                            $rowUsageCount = is_string($row['id'] ?? null) ? ($valueUsageCounts[$row['id']] ?? 0) : 0;
+                                        @endphp
+                                        @if ($rowUsageCount > 0)
+                                            {{-- Phase 5 review (0030a, finding 1): keyed on $rowHook,
+                                            not the row's UI-only `key` -- $rowHook is provably
+                                            $row['id'] here (the notice only renders when
+                                            is_string($row['id']) already held above), matching every
+                                            other hook in this repeater and docs/api/routes.md's own
+                                            stated convention: a test that seeded the fixture knows
+                                            the persisted id ahead of time, never the fresh UUID `key`
+                                            minted on every openEditModal()/addValue() call. --}}
+                                            <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400" data-test="value-in-use-notice-{{ $rowHook }}">
+                                                {{ trans_choice('products.variants.rename_notice', $rowUsageCount, ['count' => $rowUsageCount]) }}
+                                            </flux:text>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
@@ -274,6 +302,30 @@
                         @error('productCategoryId') pattern for its own in-use block. --}}
                         @error('values')
                             <flux:callout variant="danger" icon="x-circle" heading="{{ $message }}" data-test="attribute-type-value-in-use" />
+                        @enderror
+
+                        {{-- Story 0030a: a single, generic outlet for EVERY sku-keyed refusal the
+                        rename cascade can throw (App\Actions\Products\SyncProductAttributeValues::
+                        reDeriveVariantSkusForRenamedValues(), already shipped in story 0029) --
+                        derived_sku_taken, derived_sku_empty_segment, derived_sku_too_long, or the
+                        translated unique-violation race message. No per-message branching is
+                        needed: whichever one save() throws lands in the 'sku' error bag key and
+                        renders here verbatim. Styled identically to the two existing precedents
+                        immediately above/below this one in this file
+                        (@error('values') / @error('productAttributeTypeId')), with one deliberate
+                        difference: `:heading="$message"` (colon-bound), not `heading="{{ $message }}"`
+                        -- Phase 5 review (0030a, finding 2) found the double-brace form double-HTML-
+                        encodes any quote character in $message under this Flux-folded tag (verified
+                        by Blade::render() execution), which surfaces on derived_sku_empty_segment
+                        specifically since it is the only one of the four sku-keyed messages whose
+                        own copy contains a literal quote. The colon-bound form renders correctly
+                        AND stays fully escaped -- re-verified with a <script> probe through $message,
+                        which still comes back HTML-entity-escaped. Never switch this to `{!! !!}`:
+                        the interpolated :value segment is unrestricted, unsanitized attribute-value
+                        text (attributeValueRules() enforces only max:100/distinct:ignore_case, no
+                        character allow-list), so unescaped output here would be stored XSS. --}}
+                        @error('sku')
+                            <flux:callout variant="danger" icon="x-circle" :heading="$message" data-test="attribute-type-rename-sku-collision" />
                         @enderror
 
                         <flux:button variant="ghost" size="sm" icon="plus" wire:click="addValue" data-test="add-value">

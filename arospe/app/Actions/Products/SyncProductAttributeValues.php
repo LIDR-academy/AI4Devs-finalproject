@@ -281,6 +281,15 @@ class SyncProductAttributeValues
                 // write, via the shared translator -- a race that slips past the pre-check above
                 // still surfaces as a clean products.variants.duplicate_combination-family
                 // ValidationException rather than an uncaught database exception.
+                //
+                // Phase 4 audit (0030a, finding L-2): the translator's OTHER branch
+                // (combination-hash index -> a 'combination'-keyed message) is unreachable from
+                // THIS call site specifically, because the UPDATE above writes only
+                // sku/updated_at and never touches product_id/combination_hash -- so only the
+                // sku-uniqueness index can be the one that raced. If this UPDATE's column list
+                // ever grows to include either of those two columns, re-check whether
+                // AttributeTypes\Index's view needs a 'combination'-keyed outlet too, or that
+                // refusal will be silently discarded exactly like the 'sku' one was before 0030a.
                 throw ($this->translateProductVariantUniqueViolation)($e, $newSku);
             }
         }

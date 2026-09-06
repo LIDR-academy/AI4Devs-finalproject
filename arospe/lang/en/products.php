@@ -66,6 +66,10 @@ return [
         'value_in_use' => 'This value cannot be removed: :count variant uses it.|This value cannot be removed: :count variants use it.',
         'type_in_use' => 'This type cannot be deleted: :count variant uses it.|This type cannot be deleted: :count variants use it.',
 
+        // Story 0030a -- the non-blocking, informational per-row notice on the attribute types
+        // screen's value repeater, shown before a rename is even attempted.
+        'rename_notice' => 'Renaming this value will update the SKU of :count variant.|Renaming this value will update the SKU of :count variants.',
+
         // Story 0029b -- the cartesian combination generator. `summary` is a trans_choice over
         // the created count for 0031's own result-table UI -- this backend-only story never
         // calls it itself, but the action's whole outcome contract (D-G1) is this vocabulary.
