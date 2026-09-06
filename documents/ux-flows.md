@@ -472,6 +472,12 @@ flowchart TD
 **Estado: implementado.** La autoprotección del admin es una regla que conviene
 explicar en la interfaz *antes* del intento, no como error después.
 
+> **Corrección del 2026-09-06.** Este flujo daba el alta por hecha, y solo lo estaba a
+> medias: `POST /api/employees` existía con su permiso y su auditoría desde el bloque
+> 8, pero la pantalla no tenía formulario — crear un operador exigía llamar al endpoint
+> a mano. Ya lo tiene. Dice además lo que la API no puede decir: que la contraseña
+> inicial hay que **entregarla en persona**, porque no se manda ningún correo.
+
 ---
 
 ## 6. El sistema como actor invisible

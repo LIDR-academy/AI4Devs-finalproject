@@ -1475,3 +1475,44 @@ El E2E no completa el circuito a propósito: el token no viaja por HTTP y expone
 para los tests" sería regalar una puerta trasera — el camino feliz se prueba donde el
 doble del transporte sí ve el mensaje.
 
+---
+
+### [2026-09-06] — El alta de personal existía en la API, pero no en la pantalla
+
+**Prompt:** "¿Cómo un admin da de alta un nuevo operador?" → "Añade el formulario."
+
+**Resumen.** La pregunta destapó un hueco que la documentación no reflejaba. `POST
+/api/employees` existía desde el bloque 8 —con el permiso `employee.manage`
+comprobado en el **caso de uso** y no solo en la ruta, hash argon2id de la contraseña
+y `AuditLog` con `employee.created`—, pero la pantalla `/backoffice/empleados` solo
+listaba, cambiaba el rol y suspendía. Su único `fetch` era el `PATCH` de cada fila.
+Un admin que entrara por la interfaz **no podía crear un operador**: tenía que llamar
+al endpoint a mano. Y `ux-flows.md` §A2 daba el flujo por "implementado", con "Alta de
+empleado con rol" dibujada en el diagrama.
+
+**Sin cambio de OpenSpec.** La spec `accounts-roles` ya dice que el admin "gestiona
+empleados" y el PRD ya tiene UC-B13 ("crea, modifica y desactiva"): esto no es un
+requisito nuevo, es un hueco de implementación. Inventar un change para taparlo habría
+sido ceremonia.
+
+**Lo que decidió la pantalla.** La contraseña inicial se muestra **en claro**: no es la
+del admin, tiene que **leerla para entregarla**, y ocultarla solo conseguiría que la
+copiara mal y nadie lo notara hasta el primer acceso fallido. El rol por defecto es
+**operador** —un admin de más reparte permisos que luego hay que quitar a mano—. El
+email repetido llega como error de campo (`errors[]`, RFC 9457) y se pinta junto al
+suyo **sin vaciar el formulario**: reescribir cuatro campos por una colisión sería
+castigar al admin por los tres que tenía bien. Y la pantalla dice lo que la API no
+puede decir — que la contraseña se entrega **en persona**, porque no se manda ningún
+correo (el adaptador de esta entrega escribe al log).
+
+**Lo que sigue sin poder hacer un admin:** reponer la contraseña de un empleado
+existente. Es la misma exclusión deliberada del cambio `recuperar-contrasena`: quien
+puede fijar credenciales ajenas tiene una puerta trasera. Para eso está el enlace.
+
+**Probado como formulario de admin, no en E2E**, por la misma razón escrita en
+`configuracion-forms.test.tsx`: crear un empleado de verdad dejaría una cuenta más en
+la base compartida en **cada** ejecución de la suite, y la semilla no limpia lo que no
+ha creado ella. La pantalla ya pasa por la auditoría `axe` del E2E. **Verificación:**
+`tsc`, `eslint`, **450 unitarios** (9 nuevos) y **53 E2E** en verde. Sincronizados
+`readme.md` §1.2 y §2.6, `PRD.md` §4.1, `ux-flows.md` §A2 (con la corrección fechada de
+lo que daba por hecho) y `AGENTS.md`.

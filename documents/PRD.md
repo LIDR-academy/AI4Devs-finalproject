@@ -62,6 +62,11 @@ realizó y **cuándo** (auditoría).
   aceptación de condiciones (texto *lorem ipsum* en el MVP).
 - Actualizar la dirección de envío afecta a envíos futuros, no a los ya
   registrados.
+- **Alta de personal (solo admin).** El admin crea cuentas de operador o de
+  administrador desde el back-office, con una contraseña inicial que **entrega él en
+  persona**: no hay invitación por correo. Puede cambiar el rol de un empleado o
+  suspenderlo, pero **no reponer la contraseña de nadie** — para eso está el enlace de
+  recuperación. Toda alta y todo cambio de rol quedan en auditoría.
 - **Recuperar el acceso.** Quien olvida su contraseña pide desde el login un enlace
   a la dirección de su cuenta: un solo uso, caducidad de 1 hora, y al gastarse se
   cierran todas las sesiones abiertas. La respuesta a la solicitud es **la misma

@@ -119,7 +119,9 @@ y pide el siguiente—.
   no hay devoluciones ni saldo pendientes.
 - **Back-office y administración:** gestión del ciclo de vida de las copias
   (alta, recepción, inspección, higienización, marcado de incompletas/dañadas),
-  con **baja de copias exclusiva de admin** y configuración de reglas
+  con **baja de copias exclusiva de admin**, **gestión del personal** (alta de
+  operadores y admins, cambio de rol y suspensión — solo admin) y configuración de
+  reglas
   (precios, bono de cola, ventana de confirmación, antigüedad mínima, límite de
   colas, recordatorios de retención). **Auditoría quién/cuándo** en toda
   transición de estado y acción administrativa.
@@ -695,7 +697,7 @@ original fue de estabilidad: el pool de compilación de `next dev` se caía bajo
 de varios navegadores y dejaba el servidor devolviendo 500 en unas rutas y colgando
 otras. `E2E_DEV=1` conserva el objetivo antiguo para iterar sobre una pantalla.
 
-> **Estado: en verde.** **441 tests unitarios y de integración** en 32 ficheros
+> **Estado: en verde.** **450 tests unitarios y de integración** en 33 ficheros
 > (`npm test`) y **53 E2E** en 11 ficheros (`npm run test:e2e`): 49 en escritorio y
 > los 4 del *smoke* repetidos en un viewport de móvil — el recorrido completo se
 > queda fuera del proyecto móvil a propósito, porque comparte la base sembrada con

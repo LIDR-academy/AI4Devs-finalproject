@@ -1257,6 +1257,27 @@ project. Read it at the start of every session.
   directorio: para verificar sin tocar el servidor del usuario, `npm run build` +
   `start:standalone` en otro puerto.
 
+- **Alta de personal desde la pantalla (2026-09-06):** `/backoffice/empleados` tenía
+  lista, cambio de rol y suspensión, pero **no formulario de alta** — `POST
+  /api/employees` existía desde el bloque 8 con su permiso `employee.manage` y su
+  `AuditLog`, y crear un operador exigía llamarlo a mano. `ux-flows.md` §A2 daba el
+  flujo por "implementado" y era falso; ahora lo es. No hay cambio de OpenSpec: la
+  spec `accounts-roles` ya dice que el admin "gestiona empleados", así que esto es un
+  hueco de implementación, no un requisito nuevo.
+  **Decisiones de la pantalla:** la contraseña inicial se pinta **en claro**
+  (`type="text"`) porque el admin tiene que leerla para entregarla —no es la suya, y
+  ocultarla solo lograría que la copiara mal—; **rol por defecto OPERATOR**; el email
+  repetido llega como `errors[]` y se pinta junto al campo **sin vaciar** lo escrito.
+  La pantalla dice que la contraseña se entrega **en persona**: no hay invitación por
+  correo, y con el adaptador al log no llegaría a nadie. El admin sigue **sin poder
+  reponer** la contraseña de un empleado existente — eso es el enlace de recuperación,
+  y que un tercero pueda fijar credenciales ajenas es una puerta trasera.
+  **Probado como formulario de admin, no en E2E** (misma razón que
+  `configuracion-forms.test.tsx`: crearía una cuenta más en la base compartida en cada
+  ejecución). La pantalla ya pasa por la auditoría `axe` del E2E.
+  **Verificado en verde:** `tsc --noEmit`, `eslint .`, `vitest run` (450, 9 nuevos),
+  `next build` y `npm run test:e2e` (53).
+
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → **Vercel +
 Supabase** (`ADR-0003`, 2026-08-22, sustituye la VM única de `ADR-0001` §5); auth →

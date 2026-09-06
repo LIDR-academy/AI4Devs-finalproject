@@ -9,6 +9,7 @@ import { prismaBackofficeRepository } from "@/repositories/backoffice.repository
 import { listEmployees } from "@/use-cases/backoffice/manage-backoffice";
 
 import { EmployeeControls } from "./employee-controls";
+import { NewEmployeeForm } from "./new-employee-form";
 
 export const metadata = { title: "Personal" };
 
@@ -30,6 +31,8 @@ export default async function EmployeesPage() {
           Operadores y administradores con acceso al back-office.
         </p>
       </div>
+
+      <NewEmployeeForm />
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[36rem] text-sm">
