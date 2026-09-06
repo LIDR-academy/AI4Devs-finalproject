@@ -175,6 +175,9 @@ Seguridad de la cuenta: se ha pedido restablecer la contraseña, la contraseña 
 cambiado (ninguno lleva el enlace dentro — sirven para detectar un intento ajeno).
 
 ### 4.7 Otras funcionalidades del suscriptor
+- **Buzón de avisos**: lista de los avisos recibidos, que se marcan como leídos uno
+  a uno o **todos de una vez**. "Todos" son todos los del usuario, no solo los que
+  quepan en la pantalla.
 - **"Mis sets"**: vista con los sets actualmente en préstamo, histórico de
   alquileres pasados y posición en la(s) cola(s) activa(s).
 - **Cancelación (camino feliz)**: solo cuando el suscriptor no tiene ninguna

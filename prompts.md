@@ -1695,3 +1695,44 @@ calendario e ignora la hora. Ninguna de las dos se veía leyendo el código.
 **Verificación:** 474 unitarios (7 nuevos) y 56 E2E en verde, con un recorrido que
 comprueba que la marca se ve **sin sesión** y que a Bruno —el fixture del suscriptor
 reciente— la ficha le da la fecha.
+
+---
+
+### [2026-09-07] — Marcar todos los avisos como leídos
+
+**Prompt:** "En el formulario avisos de suscriptor, añadir botón/API para marcar todos
+los avisos como leídos."
+
+**Resumen.** `POST /api/notifications/read` y un botón en `/portal/avisos`. Tres
+decisiones que no venían dadas por el encargo:
+
+**El botón dice cuántos** ("Marcar los 24 como leídos") en vez de un "marcar todos"
+seco. La lista viene recortada a 50 y el servidor marca **todos** los que haya: sin el
+número, quien tuviera sesenta avisos no sabría si pulsar afecta a lo que ve o a lo que
+no. Y **no se pinta si no hay ninguno sin leer**: un botón que no puede cambiar nada es
+ruido en una pantalla que ya trae un botón por fila.
+
+**Cero no es un error, y eso lo separa del marcado individual**, que responde 404
+cuando el aviso ya estaba leído. Allí quien llama señaló una fila concreta y se
+encontró con que no había nada que cambiar; aquí pidió "deja el buzón a cero", y un
+buzón que ya está a cero cumple exactamente lo pedido. Se devuelve el recuento para que
+la pantalla no tenga que contarlo.
+
+**El destinatario sale de la sesión y el endpoint no tiene cuerpo**: no existe el
+parámetro con el que pedir el buzón de otro. Es la misma forma que el marcado
+individual, donde el `userId` viaja dentro del `WHERE` en vez de en una comprobación
+previa que se pueda olvidar. Y el `readAt: null` del `WHERE` acota lo que se toca a lo
+que de verdad cambia: sin él, volver a pulsar reescribiría la fecha de lectura de
+avisos leídos hace semanas.
+
+**Probado como componente y no en E2E**, por la razón de siempre en este proyecto:
+vaciar un buzón es un cambio sobre la base compartida, y las únicas cuentas con avisos
+son las del historial sembrado — marcarlos en una ejecución los dejaría leídos para la
+siguiente. La verificación real se hizo a mano contra el servidor con la cuenta de
+Bruno (24 marcados, 0 en la segunda llamada, 401 sin sesión) y **se revirtió después**:
+el lote comparte instante exacto de marcado, así que devolver esas 24 filas a "sin
+leer" fue exacto.
+
+**Hueco anotado, no tapado:** la spec `notifications` no dice nada del buzón —ni del
+marcado individual, que es anterior a este cambio—; solo describe qué avisos se
+generan. Queda pendiente de decidir si se formaliza.

@@ -49,6 +49,9 @@ class FakeNotificationRepository implements NotificationRepository {
   async markRead() {
     return true;
   }
+  async markAllRead() {
+    return 0;
+  }
 }
 
 const EVENTS: DomainEvent[] = [

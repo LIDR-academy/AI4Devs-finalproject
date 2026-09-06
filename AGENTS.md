@@ -1377,6 +1377,22 @@ project. Read it at the start of every session.
   **Verificado en verde:** `tsc`, `eslint`, `vitest run` (474), `next build` y
   `npm run test:e2e` (56).
 
+- **Marcar todos los avisos como leídos (2026-09-07):** `POST /api/notifications/read`
+  y botón en `/portal/avisos`, que solo aparece si hay algo que marcar y **dice
+  cuántos** — la lista viene recortada a 50 y el servidor marca todos los que haya, así
+  que sin el número no se sabría si pulsar afecta a lo que se ve o a lo que no. El
+  destinatario sale de la **sesión**, nunca del cuerpo: no existe el parámetro con el
+  que pedir el buzón de otro. `readAt: null` en el `WHERE` acota lo que se toca a lo que
+  cambia, para no reescribir la fecha de lectura de avisos viejos.
+  **Cero no es error aquí, a diferencia del marcado individual** (que responde 404 si ya
+  estaba leído): allí se señaló una fila concreta, aquí se pidió "deja el buzón a cero"
+  y un buzón ya vacío cumple lo pedido.
+  Probado como componente y no en E2E: vaciar un buzón es un cambio sobre la base
+  compartida y las únicas cuentas con avisos son las del historial sembrado.
+  **La spec `notifications` no dice nada del buzón** —ni del marcado individual, que es
+  anterior—: solo describe qué avisos se generan. Queda como hueco conocido, pendiente
+  de decidir si se formaliza.
+
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → **Vercel +
 Supabase** (`ADR-0003`, 2026-08-22, sustituye la VM única de `ADR-0001` §5); auth →

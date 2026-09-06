@@ -3,7 +3,7 @@ import { requireSurfacePage } from "@/http/auth-context";
 import { notificationLabel } from "@/lib/status";
 import { prismaNotificationRepository } from "@/repositories/notification.repository.prisma";
 
-import { MarkReadButton } from "./notification-actions";
+import { MarkAllReadButton, MarkReadButton } from "./notification-actions";
 
 export const metadata = { title: "Avisos" };
 
@@ -18,11 +18,19 @@ const DATE = new Intl.DateTimeFormat("es-ES", { dateStyle: "medium", timeStyle: 
  */
 export default async function PortalAvisosPage() {
   const { user } = await requireSurfacePage("portal");
-  const notifications = await prismaNotificationRepository.listForUser(user.id);
+  const [notifications, unread] = await Promise.all([
+    prismaNotificationRepository.listForUser(user.id),
+    // Se cuenta en la base y no sobre la lista: la lista viene recortada a 50, y el
+    // botón dice "marcar los N" sobre lo que el servidor va a marcar de verdad.
+    prismaNotificationRepository.countUnread(user.id),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold tracking-tight">Avisos</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold tracking-tight">Avisos</h1>
+        <MarkAllReadButton unread={unread} />
+      </div>
 
       {notifications.length === 0 ? (
         <p className="text-sm text-[var(--muted-foreground)]">Nada nuevo.</p>

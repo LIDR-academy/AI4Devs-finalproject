@@ -56,6 +56,16 @@ export const prismaNotificationRepository: NotificationRepository = {
     return prisma.notification.count({ where: { userId, readAt: null } });
   },
 
+  async markAllRead({ userId, at }) {
+    const { count } = await prisma.notification.updateMany({
+      // `readAt: null` acota lo que se toca a lo que de verdad cambia: sin él, volver
+      // a pulsar reescribiría la fecha de lectura de avisos leídos hace semanas.
+      where: { userId, readAt: null },
+      data: { readAt: at },
+    });
+    return count;
+  },
+
   async markRead({ notificationId, userId, at }) {
     // El `userId` va en el WHERE, no en una comprobación previa: así es imposible
     // marcar como leída la notificación de otro, ni siquiera por un fallo de lógica.

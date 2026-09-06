@@ -42,4 +42,12 @@ export interface NotificationRepository {
 
   /** Marca como leída una notificación **del propio usuario**. */
   markRead(input: { notificationId: string; userId: string; at: Date }): Promise<boolean>;
+
+  /**
+   * Marca como leídos **todos** los avisos sin leer del usuario y devuelve cuántos
+   * eran. Es una sola sentencia, no un bucle sobre lo que la pantalla enseña: quien
+   * tiene más avisos que los que caben en la lista espera que "todos" signifique
+   * todos.
+   */
+  markAllRead(input: { userId: string; at: Date }): Promise<number>;
 }
