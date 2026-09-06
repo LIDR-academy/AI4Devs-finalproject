@@ -1,9 +1,9 @@
 ---
 document: stack_manifest
-version: 1.13.0
+version: 1.14.0
 status: approved
 approved_by: "Jose Lacruz <lacruzjd@gmail.com>"
-approved_at: "2026-09-02"
+approved_at: "2026-09-05"
 authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agentes IA"
 ---
 
@@ -64,6 +64,7 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **Estilos** | Vanilla CSS + CSS Modules | — | Sin Tailwind ni CSS-in-JS. Tokens y utilidades compartidas en `index.css`; estilos de un solo componente en `Componente.module.css` colocado junto al `.tsx` |
 | **Touch Targets** | — | — | Mínimo **48px** (WCAG 2.1 AAA) |
 | **Offline Queue** | IndexedDB | — | Para operaciones sin conexión |
+| **Escaneo de Código de Barras** | @zxing/browser | **0.2.1** | Peer `@zxing/library@^0.23.0`. MIT. Decodifica vía `getUserMedia`+`canvas` (EAN-13/UPC-A/Code128) — funciona igual en Chrome, Safari y Firefox, sin depender de la `BarcodeDetector` nativa (soporte parcial, ausente en Safari/iOS). Un único camino de código, sin fallback que mantener (`US-032`/`TK-119-FE`, decisión humana 2026-09-05, Guard 24) |
 
 ---
 

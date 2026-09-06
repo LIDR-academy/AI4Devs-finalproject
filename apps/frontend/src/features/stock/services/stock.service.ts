@@ -64,6 +64,8 @@ export interface InsumoItem {
   warehouseStock: string;
   stockByLocation?: StockByLocationEntry[];
   unitCost?: string | null;
+  /** US-032: código de barras opcional, usado por el escaneo en extracción de bodega. */
+  barcode?: string | null;
 }
 
 export interface CreateInsumoDTO {
@@ -73,6 +75,8 @@ export interface CreateInsumoDTO {
   unitCost?: string;
   /** US-025: sub-sector de bodega donde queda depositado el stock inicial. */
   storageLocationId: string;
+  /** US-032: código de barras opcional, para preselección posterior vía escaneo. */
+  barcode?: string;
 }
 
 export interface RestockInsumoDTO {

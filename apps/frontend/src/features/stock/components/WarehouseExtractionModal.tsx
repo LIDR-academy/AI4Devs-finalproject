@@ -6,6 +6,7 @@ import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ModalFooterActions } from '../../../shared/components/ModalFooterActions.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import { BarcodeScannerButton } from '../../../shared/components/BarcodeScannerButton.js';
 import { mapToUserFriendlyError } from '../../../shared/utils/errorMessageMapper.js';
 import { DecimalQuantity } from '../../../shared/domain/DecimalQuantity.js';
 import {
@@ -35,6 +36,10 @@ interface Insumo {
       extracción falla con 422 (bug real reportado: leche 10L en Cámara de Congelados,
       Bodega de Secos con 0). */
   stockByLocation: StockByLocationEntry[];
+  /** US-032: código de barras, ya incluido en la respuesta de GET /stock/insumos —
+      permite matchear el escaneo contra el catálogo ya cargado en memoria, sin una
+      segunda llamada de red (TK-119-FE, revisión adversarial). */
+  barcode: string | null;
 }
 
 function stockAtSector(insumo: Insumo | undefined, storageLocationId: string): DecimalQuantity {
@@ -656,6 +661,7 @@ function useAvailableInsumos(isOpen: boolean): AvailableInsumosState {
             stock: Number(i.warehouseStock),
             unit: i.unitOfMeasure,
             stockByLocation: i.stockByLocation ?? [],
+            barcode: i.barcode ?? null,
           }))
         );
       })
@@ -673,6 +679,29 @@ function useAvailableInsumos(isOpen: boolean): AvailableInsumosState {
   }, [isOpen, reloadNonce]);
 
   return { insumos, loading, error, reload: () => setReloadNonce((n) => n + 1) };
+}
+
+// US-032/TK-119-FE: el componente de escaneo no sabe nada de insumos, solo emite el
+// código decodificado. GET /stock/insumos (useAvailableInsumos) ya trae `barcode` por
+// insumo con el mismo mapper que el endpoint dedicado de búsqueda — matchear contra el
+// catálogo ya cargado en memoria evita una segunda llamada de red por cada escaneo y,
+// de paso, garantiza que el insumo encontrado SIEMPRE está entre las opciones del
+// selector manual (revisión adversarial: una búsqueda de servidor independiente podía,
+// en teoría, devolver un id ausente del catálogo ya renderizado).
+function useBarcodeScan(insumos: Insumo[], onMatch: (insumoId: string) => void) {
+  const [scanError, setScanError] = useState<string | null>(null);
+
+  const handleScan = (barcode: string) => {
+    const insumo = insumos.find((i) => i.barcode === barcode);
+    if (insumo) {
+      setScanError(null);
+      onMatch(insumo.id);
+    } else {
+      setScanError('Código no encontrado — solicita a un Administrador que lo dé de alta.');
+    }
+  };
+
+  return { scanError, handleScan };
 }
 
 const InsumosLoadError: React.FC<{ message: string; onRetry: () => void; onClose: () => void }> = ({ message, onRetry, onClose }) => (
@@ -696,6 +725,7 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
 }) => {
   const insumosState = useAvailableInsumos(isOpen);
   const form = useExtractionForm(insumosState.insumos, onSuccess, onClose);
+  const { scanError, handleScan } = useBarcodeScan(insumosState.insumos, form.bind.onInsumoChange);
 
   if (!isOpen) return null;
 
@@ -716,6 +746,8 @@ export const WarehouseExtractionModal: React.FC<WarehouseExtractionModalProps> =
         <ErrorBanner message="No hay insumos de bodega disponibles para extraer." />
       ) : (
         <>
+          <BarcodeScannerButton onScan={handleScan} />
+          {scanError && <ErrorBanner message={scanError} />}
           {form.error && <ErrorBanner message={form.error} />}
           <ExtractionForm insumos={insumosState.insumos} onCancel={onClose} {...form.bind} />
         </>

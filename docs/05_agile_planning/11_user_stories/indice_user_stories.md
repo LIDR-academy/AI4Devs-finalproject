@@ -34,8 +34,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Advierte de forma no bloqueante al operario si ya existe un remanente activo del mismo insumo en cualquier ubicación de cocina, para reducir aperturas duplicadas (KPI #3 del PRD). ✅ Backend (`TK-080`) y Frontend (`TK-080-FE`) implementados.
 *   **[US-026: Áreas de Cocina como Ubicaciones de Catálogo y Destino Dinámico en Extracción](stock/US-026.md)** ✅
     *   *Descripción:* Las áreas de cocina (heladera, mesa de prep, línea) pasan a ser filas de `StorageLocation` (`type = KITCHEN`); el destino de cocina en la extracción se elige del catálogo y `Remanente.location` pasa a FK. Prerrequisito de ADR-003, cierra deuda de `TK-074-FE`. `TK-102`/`TK-102-FE` + `TK-112-FE` (tablero FEFO).
-*   **[US-032: Escaneo de Código de Barras en Extracción de Bodega](stock/US-032.md)**
-    *   *Descripción:* Preselecciona el insumo en `WarehouseExtractionModal` escaneando su código de barras con la cámara integrada del dispositivo (sin hardware dedicado — aclara el Non-Goal #4 del PRD). Sin match, solo `ADMIN` completa el alta. ✅ Backend (`TK-119`) implementado y verificado contra Postgres real; Frontend (`TK-119-FE`) pendiente de decisión de librería de escaneo (Guard 24).
+*   **[US-032: Escaneo de Código de Barras en Extracción de Bodega](stock/US-032.md)** ✅
+    *   *Descripción:* Preselecciona el insumo en `WarehouseExtractionModal` escaneando su código de barras con la cámara integrada del dispositivo (sin hardware dedicado — aclara el Non-Goal #4 del PRD). Sin match, solo `ADMIN` completa el alta. ✅ Backend (`TK-119`) y Frontend (`TK-119-FE`) implementados: `@zxing/browser@0.2.1` (Guard 24, manifest v1.14.0) con import dinámico para no cargar la librería a quien nunca escanea.
 
 ### ⚙️ Configuración (`/settings/`)
 *   **[US-017: Configuración General del Restaurante y Parámetros FEFO](settings/US-017.md)** ✅

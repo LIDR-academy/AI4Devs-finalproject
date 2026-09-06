@@ -1,0 +1,16 @@
+/* BarcodeScannerButton (US-032 / TK-119-FE) — video de la cámara dentro del Modal. */
+
+.scanner-video {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: var(--text-primary);
+  object-fit: cover;
+}
+
+.camera-error {
+  padding: var(--space-3);
+}
+
+.inline-icon-spacer {
+  margin-right: var(--space-1);
+}

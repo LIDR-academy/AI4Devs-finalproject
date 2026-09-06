@@ -4,7 +4,7 @@ id: TK-119-FE
 related_story: US-032
 points: 3
 type: frontend
-status: approved
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/stock/US-032.md
   - docs/02_architecture_design/04_technical_design.md
@@ -17,8 +17,10 @@ inputs:
 
 ---
 
-## ⚠️ Decisión de Stack Pendiente (Guard 24 — bloqueante antes de codificar)
-Este ticket requiere una librería de decodificación de código de barras vía cámara del navegador (`getUserMedia` + un decoder JS, ej. `@zxing/browser` o `html5-qrcode`). **Ninguna está aún declarada en `docs/00_stack_manifest.md`.** Antes de escribir código, el agente que implemente este ticket DEBE preguntar explícitamente al humano cuál usar (o confirmar una de las 2 sugeridas) y registrarla en el manifiesto — nunca asumirla en silencio. Este ticket especifica el comportamiento esperado, no la librería.
+## ✅ Decisión de Stack Resuelta (Guard 24)
+**`@zxing/browser@0.2.1`** (peer `@zxing/library@^0.23.0`, MIT), aprobada explícitamente por el humano el **2026-09-05** y declarada en `docs/00_stack_manifest.md` §4 (v1.13.0 → v1.14.0). Se eligió sobre `html5-qrcode` (capa extra sobre el mismo zxing) y sobre la `BarcodeDetector` nativa (sin soporte en Safari/iOS, obligaría a mantener 2 caminos de código). Decodifica vía `getUserMedia`+`canvas`, igual en Chrome, Safari y Firefox.
+
+Se carga con **import dinámico** (`await import('@zxing/browser')` dentro de `createZxingBarcodeReader`): añade ~117KB gzip que quedan en un chunk aparte, descargado solo al abrir el escáner. Sin esto, el chunk principal pasaba de 135KB a 254KB gzip para TODOS los usuarios (medido con builds antes/después).
 
 ---
 
@@ -35,10 +37,10 @@ Este ticket requiere una librería de decodificación de código de barras vía 
 
 ## 🔀 Alcance de Modificación (Frontend Architecture)
 *   **Componentes UI (`src/shared/components/`):** `BarcodeScannerButton.tsx` (nuevo, en `shared/` porque es reutilizable — el mismo patrón servirá para cualquier futuro punto de escaneo, no solo extracción). Renderiza un botón `.btn-touch` que abre un `<video>` con el feed de cámara (permiso `getUserMedia`) dentro de un `Modal` ya existente; al decodificar un código, invoca un callback `onScan(barcode: string)` y cierra el modal — el componente no sabe nada de insumos, solo emite el string decodificado.
-*   **Integración (`src/features/stock/components/WarehouseExtractionModal.tsx`):** monta `<BarcodeScannerButton onScan={handleScan} />` junto al selector manual existente. `handleScan` llama a `StockService.findInsumoByBarcode(barcode)`:
-    *   `200` → preselecciona el insumo en el formulario, igual que si se hubiera elegido manualmente.
-    *   `404` → `ErrorBanner` no bloqueante ("Código no encontrado — solicita a un Administrador que lo dé de alta"), el selector manual sigue disponible.
-*   **API Service:** `StockService.findInsumoByBarcode()` nuevo en `stock.service.ts`.
+*   **Integración (`src/features/stock/components/WarehouseExtractionModal.tsx`):** monta `<BarcodeScannerButton onScan={handleScan} />` junto al selector manual existente. `handleScan` (hook local `useBarcodeScan`) resuelve el match **de forma síncrona contra el catálogo ya cargado en memoria** por `useAvailableInsumos`:
+    *   con match → preselecciona el insumo en el formulario, igual que si se hubiera elegido manualmente.
+    *   sin match → `ErrorBanner` no bloqueante ("Código no encontrado — solicita a un Administrador que lo dé de alta"), el selector manual sigue disponible.
+*   **API Service:** ninguno nuevo. `GET /stock/insumos` (`ListInsumosUseCase`) ya devuelve `barcode` por insumo — mismo `insumoOutputMapper` que el endpoint dedicado de `TK-119` — así que basta con propagar ese campo en el mapeo local de `useAvailableInsumos`. **Desviación deliberada respecto de la especificación original de este ticket** (que proponía llamar a `StockService.findInsumoByBarcode()` por cada escaneo): la revisión adversarial mostró que la segunda llamada de red introducía carreras de respuesta desordenada y `setState` sobre componente desmontado, y que además podía devolver un id ausente del catálogo ya renderizado (dejando el selector en un estado inconsistente). El endpoint backend `GET /insumos/by-barcode/:barcode` (`TK-119`) sigue existiendo, probado y disponible para futuros consumidores.
 *   **Alta de Insumo con Barcode:** `CreateInsumoModal.tsx` gana un campo opcional "Código de barras" (`input-touch`), consumido por `StockService.createInsumo()` ya existente (solo extiende el payload).
 *   **Componentes Reutilizados (sin duplicar):** `Modal.tsx`, `ErrorBanner.tsx` ya existentes.
 
@@ -79,3 +81,5 @@ Este ticket requiere una librería de decodificación de código de barras vía 
 
 ## 📌 Deuda Registrada
 Ninguna propia. Escaneo de lote/fecha de vencimiento vía código de barras (Roadmap §7.2 del PRD) queda fuera de alcance — este ticket solo resuelve identificación del insumo, no captura de lote.
+
+**Anotado sin corregir (fuera de alcance, blast radius desproporcionado):** `Modal.tsx` no usa un portal de React, así que el modal del escáner se renderiza anidado dentro del `.modal-card` de `WarehouseExtractionModal` (que tiene `overflow-y: auto`). Se verificó leyendo el CSS real que **no es un defecto accionable hoy**: el único `transform` de `.modal-card` viene de su animación de montaje de 0.25s sin `fill-mode: forwards`, así que deja de ser containing-block para descendientes `position: fixed` mucho antes de que un usuario pueda abrir el escáner anidado. Si en el futuro aparece otro caso de modal-dentro-de-modal, o si se le añade un `transform`/`will-change` permanente a `.modal-card`, conviene migrar `Modal.tsx` a `createPortal` — cambio que afecta a ~10 modales y merece su propio ticket.

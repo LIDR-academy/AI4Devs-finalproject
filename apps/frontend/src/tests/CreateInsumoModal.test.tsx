@@ -100,4 +100,29 @@ describe('TK-078-FE / TK-096-FE: CreateInsumoModal', () => {
 
     expect(capturedBody).not.toHaveProperty('unitCost');
   });
+
+  it('TK-119-FE (US-032): envía barcode en el body cuando se completa, lo omite si se deja vacío', async () => {
+    let capturedBody: Record<string, unknown> | null = null;
+    stubFetch((body) => {
+      capturedBody = body;
+      return { id: 'ins-new-3', name: 'Aceite de Oliva', unitOfMeasure: 'L', warehouseStock: '0.000', barcode: '7791234567890' };
+    });
+
+    const onSuccess = vi.fn();
+    render(<CreateInsumoModal isOpen={true} onClose={() => {}} onSuccess={onSuccess} />);
+
+    await waitFor(() => {
+      expect((screen.getByLabelText(/Sub-sector de Bodega/i) as HTMLSelectElement).value).toBe('loc-seed-meat-fridge');
+    });
+
+    fireEvent.change(screen.getByLabelText(/Nombre del Insumo/i), { target: { value: 'Aceite de Oliva' } });
+    fireEvent.change(screen.getByLabelText(/Código de Barras \(Opcional\)/i), { target: { value: '7791234567890' } });
+    fireEvent.click(screen.getByRole('button', { name: /Guardar Insumo/i }));
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalled();
+    });
+
+    expect(capturedBody).toMatchObject({ barcode: '7791234567890' });
+  });
 });

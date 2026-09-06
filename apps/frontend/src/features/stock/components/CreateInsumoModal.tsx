@@ -14,7 +14,7 @@ interface CreateInsumoModalProps {
 
 type Unit = 'KG' | 'L' | 'UNITS';
 
-const TextField: React.FC<{ id: string; label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; step?: string; min?: string; required?: boolean }> = ({
+const TextField: React.FC<{ id: string; label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; step?: string; min?: string; maxLength?: number; required?: boolean }> = ({
   id,
   label,
   value,
@@ -23,6 +23,7 @@ const TextField: React.FC<{ id: string; label: string; value: string; onChange: 
   type = 'text',
   step,
   min,
+  maxLength,
   required,
 }) => (
   <div className="mb-4">
@@ -34,6 +35,7 @@ const TextField: React.FC<{ id: string; label: string; value: string; onChange: 
       type={type}
       step={step}
       min={min}
+      maxLength={maxLength}
       className="input-touch w-full"
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -67,6 +69,7 @@ interface FormState {
   initialWarehouseStock: string;
   storageLocationId: string;
   unitCost: string;
+  barcode: string;
 }
 
 function useCreateInsumoForm(onClose: () => void, onSuccess: () => void) {
@@ -76,6 +79,7 @@ function useCreateInsumoForm(onClose: () => void, onSuccess: () => void) {
     initialWarehouseStock: '0',
     storageLocationId: '',
     unitCost: '',
+    barcode: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +100,7 @@ function useCreateInsumoForm(onClose: () => void, onSuccess: () => void) {
         initialWarehouseStock: state.initialWarehouseStock || '0',
         storageLocationId: state.storageLocationId,
         unitCost: state.unitCost.trim() ? state.unitCost.trim() : undefined,
+        barcode: state.barcode.trim() ? state.barcode.trim() : undefined,
       };
       await StockService.createInsumo(payload);
       onSuccess();
@@ -148,6 +153,14 @@ export const CreateInsumoModal: React.FC<CreateInsumoModalProps> = ({ isOpen, on
           placeholder="Ej. 1800.00"
           value={state.unitCost}
           onChange={(v) => set('unitCost', v)}
+        />
+        <TextField
+          id="barcode-input"
+          label="Código de Barras (Opcional)"
+          placeholder="Ej. 7791234567890"
+          value={state.barcode}
+          onChange={(v) => set('barcode', v)}
+          maxLength={64}
         />
         <div className="modal-footer-actions justify-end no-margin-top">
           <button type="button" onClick={onClose} disabled={loading} className="btn-touch btn-secondary">

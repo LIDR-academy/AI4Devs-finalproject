@@ -1,6 +1,18 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within, act } from '@testing-library/react';
 import { WarehouseExtractionModal } from '../features/stock/components/WarehouseExtractionModal.js';
+
+// TK-119-FE: BarcodeScannerButton llama a @zxing/browser real (getUserMedia) — no
+// disponible en jsdom. Se mockea el módulo del hook para simular el resultado del
+// escaneo sin depender de una cámara real; el componente en sí ya tiene su propia
+// cobertura RTL dedicada en shared/components/BarcodeScannerButton.test.tsx.
+let mockScanResult: ((barcode: string) => void) | undefined;
+vi.mock('../shared/hooks/useBarcodeScanner.js', () => ({
+  useBarcodeScanner: (active: boolean, onScan: (barcode: string) => void) => {
+    mockScanResult = active ? onScan : undefined;
+    return { videoRef: { current: null }, error: null };
+  },
+}));
 
 // US-025: el saldo por sub-sector es obligatorio en la respuesta real de /stock/insumos
 // (ListInsumosUseCase) — sin él, el chequeo de stock por sector de origen (bugfix del
@@ -21,6 +33,7 @@ const INSUMOS_FIXTURE = [
     name: 'Aceite de Oliva',
     unitOfMeasure: 'L',
     warehouseStock: '5.000',
+    barcode: '7791234567890',
     stockByLocation: [
       { storageLocationId: 'loc-seed-meat-fridge', storageLocationName: 'Heladera de Carnes', quantity: '5.000' },
       { storageLocationId: 'loc-seed-dry', storageLocationName: 'Bodega de Secos', quantity: '5.000' },
@@ -342,6 +355,42 @@ describe('TK-096-FE: WarehouseExtractionModal — Sub-sector de bodega de origen
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
     expect(capturedBody).toMatchObject({ toStorageLocationId: 'loc-seed-kitchen-line' });
     expect(capturedBody).not.toHaveProperty('toLocation');
+  });
+});
+
+describe('TK-119-FE: WarehouseExtractionModal — escaneo de código de barras (US-032)', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    mockScanResult = undefined;
+  });
+
+  it('escaneo con match preselecciona el insumo en el formulario (match local contra el catálogo ya cargado, sin llamada de red adicional)', async () => {
+    stubFetchForExtractionModal({});
+
+    render(<WarehouseExtractionModal isOpen={true} onClose={() => {}} onSuccess={() => {}} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /Escanear Código de Barras/i }));
+    await act(async () => {
+      mockScanResult?.('7791234567890');
+    });
+
+    await waitFor(() => {
+      expect((screen.getByLabelText(/Seleccionar Insumo de Bodega/i) as HTMLSelectElement).value).toBe('ins-2');
+    });
+  });
+
+  it('escaneo sin match muestra ErrorBanner no bloqueante y el selector manual sigue disponible', async () => {
+    stubFetchForExtractionModal({});
+
+    render(<WarehouseExtractionModal isOpen={true} onClose={() => {}} onSuccess={() => {}} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /Escanear Código de Barras/i }));
+    await act(async () => {
+      mockScanResult?.('0000000000000');
+    });
+
+    expect(await screen.findByText(/código no encontrado/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Seleccionar Insumo de Bodega/i)).toBeInTheDocument();
   });
 });
 
