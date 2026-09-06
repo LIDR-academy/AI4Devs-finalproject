@@ -1,6 +1,6 @@
 ---
 document: stack_manifest
-version: 1.14.0
+version: 1.15.0
 status: approved
 approved_by: "Jose Lacruz <lacruzjd@gmail.com>"
 approved_at: "2026-09-05"
@@ -75,8 +75,16 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **Test Runner** | Vitest | **1.x** | Backend y Frontend |
 | **Testing Library** | React Testing Library | **14.x** | Para componentes React |
 | **E2E Browser** | Playwright | **1.x** | Page Object Model (POM) obligatorio |
-| **Mutation Testing** | Stryker | **8.x** | Score mínimo ≥70% |
+| **Mutation Testing** | Stryker | **8.x** | ⚠️ Score mínimo ≥70% **declarado pero NO operativo** — ver nota de verificación abajo |
 | **Comando de Tests** | `pnpm test` | — | Ejecuta todos los workspaces |
+
+> **Nota de verificación (2026-09-06) — el umbral de mutación NO se está cumpliendo ni midiendo.** Al auditar la preparación para producción se ejecutó Stryker por primera vez de forma real, y el resultado invalida la línea de la tabla:
+> 1. **No está wireado en `ci.yml`.** Existe `pnpm --filter @restostock/backend run test:mutation` y `apps/backend/stryker.conf.json` con `thresholds.break = 70`, pero **ningún job del pipeline lo invoca**: el umbral es declarativo, nadie lo hace cumplir. `apps/frontend` **no tiene configuración de Stryker en absoluto**.
+> 2. **El número que produce hoy no es un score de mutación fiable.** Sobre `src/domain/kitchen/value-objects/Temperature.ts` (36 líneas, 10 mutantes) devuelve 60%, pero desglosado: **0 mutantes matados por un test** y **6 timeouts** con `coverageAnalysis: "perTest"` (1 matado / 5 timeouts al forzar `--coverageAnalysis off`). Stryker contabiliza un timeout como "detectado", así que el 60% se compone casi entero de timeouts, no de pruebas que atrapen el defecto. El propio reporte lo delata: *"Ran 0.00 tests per mutant on average"* (0.10 sin `perTest`) — el runner de Vitest apenas está ejecutando tests contra cada mutante.
+> 3. **Inviable como gate con la configuración actual:** ~2 minutos por un único archivo pequeño. El `mutate` configurado abarca `src/domain/**` + `src/application/**` (cientos de archivos), lo que proyecta muchas horas por corrida. Una corrida acotada solo al dominio `kitchen` se canceló tras 15 minutos sin terminar.
+> 4. **Hallazgo colateral real:** `Temperature.ts` no tiene test unitario propio (4 mutantes sin cobertura alguna); solo se ejercita indirectamente desde `RecordTemperatureLogUseCase.test.ts`.
+>
+> Arreglar la integración Stryker+Vitest y decidir un alcance ejecutable en CI merece su propio ticket. Hasta entonces, **este manifiesto no debe leerse como si el proyecto tuviera un score de mutación ≥70% verificado**.
 
 ---
 
