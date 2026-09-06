@@ -4,7 +4,7 @@ id: TK-079-FE
 related_story: US-020
 points: 2
 type: frontend
-status: approved
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/reports/US-020.md
   - docs/05_agile_planning/12_tickets/reports/backend/TK-079.md

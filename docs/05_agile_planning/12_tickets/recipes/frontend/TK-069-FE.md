@@ -4,7 +4,7 @@ id: TK-069-FE
 related_story: US-012
 points: 3
 type: frontend
-status: approved
+status: done
 inputs:
   - docs/05_agile_planning/12_tickets/recipes/backend/TK-069.md
   - docs/05_agile_planning/12_tickets/catalog/frontend/TK-057-FE.md

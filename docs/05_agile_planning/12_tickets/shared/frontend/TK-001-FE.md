@@ -4,7 +4,7 @@ id: TK-001-FE
 related_story: N/A
 points: 3
 type: frontend
-status: approved
+status: done
 inputs:
   - docs/01_product_definition/02_prd.md
   - docs/02_architecture_design/04_technical_design.md

@@ -4,7 +4,7 @@ id: TK-060-FE
 related_story: US-013
 points: 2
 type: frontend
-status: approved
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/stock/US-013.md
   - docs/02_architecture_design/04_technical_design.md

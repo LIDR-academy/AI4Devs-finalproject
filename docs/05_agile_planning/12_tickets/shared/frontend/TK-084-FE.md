@@ -4,7 +4,7 @@ id: TK-084-FE
 related_story: US-022
 points: 5
 type: frontend
-status: approved
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/shared/US-022.md
   - docs/05_agile_planning/12_tickets/shared/frontend/TK-081-FE.md

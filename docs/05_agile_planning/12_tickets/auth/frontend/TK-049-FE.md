@@ -4,7 +4,7 @@ id: TK-049-FE
 related_story: US-010
 points: 3
 type: frontend
-status: approved
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/auth/US-010.md
   - docs/02_architecture_design/04_technical_design.md

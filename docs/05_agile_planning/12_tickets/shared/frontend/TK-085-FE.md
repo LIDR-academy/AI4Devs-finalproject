@@ -4,7 +4,7 @@ id: TK-085-FE
 related_story: US-023
 points: 8
 type: frontend
-status: approved
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/shared/US-023.md
   - docs/02_architecture_design/05_ui_ux_design_system.md

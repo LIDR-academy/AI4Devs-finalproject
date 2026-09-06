@@ -4,6 +4,27 @@ Este documento centraliza el backlog técnico y funcional del Producto Mínimo V
 
 ---
 
+## 🔄 Saneamiento de Estados (2026-09-06)
+
+El campo `status` del frontmatter había quedado desactualizado: **65 tickets figuraban `approved` estando implementados y commiteados** (ej. `TK-092`/`TK-093`/`TK-094`, cuyo cierre está documentado en `AUDIT-SEC-001`). Con esa deriva era imposible responder "¿qué falta?" leyendo la documentación.
+
+**Método de reconciliación aplicado** (evidencia de git, no criterio del agente): se marcó `done` únicamente el ticket con un commit `feat(`/`fix(`/`refactor(` cuyo asunto lo nombra en cualquiera de las dos convenciones que ha usado el repositorio — `[TK-XXX]` (histórica) o `(TK-XXX)` (actual). Una simple mención dentro de un commit `docs:` **no** se aceptó como prueba de implementación.
+
+Resultado: **96 `done`**, **9 pendientes reales**, 1 `not_needed`, 1 `MOSTLY_DONE`.
+
+**Pendientes reales tras el saneamiento:**
+
+| Ticket | Situación |
+| :--- | :--- |
+| `TK-091` | Deuda diferida y documentada: extraer un helper de error→RFC 7807 en `auth.controller.ts` (ver nota histórica de `docs/00_stack_manifest.md`). |
+| `TK-007`, `TK-007-C`, `TK-007-D`, `TK-007-E` | Sub-tickets de UI sin evidencia de cierre en el historial. |
+| `TK-072`, `TK-072-FE`, `TK-077-FE` | Sin evidencia de cierre en el historial. |
+| `TK-008` | Evidencia débil: solo aparece citado en commits `docs:`, nunca en uno de implementación. Requiere verificación humana contra el código antes de darlo por cerrado. |
+
+> ⚠️ El estado de un ticket se cierra **al terminarlo**, en el mismo commit atómico que lo implementa (`02_cascading_dev_workflow.md` FASE 6). Este saneamiento retroactivo es una excepción puntual, no un procedimiento a repetir.
+
+---
+
 ## ⚖️ 1. Matriz Multidimensional de Criterios de Priorización
 
 Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el máximo retorno de inversión (ROI) minimizando el riesgo técnico, cada ticket se evalúa en 4 dimensiones estratégicas:
