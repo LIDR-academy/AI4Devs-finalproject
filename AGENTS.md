@@ -1278,6 +1278,24 @@ project. Read it at the start of every session.
   **Verificado en verde:** `tsc --noEmit`, `eslint .`, `vitest run` (450, 9 nuevos),
   `next build` y `npm run test:e2e` (53).
 
+- **«Sets fuera» contaba alquileres cerrados (arreglado 2026-09-06):** el `_count` de
+  la lista de clientes filtraba **solo por el estado de la copia**, sin mirar el del
+  alquiler, así que sumaba los alquileres ya cerrados de una copia que hoy está fuera
+  **con otra persona** — Diego aparecía con 5 sets teniendo 1, Ana con 3 teniendo 0.
+  La regla correcta es la que usa todo lo demás (`currentCopyStates`, la cola de
+  trabajo, la ficha de copia): `status: { not: "COMPLETED" }` **y** el estado de la
+  copia; la lista de clientes era la única que se dejaba la mitad.
+  **Por qué se coló:** los adaptadores Prisma **no tienen ninguna prueba** —los casos
+  de uso corren contra dobles en memoria, y un doble no tiene copias que hayan pasado
+  por varias manos—, así que el fallo solo era visible contra una base con pasado.
+  Cubierto ahora por `e2e/clientes.spec.ts`, **de solo lectura** (no alquila ni
+  devuelve: comparte base con el resto de la suite) y verificado en los dos sentidos:
+  con el fallo reintroducido se pone rojo.
+  **Pendiente de decisión del usuario:** la columna cuenta los cuatro estados que
+  ocupan plaza de plan, y dos de ellos —`EN_INSPECCION`, `EN_HIGIENIZACION`— son copias
+  que ya están de vuelta en el almacén. O el título deja de decir "fuera", o la columna
+  pasa a `HELD_COPY_STATES`.
+
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → **Vercel +
 Supabase** (`ADR-0003`, 2026-08-22, sustituye la VM única de `ADR-0001` §5); auth →

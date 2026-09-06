@@ -1516,3 +1516,40 @@ ha creado ella. La pantalla ya pasa por la auditoría `axe` del E2E. **Verificac
 `tsc`, `eslint`, **450 unitarios** (9 nuevos) y **53 E2E** en verde. Sincronizados
 `readme.md` §1.2 y §2.6, `PRD.md` §4.1, `ux-flows.md` §A2 (con la corrección fechada de
 lo que daba por hecho) y `AGENTS.md`.
+
+---
+
+### [2026-09-06] — «Sets fuera» contaba alquileres cerrados
+
+**Prompt:** "En el formulario de clientes: la columna «Sets fuera» ¿es la suma de sets
+históricos del cliente? Aparece un cliente con 5 sets y otro con 3, pero al ver el
+histórico aparece que los sets están cerrados o con uno en curso."
+
+**Resumen.** No era la suma histórica: era algo más raro y más equivocado. El `_count`
+de la lista de clientes filtraba **solo por el estado de la copia**
+(`copy: { state: { in: OCCUPYING } }`), sin mirar el estado del alquiler. Así, un
+alquiler cerrado hace meses seguía contando si **esa misma copia** está hoy fuera con
+otra persona. Comprobado contra la base antes de tocar nada: Diego 5 cuando tiene 1,
+Ana 3 cuando tiene 0, Carla 2 cuando tiene 0.
+
+La regla correcta ya estaba escrita en el resto del código —`currentCopyStates`, la
+cola de trabajo, la ficha de copia, los recordatorios de retención llevan las **dos**
+condiciones—; la lista de clientes era la única que se dejaba la mitad. El arreglo es
+esa condición, no una invención: `status: { not: "COMPLETED" }`.
+
+**Por qué se coló, que es lo que importa.** Los adaptadores Prisma **no tienen ninguna
+prueba**: los casos de uso corren contra dobles en memoria, y un doble no tiene copias
+que hayan pasado por varias manos. El fallo solo es visible contra una base con
+pasado, y de hecho nació cuando la semilla ganó nueve meses de historial. Por eso la
+prueba nueva es un E2E (`e2e/clientes.spec.ts`) y no un test de caso de uso: es **de
+solo lectura** —no alquila ni devuelve nada, que comparte base con el resto de la
+suite— y usa a Elena Prat, del historial sembrado, que nadie más toca y tiene la forma
+exacta del fallo: tres alquileres, todos devueltos. Verificado en los dos sentidos: con
+el fallo reintroducido a propósito, la prueba se pone roja (`Expected "0", Received
+"1"`).
+
+**Queda una pregunta abierta para el usuario**, que no se decidió por él: la columna
+cuenta los cuatro estados que ocupan plaza de plan, y dos de ellos —`EN_INSPECCION` y
+`EN_HIGIENIZACION`— son copias que ya están de vuelta en el almacén. El número es el
+correcto para saber si el cliente puede pedir otro set, pero el título "Sets fuera" las
+nombra mal. O cambia el título, o la columna pasa a `HELD_COPY_STATES`.

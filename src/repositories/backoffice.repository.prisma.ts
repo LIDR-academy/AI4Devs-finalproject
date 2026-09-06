@@ -193,7 +193,14 @@ const CUSTOMER_SELECT = {
   },
   _count: {
     select: {
-      rentals: { where: { copy: { state: { in: OCCUPYING } } } },
+      // Las **dos** condiciones, como en el resto de consultas que cuentan plaza
+      // ocupada (`subscription.repository` → `currentCopyStates`). Filtrar solo por el
+      // estado de la copia contaba los alquileres **ya cerrados** de una copia que hoy
+      // está fuera con otra persona: el cliente aparecía con cinco sets y su historial
+      // los tenía todos devueltos.
+      rentals: {
+        where: { status: { not: "COMPLETED" }, copy: { state: { in: OCCUPYING } } },
+      },
       queueEntries: { where: { status: { in: ACTIVE_QUEUE_STATUSES } } },
     },
   },
