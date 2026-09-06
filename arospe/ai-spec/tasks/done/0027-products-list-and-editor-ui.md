@@ -2576,6 +2576,41 @@ calls that can be answered any time before the markup is written.
   option renders something plausible, which is exactly the shape this project's contracts require to be
   escalated rather than assumed.
 
+> ⚠️ **Correction, 2026-09-06 — twelve were raised, nine remain open.** **OQ-11** and **OQ-12** below
+> are new, carried here from [0031](0031-product-variants-editor-ui.md)'s own **OQ-7** and
+> its bookkeeping-note reference to an **OQ-12** — 0031's Phase 2 explicitly scopes both as amendments
+> to be *raised* on this story rather than performed inside 0031's own Phase 3 (its Definition of Done
+> says so by name). Neither blocks anything today: this story already closed past Phase 3, so both are
+> recorded here as open PO/human decisions for whoever next touches `Editor::save()` or its SKU field,
+> not as a reopened gate on this file's own closure.
+
+- **OQ-11 — Should a successful `products.create` save redirect to `products.edit` instead of
+  `products.index`?** Raised by [0031](0031-product-variants-editor-ui.md)'s **OQ-7** (its
+  own **D-7**): the variant builder only renders on `products.edit` (0031 **D-1**, a saved product is a
+  precondition for the child component to mount at all), so today's "create a product, then add its
+  variants" flow bounces the administrator to the list, one extra navigation away from where the
+  builder actually lives. **(a) Yes — redirect the create branch to `route('products.edit', $product)`
+  _(0031's recommendation)_**, one line in [D-12(c)](#d-12--save-composition-who-calls-what-in-one-transaction-then-redirect)'s
+  `save()`; the **edit** branch keeps redirecting to `products.index` unchanged. (b) No; add a "Guardar
+  y añadir variantes" secondary button instead of changing the default redirect. (c) No change. **Not
+  decided here** — a human/PO call, per 0031's own scope fence against performing this amendment inside
+  its own Phase 3.
+
+- **OQ-12 — Should the product's SKU field carry a notice that changing it re-derives every existing
+  variant's SKU?** Raised by [0031](0031-product-variants-editor-ui.md)'s own **OQ-12**
+  (referenced there only in its Files table and Provenance section, not written out as a full entry in
+  its own Open Questions — its bookkeeping note explains why the number was left unused rather than
+  re-pointed at unrelated content). 0029's **D-4.6** re-derives every variant SKU built on this product
+  inside the same transaction as a SKU edit here, and refuses the whole product save
+  (`products.variants.parent_sku_change_collides`) if any re-derivation would collide — an
+  administrator editing this field today has no indication the edit is not local to the product it
+  looks like it only affects. **(a) A static helper line under the SKU field naming the consequence
+  _(recommended, by the same shape [D-13](#d-13--a-static-notice-that-formatting-is-lossy-no-dynamic-diff-warning)
+  already uses for the lossy-formatting notice)_.** (b) No change; rely on the refusal message alone,
+  the same way [D-8](#d-8--three-gallery-instances-on-one-page-and-why-they-cannot-collide)'s SKU
+  collision path already does for the product-to-product case. **Not decided here** — same disposition
+  as OQ-11.
+
 ## Provenance
 
 Phase 1 (Three Amigos) debate for Epic 2, run on 2026-08-18 with `frontend-expert` (files and

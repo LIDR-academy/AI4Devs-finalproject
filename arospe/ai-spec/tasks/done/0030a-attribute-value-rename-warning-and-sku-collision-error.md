@@ -29,7 +29,7 @@ serves it; see the technical-approach note below on which shipped query this act
 
 > 🟠 **This is not a fresh Three Amigos debate — it is two amendments 0031's own Phase 1 debate
 > found and recommended against 0030's already-shipped screen, split out as their own story rather
-> than performed inside 0031.** [0031](../0031-product-variants-editor-ui.md)'s **D-16** ("The
+> than performed inside 0031.** [0031](0031-product-variants-editor-ui.md)'s **D-16** ("The
 > attribute-value rename edge case, resolved") and its **OQ-10** name both gaps explicitly:
 >
 > - **(a)** *"Does anything need to warn before the rename? Yes — and it belongs to 0030, not
