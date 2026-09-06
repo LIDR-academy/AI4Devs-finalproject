@@ -10,6 +10,36 @@ export interface RecipeItem {
   ingredientsSummary: string;
 }
 
+/** US-033: tipo de unidad refrigerante, con umbral FDA propio en el dominio del backend. */
+export type TemperatureUnitType = 'REFRIGERATOR' | 'FREEZER';
+
+export interface RecordTemperatureLogDTO {
+  storageLocationId: string;
+  unitType: TemperatureUnitType;
+  /** Decimal como string (Guard 17): hasta 3 dígitos enteros y 2 decimales, ej. "-18.00". */
+  temperatureCelsius: string;
+}
+
+/* jscpd:ignore-start — espejo deliberado de TemperatureLogOutputDTO del backend.
+   openapi.yaml es la SSoT; front y back son paquetes separados sin tipo compartido. */
+export interface TemperatureLogItem {
+  id: string;
+  storageLocationId: string;
+  unitType: TemperatureUnitType;
+  temperatureCelsius: string;
+  /** Calculado en el dominio del backend, nunca persistido — solo advierte, jamás bloquea. */
+  isWithinSafeRange: boolean;
+  recordedByUserId: string;
+  recordedAt: string;
+}
+/* jscpd:ignore-end */
+
+export interface TemperatureLogFilters {
+  storageLocationId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 // US-007 v1.1.0 / TK-111-FE
 interface RecipeIngredientAvailability {
   insumoId: string;
@@ -236,5 +266,22 @@ export class KitchenService {
   // mostrar ninguna. El modal decide qué hacer si esta llamada falla (no bloquea el envío).
   public static async fetchRecipeAvailability(recipeId: string, portions: number): Promise<RecipeAvailability> {
     return apiRequest<RecipeAvailability>(`/kitchen/recipes/${recipeId}/availability?portions=${portions}`);
+  }
+
+  // US-033 / TK-120-FE: sin fallback a mock (AUDIT-DEV-006 F-5) — una lectura de
+  // temperatura inventada es peor que ninguna, es un registro sanitario.
+  public static async recordTemperatureLog(data: RecordTemperatureLogDTO): Promise<TemperatureLogItem> {
+    return apiRequest<TemperatureLogItem>('/kitchen/temperature-logs', { method: 'POST', body: data });
+  }
+
+  // US-033: histórico solo-ADMIN (el backend lo gatea con requireRole('ADMIN')).
+  public static async fetchTemperatureLogs(filters: TemperatureLogFilters = {}): Promise<TemperatureLogItem[]> {
+    const params = new URLSearchParams();
+    if (filters.storageLocationId) params.set('storageLocationId', filters.storageLocationId);
+    if (filters.startDate) params.set('startDate', filters.startDate);
+    if (filters.endDate) params.set('endDate', filters.endDate);
+    const query = params.toString();
+
+    return apiRequest<TemperatureLogItem[]>(`/kitchen/temperature-logs${query ? `?${query}` : ''}`);
   }
 }

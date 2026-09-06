@@ -93,3 +93,4 @@ terraform.rc
 # Playwright (e2e) run artifacts
 apps/frontend/test-results/
 apps/frontend/playwright-report/
+apps/frontend/e2e-artifacts/

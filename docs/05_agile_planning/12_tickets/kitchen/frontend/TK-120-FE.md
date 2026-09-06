@@ -4,7 +4,7 @@ id: TK-120-FE
 related_story: US-033
 points: 3
 type: frontend
-status: approved
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/kitchen/US-033.md
   - docs/02_architecture_design/04_technical_design.md
@@ -32,8 +32,12 @@ Consume `POST /api/v1/kitchen/temperature-logs` y `GET /api/v1/kitchen/temperatu
 *   **Componentes UI (`src/features/kitchen/components/`):** `TemperatureLogModal.tsx` (nuevo) — mismo patrón compositivo que `WarehouseExtractionModal.tsx` (`Modal`/`ModalHeader`/`ModalFooterActions` + hook `useTemperatureLogForm`). Campos: `<select>` de `StorageLocation` (reutiliza `StorageSectorSelect` ya existente de `US-025`), `<select>` `REFRIGERATOR`/`FREEZER`, `<input type="number">` para la temperatura. Al confirmar con un valor fuera de rango, la respuesta `201` con `isWithinSafeRange: false` se muestra como una confirmación con acento de advertencia (`--color-warning`), nunca como un error — el registro sí se creó.
 *   **Punto de Entrada:** botón secundario "Registrar Temperatura" en el panel `Acciones` del tablero (`InventarioRoute`), junto a `Extraer de Bodega`/`Preparar Receta` — mismo nivel jerárquico, sin ser obligatorio ni bloquear el resto del tablero.
 *   **Reporte Histórico (`src/features/reports/components/`):** `TemperatureLogReportPanel.tsx` (nuevo), montado en `/reportes` (solo `ADMIN`, ya gateado por `ProtectedRoute` de esa ruta) — tabla `.data-table` con fecha, sub-sector, tipo, valor, y una columna de estado (`UrgencyChip`-like pero binario: dentro/fuera de rango, con marca + texto, WCAG 1.4.1).
-*   **API Service:** `KitchenService.recordTemperatureLog()` y `ReportsService.getTemperatureLogs()` (o el service que agrupe reportes ya existente).
-*   **Componentes Reutilizados (sin duplicar):** `Modal.tsx`, `StorageSectorSelect.tsx`, `.data-table`.
+*   **API Service:** `KitchenService.recordTemperatureLog()` y `KitchenService.fetchTemperatureLogs()`. **Ambos en `kitchen.service.ts`, no en `reports.service.ts`** como sugería el borrador de este ticket: los dos golpean `/api/v1/kitchen/temperature-logs` y comparten el mismo DTO — partirlos entre dos services habría duplicado `TemperatureLogItem`. El panel de reportes importa `KitchenService` (mismo patrón cross-feature que ya usa `WarehouseExtractionModal` con `KitchenService`).
+*   **Componentes Reutilizados (sin duplicar):** `Modal.tsx`, `ModalHeader.tsx`, `ModalFooterActions.tsx`, `ErrorBanner.tsx`, `StorageSectorSelect.tsx`, `.data-table`.
+*   **Extensiones a componentes compartidos (en vez de crear casi-duplicados):**
+    *   `SuccessFeedbackBanner` gana `variant?: 'success' | 'warning'` — mismo criterio con el que en su día se añadieron `size` a `Modal`, `compact` a `ErrorBanner` y `danger` a `ModalHeader`.
+    *   `ActionButton` gana la variante `temperature` (verde `--color-success`; `--color-info` es alias intencional de `--color-primary` y habría quedado idéntica a `add`), con su contorno de tiza en turno noche.
+    *   **`useAsyncData` (nuevo, `shared/hooks/`)**: el gate de duplicación bloqueó el ticket al detectar que el bloque *loading/error/guarda-de-cancelación* del panel nuevo era idéntico al de `PreparationWasteReportPanel`. Se extrajo a un hook compartido y **se migró también el panel existente** — si no, la duplicación seguiría viva, solo que concentrada. El error siempre pasa por `mapToUserFriendlyError` (Guard 38).
 
 ---
 

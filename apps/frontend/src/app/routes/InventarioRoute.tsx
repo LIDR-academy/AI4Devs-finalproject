@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshCw, ArrowRightLeft, ShieldCheck, Utensils, ClipboardCheck } from 'lucide-react';
+import { RefreshCw, ArrowRightLeft, ShieldCheck, Utensils, ClipboardCheck, Thermometer } from 'lucide-react';
 import { ActionButton } from '../../shared/components/ActionButton.js';
 import { bucketRemanentes, type UrgencyLevel } from '../../shared/components/urgency.js';
 import { KitchenService, RemanenteFEFOItem } from '../../features/kitchen/services/kitchen.service.js';
@@ -12,6 +12,7 @@ import { ShiftReconciliationWizard } from '../../features/kitchen/components/Shi
 import { FEFOInventoryHealthBar } from '../../features/kitchen/components/FEFOInventoryHealthBar.js';
 import { OpenPreparationsPanel } from '../../features/kitchen/components/OpenPreparationsPanel.js';
 import { LocationFilterTabs, LocationFilter } from '../../features/kitchen/components/LocationFilterTabs.js';
+import { TemperatureLogModal } from '../../features/kitchen/components/TemperatureLogModal.js';
 import { useAppShell } from '../session.js';
 import styles from './InventarioRoute.module.css';
 
@@ -51,9 +52,10 @@ interface AccionesEstadoGridProps {
   remanentes: RemanenteFEFOItem[];
   onExtract: () => void;
   onPrepareRecipe: () => void;
+  onRecordTemperature: () => void;
 }
 
-const AccionesEstadoGrid: React.FC<AccionesEstadoGridProps> = ({ remanentes, onExtract, onPrepareRecipe }) => (
+const AccionesEstadoGrid: React.FC<AccionesEstadoGridProps> = ({ remanentes, onExtract, onPrepareRecipe, onRecordTemperature }) => (
   <section className={styles['acciones-estado-grid']}>
     <div className={styles['acciones-panel']}>
       <h3 className="card-title mb-3">Acciones</h3>
@@ -73,6 +75,16 @@ const AccionesEstadoGrid: React.FC<AccionesEstadoGridProps> = ({ remanentes, onE
           icon={<Utensils size={26} />}
           onClick={onPrepareRecipe}
           id="btn-open-recipe"
+        />
+        {/* US-033/TK-120-FE: acción voluntaria de inicio de turno — nunca se auto-abre
+            ni bloquea el tablero (decisión de negocio: solo advierte, jamás bloquea). */}
+        <ActionButton
+          action="temperature"
+          label="Registrar Temperatura"
+          hint="control sanitario"
+          icon={<Thermometer size={26} />}
+          onClick={onRecordTemperature}
+          id="btn-open-temperature-log"
         />
       </div>
     </div>
@@ -106,6 +118,7 @@ function useKitchenOpModals() {
   const [isExtractionOpen, setIsExtractionOpen] = useState(false);
   const [isRecipeOpen, setIsRecipeOpen] = useState(false);
   const [isReconciliationOpen, setIsReconciliationOpen] = useState(false);
+  const [isTemperatureLogOpen, setIsTemperatureLogOpen] = useState(false);
   const [discardTarget, setDiscardTarget] = useState<RemanenteFEFOItem | null>(null);
   // ADR-004 / TK-108-FE: los botones rápidos de cantidad abren el modal de motivo,
   // en vez de consumir directo (mismo patrón que discardTarget).
@@ -117,6 +130,8 @@ function useKitchenOpModals() {
     setIsRecipeOpen,
     isReconciliationOpen,
     setIsReconciliationOpen,
+    isTemperatureLogOpen,
+    setIsTemperatureLogOpen,
     discardTarget,
     setDiscardTarget,
     consumeTarget,
@@ -176,6 +191,7 @@ export const InventarioRoute: React.FC = () => {
         remanentes={remanentes}
         onExtract={() => modals.setIsExtractionOpen(true)}
         onPrepareRecipe={() => modals.setIsRecipeOpen(true)}
+        onRecordTemperature={() => modals.setIsTemperatureLogOpen(true)}
       />
       {/* US-027/US-028: preparaciones de receta abiertas — el panel se auto-oculta si no hay ninguna. */}
       <OpenPreparationsPanel reloadKey={remanentes.length} onReconciled={loadRemanentes} />
@@ -193,6 +209,7 @@ export const InventarioRoute: React.FC = () => {
       <RecipeSelectorModal isOpen={modals.isRecipeOpen} onClose={() => modals.setIsRecipeOpen(false)} onSuccess={loadRemanentes} />
       <DiscardModal remanente={modals.discardTarget} onClose={() => modals.setDiscardTarget(null)} onSuccess={loadRemanentes} />
       <ConsumeReasonModal target={modals.consumeTarget} onClose={() => modals.setConsumeTarget(null)} onSuccess={loadRemanentes} />
+      <TemperatureLogModal isOpen={modals.isTemperatureLogOpen} onClose={() => modals.setIsTemperatureLogOpen(false)} />
       <ShiftReconciliationWizard
         isOpen={modals.isReconciliationOpen}
         remanentes={remanentes}

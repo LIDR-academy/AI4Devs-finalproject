@@ -2,7 +2,7 @@ import React from 'react';
 import styles from './ActionButton.module.css';
 
 /** Capa de color de **acción** (qué botón es cuál) — nunca urgencia/estado. */
-type ActionKind = 'extract' | 'add' | 'recipe';
+type ActionKind = 'extract' | 'add' | 'recipe' | 'temperature';
 
 interface ActionButtonProps {
   action: ActionKind;

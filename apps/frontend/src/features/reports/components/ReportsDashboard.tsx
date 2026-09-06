@@ -3,6 +3,7 @@ import { BarChart3, Calendar, Trash2, PieChart, RefreshCw, Clock } from 'lucide-
 import { ReportsService, WasteSummaryItem, RotationMetrics } from '../services/reports.service.js';
 import { SettingsService } from '../../settings/services/settings.service.js';
 import { PreparationWasteReportPanel } from './PreparationWasteReportPanel.js';
+import { TemperatureLogReportPanel } from './TemperatureLogReportPanel.js';
 import styles from './ReportsDashboard.module.css';
 
 interface ReportsDashboardProps {
@@ -258,6 +259,8 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ userRole }) 
       <KpiCards totalQuantity={totalQuantity} expirationWaste={expirationWaste} rotationMetrics={rotationMetrics} />
       <WasteBarChart isLoading={isLoading} data={data} maxVal={maxVal} currencySymbol={currencySymbol} />
       <PreparationWasteReportPanel startDate={startDate} endDate={endDate} currencySymbol={currencySymbol} />
+      {/* US-033/TK-120-FE: histórico de temperatura — la ruta /reportes ya está gateada a ADMIN. */}
+      <TemperatureLogReportPanel startDate={startDate} endDate={endDate} />
     </>
   );
 };

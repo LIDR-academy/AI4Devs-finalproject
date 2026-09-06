@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { AlertTriangle, ChefHat, Scale } from 'lucide-react';
 import { ReportsService, PreparationWasteLine, RecipeConsumptionLine } from '../services/reports.service.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
-import { mapToUserFriendlyError } from '../../../shared/utils/errorMessageMapper.js';
+import { useAsyncData } from '../../../shared/hooks/useAsyncData.js';
 import { DecimalQuantity } from '../../../shared/domain/DecimalQuantity.js';
 import styles from './PreparationWasteReportPanel.module.css';
 
@@ -31,36 +31,22 @@ function groupByRecipe<T extends { recipeId: string; recipeName: string }>(items
   return Array.from(byId.values());
 }
 
+// TK-120-FE: migrado al hook compartido `useAsyncData` — este bloque (loading/error/
+// guarda de cancelación) era literalmente el mismo que el del panel de temperatura y
+// el gate de duplicación lo bloqueó al aparecer la segunda copia.
 function useReportData(startDate: string, endDate: string) {
-  const [wasteByReason, setWasteByReason] = useState<PreparationWasteLine[]>([]);
-  const [consumptionVsTheoretical, setConsumptionVsTheoretical] = useState<RecipeConsumptionLine[]>([]);
-  const [thresholdPercent, setThresholdPercent] = useState(5);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, loading, error } = useAsyncData(
+    () => ReportsService.fetchPreparationWasteReport(startDate, endDate),
+    `${startDate}|${endDate}`
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    ReportsService.fetchPreparationWasteReport(startDate, endDate)
-      .then((report) => {
-        if (cancelled) return;
-        setWasteByReason(report.wasteByReason);
-        setConsumptionVsTheoretical(report.consumptionVsTheoretical);
-        setThresholdPercent(report.wasteAlertThresholdPercent);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(mapToUserFriendlyError(err).message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [startDate, endDate]);
-
-  return { wasteByReason, consumptionVsTheoretical, thresholdPercent, loading, error };
+  return {
+    wasteByReason: data?.wasteByReason ?? [],
+    consumptionVsTheoretical: data?.consumptionVsTheoretical ?? [],
+    thresholdPercent: data?.wasteAlertThresholdPercent ?? 5,
+    loading,
+    error,
+  };
 }
 
 const WasteReasonRow: React.FC<{ line: PreparationWasteLine; currencySymbol: string }> = ({ line, currencySymbol }) => (
