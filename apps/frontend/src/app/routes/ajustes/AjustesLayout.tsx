@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Settings, Users, ShieldCheck, History, ClipboardList } from 'lucide-react';
+import { Settings, Users, ShieldCheck, History, ClipboardList, Bot } from 'lucide-react';
 import styles from './AjustesLayout.module.css';
 
 const SUB_TABS = [
@@ -9,6 +9,7 @@ const SUB_TABS = [
   { to: 'roles', label: 'Roles', icon: <ShieldCheck size={18} /> },
   { to: 'movimientos', label: 'Movimientos', icon: <History size={18} /> },
   { to: 'motivos', label: 'Motivos', icon: <ClipboardList size={18} /> },
+  { to: 'ia', label: 'Agente IA', icon: <Bot size={18} /> },
 ];
 
 /**

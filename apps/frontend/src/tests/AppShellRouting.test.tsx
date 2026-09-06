@@ -44,10 +44,10 @@ describe('TK-085-FE: forma del árbol de rutas real (app/router.tsx)', () => {
     }
   });
 
-  it('/ajustes es un layout route con 5 sub-rutas + index redirect (US-024; catalogo retirada en TK-095-FE, motivos sumada en TK-107-FE)', () => {
+  it('/ajustes es un layout route con sub-rutas + index redirect (US-024, US-030, US-034)', () => {
     const ajustes = byPath('ajustes');
     const subPaths = (ajustes?.children ?? []).map((r) => r.path).filter(Boolean);
-    expect(subPaths).toEqual(['configuracion', 'personal', 'roles', 'movimientos', 'motivos']);
+    expect(subPaths).toEqual(['configuracion', 'personal', 'roles', 'movimientos', 'motivos', 'ia']);
     expect((ajustes?.children ?? []).some((r) => r.index)).toBe(true); // <Navigate to="configuracion">
   });
 });
