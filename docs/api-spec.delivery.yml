@@ -1,0 +1,323 @@
+openapi: 3.0.0
+info:
+  title: MecaTrack API — Delivery Panel
+  description: Admin-only delivery panel for ready and owner-contacted work orders (US-008, US-D1)
+  version: 1.1.0
+
+servers:
+  - url: http://localhost:4000/api
+    description: Local development
+
+paths:
+  /delivery/ready:
+    get:
+      summary: List work orders ready for delivery
+      description: |
+        Returns work orders in status LISTA_PARA_ENTREGA or OWNER_CONTACTED.
+        Includes owner phone from the ownerClient snapshot at check-in and contact audit fields.
+        ADMIN only.
+      tags: [Delivery]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [checkedInAt, totalAmount]
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        '200':
+          description: Ready-for-delivery list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryReadyListResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (non-admin)
+
+  /delivery/ready/{workOrderId}:
+    get:
+      summary: Get ready work order detail
+      tags: [Delivery]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: workOrderId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ready work order detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryReadyDetail'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Work order not ready for delivery
+
+  /delivery/ready/{workOrderId}/mark-contacted:
+    patch:
+      summary: Mark owner as contacted
+      description: |
+        Transitions LISTA_PARA_ENTREGA to OWNER_CONTACTED and sets ownerContactedAt / ownerContactedById (US-D1).
+      tags: [Delivery]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: workOrderId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Owner contacted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkContactedResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Work order not found
+        '409':
+          description: |
+            Already contacted, not ready for contact, or work order has no owner (US-D9).
+            Ownerless THIRD_PARTY OTs cannot use mark-contacted; deliver remains allowed.
+
+  /delivery/ready/{workOrderId}/deliver:
+    patch:
+      summary: Mark work order as delivered
+      description: Transitions LISTA_PARA_ENTREGA or OWNER_CONTACTED to ENTREGADA and sets deliveredAt server-side.
+      tags: [Delivery]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: workOrderId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Work order delivered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliverWorkOrderResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Work order not found
+        '409':
+          description: Already delivered or not ready
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    DeliveryReadyListResponse:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryReadyItem'
+        total:
+          type: integer
+
+    DeliveryReadyItem:
+      type: object
+      required:
+        - workOrderId
+        - licensePlate
+        - vehicleLabel
+        - ownerName
+        - ownerPhone
+        - ownerPhoneDisplay
+        - ownerEmail
+        - broughtByName
+        - broughtByPhone
+        - totalAmount
+        - checkedInAt
+        - elapsedLabel
+        - status
+        - ownerContactedAt
+        - ownerContactedBy
+      properties:
+        workOrderId:
+          type: string
+          format: uuid
+        licensePlate:
+          type: string
+        vehicleLabel:
+          type: string
+        ownerName:
+          type: string
+          nullable: true
+          description: Null when intake was THIRD_PARTY without linked owner (US-D9).
+        ownerPhone:
+          type: string
+          nullable: true
+        ownerPhoneDisplay:
+          type: string
+          nullable: true
+        ownerEmail:
+          type: string
+          nullable: true
+        broughtByName:
+          type: string
+          nullable: true
+        broughtByPhone:
+          type: string
+          nullable: true
+        totalAmount:
+          type: number
+        checkedInAt:
+          type: string
+          format: date-time
+        elapsedLabel:
+          type: string
+        status:
+          type: string
+          enum: [LISTA_PARA_ENTREGA, OWNER_CONTACTED]
+        ownerContactedAt:
+          type: string
+          format: date-time
+          nullable: true
+        ownerContactedBy:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            fullName:
+              type: string
+
+    DeliveryReadyDetail:
+      allOf:
+        - $ref: '#/components/schemas/DeliveryReadyItem'
+        - type: object
+          required: [status, entryReason, mileage, vehicle, owner, tasks]
+          properties:
+            status:
+              type: string
+              enum: [LISTA_PARA_ENTREGA, OWNER_CONTACTED]
+            entryReason:
+              type: string
+            mileage:
+              type: integer
+              nullable: true
+            vehicle:
+              type: object
+              properties:
+                licensePlate:
+                  type: string
+                brand:
+                  type: string
+                model:
+                  type: string
+                year:
+                  type: integer
+            owner:
+              nullable: true
+              type: object
+              properties:
+                fullName:
+                  type: string
+                nationalId:
+                  type: string
+                phone:
+                  type: string
+                  nullable: true
+                email:
+                  type: string
+                  nullable: true
+            tasks:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  description:
+                    type: string
+                  status:
+                    type: string
+                  cost:
+                    type: number
+                    nullable: true
+                  costNotes:
+                    type: string
+                    nullable: true
+
+    MarkContactedResponse:
+      type: object
+      required: [workOrderId, status, ownerContactedAt, ownerContactedBy]
+      properties:
+        workOrderId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [OWNER_CONTACTED]
+        ownerContactedAt:
+          type: string
+          format: date-time
+        ownerContactedBy:
+          type: object
+          required: [id, fullName]
+          properties:
+            id:
+              type: string
+              format: uuid
+            fullName:
+              type: string
+
+    DeliverWorkOrderResponse:
+      type: object
+      required: [workOrderId, status, deliveredAt]
+      properties:
+        workOrderId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [ENTREGADA]
+        deliveredAt:
+          type: string
+          format: date-time
+        mileage:
+          type: integer
+          nullable: true
+
+tags:
+  - name: Delivery
+    description: Admin delivery panel (US-008, US-D1)

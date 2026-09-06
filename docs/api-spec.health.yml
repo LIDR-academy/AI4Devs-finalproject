@@ -1,0 +1,86 @@
+openapi: 3.0.0
+info:
+  title: MecaTrack API — Health Probes
+  description: Liveness and readiness endpoints for MecaTrack (US-O1)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4000/api
+    description: Local development (Docker Compose API often uses PORT 4000)
+  - url: http://localhost:4010/api
+    description: Local DEV API (typical host PORT 4010)
+
+paths:
+  /health/live:
+    get:
+      summary: Liveness probe
+      description: |
+        Returns OK when the NestJS process is running.
+        Does not query PostgreSQL. Public (no JWT). Intended for Docker/Kubernetes probes.
+      tags: [Health]
+      security: []
+      responses:
+        '200':
+          description: Process is alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthLiveResponse'
+              example:
+                status: ok
+
+  /health/ready:
+    get:
+      summary: Readiness probe
+      description: |
+        Returns OK when the API can serve traffic, including a PostgreSQL check
+        (`SELECT 1` via Prisma, ~2.5s timeout). Public (no JWT).
+        On failure returns HTTP 503 with a stable JSON body (no secrets or stack traces).
+      tags: [Health]
+      security: []
+      responses:
+        '200':
+          description: API and database are ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthReadyResponse'
+              example:
+                status: ok
+                checks:
+                  database: up
+        '503':
+          description: Dependency check failed (e.g. database down or timeout)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthReadyResponse'
+              example:
+                status: error
+                checks:
+                  database: down
+
+components:
+  schemas:
+    HealthLiveResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+
+    HealthReadyResponse:
+      type: object
+      required: [status, checks]
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        checks:
+          type: object
+          required: [database]
+          properties:
+            database:
+              type: string
+              enum: [up, down]

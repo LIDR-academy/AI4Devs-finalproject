@@ -1,0 +1,41 @@
+openapi: 3.0.0
+info:
+  title: MecaTrack API — Prometheus Metrics
+  description: Prometheus metrics exposition for MecaTrack (US-O2)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4000/api
+    description: Local / Docker Compose API
+  - url: http://localhost:4010/api
+    description: Local DEV API (typical host PORT 4010)
+
+paths:
+  /metrics:
+    get:
+      summary: Prometheus metrics scrape
+      description: |
+        Returns Prometheus text exposition format for HTTP RED metrics
+        (`mecatrack_http_requests_total`, `mecatrack_http_request_duration_seconds`)
+        and default Node process metrics with prefix `mecatrack_`.
+
+        Public ops endpoint (no JWT). Intended for internal Prometheus scrape
+        (e.g. `http://api:4000/api/metrics` on the Docker network). Do not expose
+        on the public internet without network controls.
+
+        The scrape path itself is excluded from HTTP RED observation.
+      tags: [Metrics]
+      security: []
+      responses:
+        '200':
+          description: Prometheus exposition body
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |
+                # HELP mecatrack_http_requests_total Total HTTP requests handled by the MecaTrack API
+                # TYPE mecatrack_http_requests_total counter
+                mecatrack_http_requests_total{method="GET",route="/api/health/live",status_code="200"} 3
+        '500':
+          description: Unexpected server error

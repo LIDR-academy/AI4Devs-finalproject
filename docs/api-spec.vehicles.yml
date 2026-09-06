@@ -1,0 +1,407 @@
+openapi: 3.0.0
+info:
+  title: MecaTrack API — Vehicle Management
+  description: Vehicle search and registration endpoints for MecaTrack (US-004)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4000/api
+    description: Local development
+
+paths:
+  /vehicles/search:
+    get:
+      summary: Search vehicles
+      description: |
+        Search by license plate fragment (`q`) or exact plate (`licensePlate`).
+        At least one query parameter is required. Short `q` values (< 2 chars) return an empty list.
+      tags: [Vehicles]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+            minLength: 2
+        - in: query
+          name: licensePlate
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search results (max 20 items)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleSearchResponse'
+        '400':
+          description: Missing search parameters
+        '401':
+          description: Unauthorized
+
+  /vehicles/{id}/history:
+    get:
+      summary: Get vehicle visit history
+      description: Returns visit history populated from work orders with technical notes (US-005, US-007).
+      tags: [Vehicles]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vehicle history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleHistoryResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Vehicle not found
+
+  /vehicles/{id}:
+    get:
+      summary: Get vehicle by ID
+      tags: [Vehicles]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vehicle found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Vehicle not found
+
+    patch:
+      summary: Update vehicle
+      description: Updates vehicle data including license plate. Owner cannot be changed (D3/V2).
+      tags: [Vehicles]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVehicleRequest'
+      responses:
+        '200':
+          description: Vehicle updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '404':
+          description: Vehicle not found
+        '409':
+          description: Duplicate license plate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleConflictResponse'
+
+    delete:
+      summary: Delete vehicle
+      description: Deletes vehicle and ownership records if no work orders exist.
+      tags: [Vehicles]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Vehicle deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Vehicle not found
+        '409':
+          description: Vehicle has work orders
+
+  /vehicles:
+    post:
+      summary: Create a new vehicle
+      description: Creates vehicle and initial active ownership for the given client.
+      tags: [Vehicles]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleRequest'
+      responses:
+        '201':
+          description: Vehicle created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '404':
+          description: Client not found
+        '409':
+          description: Duplicate license plate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleConflictResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CurrentOwner:
+      type: object
+      required: [id, fullName, nationalId]
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        nationalId:
+          type: string
+
+    VehicleResponse:
+      type: object
+      required: [id, licensePlate, brand, model, year, color, currentOwner, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        licensePlate:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+        color:
+          type: string
+          nullable: true
+        currentOwner:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CurrentOwner'
+          description: Null when the vehicle has no active ownership (US-D9).
+        createdAt:
+          type: string
+          format: date-time
+
+    VehicleSearchResponse:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/VehicleResponse'
+        total:
+          type: integer
+
+    UpdateVehicleRequest:
+      type: object
+      required: [licensePlate, brand, model, year]
+      properties:
+        licensePlate:
+          type: string
+          minLength: 2
+          maxLength: 15
+        brand:
+          type: string
+          minLength: 1
+          maxLength: 60
+        model:
+          type: string
+          minLength: 1
+          maxLength: 60
+        year:
+          type: integer
+          minimum: 1900
+        color:
+          type: string
+          maxLength: 40
+
+    CreateVehicleRequest:
+      type: object
+      required: [licensePlate, brand, model, year]
+      properties:
+        licensePlate:
+          type: string
+          minLength: 2
+          maxLength: 15
+        brand:
+          type: string
+          minLength: 1
+          maxLength: 60
+        model:
+          type: string
+          minLength: 1
+          maxLength: 60
+        year:
+          type: integer
+          minimum: 1900
+        color:
+          type: string
+          maxLength: 40
+        clientId:
+          type: string
+          format: uuid
+          description: Optional. When omitted, the vehicle is created without ownership (US-D9).
+
+    VehicleHistoryResponse:
+      type: object
+      required: [vehicleId, visits]
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+        visits:
+          type: array
+          items:
+            $ref: '#/components/schemas/VehicleHistoryVisit'
+
+    VehicleHistoryVisit:
+      type: object
+      required:
+        - workOrderId
+        - checkedInAt
+        - status
+        - entryReason
+        - totalAmount
+        - ownerAtVisit
+        - visitNotes
+        - tasks
+      properties:
+        workOrderId:
+          type: string
+          format: uuid
+        checkedInAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+        entryReason:
+          type: string
+        totalAmount:
+          type: number
+          nullable: true
+        ownerAtVisit:
+          type: object
+          properties:
+            fullName:
+              type: string
+            nationalId:
+              type: string
+        visitNotes:
+          type: object
+          properties:
+            visitDiagnosis:
+              type: string
+              nullable: true
+            visitRepairSummary:
+              type: string
+              nullable: true
+            visitPartsUsed:
+              type: string
+              nullable: true
+            visitAdditionalNotes:
+              type: string
+              nullable: true
+        tasks:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              status:
+                type: string
+              cost:
+                type: number
+                nullable: true
+              diagnosis:
+                type: string
+                nullable: true
+              repairPerformed:
+                type: string
+                nullable: true
+              partsUsed:
+                type: string
+                nullable: true
+              additionalNotes:
+                type: string
+                nullable: true
+
+    VehicleConflictResponse:
+      type: object
+      required: [statusCode, message, error, existingVehicle]
+      properties:
+        statusCode:
+          type: integer
+          example: 409
+        message:
+          type: string
+          example: Vehicle with this license plate already exists
+        error:
+          type: string
+          example: Conflict
+        existingVehicle:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            licensePlate:
+              type: string
+            brand:
+              type: string
+            model:
+              type: string
+            year:
+              type: integer

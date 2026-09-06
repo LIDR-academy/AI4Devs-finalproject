@@ -1,0 +1,152 @@
+openapi: 3.0.0
+info:
+  title: MecaTrack API — Authentication
+  description: Auth endpoints for MecaTrack (US-001)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4000/api
+    description: Local development
+
+paths:
+  /auth/login:
+    post:
+      summary: Login with email and password
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      parameters:
+        - in: header
+          name: X-MecaTrack-Client
+          required: false
+          schema:
+            type: string
+            enum: [mobile]
+          description: Native clients send `mobile` to receive `refreshToken` in the JSON body (web keeps the httpOnly cookie only).
+      responses:
+        '200':
+          description: Successful login
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                    description: Present only when X-MecaTrack-Client is `mobile`
+                  user:
+                    $ref: '#/components/schemas/UserPayload'
+        '401':
+          description: Invalid credentials (including inactive accounts; generic message)
+        '429':
+          description: Rate limit exceeded
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      tags: [Auth]
+      parameters:
+        - in: header
+          name: X-MecaTrack-Client
+          required: false
+          schema:
+            type: string
+            enum: [mobile]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  description: Native clients send the refresh token in the body; the web client uses the httpOnly cookie.
+      responses:
+        '200':
+          description: New access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                    description: Rotated refresh token; present when the request used a body token or the mobile client header
+        '401':
+          description: Missing or invalid refresh cookie or body token
+
+  /auth/logout:
+    post:
+      summary: Logout and revoke refresh token
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Logged out
+
+  /auth/me:
+    get:
+      summary: Get current user profile
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserPayload:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, MECHANIC]
+
+    MeResponse:
+      allOf:
+        - $ref: '#/components/schemas/UserPayload'
+        - type: object
+          properties:
+            active:
+              type: boolean
