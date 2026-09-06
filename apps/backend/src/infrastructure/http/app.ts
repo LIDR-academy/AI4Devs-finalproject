@@ -60,6 +60,13 @@ import { ITemperatureLogRepository } from '../../domain/kitchen/repositories/ITe
 import { InMemoryTemperatureLogRepository } from '../kitchen/repositories/InMemoryTemperatureLogRepository.js';
 import { createTemperatureLogsController } from '../kitchen/http/controllers/temperature-logs.controller.js';
 
+import { IAiConfigurationRepository } from '../../domain/settings/repositories/IAiConfigurationRepository.js';
+import { InMemoryAiConfigurationRepository } from '../settings/repositories/InMemoryAiConfigurationRepository.js';
+import { createAiSettingsController } from '../settings/http/controllers/aiSettings.controller.js';
+import { CredentialEncryptionService } from '../security/CredentialEncryptionService.js';
+import { SuggestRescueRecipesUseCase } from '../../application/recipes/use-cases/SuggestRescueRecipesUseCase.js';
+import { CompositeAiRecipeGeneratorAdapter } from '../recipes/gateways/CompositeAiRecipeGeneratorAdapter.js';
+
 export interface AppOptions {
   userRepository?: IUserRepository;
   emailService?: IEmailService;
@@ -73,6 +80,7 @@ export interface AppOptions {
   roleRepository?: IRoleRepository;
   locationRepository?: IStorageLocationRepository;
   settingsRepository?: ISystemSettingsRepository;
+  aiConfigRepository?: IAiConfigurationRepository;
   consumptionReasonRepository?: IConsumptionReasonRepository;
   temperatureLogRepository?: ITemperatureLogRepository;
   jwtSecret?: string;
@@ -189,6 +197,8 @@ interface AppRepositories {
   settingsRepo: ISystemSettingsRepository;
   consumptionReasonRepo: IConsumptionReasonRepository;
   temperatureLogRepo: ITemperatureLogRepository;
+  aiConfigRepo: IAiConfigurationRepository;
+  encryptionService: CredentialEncryptionService;
 }
 
 function buildQueryRepositories(
@@ -213,6 +223,7 @@ function buildAuxiliaryRepositories(options: AppOptions) {
     roleRepo: options.roleRepository ?? new InMemoryRoleRepository(),
     locationRepo: options.locationRepository ?? new InMemoryLocationRepository(),
     settingsRepo: options.settingsRepository ?? new InMemorySettingsRepository(),
+    aiConfigRepo: options.aiConfigRepository ?? new InMemoryAiConfigurationRepository(),
     consumptionReasonRepo: options.consumptionReasonRepository ?? new InMemoryConsumptionReasonRepository(),
     temperatureLogRepo: options.temperatureLogRepository ?? new InMemoryTemperatureLogRepository(),
   };
@@ -236,6 +247,7 @@ function buildDefaultRepositories(options: AppOptions): AppRepositories {
     recipeRepo: options.recipeRepository ?? new InMemoryRecipeRepository(),
     reconciliationRepo: options.reconciliationRepository ?? new InMemoryShiftReconciliationRepository(),
     recipePreparationRepo,
+    encryptionService: new CredentialEncryptionService(options.jwtSecret ?? process.env.JWT_SECRET),
   };
 }
 
@@ -262,15 +274,23 @@ function mountApiRoutes(
   authMiddleware: ReturnType<typeof createAuthenticateJWTMiddleware>,
   isAuthRequired: boolean
 ): void {
-  const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, recipePreparationRepo, reportRepo, roleRepo, locationRepo, settingsRepo, consumptionReasonRepo, temperatureLogRepo } = repos;
+  const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, recipePreparationRepo, reportRepo, roleRepo, locationRepo, settingsRepo, aiConfigRepo, encryptionService, consumptionReasonRepo, temperatureLogRepo } = repos;
   const guard = isAuthRequired ? [authMiddleware] : [];
 
   app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo, isAuthRequired, locationRepo, recipePreparationRepo, roleRepo));
   app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo, isAuthRequired, recipePreparationRepo, stockRepo, locationRepo, consumptionReasonRepo, settingsRepo, roleRepo));
   app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo, roleRepo, settingsRepo, isAuthRequired));
-  app.use('/api/v1/recipes', ...guard, createRecipesRouter(recipeRepo, stockRepo));
+  const aiRecipeGeneratorGateway = new CompositeAiRecipeGeneratorAdapter();
+  const suggestRescueRecipesUseCase = new SuggestRescueRecipesUseCase(
+    remanenteQueryRepo,
+    stockRepo,
+    aiConfigRepo,
+    aiRecipeGeneratorGateway
+  );
+  app.use('/api/v1/recipes', ...guard, createRecipesRouter(recipeRepo, stockRepo, suggestRescueRecipesUseCase));
   app.use('/api/v1/roles', ...guard, createRolesController(roleRepo, isAuthRequired));
   app.use('/api/v1/locations', ...guard, createLocationsController(locationRepo, isAuthRequired, stockRepo));
+  app.use('/api/v1/settings/ai', ...guard, createAiSettingsController(aiConfigRepo, encryptionService, isAuthRequired));
   app.use('/api/v1/settings', ...guard, createSettingsController(settingsRepo));
   // US-030: catálogo de motivos de consumo — lectura para cualquier autenticado,
   // mutación y `includeInactive` solo ADMIN (gateado dentro del propio controller).

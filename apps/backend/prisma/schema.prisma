@@ -146,6 +146,23 @@ model SystemSettings {
   updatedAt                    DateTime @updatedAt
 }
 
+// US-034 / TK-121: Configuración de agente de IA y conectividad
+model AiConfiguration {
+  id              String   @id @default("default")
+  provider        String   @default("HEURISTIC") // GEMINI, OPENAI_COMPATIBLE, HEURISTIC
+  modelName       String   @default("gemini-2.5-flash")
+  endpointUrl     String?
+  encryptedApiKey String?
+  temperature     Decimal  @default(0.0) @db.Decimal(3, 2)
+  replenishmentOn Boolean  @default(true)
+  rescueRecipesOn Boolean  @default(true)
+  anomalyAuditOn  Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+  updatedBy       String?
+
+  @@map("ai_configurations")
+}
+
 model Insumo {
   id              String           @id @default(uuid())
   name            String
