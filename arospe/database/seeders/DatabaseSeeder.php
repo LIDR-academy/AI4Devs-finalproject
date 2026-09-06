@@ -31,5 +31,9 @@ class DatabaseSeeder extends Seeder
         // environment allow-list above. See docs/database/schema.md's "Populated by"
         // note on the same reasoning for RolePermissionSeeder.
         $this->call(SalesRegionSeeder::class);
+
+        // Story 0032: the shipping geography catalog. Also required application data,
+        // physically independent of SalesRegionSeeder above -- no shared table, no FK.
+        $this->call(GeographyCatalogSeeder::class);
     }
 }

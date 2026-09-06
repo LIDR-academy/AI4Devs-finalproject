@@ -17,7 +17,6 @@ class ProductionSeeder extends Seeder
     {
         $this->call(RolePermissionSeeder::class);
         $this->call(SalesRegionSeeder::class);
-        // Story 0032 adds the shipping geography catalog here. Keep this list the one
-        // place a required catalog is registered.
+        $this->call(GeographyCatalogSeeder::class);
     }
 }
