@@ -133,7 +133,13 @@ app/
                        embeds rather than one screen's own logic (WysiwygEditor, SearchableMultiSelect)
                        plus the one supporting interface a consumer implements
                        (MultiSelectOptionsResolver) rather than a component itself; see the
-                       wire:ignore section below
+                       wire:ignore section below. Products/VariantBuilder.php (story 0031) is
+                       `Products/`'s third class and the app's first NESTED child component embedded
+                       inside another module's own routed page (`Products/Editor`, never its own
+                       route) rather than beside it — it re-declares `#[Locked] public string
+                       $productId` and re-reads the parent `Product` with `findOrFail()` at the top
+                       of every method, the 0022 D6 precedent applied verbatim; see
+                       architecture/authorization.md for why it needs no `ProductVariantPolicy`
   Models/              Eloquent models (User, SalesRegion, Media, ProductCategory, Product,
                        ProductAttributeType, ProductAttributeValue, ProductVariant, GeographyEntry
                        — story 0032, the only bigint-PK model in this app; Role, which subclasses
@@ -167,7 +173,12 @@ resources/
   views/
     components/        Blade components — all anonymous (no app/View/Components/ in this repo)
     layouts/            Auth/app layout shells
-    livewire/           Views for Livewire components AND plain auth Blade views (see naming.md)
+    livewire/           Views for Livewire components AND plain auth Blade views (see naming.md).
+                        products/variant-builder.blade.php (story 0031) is the ordinary mirror-rule
+                        pairing for Products/VariantBuilder.php above (naming.md's exception does not
+                        apply — the class is not named Index), embedded from
+                        products/editor.blade.php below a flux:separator, rendered only when
+                        $productId !== null
     partials/
 routes/                 web.php, plus one file per functional area that web.php requires
                         (settings.php, roles.php, users.php, sales-regions.php,
@@ -180,7 +191,17 @@ tests/
                         Seeders/, Users/, Roles/, SalesRegions/, Media/, ProductCategories/,
                         Products/, Components/, Models/, Policies/, Authorization/,
                         Navigation/, ...). Dev/ (story 0020's MediaGalleryHarnessRouteTest.php) was
-                        deleted by story 0027 along with its subject
+                        deleted by story 0027 along with its subject. Story 0031 adds five files to
+                        Products/ for the nested VariantBuilder component, of which
+                        VariantBuilderTest.php (create/duplicate-combination/sku-collision refusal/
+                        delete/re-create round trip) and VariantBuilderAuthorizationTest.php (an
+                        allow-and-deny pair per gated method, matching D-10's six-call-site fixture)
+                        are the two to read first; VariantBuilderQueryTest.php pins the
+                        featuredImage/values.type eager-load with no N+1 as either axis grows,
+                        VariantBuilderRenderingTest.php covers refusal placement, the disabled-row
+                        hints and the empty-state/no-attribute-types dead ends, and
+                        VariantBuilderSkuPreviewTest.php pins the live #[Computed] preview against
+                        0029's own derivation formula
   Unit/                 Mirrors app structure too (Actions/ itself — NormalizeForSearchTest.php,
                         story 0022, sits directly here with no subfolder, matching the app class it
                         tests — plus Actions/Auth/, Actions/Media/, Actions/Products/ (story 0029's
@@ -560,5 +581,7 @@ Use the scoped forms freely while iterating; the unscoped runs are what counts a
 **`php artisan test --parallel` is an equally valid unscoped record, and the faster one** (measured on this repo's own 950-test suite: ~2.6x on this project's dev container — see [testing/ci/commands.md#run-in-parallel](../testing/ci/commands.md#run-in-parallel)). It runs every test in every suite exactly like the plain unscoped form; `--parallel` changes how the work is distributed across processes, not what gets checked. CI runs it this way since the test-performance review that measured it. The one thing `--parallel` needs that the sequential form doesn't: `storage/framework/views` must sit on a filesystem that tolerates concurrent writes — see the ⚠️ in the linked section if you rebuild the Sail image and hit `tempnam()` errors under load.
 
 _Last updated: 2026-09-06 — Story 0032 (Shipping geography catalog seed). Added `GeographyEntry`/`GeographyLevel`/`GeographyCatalogSeeder` to the directory-structure listing (`app/Models/`, `app/Enums/`, `database/data/`, `tests/Unit/`, `tests/Support/`), including the new `tests/Fixtures/geography/` sibling to `tests/Browser/Fixtures/`. No convention rule changed — every addition follows an existing pattern (the `Index`-in-a-subfolder-adjacent bigint-PK exception is ADR 0001's, not a new rule here; the deferred-`label()` and `app()`-resolution shapes are naming.md's/code-style.md's existing rules applied, not extended)._
+
+_Previously: 2026-09-06 — Story 0031 (Product variants — the variant builder inside the product editor, UI). Added `Products/VariantBuilder.php` (a third class in `Actions/Products/`'s sibling `Livewire/Products/`, and this app's first Livewire component nested inside another module's own routed page) and its mirrored `resources/views/livewire/products/variant-builder.blade.php` to the directory-structure listing, plus story 0031's five new `tests/Feature/Products/VariantBuilder*Test.php` files. No convention content changed beyond these listing entries this pass._
 
 _Previously: 2026-09-05 — Collapsed the accumulating `_Previously:` footer chain (spanning tasks 0004–story 0029b, ~40k characters) into this single line, per the doc-growth-management rule now codified in [contracts.md](../contracts.md#doc-growth-management-rule) and the docs-maintainer skill's Definition of Done. No convention content changed this pass.

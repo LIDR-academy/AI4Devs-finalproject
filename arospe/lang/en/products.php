@@ -78,6 +78,73 @@ return [
             'too_many' => 'Generating these types would create :attempted combinations, above the limit of :limit. Select fewer types or values.',
             'summary' => ':count variant created.|:count variants created.',
         ],
+
+        // Story 0031 -- the single-variant builder nested in the product editor (D-15). Nested
+        // sub-groups so nothing collides with 0029's flat leaves above.
+        'builder' => [
+            'heading' => 'Variants',
+            'summary' => ':count variants',
+            'add' => 'Add variant',
+            'empty' => 'This product has no variants yet.',
+            'requires_saved_product' => 'Save the product first to start adding variants.',
+            'no_attribute_types' => 'No attribute types are defined yet. Define at least one before building a variant.',
+            'action_not_allowed' => 'Action not allowed',
+        ],
+
+        'columns' => [
+            'combination' => 'Combination',
+            'sku' => 'SKU',
+            'price' => 'Price',
+            'stock' => 'Stock',
+            'image' => 'Image',
+            'actions' => 'Actions',
+        ],
+
+        'form' => [
+            'create_title' => 'New variant',
+            'edit_title' => 'Edit variant',
+            'combination_legend' => 'Combination',
+            'attribute_type_label' => 'Attribute type',
+            'attribute_type_placeholder' => 'Select an attribute type',
+            'attribute_value_label' => 'Value',
+            'attribute_value_placeholder' => 'Select a value',
+            'add_attribute_row' => 'Add attribute',
+            'remove_attribute_row' => 'Remove attribute',
+            'price_label' => 'Price',
+            'price_prefilled_help' => "Pre-filled from the product's own price -- change it if this variant is priced differently.",
+            'stock_label' => 'Stock',
+            'save' => 'Save',
+            'cancel' => 'Cancel',
+        ],
+
+        'sku' => [
+            'preview_label' => 'Derived SKU',
+            'preview_pending' => 'Choose attribute values to preview the SKU.',
+            'preview_provisional' => 'Provisional -- may still change as more attribute values are chosen.',
+            'derived_notice' => 'This SKU is derived from the product SKU and the chosen attribute values. It cannot be typed directly.',
+            'remedy_hint' => "Change the product's SKU or rename the attribute value to resolve this.",
+        ],
+
+        'combination' => [
+            'immutable_notice' => "A variant's combination cannot be changed once it exists. Remove this variant and build a new one instead.",
+            'duplicate_of' => 'See :label',
+        ],
+
+        'image' => [
+            'own_badge' => 'Own',
+            'inherited_badge' => 'Inherited',
+            'none' => 'No image',
+            'choose' => 'Choose from gallery',
+            'replace' => 'Change image',
+            'revert_to_inherited' => "Use the product's image",
+            'confirm_label' => 'Use this image',
+        ],
+
+        'delete' => [
+            'title' => 'Delete variant',
+            'confirm' => 'Are you sure you want to remove ":label" (:sku)?',
+            'irreversible' => 'This action is permanent and cannot be undone.',
+        ],
     ],
 
     // Story 0027 -- the routed product editor.

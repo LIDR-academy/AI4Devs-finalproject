@@ -68,6 +68,73 @@ return [
             'too_many' => 'Generar estos tipos crearía :attempted combinaciones, por encima del límite de :limit. Selecciona menos tipos o valores.',
             'summary' => ':count variante creada.|:count variantes creadas.',
         ],
+
+        // Historia 0031 -- el compositor de variantes anidado en el editor de producto. Clave por
+        // clave idéntico a lang/en/products.php.
+        'builder' => [
+            'heading' => 'Variantes',
+            'summary' => ':count variantes',
+            'add' => 'Añadir variante',
+            'empty' => 'Este producto todavía no tiene variantes.',
+            'requires_saved_product' => 'Guarda primero el producto para empezar a añadir variantes.',
+            'no_attribute_types' => 'Todavía no hay tipos de atributo definidos. Define al menos uno antes de crear una variante.',
+            'action_not_allowed' => 'Acción no permitida',
+        ],
+
+        'columns' => [
+            'combination' => 'Combinación',
+            'sku' => 'SKU',
+            'price' => 'Precio',
+            'stock' => 'Stock',
+            'image' => 'Imagen',
+            'actions' => 'Acciones',
+        ],
+
+        'form' => [
+            'create_title' => 'Nueva variante',
+            'edit_title' => 'Editar variante',
+            'combination_legend' => 'Combinación',
+            'attribute_type_label' => 'Tipo de atributo',
+            'attribute_type_placeholder' => 'Selecciona un tipo de atributo',
+            'attribute_value_label' => 'Valor',
+            'attribute_value_placeholder' => 'Selecciona un valor',
+            'add_attribute_row' => 'Añadir atributo',
+            'remove_attribute_row' => 'Quitar atributo',
+            'price_label' => 'Precio',
+            'price_prefilled_help' => 'Rellenado con el precio del producto -- cámbialo si esta variante tiene un precio distinto.',
+            'stock_label' => 'Stock',
+            'save' => 'Guardar',
+            'cancel' => 'Cancelar',
+        ],
+
+        'sku' => [
+            'preview_label' => 'SKU derivado',
+            'preview_pending' => 'Elige valores de atributo para previsualizar el SKU.',
+            'preview_provisional' => 'Provisional -- puede cambiar todavía a medida que se eligen más valores de atributo.',
+            'derived_notice' => 'Este SKU se deriva del SKU del producto y de los valores de atributo elegidos. No se puede escribir directamente.',
+            'remedy_hint' => 'Cambia el SKU del producto o renombra el valor del atributo para resolver esto.',
+        ],
+
+        'combination' => [
+            'immutable_notice' => 'La combinación de una variante no se puede cambiar una vez creada. Elimina esta variante y crea una nueva en su lugar.',
+            'duplicate_of' => 'Ver :label',
+        ],
+
+        'image' => [
+            'own_badge' => 'Propia',
+            'inherited_badge' => 'Heredada',
+            'none' => 'Sin imagen',
+            'choose' => 'Elegir de la galería',
+            'replace' => 'Cambiar imagen',
+            'revert_to_inherited' => 'Usar la imagen del producto',
+            'confirm_label' => 'Usar esta imagen',
+        ],
+
+        'delete' => [
+            'title' => 'Eliminar variante',
+            'confirm' => '¿Seguro que quieres eliminar ":label" (:sku)?',
+            'irreversible' => 'Esta acción es permanente y no se puede deshacer.',
+        ],
     ],
 
     // Historia 0027 -- clave por clave idéntico a lang/en/products.php.

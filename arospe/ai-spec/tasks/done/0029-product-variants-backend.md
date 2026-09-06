@@ -24,7 +24,7 @@ combination on a product**, and **a SKU namespace that spans both `products.sku`
 > other is scope.
 >
 > 1. **Four contract gaps** that story **0031** found while designing the screen that consumes this
->    one, raised as [its OQ-3](../0031-product-variants-editor-ui.md#open-questions). They are all
+>    one, raised as [its OQ-3](0031-product-variants-editor-ui.md#open-questions). They are all
 >    *underspecification of things this story already decided*, not new decisions: the error-bag keys
 >    two refusals throw on, one missing validation-rules method, the three action signatures, and the
 >    Eloquent relations this story names in prose but never declares. Filled in as
@@ -1562,7 +1562,7 @@ the migration diff.
 ---
 
 > 🟣 **D-15 to D-18 were added on 2026-08-19.** D-15–D-17 fill the four contract gaps 0031 raised as
-> [its OQ-3](../0031-product-variants-editor-ui.md#open-questions) — none of them is a new decision, each
+> [its OQ-3](0031-product-variants-editor-ui.md#open-questions) — none of them is a new decision, each
 > is a thing this story already decided and then never wrote down. **D-18 is the one genuine scope
 > addition**: the cartesian generator.
 
@@ -2567,7 +2567,7 @@ Nothing is user-visible yet: the builder that consumes all of this is story **00
       that raises the question. Nothing in this story nests a savepoint inside another transaction, so
       it has no occasion to run it.
 - [ ] 🟠 **Cross-reference sweep for the split**: every mention of the generator or of the two
-      in-use guards in [0031](../0031-product-variants-editor-ui.md) points at **0029b** / **0029a**
+      in-use guards in [0031](0031-product-variants-editor-ui.md) points at **0029b** / **0029a**
       rather than at this file, and both new siblings' own relative links resolve from
       `ai-spec/tasks/` — verified by resolving each path against the filesystem, per
       [workflow.md](../../../docs/workflow.md#link-integrity-check-on-every-stage-move), not by
@@ -3195,7 +3195,7 @@ the screen it built on this contract, the second is a PO decision.
 
 **Part 1 — four contract gaps, filled.** Story **0031** was debated on 2026-08-19 against this
 document and found four places where this story decided something and then never wrote it down, raised
-as [its OQ-3](../0031-product-variants-editor-ui.md#open-questions). All four are **specification, not
+as [its OQ-3](0031-product-variants-editor-ui.md#open-questions). All four are **specification, not
 new decisions**, and all four are answered as 0031 recommended:
 
 | 0031's gap | Answer | Where |
