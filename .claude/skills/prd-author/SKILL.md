@@ -36,7 +36,7 @@ Turn the strategic proposal into a **decision-ready, living PRD** for Sport ITSM
 - Every "Must" requirement traces to a business objective or a top pain point. No orphan requirements (see "Traceability").
 - Numeric targets are **hypotheses to validate**, never commitments — label them so.
 - Write in **English** (documentation-standards §1). Offer a Spanish version on request.
-- **Output:** a single `docs/product/prd.md` by default. Split into `docs/product/personas.md` / `docs/product/roadmap.md` only if the user asks; if you split, the PRD links to them instead of duplicating.
+- **Output:** a single `docs/product/PRD.md` by default. Split into `docs/product/personas.md` / `docs/product/roadmap.md` only if the user asks; if you split, the PRD links to them instead of duplicating.
 - **Do not write the PRD until the user explicitly approves scope.** This skill defines the process and template; it does not auto-generate.
 
 ## Process
@@ -65,9 +65,9 @@ PRDAuthorProcess {
   }
 
   DetectMode() {
-    if (fileExists("docs/product/prd.md")) {
+    if (fileExists("docs/product/PRD.md")) {
       Mode = "revise"
-      Existing = readAndParse("docs/product/prd.md")   // version, change log, all IDs
+      Existing = readAndParse("docs/product/PRD.md")   // version, change log, all IDs
       log("Existing PRD found (" + Existing.version + ") — entering revision mode; IDs will be preserved.")
     } else {
       Mode = "create"
@@ -123,8 +123,8 @@ PRDAuthorProcess {
     prd = renderTemplate("references/prd-template.md", State)
     checkDefinitionOfReady(prd)
     // On explicit approval only:
-    prd |> writeFile("docs/product/prd.md")
-    log("PRD " + (Mode == "revise" ? "updated" : "written") + " at docs/product/prd.md")
+    prd |> writeFile("docs/product/PRD.md")
+    log("PRD " + (Mode == "revise" ? "updated" : "written") + " at docs/product/PRD.md")
   }
 
   execute() {
@@ -160,7 +160,7 @@ Typical gaps for Sport ITSM:
 
 The PRD is maintained over time, not written once.
 
-- **Detect** an existing `docs/product/prd.md` and enter **revision mode**.
+- **Detect** an existing `docs/product/PRD.md` and enter **revision mode**.
 - **Stable IDs:** never renumber or reuse `P` (pain points), `BO-`, `PER-` (personas), `FR-`, `NFR-` IDs. New items get the next free number.
 - **Deprecate, don't delete:** a requirement that's dropped is marked `Status: Deprecated` with the version it was removed in — history and traceability stay intact.
 - **Version bump:** patch for wording/fixes, minor for added requirements, major for scope/objective changes. Update the Document Control version and append a **change-log row** with today's date (from session context), author, and a one-line summary.
@@ -187,7 +187,7 @@ Render it as the **Traceability matrix** section of the PRD, and validate these 
 
 ## PRD template
 
-The full section-by-section PRD structure lives in [`references/prd-template.md`](references/prd-template.md). Follow it exactly for `docs/product/prd.md`. It covers: document control (version + change log) · vision & positioning · problem & context · business objectives · personas · scope (MVP / post-MVP / out-of-scope) · feature specifications · functional requirements · non-functional requirements · traceability matrix · success metrics · prioritization & roadmap · assumptions, dependencies, risks · open questions.
+The full section-by-section PRD structure lives in [`references/prd-template.md`](references/prd-template.md). Follow it exactly for `docs/product/PRD.md`. It covers: document control (version + change log) · vision & positioning · problem & context · business objectives · personas · scope (MVP / post-MVP / out-of-scope) · feature specifications · functional requirements · non-functional requirements · traceability matrix · success metrics · prioritization & roadmap · assumptions, dependencies, risks · open questions.
 
 ## Anti-patterns (avoid)
 

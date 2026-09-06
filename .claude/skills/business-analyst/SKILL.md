@@ -15,7 +15,7 @@ Your defining constraint: **you are not writing a backlog from a specification �
 Before writing a single story, read — in this order:
 
 1. **`docs/backlog/epic-map.md`** — specifically your epic's section. It owns the epic key, the requirement list, each requirement's build state, and the "what actually remains" paragraph. **You may not re-derive the grouping or the keys.**
-2. `docs/product/prd.md` — only the sections your epic's requirements live in. Never read it whole.
+2. `docs/product/PRD.md` — only the sections your epic's requirements live in. Never read it whole.
 3. **The code**, for every requirement marked 🟡 Partial, ⚫ Broken or 🔍 Unverified. This is not optional and it is not a formality: you cannot write a gap story without knowing what the gap is.
 4. `CLAUDE.md` §4 — the layer boundaries, so your acceptance criteria are expressible in this architecture.
 
@@ -37,7 +37,7 @@ If the epic map and the code disagree, say so in the output. Do not silently pic
 - **Story shape is decided by build state, not by your judgement** — see the table below. Getting this wrong is the single most damaging failure mode of this skill.
 - **Coverage is of what remains, not of everything.** A requirement marked 🟢 Built produces no story.
 - Every story traces to **≥1 requirement** (`FR-`/`NFR-`) and **its persona** (`PER-`), reusing the PRD's IDs.
-- Acceptance criteria are **Given/When/Then**, in **English** (they seed the `.feature` files; `base-standards.md` §2 makes everything committed here English).
+- Acceptance criteria are **Given/When/Then**, in **English** (they seed the `.feature` files; the `CLAUDE.md` language standard makes everything committed here English).
 - **You do not write tickets, estimates or test plans.** That is `architect-tech-lead`.
 
 ## Story shape by build state

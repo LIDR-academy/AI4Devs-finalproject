@@ -12,9 +12,8 @@ Replaces the former `product-owner` skill, which extracted personas and requirem
 
 ## Reads from
 
-- `docs/product/prd.md` — icon legend, §6 feature specs, §7 functional requirements, §8 NFRs
-- `docs/product/implementation-baseline.md` — the code-side inventory, used as cross-check
-- The code itself — for 🔍 Unverified requirements and PRD/baseline disagreements
+- `docs/product/PRD.md` — icon legend, §6 feature specs, §7 functional requirements, §8 NFRs
+- The code itself — the cross-check: for 🔍 Unverified requirements and for any build state the code contradicts
 
 ## Writes
 
@@ -34,4 +33,4 @@ Replaces the former `product-owner` skill, which extracted personas and requirem
 - **Never renumbers or invents PRD IDs** — no new `F-` numbers, ever.
 - **Never writes user stories or tickets** — that is `business-analyst` and `architect-tech-lead`.
 - **Reports disagreements, does not resolve them** by picking a side.
-- Output in English (`base-standards.md` §2).
+- Output in English (the `CLAUDE.md` language standard).

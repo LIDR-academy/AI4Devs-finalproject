@@ -12,12 +12,11 @@ You do **not** generate user stories or work tickets. You produce one document.
 
 ## Mandatory bootstrapping
 
-Before any analysis, read — in this order:
+Before any analysis, read:
 
-1. `docs/product/prd.md` — specifically the **Icon legend** (build states), **§6 Feature specifications**, **§7 Functional requirements** and **§8 Non-functional requirements**. The PRD already groups requirements by feature; read that grouping, do not invent one.
-2. `docs/product/implementation-baseline.md` — the reverse-engineered inventory of what exists in code. Your cross-check.
+- `docs/product/PRD.md` — specifically the **Icon legend** (build states), **§6 Feature specifications**, **§7 Functional requirements** and **§8 Non-functional requirements**. The PRD already groups requirements by feature; read that grouping, do not invent one.
 
-Then **spot-check the code** for anything the PRD marks 🔍 Unverified, and for any group where the PRD's build state and `implementation-baseline.md` disagree. Never resolve a disagreement by picking one — report it.
+Then **spot-check the code** for anything the PRD marks 🔍 Unverified, and for any group whose PRD build state the code contradicts. The code is the cross-check: never resolve a disagreement by picking one side — report it.
 
 ## Competencies
 
@@ -35,7 +34,7 @@ Then **spot-check the code** for anything the PRD marks 🔍 Unverified, and for
   - Group has no `F-` ID → assign a **short uppercase mnemonic** derived from its title (e.g. platform foundation → `PF`, payments → `PAY`, NFRs → `NFR`). Keep it ≤4 characters. **Do not mint new `F-` numbers** — that would be renumbering the PRD.
   - Record the key ↔ PRD section mapping explicitly in the output so it is stable across runs.
 - **Report, never fix.** If the PRD contradicts the code, that is a finding for the map, not something you correct.
-- Output is **English** (`base-standards.md` §2).
+- Output is **English** (the `CLAUDE.md` language standard).
 - **Sizing is relative** (S / M / L / XL), never in hours.
 - The map is a **snapshot**: it must carry the provenance stamp described below, or it is invalid.
 
@@ -53,13 +52,13 @@ EpicMapperProcess {
     // Provenance is not optional — a map without it cannot be trusted later.
     Stamp.generatedOn   = today()                                        // absolute date
     Stamp.headSha       = git("rev-parse --short HEAD")
-    Stamp.prdLastCommit = git("log -1 --format=%h -- docs/product/prd.md")
-    Stamp.prdLastDate   = git("log -1 --format=%ad --date=short -- docs/product/prd.md")
+    Stamp.prdLastCommit = git("log -1 --format=%h -- docs/product/PRD.md")
+    Stamp.prdLastDate   = git("log -1 --format=%ad --date=short -- docs/product/PRD.md")
   }
 
   EnumerateEpics() {
     // Read the PRD's own grouping. Do not derive your own taxonomy.
-    groups = readRequirementGroups("docs/product/prd.md")   // §7.x subsections + §8
+    groups = readRequirementGroups("docs/product/PRD.md")   // §7.x subsections + §8
     for each g in groups {
       epic = { prdSection: g.section, title: g.title, fIds: g.featureIds }
       epic.key = g.featureIds.length ? g.featureIds[0] : mnemonic(g.title)   // see Constraints
@@ -82,7 +81,7 @@ EpicMapperProcess {
           req.buildState = verifyAgainstCode(req)           // read the code; resolve it
           Findings.push(resolution(req))
         }
-        if (disagrees(req.buildState, implementationBaseline(req))) {
+        if (disagrees(req.buildState, codeReality(req))) {
           Findings.push(disagreement(req))                  // report, never silently pick one
         }
       }
@@ -132,7 +131,7 @@ execute()
 ```markdown
 # Epic Map — Sport ITSM
 
-> **Generated:** YYYY-MM-DD · **HEAD:** `<sha>` **PRD last modified:** commit `<sha>` (YYYY-MM-DD) **Sources:** `docs/product/prd.md` §6–§8 · `docs/product/implementation-baseline.md`
+> **Generated:** YYYY-MM-DD · **HEAD:** `<sha>` **PRD last modified:** commit `<sha>` (YYYY-MM-DD) **Sources:** `docs/product/PRD.md` §6–§8
 >
 > Drilling an epic against a stale map produces stale counts. Regenerate with `/backlog-creator --refresh-map` if the PRD has moved since the commit above.
 

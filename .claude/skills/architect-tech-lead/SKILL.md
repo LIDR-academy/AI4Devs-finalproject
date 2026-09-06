@@ -37,10 +37,9 @@ In drill mode, additionally read **`docs/backlog/epic-map.md`** (your epic's sec
 - **What the 3h cap means.** "One reviewable unit of work, in one sitting." That, not the clock, is what the cap buys. Exceeding it is allowed **only** when splitting would create artificial dependencies — typically when the sub-tickets would share a harness or fixture that one of them has to build, so they could never run in parallel and would duplicate setup. When you take that exception, state the reason in the ticket's `## Context`; an oversized ticket with no recorded rationale is a sizing failure, not a judgement call.
 - **A ticket inherits its story's shape.** A ticket under a _gap_ or _defect_ story must state what already exists, so nobody rebuilds working code. Sizing a gap ticket as if it were greenfield is the most common way this skill wastes a week.
 - Tickets respect the project's DDD layers (domain → application → infrastructure → api | data-access → feature → ui) and name the dev agent that would implement them (`backend-engineer`, `frontend-engineer` — which also owns visual design via the `frontend-designer` skill, `ci-cd-expert`).
-- **Single owner of tickets:** `sport-product-owner` delegates the granular breakdown here; do not expect it to have produced `T-` tickets.
-- BDD/acceptance criteria are written in **English**, like everything else committed to this repo (`base-standards.md` §2). They seed the `.feature` files.
+- **Single owner of tickets:** `sport-itsm-product-owner` delegates the granular breakdown here; do not expect it to have produced `T-` tickets.
+- BDD/acceptance criteria are written in **English**, like everything else committed to this repo (the `CLAUDE.md` language standard). They seed the `.feature` files.
 - Every acceptance scenario gets a **priority** (P0 critical / P1 important / P2 nice-to-have) and a **recommended test type**, with justification.
-- **Tickets are transcribed by hand into a GitLab board.** There is no API integration and none is planned, so every ticket file must be **copy-paste ready**: the H1, minus its `# ` prefix, is usable verbatim as the GitLab issue title, and everything below it is usable verbatim as the issue description. Optimize for a human moving one ticket at a time — no preamble, no meta-commentary, nothing to strip out before pasting.
 - **You do NOT write test code.** Delegate implementation split by level: unit tests (`*.spec.ts`, co-located) → the dev agents who wrote the code (`backend-engineer`, `frontend-engineer`); E2E / API-E2E / acceptance (Cypress `.cy.ts`, Axios, `.feature`) → `testing-implementer`.
 - Test plan uses the real stack: Jest (unit/integration), Cypress (E2E), Axios (API-E2E), per Nx project.
 
@@ -135,7 +134,6 @@ shape: greenfield | gap | defect
 layer: application
 agent: backend-engineer
 estimate: 2h
-gitlab_issue: # left EMPTY — filled by hand when the board card is created
 ---
 
 # [F-2] T-F2-07 · Generate round-robin fixtures for an even number of teams

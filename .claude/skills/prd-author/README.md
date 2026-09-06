@@ -25,7 +25,7 @@ Authors the **Product Requirements Document (PRD)** for Sport ITSM and the found
 
 ## Outputs
 
-- `docs/product/prd.md` — the PRD (primary)
+- `docs/product/PRD.md` — the PRD (primary)
 - `docs/product/personas.md`, `docs/product/roadmap.md` — optional companions
 
 ## Structure
@@ -38,4 +38,4 @@ Loaded and executed by the `sport-product-owner` agent (Mode 1 — strategic / d
 
 ## Gates
 
-The workflow is gated: vision & objectives → personas → scope & requirements → metrics & prioritization → assemble. It does **not** auto-generate the PRD; it stops for user approval at each gate and writes `docs/product/prd.md` only on explicit approval.
+The workflow is gated: vision & objectives → personas → scope & requirements → metrics & prioritization → assemble. It does **not** auto-generate the PRD; it stops for user approval at each gate and writes `docs/product/PRD.md` only on explicit approval.

@@ -27,7 +27,7 @@ Its defining job is not "turn requirements into stories" — it is **to write th
 ## Inputs
 
 - `docs/backlog/epic-map.md` — the epic's section: key, requirement list, build states, "what actually remains"
-- `docs/product/prd.md` — **only** the sections its requirements live in, never the whole file
+- `docs/product/PRD.md` — **only** the sections its requirements live in, never the whole file
 - **The code** — mandatory for every 🟡 / ⚫ / 🔍 requirement
 
 ## Outputs
@@ -41,7 +41,7 @@ Its defining job is not "turn requirements into stories" — it is **to write th
 - **Epic-scoped IDs.** `US-<key>-nn` only — this is what lets one epic be drilled while another stays untouched.
 - **Never renumbers PRD IDs** (`P`, `BO-`, `F-`, `FR-`, `NFR-`, `PER-`).
 - **Never re-derives the epic grouping or keys** — `epic-map.md` owns them.
-- Acceptance criteria in English (`base-standards.md` §2).
+- Acceptance criteria in English (the `CLAUDE.md` language standard).
 - **Writes no tickets, estimates or test plans** — that is `architect-tech-lead`.
 
 ## Integration

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-> **Purpose:** Operational context for Claude Code working in this repository — how to orient, where things live, and how to work. This file is **not** a functional-requirements document; product behavior and requirements live in the specifications (see section 4).
+> **Purpose:** Operational context for Claude Code working in this repository — how to orient, where things live, and how to work. This file is **not** a functional-requirements document; product behavior and requirements live in the product documentation (see section 4).
 
 ---
 
@@ -117,23 +117,78 @@ Baseline contexts: `incident`, `service-request`, `problem`, `change`, `release`
 
 ---
 
-## 4. Specifications & OpenSpec Workflow
+## 4. Product Behavior — Specifications, Product Docs & Backlog
 
-Specifications live under `openspec/` and are the canonical source of product behavior. Product functional requirements belong here, **never** in this file.
+**The rule that does not change: product functional requirements do NOT live in this file.** `CLAUDE.md` points to where behavior is specified; it never restates it.
 
-- **Canonical specs:** `openspec/specs/<capability>/spec.md` — the current, agreed-upon behavior per capability (e.g., `incident-management`, `service-request-management`, `change-management`, `release-management`, `asset-configuration-management`, `sla-management`, `service-catalog`).
-- **Proposed changes:** `openspec/changes/<change-id>/` — each in-flight change holds `proposal.md` (the what/why), `tasks.md`, optional `design.md` (where stack/architecture detail is allowed), and spec deltas under `openspec/changes/<change-id>/specs/<capability>/spec.md`.
+**Doctrine (Product Owner decision).** **`docs/product/PRD.md` is the canonical source of product behavior today; `openspec/` is the change-control layer that will be stood up on top of it once implementation begins** — a spec delta only carries meaning against an agreed, implemented baseline, and today the entire product is a greenfield `ADDED` set, so seeding `openspec/specs/` now would create a second source of truth with nothing to reconcile it against.
 
-**Workflow:** `propose → implement → archive`.
-1. **Propose** — create the change folder with a proposal and spec deltas describing the intended behavior change.
-2. **Implement** — build against the approved deltas and complete the tasks.
-3. **Archive** — once deployed, fold the deltas into the canonical specs and archive the change.
+**Where do I go?**
 
-**Spec delta markers:** deltas use `## ADDED / MODIFIED / REMOVED Requirements` headers to describe how a change alters a capability's spec.
+| I need… | Read |
+|---|---|
+| What the product must do, and why | `docs/product/PRD.md` (canonical) |
+| How the system is structured / built | `docs/product/ARCHITECTURE.md` + §2–§3 above + the `sport-itsm-*` skills |
+| What is left to build, grouped and sized | `docs/backlog/epic-map.md` (derived) |
+| A behavior **change** to already-implemented behavior | `openspec/changes/<change-id>/` — **not created yet**, see §4.4 |
 
-**Specs are technology-agnostic:** they describe behavior only (requirements, scenarios, business rules). Stack, architecture, and implementation detail belong in the change's `design.md` and are owned by engineering — never in a spec delta.
+### 4.1 Canonical behavior — `docs/product/PRD.md`
 
-**AGENTS.md vs CLAUDE.md:** the OpenSpec convention also references an `AGENTS.md` file as the entry point for AI agents. In this repository, **CLAUDE.md** (this file) is the Claude Code operational file, and it points to `openspec/` as the specification source of truth.
+Business and functional, technology-agnostic. It owns:
+
+| PRD section | Owns |
+|---|---|
+| §1 Product Vision & Value Proposition | Vision statement, value proposition, differentiators |
+| §2–§3 Problem Statement, Scope | The in-scope / out-of-scope rule (SCMS platform, not the sporting operation) |
+| §4 Personas & Roles | The personas (Requester, Agent L1, Analyst L2/L3, Change/Release Manager, Service Owner, System Administrator…) |
+| §5–§6 Capability Breakdown, User Journeys | The capability catalogue `C1…C18` and the end-to-end journeys |
+| **§7 Functional Requirements** | **`FR-<CAP>-nn`** (e.g. `FR-INC-04`, `FR-MIM-01`) with MoSCoW priority, grouped one subsection per capability |
+| **§8 Non-Functional Requirements** | **`NFR-<CAP>-nn`** (e.g. `NFR-AVL-01`), expressed as observable behavior only |
+| §9 Success Metrics & KPIs | FCR, MTTA, MTTR, CSAT, deflection rate and their targets |
+| §10–§13 | Assumptions, constraints, dependencies, risks |
+| **§14 Phased Release Plan** | Prioritization method (WSJF-style + MoSCoW), Phase 0 foundations, MVP scope, later phases |
+| §15–§16 | Definition of Ready / Definition of Done, glossary |
+
+**Rules.** PRD requirement IDs are **stable**: never renumber, reuse or invent one — anywhere, in any artifact. The PRD is **behavior only**: no stack, schema, endpoint or component choice ever enters it. Each §7 subsection already names the OpenSpec capability slug it will map to (`incident-management`, `service-request-management`, `change-management`, `release-management`, `asset-configuration-management`, `sla-management`, `service-catalog`, …), so the future migration is a lookup, not a re-derivation. The PRD is owned by the `sport-itsm-product-owner` agent via the `prd-author` skill.
+
+### 4.2 Engineering documentation — `docs/product/`
+
+The technical companions to the PRD. They describe the **target state**: nothing is implemented yet, so read them as prescriptive ("shall be"), not descriptive.
+
+- **`ARCHITECTURE.md`** — the authoritative design baseline: C4 context and containers, the **bounded context map** (§4), the **Nx monorepo structure, three-axis tags and module-boundary matrix** (§5), the backend hexagon and frontend architecture (§6–§7), cross-cutting architecture (§9) and the **ADRs** (§10, to be promoted to `docs/adr/` when scaffolding starts). Together with §3 of this file and the `sport-itsm-architecture` skill, it is the layer/boundary reference.
+- **`DATA-MODEL.md`** — the prescriptive relational schema the first TypeORM migrations must produce, per context schema, each table traced to an FR ID.
+- **`COMPONENTS.md`** — the main components (Web Client, API, PostgreSQL, per-context libraries), their responsibility and technology.
+- **`PROJECT-STRUCTURE.md`** — where things live on disk and why: the directory tree and the folder-structure-*is*-the-architecture rule.
+
+These hold the **how**. Never put a requirement in them, and never put stack detail in the PRD.
+
+### 4.3 Derived backlog — `docs/backlog/`
+
+The delivery chain, produced **from** the PRD, one epic at a time:
+
+`docs/backlog/epic-map.md` → `docs/backlog/<key>/user-stories.md` → `docs/backlog/<key>/tickets/T-<key>-nn.md`
+
+**The backlog is derived, never a source.** No backlog artifact may introduce a requirement that is not in the PRD, and none may invent, renumber or reword a PRD ID. Epic keys are the PRD's own capability IDs (`C1`, `C10`, `C18`, plus `NFR` for §8); story IDs are `US-<key>-nn` and ticket IDs `T-<key>-nn`. A downstream role that finds the PRD wrong **reports the finding** — the fix is made in the PRD by the Product Owner, then the affected backlog artifacts are regenerated.
+
+### 4.4 `openspec/` — planned, not yet created
+
+**`openspec/` does not exist in this repository today.** Do not read it, cite it, or treat a missing file under it as an error: until it is created, §4.1 is the specification source of truth and §4.3 is the delivery plan.
+
+**When it activates.** Per capability, at the **first behavior change proposed against already-implemented behavior** of that capability — i.e. once its PRD requirements have been built, not before. Creating `openspec/` is itself an approved change, never a side effect of an unrelated task.
+
+**How the migration works.** Seeding a capability writes `openspec/specs/<capability>/spec.md` from that capability's PRD §7/§8 requirements — behavior carried over verbatim in intent, **PRD IDs referenced, never renumbered**. From that point the canonical spec owns that capability's current behavior and the PRD remains the product-level narrative (vision, personas, scope, metrics, phases) and the register of not-yet-built requirements. A capability that has not been seeded stays governed by the PRD.
+
+**Structure, once active.**
+
+- **Canonical specs:** `openspec/specs/<capability>/spec.md` — the current, agreed-upon behavior per capability.
+- **Proposed changes:** `openspec/changes/<change-id>/` — `proposal.md` (the what/why), `tasks.md`, optional `design.md` (where stack/architecture detail is allowed), and spec deltas under `openspec/changes/<change-id>/specs/<capability>/spec.md`.
+- **Workflow:** `propose → implement → archive`. **Propose** the change folder with proposal and deltas; **implement** against the approved deltas; **archive** by folding the deltas into the canonical specs.
+- **Spec delta markers:** `## ADDED / MODIFIED / REMOVED Requirements`.
+- **Specs are technology-agnostic:** behavior only (requirements, scenarios, business rules). Stack, architecture and implementation detail belong in the change's `design.md` and are owned by engineering — never in a spec delta. This mirrors the PRD rule in §4.1, so a requirement migrates cleanly.
+
+### 4.5 AGENTS.md vs CLAUDE.md
+
+The OpenSpec convention also references an `AGENTS.md` file as the entry point for AI agents. In this repository, **CLAUDE.md** (this file) is the Claude Code operational file, and there is no `AGENTS.md`. It points to **`docs/product/PRD.md`** as the specification source of truth today, and to `openspec/` for capabilities once they have been seeded per §4.4.
 
 ---
 
@@ -145,15 +200,28 @@ Agents are **roles** with their own context and tools; they invoke skills for kn
 
 | Agent | Role |
 |-------|------|
-| **`sport-itsm-product-owner`** | Product Owner: owns backlog and product vision; writes Epics / User Stories / Gherkin acceptance criteria; translates approved requirements into OpenSpec Change Proposals and Spec Deltas. Grounded in `readme.md` §0.3/§1.1/§1.2. |
-| **`sport-itsm-architect`** | Software Architect: owns the end-to-end architecture (frontend + backend) under Nx using DDD + Hexagonal; designs bounded contexts, defines the lib/tag structure and module boundaries, scaffolds Nx libraries, reviews the dependency graph, writes ADRs. |
+| **`sport-itsm-product-owner`** | Product Owner: owns backlog and product vision. **Mode 1** — authors the PRD, personas and roadmap (via `prd-author`). **Mode 2** — builds `docs/backlog/epic-map.md` (via `epic-mapper`). Translates approved requirements into OpenSpec Change Proposals and Spec Deltas **once `openspec/` is active** (§4.4). Working baseline: `docs/product/PRD.md`, itself grounded in `readme.md` §0.3/§1.1/§1.2. |
+| **`sport-itsm-architect`** | Software Architect: owns the end-to-end architecture (frontend + backend) under Nx using DDD + Hexagonal; designs bounded contexts, defines the lib/tag structure and module boundaries, scaffolds Nx libraries, reviews the dependency graph, writes ADRs. **Structure only — it does not write stories or tickets.** |
+| **`business-analyst`** | Business Analyst: writes the user stories for **one** epic into `docs/backlog/<key>/user-stories.md`, shaped by each requirement's as-built state (greenfield / gap / defect). Consumes the epic map; never re-derives an epic key. |
+| **`architect-tech-lead`** | Architect / Tech Lead: decomposes **one** epic's user stories into board-ready tickets (≤3h) at `docs/backlog/<key>/tickets/T-<key>-nn.md`, plus the BDD specification and the test plan. Single owner of ticket generation; does **not** write test code. |
+
+**Backlog pipeline.** The three backlog roles form a chain, one epic at a time, each consuming the previous artifact and never re-deriving it:
+
+`sport-itsm-product-owner` (Mode 2) → `docs/backlog/epic-map.md` → `business-analyst` → `docs/backlog/<key>/user-stories.md` → `architect-tech-lead` → `docs/backlog/<key>/tickets/`
+
+Keys (`C1`, `C10`, `C18`, `NFR`…) are owned by the epic map. Story IDs are `US-<key>-nn`, ticket IDs `T-<key>-nn`; neither role renumbers a PRD identifier (`FR-`, `NFR-`, `BO-`).
 
 ### Skills (`.claude/skills/`)
 
-Skills are **reusable knowledge/guardrails**, invokable by any agent or the main loop. They are layered by **altitude** (business → system → craft → stack → framework):
+Skills are **reusable knowledge/guardrails**, invokable by any agent or the main loop. They are layered by **altitude** (process → business → system → craft → stack → framework):
 
 | Skill | Altitude | What it provides |
 |-------|----------|------------------|
+| **`prd-author`** | Process (product) | The PRD workflow, template and quality checklist, plus the personas and roadmap artifacts around it. Owned by the PO (Mode 1). |
+| **`epic-mapper`** | Process (product) | Builds `docs/backlog/epic-map.md`: requirement counts by build state, what remains, dependencies, size, drill order. Maps and measures — it never writes stories or tickets. Owned by the PO (Mode 2). |
+| **`business-analyst`** | Process (backlog) | Story shaping by as-built state, the story-shape table and the `user-stories.md` output format. One epic per run. |
+| **`architect-tech-lead`** | Process (backlog) | Ticket decomposition (≤3h), the ticket file format, the BDD specification and the test strategy (coverage, gaps, P0/P1/P2, test type). One epic per run. |
+| **`feature-docs`** | Process (technical writing) | The standard for written + visual technical documents: feature specs, architecture diagrams, structured technical references. |
 | **`service-desk-expert`** | Business / domain | ITSM service-management processes, functional analysis, and ITSM terminology. Domain depth for specs. |
 | **`sport-itsm-architecture`** | System / structure | DDD + Hexagonal + Nx: bounded contexts, layer rules, tag scheme (`platform:`/`scope:`/`type:`), the module-boundary constraint matrix, shared contracts. |
 | **`sport-itsm-engineering-principles`** | Craft (class/function) | SOLID + clean-code universals (DRY, KISS, YAGNI, naming, small functions, immutability, error handling) in TypeScript. Stack-agnostic. |
@@ -164,9 +232,10 @@ Skills are **reusable knowledge/guardrails**, invokable by any agent or the main
 
 ### How they relate
 
-- **Agents consume skills.** The **PO** uses `service-desk-expert` for domain depth. The **architect** uses `sport-itsm-architecture` + both stack skills + `sport-itsm-engineering-principles`, and may consult the two external skills.
+- **Agents consume skills.** The **PO** uses `service-desk-expert` for domain depth, `prd-author` in Mode 1 and `epic-mapper` in Mode 2. The **architect** uses `sport-itsm-architecture` + both stack skills + `sport-itsm-engineering-principles` + `feature-docs`, and may consult the two external skills. **`business-analyst`** and **`architect-tech-lead`** are thin agents over the skill of the same name, and both also read `sport-itsm-architecture` so their output is expressible in this structure.
+- **One owner per artifact.** The epic map is the PO's; `user-stories.md` is the Business Analyst's; the tickets and the test plan are the Architect / Tech Lead's. A downstream role that finds an upstream artifact wrong **reports it** — it does not edit it. That is why every `user-stories.md` ends in a Findings section.
 - **Skills are layered, not overlapping.** Each altitude is a single source of truth and cross-references the others instead of duplicating: `sport-itsm-architecture` (system) ↔ `sport-itsm-engineering-principles` (the DIP is the micro-level form of the dependency rule); the two stack skills defer to both for structure and craft, adding only tech-specific rules.
 - **Precedence.** The project skills (`sport-itsm-*`) are **project law** and **override** the generic external skills (`nestjs-best-practices`, `angular-developer`) wherever they differ — especially on stack, tooling, boundaries, and E2E (Cypress/Cucumber, not Supertest).
-- **Behavior vs structure vs code.** Product behavior lives in `openspec/` (§4); how the system is structured and coded lives in the skills above; this `CLAUDE.md` only points to them.
+- **Behavior vs structure vs code.** Product behavior lives in `docs/product/PRD.md` (§4); how the system is structured and coded lives in `docs/product/ARCHITECTURE.md` and the skills above; this `CLAUDE.md` only points to them.
 
 **Language standard:** all product and specification artifacts are written in **technical English using standard Service Desk / ITSM terminology** (Incident, Service Request, Problem, Change, Release, SLA, OLA, CMDB, Configuration Item, Resolver Group, Major Incident; FCR, MTTR, MTTA, CSAT, RCA, KEDB, CAB), regardless of the language of the request.

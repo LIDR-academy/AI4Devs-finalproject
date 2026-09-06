@@ -1,6 +1,6 @@
 # PRD Template — Sport ITSM
 
-> This is the canonical structure for `docs/product/prd.md`. Fill every section. Keep prose terse and decision-ready. Use sports-domain primitives (matchdays, fixtures, byes, tie-breakers, cards, suspensions), not generic SaaS abstractions. All numeric targets are **hypotheses to validate**, not commitments — label them. Placeholders are written as `<…>`; remove any section only with a note saying why.
+> This is the canonical structure for `docs/product/PRD.md`. Fill every section. Keep prose terse and decision-ready. Use sports-domain primitives (matchdays, fixtures, byes, tie-breakers, cards, suspensions), not generic SaaS abstractions. All numeric targets are **hypotheses to validate**, not commitments — label them. Placeholders are written as `<…>`; remove any section only with a note saying why.
 
 ---
 
