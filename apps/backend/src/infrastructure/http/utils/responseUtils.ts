@@ -30,3 +30,19 @@ export function handleZodOrNext(req: Request, res: Response, next: NextFunction,
   }
   next(err);
 }
+
+/**
+ * Convierte `startDate`/`endDate` de query string (ISO 8601 opcional) a `Date` — mismo
+ * patrón repetido en cualquier endpoint de histórico filtrable por rango de fechas.
+ * Extraído (TK-120) tras el gate de duplicación detectarlo entre
+ * `stock.controller.ts#getMovementHistory` y `temperature-logs.controller.ts`.
+ */
+export function parseDateRangeQuery(query: { startDate?: string; endDate?: string }): {
+  startDate?: Date;
+  endDate?: Date;
+} {
+  return {
+    startDate: query.startDate ? new Date(query.startDate) : undefined,
+    endDate: query.endDate ? new Date(query.endDate) : undefined,
+  };
+}

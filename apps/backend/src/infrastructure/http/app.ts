@@ -54,6 +54,11 @@ import { IConsumptionReasonRepository } from '../../domain/kitchen/repositories/
 import { InMemoryConsumptionReasonRepository } from '../kitchen/repositories/InMemoryConsumptionReasonRepository.js';
 import { createConsumptionReasonsController } from '../kitchen/http/controllers/consumption-reasons.controller.js';
 import { cryptoIdGenerator } from '../shared/cryptoIdGenerator.js';
+import { systemClock } from '../shared/systemClock.js';
+
+import { ITemperatureLogRepository } from '../../domain/kitchen/repositories/ITemperatureLogRepository.js';
+import { InMemoryTemperatureLogRepository } from '../kitchen/repositories/InMemoryTemperatureLogRepository.js';
+import { createTemperatureLogsController } from '../kitchen/http/controllers/temperature-logs.controller.js';
 
 export interface AppOptions {
   userRepository?: IUserRepository;
@@ -69,6 +74,7 @@ export interface AppOptions {
   locationRepository?: IStorageLocationRepository;
   settingsRepository?: ISystemSettingsRepository;
   consumptionReasonRepository?: IConsumptionReasonRepository;
+  temperatureLogRepository?: ITemperatureLogRepository;
   jwtSecret?: string;
   corsAllowedOrigins?: string;
   rateLimit?: { windowMs: number; max: number };
@@ -182,6 +188,7 @@ interface AppRepositories {
   locationRepo: IStorageLocationRepository;
   settingsRepo: ISystemSettingsRepository;
   consumptionReasonRepo: IConsumptionReasonRepository;
+  temperatureLogRepo: ITemperatureLogRepository;
 }
 
 function buildQueryRepositories(
@@ -207,6 +214,7 @@ function buildAuxiliaryRepositories(options: AppOptions) {
     locationRepo: options.locationRepository ?? new InMemoryLocationRepository(),
     settingsRepo: options.settingsRepository ?? new InMemorySettingsRepository(),
     consumptionReasonRepo: options.consumptionReasonRepository ?? new InMemoryConsumptionReasonRepository(),
+    temperatureLogRepo: options.temperatureLogRepository ?? new InMemoryTemperatureLogRepository(),
   };
 }
 
@@ -254,7 +262,7 @@ function mountApiRoutes(
   authMiddleware: ReturnType<typeof createAuthenticateJWTMiddleware>,
   isAuthRequired: boolean
 ): void {
-  const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, recipePreparationRepo, reportRepo, roleRepo, locationRepo, settingsRepo, consumptionReasonRepo } = repos;
+  const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, recipePreparationRepo, reportRepo, roleRepo, locationRepo, settingsRepo, consumptionReasonRepo, temperatureLogRepo } = repos;
   const guard = isAuthRequired ? [authMiddleware] : [];
 
   app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo, isAuthRequired, locationRepo, recipePreparationRepo, roleRepo));
@@ -267,6 +275,10 @@ function mountApiRoutes(
   // US-030: catálogo de motivos de consumo — lectura para cualquier autenticado,
   // mutación y `includeInactive` solo ADMIN (gateado dentro del propio controller).
   app.use('/api/v1/consumption-reasons', ...guard, createConsumptionReasonsController(consumptionReasonRepo, cryptoIdGenerator, isAuthRequired));
+  // US-033/TK-120: registro (cualquier rol) gateado solo por `guard` (autenticación);
+  // el histórico (`GET`) exige ADMIN dentro del propio controller (mismo patrón que
+  // consumption-reasons con `includeInactive`).
+  app.use('/api/v1/kitchen/temperature-logs', ...guard, createTemperatureLogsController(temperatureLogRepo, locationRepo, cryptoIdGenerator, systemClock, isAuthRequired));
 }
 
 export function createApp(options: AppOptions = {}): Express {

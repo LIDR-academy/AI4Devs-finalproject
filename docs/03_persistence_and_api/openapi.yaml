@@ -1189,6 +1189,95 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/kitchen/temperature-logs:
+    post:
+      summary: Record a manual temperature reading for a storage sector at shift start (US-033/TK-120)
+      operationId: recordTemperatureLog
+      tags:
+        - Shift & Audit
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTemperatureLogRequest'
+      responses:
+        '201':
+          description: >-
+            Temperature log recorded. Always 201 regardless of the reading — an
+            out-of-range value never blocks; it only sets isWithinSafeRange to false
+            for later audit visibility (explicit business decision).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemperatureLogResponse'
+        '400':
+          description: Invalid storageLocationId/unitType/temperatureCelsius format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: storageLocationId does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: List historical temperature readings for audit (ADMIN only, US-033/TK-120)
+      operationId: listTemperatureLogs
+      tags:
+        - Shift & Audit
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: storageLocationId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Temperature readings, most recent first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TemperatureLogResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/reports/waste:
     get:
       summary: Get consolidated waste report by date range (ADMIN role only)
@@ -2104,6 +2193,46 @@ components:
                 $ref: '#/components/schemas/DecimalString'
               variance:
                 $ref: '#/components/schemas/DecimalString'
+
+    CreateTemperatureLogRequest:
+      type: object
+      required:
+        - storageLocationId
+        - unitType
+        - temperatureCelsius
+      properties:
+        storageLocationId:
+          type: string
+          example: "loc-seed-fridge-a"
+        unitType:
+          type: string
+          enum: [REFRIGERATOR, FREEZER]
+          description: Determines the safe-range threshold applied in isWithinSafeRange (FDA Food Code — REFRIGERATOR <= 4.00°C, FREEZER <= -18.00°C).
+        temperatureCelsius:
+          type: string
+          description: Decimal string, up to 2 decimals, may be negative (e.g. freezer readings).
+          example: "3.50"
+
+    TemperatureLogResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        storageLocationId:
+          type: string
+        unitType:
+          type: string
+          enum: [REFRIGERATOR, FREEZER]
+        temperatureCelsius:
+          type: string
+        isWithinSafeRange:
+          type: boolean
+          description: Derived in the domain layer from temperatureCelsius/unitType — never persisted, never blocks the write when false.
+        recordedByUserId:
+          type: string
+        recordedAt:
+          type: string
+          format: date-time
 
     WasteReportItem:
       type: object

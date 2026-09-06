@@ -65,7 +65,7 @@ Este documento contiene las especificaciones detalladas de las historias de usua
 *   **[US-030: Catálogo de Motivos de Consumo (Administrable)](kitchen/US-030.md)** ✅
     *   *Descripción:* El Administrador mantiene un catálogo de motivos (crear, editar, activar/desactivar) que el equipo de cocina elige al consumir un remanente o al declarar una varianza negativa de conciliación de turno. Backend (`TK-107`) + panel de administración en `/ajustes/motivos` (`TK-107-FE`, ADR-004).
 *   **[US-033: Registro de Temperatura de Refrigeración al Iniciar Turno](kitchen/US-033.md)**
-    *   *Descripción:* Registro manual (sin sensor) de la temperatura leída en el termómetro físico de cada sub-sector al iniciar turno; un valor fuera del rango FDA (≤4°C/≤-18°C) solo advierte, nunca bloquea. Histórico solo-`ADMIN`. 📋 Spec aprobada — pendiente `TK-120` / `TK-120-FE`.
+    *   *Descripción:* Registro manual (sin sensor) de la temperatura leída en el termómetro físico de cada sub-sector al iniciar turno; un valor fuera del rango FDA (≤4°C/≤-18°C) solo advierte, nunca bloquea. Histórico solo-`ADMIN`. ✅ Backend (`TK-120`) implementado y verificado contra Postgres real; Frontend (`TK-120-FE`) pendiente.
 
 ### 📊 Reportes (`/reports/`)
 *   **[US-009: Dashboard y Reporte de Mermas Visibles](reports/US-009.md)**

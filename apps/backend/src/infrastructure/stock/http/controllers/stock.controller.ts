@@ -6,7 +6,7 @@ import { CreateInsumoUseCase } from '../../../../application/stock/use-cases/Cre
 import { ListInsumosUseCase } from '../../../../application/stock/use-cases/ListInsumosUseCase.js';
 import { RestockInsumoUseCase } from '../../../../application/stock/use-cases/RestockInsumoUseCase.js';
 import { FindInsumoByBarcodeUseCase } from '../../../../application/stock/use-cases/FindInsumoByBarcodeUseCase.js';
-import { respondValidationError } from '../../../http/utils/responseUtils.js';
+import { respondValidationError, parseDateRangeQuery } from '../../../http/utils/responseUtils.js';
 
 const recordExtractionSchema = z
   .object({
@@ -135,8 +135,7 @@ export class StockController {
 
       const result = await this.getStockMovementHistoryUseCase.execute({
         insumoId: query.insumoId,
-        startDate: query.startDate ? new Date(query.startDate) : undefined,
-        endDate: query.endDate ? new Date(query.endDate) : undefined,
+        ...parseDateRangeQuery(query),
       });
       res.status(200).json(result);
     } catch (error) {

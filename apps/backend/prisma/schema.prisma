@@ -41,6 +41,14 @@ enum RecipePreparationStatus {
   ABANDONED
 }
 
+// US-033/TK-120: clasifica el equipo al momento de la lectura — determina el umbral
+// seguro (REFRIGERATOR <= 4.00°C, FREEZER <= -18.00°C, FDA Food Code), independiente
+// de LocationType (que responde "dónde está", no "qué tan frío debería estar").
+enum TemperatureUnitType {
+  REFRIGERATOR
+  FREEZER
+}
+
 model Role {
   id          String           @id @default(uuid())
   name        String           @unique
@@ -84,6 +92,7 @@ model User {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   stockMovements    StockMovement[]
+  temperatureLogs   TemperatureLog[]
 }
 
 model StorageLocation {
@@ -100,6 +109,27 @@ model StorageLocation {
   remanentes      Remanente[]
   // AUDIT-DEV-006 F-7 / TK-101: movimientos de extracción/descarte con este sub-sector como origen
   stockMovements  StockMovement[]
+  // US-033/TK-120: lecturas de temperatura registradas para este sub-sector
+  temperatureLogs TemperatureLog[]
+}
+
+// US-033/TK-120: registro manual (sin sensor, Non-Goal #4 del PRD) de temperatura de un
+// sub-sector al iniciar turno. isWithinSafeRange NO se persiste — se deriva siempre en
+// el dominio (TemperatureLog.isWithinSafeRange) a partir de temperatureCelsius/unitType,
+// para que nunca pueda desincronizarse del umbral real si este cambia.
+model TemperatureLog {
+  id                 String              @id @default(uuid())
+  storageLocationId  String
+  unitType           TemperatureUnitType
+  temperatureCelsius Decimal             @db.Decimal(5, 2)
+  recordedByUserId   String
+  recordedAt         DateTime            @default(now())
+
+  storageLocation StorageLocation @relation(fields: [storageLocationId], references: [id], onDelete: Restrict)
+  recordedBy      User            @relation(fields: [recordedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([storageLocationId])
+  @@index([recordedAt])
 }
 
 model SystemSettings {
