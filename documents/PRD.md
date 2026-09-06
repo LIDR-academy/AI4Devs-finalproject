@@ -263,7 +263,10 @@ al portal (`wireframes.md` §8.4)— y **HU-16**, cuyos endpoints de planes y
 recordatorios de retención existían sin pantalla desde la que ejecutarse.
 
 **Desplegado** en **https://clickoteca.vercel.app** (Vercel + Supabase,
-`documents/ADR-0003`). **Pendiente:** el videotutorial.
+`documents/ADR-0003`), y con eso **se retira el videotutorial** (decisión del
+2026-09-06): la evaluación se hace sobre la aplicación real —credenciales por el
+canal del curso— y no sobre una grabación de ella, que solo mostraría el recorrido
+que el autor eligiera mostrar. No queda ningún entregable abierto.
 
 ## 10. Criterios de éxito del MVP
 

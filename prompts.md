@@ -1301,3 +1301,22 @@ pasan a nombrar lo que hay.
 **OpenSpec no se toca, a propósito:** los seis specs son de comportamiento —colas,
 ofertas, notificaciones— y ninguno menciona hosting ni despliegue, así que el cambio no
 altera ningún requisito. Sigue en verde con `--strict`.
+
+### [2026-09-06] — El videotutorial se retira: la aplicación real es lo que se evalúa
+**Prompt:** "No es necesario el videotutorial, puesto que se podrá evaluar la aplicación
+real."
+**Resumen de la respuesta:** Era **el único entregable que quedaba abierto**, y la razón
+para retirarlo es buena: desde el despliegue del 21–22 de agosto hay una instancia en pie
+en **https://clickoteca.vercel.app**, así que quien corrige no necesita ver una grabación
+del recorrido — puede hacerlo. Y hay una diferencia real entre las dos cosas: **un vídeo
+enseña el camino que el autor eligió enseñar**, mientras que en la aplicación desplegada
+las 18 historias se recorren por el pie de quien evalúa, incluidos los caminos de error,
+que son precisamente el criterio de éxito declarado del MVP (PRD §10).
+**Lo que hace falta para que eso funcione, y ya estaba:** el readme abre §0.4 con la URL y
+con el `GET /api/health` para comprobar de un vistazo que está en pie, y dice que las
+credenciales de la instancia desplegada **no se publican en el repositorio** —es público, y
+la semilla usa un único hash para las cinco cuentas— sino que se entregan por el canal del
+curso.
+Se anotó en los tres sitios que lo daban por pendiente —`readme.md` §1.3, `documents/PRD.md`
+§9 y `AGENTS.md`— como decisión con fecha, no borrando la línea: el proyecto **no tiene ya
+ningún entregable abierto**.

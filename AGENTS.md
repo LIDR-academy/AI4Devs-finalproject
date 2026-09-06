@@ -1196,8 +1196,10 @@ project. Read it at the start of every session.
   §8 no queda ninguno abierto, y la cobertura es **18 de 18 historias**. **El log de prompts está al día** (2026-09-06): las seis entradas de la sesión de
   despliegue del 21–22 de agosto están registradas y las secciones estructuradas de
   `prompts.md` ya no tienen huecos; `main` y `project-xvm` avanzan a la punta del
-  trabajo, que es lo que lee quien corrige. Lo único
-  pendiente del proyecto es el **videotutorial**. Para cualquier cambio de estado de una copia, usar
+  trabajo, que es lo que lee quien corrige. **El videotutorial se retira** (decisión
+  del usuario, 2026-09-06): la aplicación desplegada es evaluable directamente, así
+  que la grabación no aportaba nada que no se pueda recorrer en vivo. **No queda
+  ningún entregable pendiente.** Para cualquier cambio de estado de una copia, usar
   `advanceCopyLifecycle` / `transitionCopy`; nunca `copy.update({state})`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en

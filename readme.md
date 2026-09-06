@@ -121,7 +121,7 @@ y pide el siguiente—.
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-> **Tres entregables cerrados y construidos.** Queda el videotutorial:
+> **Tres entregables cerrados y construidos:**
 >
 > 1. **Flujos por rol** — [`documents/ux-flows.md`](documents/ux-flows.md): actores y
 >    superficies, mapa de navegación, 15 diagramas Mermaid de flujo y la tabla de
@@ -183,8 +183,11 @@ y pide el siguiente—.
 > completo por interfaz.
 >
 > **Desplegado el 2026-08-21/22** en **https://clickoteca.vercel.app** (Vercel +
-> Supabase, `documents/ADR-0003`). **Pendiente:** el videotutorial
-> (`documents/PRD.md` §9).
+> Supabase, `documents/ADR-0003`), y con eso **el videotutorial se retira como
+> entregable** (2026-09-06): la revisión se hace sobre la aplicación real —con las
+> credenciales que se entregan por el canal del curso, ver §0.4—, donde las 18
+> historias se recorren por el propio pie de quien corrige en vez de por el camino
+> que una grabación hubiera elegido enseñar (`documents/PRD.md` §9).
 >
 > La navegación funcional está definida como casos de uso (PRD §14) y como historias
 > de usuario (`documents/user_stories.md`, resumidas en §5). Objetivos transversales
