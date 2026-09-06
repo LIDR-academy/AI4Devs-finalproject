@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { CreateRecipeUseCase } from '../../../../application/recipes/use-cases/CreateRecipeUseCase.js';
 import { ListRecipesUseCase } from '../../../../application/recipes/use-cases/ListRecipesUseCase.js';
+import { SuggestRescueRecipesUseCase } from '../../../../application/recipes/use-cases/SuggestRescueRecipesUseCase.js';
 import { respondValidationError } from '../../../http/utils/responseUtils.js';
 
 const createRecipeSchema = z.object({
@@ -21,7 +22,8 @@ const createRecipeSchema = z.object({
 export class RecipesController {
   constructor(
     private readonly createRecipeUseCase: CreateRecipeUseCase,
-    private readonly listRecipesUseCase: ListRecipesUseCase
+    private readonly listRecipesUseCase: ListRecipesUseCase,
+    private readonly suggestRescueRecipesUseCase?: SuggestRescueRecipesUseCase
   ) {}
 
   public createRecipe = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -41,6 +43,18 @@ export class RecipesController {
   public listRecipes = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this.listRecipesUseCase.execute();
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public suggestRescueRecipes = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!this.suggestRescueRecipesUseCase) {
+        throw new Error('Servicio de sugerencias de rescate culinario no inicializado.');
+      }
+      const result = await this.suggestRescueRecipesUseCase.execute();
       res.status(200).json(result);
     } catch (error) {
       next(error);
