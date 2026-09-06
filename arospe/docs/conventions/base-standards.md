@@ -114,7 +114,9 @@ app/
   Enums/               Backed enums for domain value sets (UserStatus, RoleName, SalesRegionKind,
                        ProductType, ProductStatus — exactly two persisted cases — and
                        ProductDisplayStatus, a badge-only third enum never persisted, never
-                       validated and carrying no column or cast of its own)
+                       validated and carrying no column or cast of its own; GeographyLevel, story
+                       0032 — deliberately no label(), since this story ships no rendering site at
+                       all, per naming.md's "add label() when a second consumer appears" rule)
   Exceptions/          Domain exceptions that render their own response (ImmutableRoleException → 403,
                        RoleInUseException → 409, PasswordConfirmationRequiredException → 423) —
                        plus, since story 0022, one that deliberately does NOT: UnresolvedSelectionException
@@ -133,8 +135,9 @@ app/
                        (MultiSelectOptionsResolver) rather than a component itself; see the
                        wire:ignore section below
   Models/              Eloquent models (User, SalesRegion, Media, ProductCategory, Product,
-                       ProductAttributeType, ProductAttributeValue, ProductVariant; Role, which
-                       subclasses the package's role model). product_media, product_sales_region and
+                       ProductAttributeType, ProductAttributeValue, ProductVariant, GeographyEntry
+                       — story 0032, the only bigint-PK model in this app; Role, which subclasses
+                       the package's role model). product_media, product_sales_region and
                        (story 0029) product_variant_values all have no model class of their own —
                        each reached only through the owning models' BelongsToMany (e.g.
                        Product::gallery(), ProductVariant::values()), the same shape the vendored
@@ -149,7 +152,9 @@ config/                Laravel + package config (fortify.php, permission.php,
                         app-owned config file (see below)
 database/
   data/                 Bundled, version-controlled fixture data a seeder reads — not seeder
-                        classes (iso-3166-countries.json, plus its own README stating provenance)
+                        classes (iso-3166-countries.json, shared read-only with story 0032's own
+                        GeographyCatalogSeeder; es-municipalities.csv, story 0032's ~8,130-row
+                        Spanish municipio fixture; plus its own README stating provenance for both)
   factories/
   migrations/
   seeders/
@@ -185,12 +190,20 @@ tests/
                         ProductCategoryValidationRulesTest.php, the first trait-level unit test in
                         this folder, joined by story 0024's ProductValidationRulesTest.php),
                         Enums/ (ProductStatusTest.php / ProductTypeTest.php since story 0024),
-                        Exceptions/, Listeners/, Models/), plus ArchitectureTest.php
+                        Exceptions/, Listeners/, Models/, Seeders/ (story 0032's
+                        GeographyCatalogSeederParsingTest.php — the CSV-parsing generator exercised
+                        via reflection, no database — and GeographyFixtureIntegrityTest.php, which
+                        parses the real bundled fixtures directly, its own file so a fast run can
+                        exclude it), plus ArchitectureTest.php
   Support/              Test-only support code, not app code (story 0022, the suite's first use of
-                        this base folder) — today just Livewire/ArrayMultiSelectOptionsResolver.php,
+                        this base folder) — Livewire/ArrayMultiSelectOptionsResolver.php,
                         a conforming MultiSelectOptionsResolver double three later stories (0026,
-                        0027, 0034) pattern-match their real resolvers against; autoloaded via
-                        composer.json's existing "Tests\\": "tests/" mapping, no new autoload entry
+                        0027, 0034) pattern-match their real resolvers against, and (story 0032)
+                        Seeders/TestableGeographyCatalogSeeder.php, a GeographyCatalogSeeder
+                        subclass whose fixture paths redirect to tests/Fixtures/geography/ — the
+                        real seeder's own fixturePath() override hook exists specifically so this
+                        test double can exist; autoloaded via composer.json's existing
+                        "Tests\\": "tests/" mapping, no new autoload entry
   Browser/              Pest browser tests. Mirrors app structure (Auth/, Media/, Components/,
                         Products/ since story 0027) — but four of the eleven files sit flat instead
                         (UsersIndexTest.php, RolesIndexTest.php, SalesRegionsIndexTest.php,
@@ -200,6 +213,10 @@ tests/
                         ../testing/frontend/playwright-setup.md#folder-structure
   Browser/Fixtures/     Real, checked-in binary fixtures a browser test needs as bytes on disk
                         (sample-upload.jpg) — never generated at runtime
+  Fixtures/geography/   Real, checked-in CSV fixtures for story 0032's seeder tests — a small
+                        (521-row, all 17 comunidades represented) municipality CSV plus malformed/
+                        duplicate/quoting variants, so a test never has to seed the whole ~8,300-row
+                        real catalog to exercise the seeder's own logic
   Pest.php, TestCase.php
 ```
 
@@ -542,4 +559,6 @@ Use the scoped forms freely while iterating; the unscoped runs are what counts a
 
 **`php artisan test --parallel` is an equally valid unscoped record, and the faster one** (measured on this repo's own 950-test suite: ~2.6x on this project's dev container — see [testing/ci/commands.md#run-in-parallel](../testing/ci/commands.md#run-in-parallel)). It runs every test in every suite exactly like the plain unscoped form; `--parallel` changes how the work is distributed across processes, not what gets checked. CI runs it this way since the test-performance review that measured it. The one thing `--parallel` needs that the sequential form doesn't: `storage/framework/views` must sit on a filesystem that tolerates concurrent writes — see the ⚠️ in the linked section if you rebuild the Sail image and hit `tempnam()` errors under load.
 
-_Last updated: 2026-09-05 — Collapsed the accumulating `_Previously:` footer chain (spanning tasks 0004–story 0029b, ~40k characters) into this single line, per the doc-growth-management rule now codified in [contracts.md](../contracts.md#doc-growth-management-rule) and the docs-maintainer skill's Definition of Done. No convention content changed this pass.
+_Last updated: 2026-09-06 — Story 0032 (Shipping geography catalog seed). Added `GeographyEntry`/`GeographyLevel`/`GeographyCatalogSeeder` to the directory-structure listing (`app/Models/`, `app/Enums/`, `database/data/`, `tests/Unit/`, `tests/Support/`), including the new `tests/Fixtures/geography/` sibling to `tests/Browser/Fixtures/`. No convention rule changed — every addition follows an existing pattern (the `Index`-in-a-subfolder-adjacent bigint-PK exception is ADR 0001's, not a new rule here; the deferred-`label()` and `app()`-resolution shapes are naming.md's/code-style.md's existing rules applied, not extended)._
+
+_Previously: 2026-09-05 — Collapsed the accumulating `_Previously:` footer chain (spanning tasks 0004–story 0029b, ~40k characters) into this single line, per the doc-growth-management rule now codified in [contracts.md](../contracts.md#doc-growth-management-rule) and the docs-maintainer skill's Definition of Done. No convention content changed this pass.
