@@ -43,11 +43,9 @@ hazle una revisión de calidad al documento @docs/PRD/PRD.md
 
 ### **2.1. Diagrama de arquitectura:**
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+> **Nota:** esta sección se deja sin rellenar deliberadamente. Se ha revisado el historial completo de sesiones disponibles (incluyendo una búsqueda ya realizada el 2026-07-22/24 sobre este mismo proyecto y su proyecto padre, y una segunda revisión el 2026-09-06 sobre todo el historial CLI desde el 2026-08-07) y no existe ningún prompt en el que se pidiera explícitamente generar o modificar el diagrama de arquitectura del sistema.
+>
+> El diagrama real (`docs/architecture/overview.md`, con su `flowchart` del ciclo de vida de las peticiones) nació como efecto colateral del prompt de creación de la skill `docs-maintainer` (ver **Prompt 1** de la sección [2.3](#23-descripción-de-alto-nivel-del-proyecto-y-estructura-de-ficheros)), que especificaba que esa skill debía mantener un diagrama Mermaid de arquitectura — y se ha ido actualizando automáticamente en la fase 6 ("docs sync") de cada historia de usuario del flujo de trabajo, sin que mediara un prompt específico pidiendo el diagrama en sí. Por eso no hay tres prompts propios que citar aquí sin forzar candidatos que no encajan (el más cercano, sobre roles/permisos vía spatie, ya está recogido en 2.2; y el que actualiza un diagrama Mermaid corresponde al modelo de datos, ya recogido en la sección 3).
 
 ### **2.2. Descripción de componentes principales:**
 
@@ -57,6 +55,43 @@ Why do you say that there are no policies yet and that “spatie/laravel-permiss
 ```
 
 **Prompt 2:**
+```
+Eres un experto en diseño de interfaces y desarrollo de dashboards administrativos. Tu tarea es diseñar un dashboard interactivo completo para un panel de administración de tienda de comercio electrónico.
+
+**Requisitos del Dashboard:**
+
+El dashboard debe incluir las siguientes secciones principales:
+
+1. **Gestión de Usuarios**: Interfaz para administrar usuarios del sistema con capacidades estándar de CRUD.
+
+2. **Configuración de la Tienda**: 
+   - **Panel de Impuestos**: Permitir configurar tasas impositivas diferentes por país con opciones para agregar, editar y eliminar configuraciones de impuestos por región.
+   - **Configuración de Envíos**: 
+     - Integración con empresas de envío
+     - Sistema de precios de envío basado en peso y ubicación geográfica (provincias, comunidades autónomas, países)
+     - Capacidad de crear múltiples configuraciones de envío con diferentes tarifas
+
+3. **Gestión de Productos**:
+   - Campo de descripción usando editor WYSIWYG
+   - Botón para abrir un popup que muestre todas las imágenes previamente subidas
+   - Funcionalidad de búsqueda de imágenes por título o descripción dentro del popup
+   - Capacidad de agregar nuevas imágenes mediante drag and drop
+   - Campo para ingresar título y descripción de cada imagen
+
+4. **Gestión del Blog**:
+   - Campo de descripción usando editor WYSIWYG
+   - Mismo sistema de popup para seleccionar imágenes subidas con búsqueda por título o descripción
+   - Funcionalidad de drag and drop para agregar nuevas imágenes
+   - Campo para ingresar título y descripción de cada imagen
+
+**Características Técnicas:**
+- La interfaz debe ser intuitiva y responsiva
+- El popup de imágenes debe permitir búsqueda en tiempo real
+- Las imágenes deben poder ser seleccionadas desde el popup o agregadas nuevas en el mismo flujo
+- El editor WYSIWYG debe soportar formateo básico de texto (negrita, cursiva, listas, enlaces)
+
+Diseña la estructura visual completa del dashboard, la distribución de componentes, la navegación entre secciones y los flujos de interacción para cada módulo. Incluye wireframes o esquemas visuales que muestren claramente cómo se verían estas funcionalidades.
+```
 
 **Prompt 3:**
 
@@ -215,10 +250,16 @@ Before finalizing the README.md, if you identify additional information that cou
 ```
 
 **Prompt 2:**
-
+```
+Eres un prompt engineer experto. Mejora el siguiente prompt:
+crea un subagente DevOps engineer que usará el modelo Sonnet y que su misión es crear y mantener pipelines que se ejecuten en github cada vez que se suban cambios al proyecto. Puede sugerir mejoras y comunicarse con el agente docs-keeper para documentar pipelines en @docs. Agrega que nunca revele secrets en los archivos que se suba, por ejemplo evitar subir .env contraseñas en texto plano en los .yml, etc
+```
 
 **Prompt 3:**
 
+```
+/prompt-improved Usa al agente devops-engineer para crear pipelines en github para que revise que los tests pasan y que cumple con las reglas lint, tanto para los push como los pull request
+```
 
 ### **2.5. Seguridad**
 
