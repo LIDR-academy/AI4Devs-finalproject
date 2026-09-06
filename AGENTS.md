@@ -1341,11 +1341,16 @@ project. Read it at the start of every session.
   suscriptor al portal, y al personal no se le enseña botón porque no contrata planes.
   Cubierto por `e2e/portal.spec.ts` con el recorrido de interfaz completo, verificado
   en los dos sentidos (con el enlace viejo, se pone rojo).
-  **Pendiente de decidir con el usuario:** la spec `accounts-roles` → "Volver a
-  suscribirse con una cuenta existente" nombra la **contraseña** como la forma de
-  acreditar identidad, que era la única cuando se escribió. Ahora hay una segunda —la
-  sesión— y el requisito se queda corto; formalizarlo pide un change de OpenSpec, no
-  editar `openspec/specs/` a mano.
+  **Spec formalizada (2026-09-07):** change `contratar-plan-desde-el-portal`, en
+  verde con `--strict`. El requisito "Volver a suscribirse con una cuenta existente"
+  nombraba la **contraseña** como única forma de acreditar identidad —lo era cuando se
+  escribió, porque el único camino de vuelta pasaba por el alta pública, donde no hay
+  sesión—; ahora reconoce **las dos** y exige que volver sea alcanzable desde dentro.
+  Añade a `subscriptions` el requisito "Contratar un plan sin suscripción vigente"
+  (crea, no reactiva; antigüedad desde cero; nunca dos vigentes a la vez).
+  **Sus tareas nacen marcadas**: el código se arregló antes, porque había un usuario
+  encerrado. Queda **archivarlo**, que es lo que aplica los deltas a
+  `openspec/specs/`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → **Vercel +

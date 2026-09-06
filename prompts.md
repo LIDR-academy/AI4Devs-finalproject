@@ -1642,6 +1642,9 @@ una URL que nunca llega. Más una pasada real con Carla, la cancelada de la semi
 201 al contratar y 409 al intentarlo dos veces. Se revirtió su suscripción para
 dejarla como fixture de "sin plan activo".
 
-**Queda una pregunta de proceso:** la spec nombra la contraseña como la forma de
-acreditar identidad al volver, y ahora hay una segunda —la sesión—. Formalizarlo pide
-un change de OpenSpec, no editar `openspec/specs/` a mano; queda anotado en AGENTS.md.
+**La spec se quedó corta y se formalizó a continuación** (change
+`contratar-plan-desde-el-portal`, 2026-09-07): nombraba la contraseña como la única
+forma de acreditar identidad al volver —lo era cuando se escribió, porque el único
+camino pasaba por el alta pública, sin sesión— y ahora reconoce las dos, más un
+requisito nuevo en `subscriptions` para contratar sin suscripción vigente. Queda
+archivarlo.
