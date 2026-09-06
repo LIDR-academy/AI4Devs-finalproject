@@ -13,6 +13,7 @@ import { PrismaLocationRepository } from '../stock/repositories/PrismaLocationRe
 import { PrismaSettingsRepository } from '../settings/repositories/PrismaSettingsRepository.js';
 import { PrismaConsumptionReasonRepository } from '../kitchen/repositories/PrismaConsumptionReasonRepository.js';
 import { PrismaTemperatureLogRepository } from '../kitchen/repositories/PrismaTemperatureLogRepository.js';
+import { PrismaAiConfigurationRepository } from '../settings/repositories/PrismaAiConfigurationRepository.js';
 
 /**
  * Composición root real de infraestructura: fuera de "production" no fuerza nada (createApp
@@ -39,6 +40,7 @@ export function buildRepositoriesForEnvironment(
     roleRepository: new PrismaRoleRepository(prisma),
     locationRepository: new PrismaLocationRepository(prisma),
     settingsRepository: new PrismaSettingsRepository(prisma),
+    aiConfigRepository: new PrismaAiConfigurationRepository(prisma),
     consumptionReasonRepository: new PrismaConsumptionReasonRepository(prisma),
     temperatureLogRepository: new PrismaTemperatureLogRepository(prisma),
   };
