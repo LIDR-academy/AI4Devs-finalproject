@@ -1410,6 +1410,126 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/settings/ai:
+    get:
+      summary: Get AI agent configuration
+      description: Returns the active AI configuration and enabled capabilities, masking sensitive credentials. Requires ADMIN role.
+      operationId: getAiConfiguration
+      tags:
+        - Settings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current AI configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiConfigurationResponse'
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update AI agent configuration
+      description: Updates provider, model, API key (encrypted at rest), temperature, and feature toggles. Requires ADMIN role.
+      operationId: updateAiConfiguration
+      tags:
+        - Settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAiConfigurationRequest'
+      responses:
+        '200':
+          description: Configuration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiConfigurationResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/settings/ai/test:
+    post:
+      summary: Test AI provider connectivity
+      description: Executes a diagnostics ping against the currently configured AI provider. Requires ADMIN role.
+      operationId: testAiConnection
+      tags:
+        - Settings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Diagnostics ping result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestAiConnectionResponse'
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/recipes/rescue-suggestions:
+    post:
+      summary: Generate dynamic anti-waste rescue recipes
+      description: Analyzes active remanentes in kitchen expiring within 48 hours and proposes structured recipes using exclusively available stock, with deterministic local heuristic fallback.
+      operationId: generateRescueRecipes
+      tags:
+        - Recipes
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of rescue recipe suggestions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueSuggestionsResponse'
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -2357,3 +2477,172 @@ components:
         instance:
           type: string
           example: "/api/v1/stock/extraction"
+
+    AiConfigurationResponse:
+      type: object
+      required:
+        - id
+        - provider
+        - modelName
+        - temperature
+        - hasApiKey
+        - replenishmentOn
+        - rescueRecipesOn
+        - anomalyAuditOn
+        - updatedAt
+      properties:
+        id:
+          type: string
+          example: "default"
+        provider:
+          type: string
+          enum: [GEMINI, OPENAI_COMPATIBLE, HEURISTIC]
+          example: "GEMINI"
+        modelName:
+          type: string
+          example: "gemini-2.5-flash"
+        endpointUrl:
+          type: string
+          nullable: true
+          example: "https://generativelanguage.googleapis.com"
+        temperature:
+          type: number
+          example: 0.0
+        hasApiKey:
+          type: boolean
+          example: true
+        replenishmentOn:
+          type: boolean
+          example: true
+        rescueRecipesOn:
+          type: boolean
+          example: true
+        anomalyAuditOn:
+          type: boolean
+          example: false
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpdateAiConfigurationRequest:
+      type: object
+      required:
+        - provider
+        - modelName
+        - temperature
+      properties:
+        provider:
+          type: string
+          enum: [GEMINI, OPENAI_COMPATIBLE, HEURISTIC]
+          example: "GEMINI"
+        modelName:
+          type: string
+          example: "gemini-2.5-flash"
+        apiKey:
+          type: string
+          description: Plaintext API key to be encrypted at rest (optional if already configured)
+          nullable: true
+        endpointUrl:
+          type: string
+          nullable: true
+          example: "https://api.openai.com/v1"
+        temperature:
+          type: number
+          minimum: 0.0
+          maximum: 0.2
+          example: 0.0
+        replenishmentOn:
+          type: boolean
+          default: true
+        rescueRecipesOn:
+          type: boolean
+          default: true
+        anomalyAuditOn:
+          type: boolean
+          default: false
+
+    TestAiConnectionResponse:
+      type: object
+      required:
+        - success
+        - message
+        - latencyMs
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Connection successful"
+        latencyMs:
+          type: integer
+          example: 215
+
+    RescueIngredientItem:
+      type: object
+      required:
+        - insumoId
+        - insumoName
+        - quantity
+        - unit
+        - isAtRisk
+      properties:
+        insumoId:
+          type: string
+          format: uuid
+        insumoName:
+          type: string
+          example: "Queso Mozzarella"
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+        unit:
+          type: string
+          example: "KG"
+        isAtRisk:
+          type: boolean
+          example: true
+
+    RescueRecipeProposal:
+      type: object
+      required:
+        - name
+        - description
+        - category
+        - estimatedPortions
+        - ingredients
+        - preventedWasteEstimate
+      properties:
+        name:
+          type: string
+          example: "Sopa Crema de Vegetales y Queso"
+        description:
+          type: string
+          example: "Aprovecha crema y verduras próximas a caducar"
+        category:
+          type: string
+          example: "ENTRANTE"
+        estimatedPortions:
+          type: integer
+          example: 8
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RescueIngredientItem'
+        preventedWasteEstimate:
+          $ref: '#/components/schemas/DecimalString'
+
+    RescueSuggestionsResponse:
+      type: object
+      required:
+        - source
+        - proposals
+      properties:
+        source:
+          type: string
+          enum: [GEMINI, OPENAI_COMPATIBLE, HEURISTIC]
+          example: "GEMINI"
+        proposals:
+          type: array
+          items:
+            $ref: '#/components/schemas/RescueRecipeProposal'
+

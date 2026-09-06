@@ -176,6 +176,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-103** | [US-027](../11_user_stories/kitchen/US-027.md) | Agregado `RecipePreparation` y Apertura Automática al Extraer para Receta | `kitchen` | 8 | Should Have | [kitchen/backend/TK-103.md](kitchen/backend/TK-103.md) |
 | **TK-104** | [US-028](../11_user_stories/kitchen/US-028.md) | Cierre y Abandono de Preparación de Receta | `kitchen` | 13 | Should Have | [kitchen/backend/TK-104.md](kitchen/backend/TK-104.md) |
 | **TK-105** | [US-029](../11_user_stories/reports/US-029.md) | Reporte de Mermas de Preparación + Auditoría del Consumo Ad-hoc | `reports` | 5 | Should Have | [reports/backend/TK-105.md](reports/backend/TK-105.md) |
+| **TK-122** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Generación de Recetas de Rescate con IA y Fallback Heurístico (Backend) | `recipes` | 5 | Should Have | [recipes/backend/TK-122.md](recipes/backend/TK-122.md) |
+| **TK-123** | [US-034](../11_user_stories/settings/US-034_configuracion_agente_ia.md) | Modelo de Persistencia y Endpoints de Configuración de IA (Backend) | `settings` | 3 | Should Have | [settings/backend/TK-123.md](settings/backend/TK-123.md) |
 
 
 ### 🖥️ Tickets de Frontend
@@ -240,6 +242,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-089-FE** | [US-024](../11_user_stories/shared/US-024.md) | Reportes Inline (sin `<Modal>` flotante) | `shared` | 3 | Should Have | [shared/frontend/TK-089-FE.md](shared/frontend/TK-089-FE.md) |
 | **TK-090-FE** | [US-024](../11_user_stories/shared/US-024.md) | Ajustes con Sub-Rutas Inline Deep-Linkables | `shared` | 8 | Should Have | [shared/frontend/TK-090-FE.md](shared/frontend/TK-090-FE.md) |
 | **TK-095-FE** | [US-023](../11_user_stories/shared/US-023.md) · [US-024](../11_user_stories/shared/US-024.md) | Pase de Fidelidad Visual y UX vs. Artefacto "Sistema FEFO" | `shared` | 13 | Should Have | [shared/frontend/TK-095-FE.md](shared/frontend/TK-095-FE.md) |
+| **TK-122-FE** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Modal y Visualización de Recetas Anti-Desperdicio (Frontend) | `recipes` | 3 | Should Have | [recipes/frontend/TK-122-FE.md](recipes/frontend/TK-122-FE.md) |
+| **TK-123-FE** | [US-034](../11_user_stories/settings/US-034_configuracion_agente_ia.md) | Sub-ruta y Panel de Configuración de Agentes IA (Frontend) | `settings` | 3 | Should Have | [settings/frontend/TK-123-FE.md](settings/frontend/TK-123-FE.md) |
 ---
 
 ## 🗂️ 3. Resumen de Fichas Técnicas de Tickets por Módulo

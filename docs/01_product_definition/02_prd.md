@@ -44,6 +44,8 @@ inputs:
    - [US-025: Depósito de Insumos en Sub-Sector de Bodega y Stock Multi-Sector](#us-025-depósito-de-insumos-en-sub-sector-de-bodega-y-stock-multi-sector)
    - [US-032: Escaneo de Código de Barras en Extracción de Bodega](#us-032-escaneo-de-código-de-barras-en-extracción-de-bodega)
    - [US-033: Registro de Temperatura de Refrigeración al Iniciar Turno](#us-033-registro-de-temperatura-de-refrigeración-al-iniciar-turno)
+   - [US-034: Panel de Configuración de Agentes IA](#us-034-panel-de-configuración-de-agentes-ia)
+   - [US-035: Generador de Recetas de Aprovechamiento Anti-Desperdicio](#us-035-generador-de-recetas-de-aprovechamiento-anti-desperdicio)
 6. [Estrategia de Calidad y Verificación (QA/Testing)](#6-estrategia-de-calidad-y-verificación-qatesting)
 7. [Roadmap Post-MVP (Fase 2)](#7-roadmap-post-mvp-fase-2)
 
@@ -447,7 +449,44 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
     *   **Escenario 3 (Acceso por rol conservado):**
         *   **Given** Un operario con rol distinto de `ADMIN`.
         *   **When** Escribe `/ajustes/roles` en la barra de direcciones.
-        *   **Then** El sistema lo redirige a Inventario sin exponer el contenido.
+
+### US-034: Panel de Configuración de Agentes IA
+*   **Historia:** Como administrador, quiero disponer de un panel de configuración en Ajustes (`/ajustes/ia`) para seleccionar y parametrizar el proveedor de IA (Google Gemini, OpenAI / Ollama compatible o Motor Heurístico local), ingresar credenciales seguras cifradas, probar la conexión y habilitar o deshabilitar módulos de IA, con el fin de gobernar el uso de modelos inteligentes en el restaurante de acuerdo a la infraestructura y conectividad disponible.
+*   **Complejidad:** M
+*   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+*   **Decisiones de negocio consultadas con el humano (Guard 24/28):** Ruta protegida `/ajustes/ia` accesible solo por rol `ADMIN`. Credenciales almacenadas cifradas en base de datos con AES-256-GCM y enmascaradas en UI, con fallback a variable de entorno `AI_API_KEY`. Conector HTTP nativo (`fetch` de Node 24) sin dependencias pesadas de terceros. Parámetro `temperature` con cota máxima <=0.2 (Guard 9). Botón de prueba de conectividad ("Ping") con feedback visual no bloqueante.
+*   **Criterios de Aceptación (BDD - Sintaxis Gherkin):**
+    *   **Escenario 1 (Acceso restringido a ADMIN):**
+        *   **Given** Un operario con rol distinto de `ADMIN` autenticado en la aplicación.
+        *   **When** Intenta acceder directamente a `/ajustes/ia`.
+        *   **Then** El sistema lo redirige a `/inventario` sin exponer los controles de configuración de IA ni las credenciales.
+    *   **Escenario 2 (Configuración y enmascaramiento de API Key):**
+        *   **Given** Un administrador autenticado en `/ajustes/ia`.
+        *   **When** Selecciona proveedor "GEMINI", ingresa una nueva API Key y guarda la configuración.
+        *   **Then** El sistema persiste la clave cifrada, muestra un mensaje de confirmación y el campo de API Key se visualiza enmascarado indicando que la clave está configurada (`hasApiKey: true`).
+    *   **Escenario 3 (Prueba de conectividad exitosa):**
+        *   **Given** Un administrador en `/ajustes/ia` con credenciales configuradas o proveedor Heurístico.
+        *   **When** Hace clic en "Probar Conexión".
+        *   **Then** El sistema ejecuta un ping contra el endpoint y muestra una señal visual de estado exitoso con la latencia en milisegundos.
+
+### US-035: Generador de Recetas de Aprovechamiento Anti-Desperdicio
+*   **Historia:** Como chef o administrador, quiero que el sistema identifique automáticamente los remanentes abiertos con fecha de vencimiento inminente (<48 horas) y me proponga recetas dinámicas o preparaciones de aprovechamiento utilizando exclusivamente ingredientes disponibles en cocina, para minimizar el desperdicio monetario y transformar mermas potenciales en platos vendibles.
+*   **Complejidad:** L
+*   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
+*   **Decisiones de negocio consultadas con el humano (Guard 17/24/28):** Human-in-the-Loop estricto: la IA genera sugerencias en borrador, pero el Chef debe pulsar "Guardar en Catálogo" para hacerla oficial. Fallback automático y transparente: si el proveedor externo de IA no está disponible o falla por timeout/red, el sistema conmuta inmediatamente a un algoritmo heurístico local determinista sin interrumpir la experiencia. Todas las cantidades y costos calculados estrictamente con `decimal.js` y `DecimalQuantity` (Guard 17).
+*   **Criterios de Aceptación (BDD - Sintaxis Gherkin):**
+    *   **Escenario 1 (Propuesta asistida por IA con remanentes críticos):**
+        *   **Given** Existen remanentes activos en cocina cuya caducidad es menor a 48 horas.
+        *   **When** El chef solicita propuestas de aprovechamiento desde Reportes o Recetas.
+        *   **Then** El sistema devuelve hasta 3 propuestas estructuradas que aprovechan prioritariamente los insumos en riesgo, indicando ingredientes, cantidades requeridas y justificación de merma evitada.
+    *   **Escenario 2 (Fallback heurístico transparente ante desconexión):**
+        *   **Given** La conectividad con el proveedor de IA externo falla o el modo Heurístico está activo.
+        *   **When** El chef solicita recetas de aprovechamiento.
+        *   **Then** El sistema genera sugerencias mediante el motor heurístico local sin arrojar error HTTP 500, indicando visualmente que se utilizó el motor determinista local.
+    *   **Escenario 3 (Conversión de sugerencia a receta del catálogo):**
+        *   **Given** Una propuesta de aprovechamiento mostrada en pantalla.
+        *   **When** El chef hace clic en "Guardar en Catálogo de Recetas".
+        *   **Then** El sistema crea una nueva receta en la base de datos con sus ingredientes asociados, lista para ser consumida mediante el flujo de consumo rápido (`US-007`).
 
 
 ---

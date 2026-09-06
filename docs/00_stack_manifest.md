@@ -1,9 +1,9 @@
 ---
 document: stack_manifest
-version: 1.15.0
+version: 1.16.0
 status: approved
 approved_by: "Jose Lacruz <lacruzjd@gmail.com>"
-approved_at: "2026-09-05"
+approved_at: "2026-09-06"
 authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agentes IA"
 ---
 
@@ -38,7 +38,8 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **Cifrado** | bcrypt | **5.x** | PIN/password hashing (cost 10) |
 | **Autenticación** | JWT (jsonwebtoken) | **9.x** | Access Token ≤15 min |
 | **Cabeceras de Seguridad** | Helmet | **7.x** | HSTS, X-Frame-Options, X-Content-Type-Options |
-
+| **Conector IA Multimodal/LLM** | Node.js Native fetch | **Node 24 LTS** | Conexión HTTP REST nativa (sin SDKs pesados de terceros) a Google Gemini API, OpenAI/Ollama compatible y Motor Heurístico local (Guard 24, decisión humana 2026-09-06) |
+| **Cifrado de Credenciales IA** | Node.js Native crypto | **Node 24 LTS** | AES-256-GCM con IV de 12 bytes y auth tag de 16 bytes para almacenamiento seguro en DB |
 
 ---
 
