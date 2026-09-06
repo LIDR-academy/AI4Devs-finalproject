@@ -26,6 +26,28 @@ export interface RecipeListItem {
   ingredients: CreateRecipeIngredientInput[];
 }
 
+export interface RescueIngredientItem {
+  insumoId: string;
+  insumoName: string;
+  quantity: string;
+  unit: string;
+  isAtRisk: boolean;
+}
+
+export interface RescueRecipeProposal {
+  name: string;
+  description: string;
+  category: string;
+  estimatedPortions: number;
+  ingredients: RescueIngredientItem[];
+  preventedWasteEstimate: string;
+}
+
+export interface RescueSuggestionsResponse {
+  source: 'GEMINI' | 'OPENAI_COMPATIBLE' | 'HEURISTIC';
+  proposals: RescueRecipeProposal[];
+}
+
 export class RecipesService {
   /**
    * Llamada estricta a /stock/insumos. Dar de alta una receta contra un insumo
@@ -44,5 +66,9 @@ export class RecipesService {
 
   public static async createRecipe(data: CreateRecipeRequest): Promise<CreateRecipeResult> {
     return apiRequest<CreateRecipeResult>('/recipes', { method: 'POST', body: data });
+  }
+
+  public static async suggestRescueRecipes(): Promise<RescueSuggestionsResponse> {
+    return apiRequest<RescueSuggestionsResponse>('/recipes/rescue-suggestions', { method: 'POST' });
   }
 }

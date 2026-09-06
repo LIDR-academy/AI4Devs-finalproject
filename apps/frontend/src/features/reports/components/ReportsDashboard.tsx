@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { BarChart3, Calendar, Trash2, PieChart, RefreshCw, Clock } from 'lucide-react';
+import { BarChart3, Calendar, Trash2, PieChart, RefreshCw, Clock, Sparkles } from 'lucide-react';
 import { ReportsService, WasteSummaryItem, RotationMetrics } from '../services/reports.service.js';
 import { SettingsService } from '../../settings/services/settings.service.js';
 import { PreparationWasteReportPanel } from './PreparationWasteReportPanel.js';
 import { TemperatureLogReportPanel } from './TemperatureLogReportPanel.js';
+import { RescueRecipesModal } from '../../recipes/components/RescueRecipesModal.js';
 import { usePermissions } from '../../../shared/hooks/usePermissions.js';
 import styles from './ReportsDashboard.module.css';
 
@@ -234,6 +235,7 @@ function useReportsData(canViewReports: boolean, filterRange: FilterRange) {
 
 export const ReportsDashboard: React.FC<ReportsDashboardProps> = () => {
   const [filterRange, setFilterRange] = useState<FilterRange>('week');
+  const [isRescueOpen, setIsRescueOpen] = useState(false);
   const { has } = usePermissions();
   const { data, isLoading, currencySymbol, rotationMetrics, startDate, endDate } = useReportsData(has('reports:view'), filterRange);
 
@@ -256,7 +258,18 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = () => {
           </p>
         </div>
 
-        <ReportsFilterBar filterRange={filterRange} onFilterChange={setFilterRange} />
+        <div className="flex-gap-sm flex-wrap">
+          <button
+            type="button"
+            className="btn-touch btn-secondary flex-gap-xs"
+            onClick={() => setIsRescueOpen(true)}
+            data-testid="btn-reportes-rescue-recipes"
+          >
+            <Sparkles size={18} className="text-primary-color" />
+            <span>Sugerencias IA</span>
+          </button>
+          <ReportsFilterBar filterRange={filterRange} onFilterChange={setFilterRange} />
+        </div>
       </header>
 
       <KpiCards totalQuantity={totalQuantity} expirationWaste={expirationWaste} rotationMetrics={rotationMetrics} />
@@ -264,6 +277,8 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = () => {
       <PreparationWasteReportPanel startDate={startDate} endDate={endDate} currencySymbol={currencySymbol} />
       {/* US-033/TK-120-FE: histórico de temperatura — la ruta /reportes ya está gateada a ADMIN. */}
       <TemperatureLogReportPanel startDate={startDate} endDate={endDate} />
+
+      <RescueRecipesModal isOpen={isRescueOpen} onClose={() => setIsRescueOpen(false)} />
     </>
   );
 };

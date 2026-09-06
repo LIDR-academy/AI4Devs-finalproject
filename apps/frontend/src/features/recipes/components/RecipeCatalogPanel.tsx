@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { ChefHat, Search } from 'lucide-react';
+import { ChefHat, Search, Sparkles } from 'lucide-react';
 import { RecipesService, RecipeListItem } from '../services/recipes.service.js';
 import { CreateRecipeModal } from './CreateRecipeModal.js';
+import { RescueRecipesModal } from './RescueRecipesModal.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
 import { SuccessFeedbackBanner } from '../../../shared/components/SuccessFeedbackBanner.js';
 import styles from './RecipeCatalogPanel.module.css';
 
 interface RecipeCatalogHeaderProps {
   onCreateClick: () => void;
+  onRescueClick: () => void;
   search: string;
   onSearchChange: (value: string) => void;
   canManage: boolean;
 }
 
-const RecipeCatalogHeader: React.FC<RecipeCatalogHeaderProps> = ({ onCreateClick, search, onSearchChange, canManage }) => (
+const RecipeCatalogHeader: React.FC<RecipeCatalogHeaderProps> = ({
+  onCreateClick,
+  onRescueClick,
+  search,
+  onSearchChange,
+  canManage,
+}) => (
   <>
     <div className="flex-between flex-wrap mb-6 gap-4">
       <div className="flex-gap-xs">
@@ -26,11 +34,23 @@ const RecipeCatalogHeader: React.FC<RecipeCatalogHeaderProps> = ({ onCreateClick
         </div>
       </div>
 
-      {canManage && (
-        <button type="button" onClick={onCreateClick} className="btn-touch btn-primary">
-          + Nueva Receta
+      <div className="flex-gap-sm flex-wrap">
+        <button
+          type="button"
+          onClick={onRescueClick}
+          className="btn-touch btn-secondary flex-center flex-gap-xs"
+          id="btn-rescue-recipes"
+        >
+          <Sparkles size={18} className="text-primary-color" />
+          <span>Sugerencias IA Anti-Desperdicio</span>
         </button>
-      )}
+
+        {canManage && (
+          <button type="button" onClick={onCreateClick} className="btn-touch btn-primary" id="btn-create-recipe">
+            + Nueva Receta
+          </button>
+        )}
+      </div>
     </div>
 
     <div className="search-input-wrapper">
@@ -120,6 +140,7 @@ export const RecipeCatalogPanel: React.FC<{ canManage?: boolean }> = ({ canManag
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRescueModalOpen, setIsRescueModalOpen] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const fetchRecipes = async () => {
@@ -158,6 +179,10 @@ export const RecipeCatalogPanel: React.FC<{ canManage?: boolean }> = ({ canManag
           setFeedback(null);
           setIsModalOpen(true);
         }}
+        onRescueClick={() => {
+          setFeedback(null);
+          setIsRescueModalOpen(true);
+        }}
         search={search}
         onSearchChange={setSearch}
         canManage={canManage}
@@ -168,6 +193,11 @@ export const RecipeCatalogPanel: React.FC<{ canManage?: boolean }> = ({ canManag
       <RecipeCatalogBody error={error} loading={loading} filteredRecipes={filteredRecipes} />
 
       <CreateRecipeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreated={handleCreated} />
+      <RescueRecipesModal
+        isOpen={isRescueModalOpen}
+        onClose={() => setIsRescueModalOpen(false)}
+        onRecipeSaved={fetchRecipes}
+      />
     </div>
   );
 };
