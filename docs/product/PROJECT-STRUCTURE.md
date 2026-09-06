@@ -6,7 +6,7 @@
 
 Sport ITSM is delivered as a **single Nx 21.6 monorepo**, managed with **pnpm** as the only package manager, holding the whole system: the NestJS **API** (`apps/api`), the Angular **Web Client** (`apps/web`), their two Cypress + Cucumber acceptance suites, and every bounded-context library under `libs/`. It is a **modular monolith**: one deployable API process, one deployable web client and one PostgreSQL system of record, with the modularity enforced logically by the workspace structure rather than physically by network hops.
 
-The layout is a direct projection of the architecture. Each ITSM capability is a **bounded context** with its own folder under `libs/`, and inside that folder the **hexagonal layers** are separate Nx libraries: `domain` (pure model and ports), `application` (use cases), `infrastructure` (outbound adapters) on the backend side, and `feature` / `ui` / `data-access` on the frontend side. `libs/shared/` holds the shared kernel, the typed contracts that are the only permitted coupling between the two platforms, and `libs/shared/ui`, the in-house design system reused by every context. In this repository the **folder structure *is* the architecture**: a file's path determines the tags of the project it belongs to, and those tags determine what it is allowed to import.
+The layout is a direct projection of the architecture. Each ITSM capability is a **bounded context** with its own folder under `libs/`, and inside that folder the **hexagonal layers** are separate Nx libraries: `domain` (pure model and ports), `application` (use cases), `infrastructure` (outbound adapters) on the backend side, and `feature` / `ui` / `data-access` on the frontend side. `libs/shared/` holds the shared kernel, the typed contracts that are the only permitted coupling between the two platforms, and `libs/shared/ui`, the in-house design system reused by every context. In this repository the **folder structure _is_ the architecture**: a file's path determines the tags of the project it belongs to, and those tags determine what it is allowed to import.
 
 ## 2. Directory tree
 
@@ -170,7 +170,7 @@ AI4Devs-finalproject/
 │  ├─ approval/  notification/  audit/  reporting/    # generic supporting contexts (ADR-001)
 │  └─ problem/  change/  release/  asset-config/      # PHASE 2 - deliberately not scaffolded yet
 │
-├─ docs/
+├─ docs/product/
 │  ├─ PRD.md                         # product requirements (behavioral authority for the MVP)
 │  ├─ ARCHITECTURE.md                # target architecture: C4, context map, hexagon, ADR-001..010
 │  ├─ COMPONENTS.md                  # main components (companion to readme §2.2)
@@ -236,7 +236,7 @@ The tree is not an arbitrary organization: it is the **Nx monorepo + DDD bounded
 
 1. **The first level under `libs/` is a bounded context.** Each ITSM capability owns a folder and a ubiquitous language. Nothing cross-cutting is allowed to live above it except the deliberately minimal `libs/shared/`.
 2. **The second level is a hexagonal layer.** `domain` / `application` / `infrastructure` are the backend hexagon; `feature` / `ui` / `data-access` are the frontend slice. A file's layer is therefore visible from its path, and so is the set of imports it is permitted.
-3. **Every project carries three tags** — `platform:` (`backend` / `frontend` / `shared`), `scope:` (`<context>` / `shared`) and `type:` (`domain`, `application`, `infrastructure`, `feature`, `ui`, `data-access`, `contracts`, `util`, plus `app` and `e2e` for the four applications, ADR-002). Libraries are created only with Nx generators and explicit `--tags`, so structure and tags never drift. The one nuance worth memorizing: `libs/shared/ui` is `platform:frontend`, not `platform:shared` — a shared *scope* never implies a shared *platform* (ADR-010).
+3. **Every project carries three tags** — `platform:` (`backend` / `frontend` / `shared`), `scope:` (`<context>` / `shared`) and `type:` (`domain`, `application`, `infrastructure`, `feature`, `ui`, `data-access`, `contracts`, `util`, plus `app` and `e2e` for the four applications, ADR-002). Libraries are created only with Nx generators and explicit `--tags`, so structure and tags never drift. The one nuance worth memorizing: `libs/shared/ui` is `platform:frontend`, not `platform:shared` — a shared _scope_ never implies a shared _platform_ (ADR-010).
 4. **`@nx/enforce-module-boundaries` in `eslint.config.mjs` turns the three axes into build-time rules.** The `type:` matrix implements the inward-only dependency rule (`infrastructure → application → domain`, never the reverse); the `scope:` rule implements context isolation (a context may depend only on itself and `scope:shared`); the `platform:` rule keeps frontend and backend from ever importing each other. An illegal import fails `pnpm nx lint`.
 5. **`apps/api` is the only escape hatch, and it is a designed one.** Tagged `scope:shared`, `type:app`, it is the composition root: the single place that sees more than one context, because that is where a context's outbound port is bound to an adapter delegating to another context's application layer (ADR-003). No library may depend on an app, so the privilege cannot spread.
 
@@ -250,15 +250,15 @@ The consequence worth stating plainly: **in this repository the folder structure
 
 ## 7. Governance commands
 
-| Purpose | Command |
-| --- | --- |
-| Install | `pnpm install` |
-| Serve | `pnpm nx serve api` / `pnpm nx serve web` |
-| Unit tests | `pnpm nx test <project>` |
-| Lint, including boundary checks | `pnpm nx lint <project>` |
-| Acceptance | `pnpm nx e2e api-e2e` / `pnpm nx e2e web-e2e` |
-| Changed-only CI gate | `pnpm nx affected -t lint test build` |
-| Inspect the dependency graph | `pnpm nx graph` |
-| Schema evolution | `pnpm typeorm migration:generate\|run\|revert -d apps/api/src/data-source.ts` |
+| Purpose                         | Command                                                                       |
+| ------------------------------- | ----------------------------------------------------------------------------- |
+| Install                         | `pnpm install`                                                                |
+| Serve                           | `pnpm nx serve api` / `pnpm nx serve web`                                     |
+| Unit tests                      | `pnpm nx test <project>`                                                      |
+| Lint, including boundary checks | `pnpm nx lint <project>`                                                      |
+| Acceptance                      | `pnpm nx e2e api-e2e` / `pnpm nx e2e web-e2e`                                 |
+| Changed-only CI gate            | `pnpm nx affected -t lint test build`                                         |
+| Inspect the dependency graph    | `pnpm nx graph`                                                               |
+| Schema evolution                | `pnpm typeorm migration:generate\|run\|revert -d apps/api/src/data-source.ts` |
 
 > **Status:** as in readme §2.1 and §2.2, this is the **target structure**. The repository currently contains only `docs/`, `.claude/`, `CLAUDE.md`, `readme.md` and `prompts.md`; there is no Nx workspace, no `package.json`, no `apps/`, no `libs/` and no `openspec/` directory yet. Every path above is prescriptive design intent that scaffolding must produce, and none of the boundary rules has been verified with `pnpm nx lint` / `pnpm nx graph`.

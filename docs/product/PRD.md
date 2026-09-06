@@ -1,16 +1,16 @@
 # Sport ITSM — Product Requirements Document (PRD)
 
-| Field | Value |
-|---|---|
-| Product | **Sport IT Service Management ("Sport ITSM")** |
-| Supported service | **Sports Competition Management System (SCMS)** |
-| Document type | Product Requirements Document — business & functional, technology-agnostic |
-| Owner | Product Owner, Sport ITSM |
-| Status | Draft for backlog grooming |
-| Source of truth | `readme.md` §0.3, §1.1, §1.2 — this PRD elaborates, never contradicts, those sections |
-| Language standard | Technical English, standard Service Desk / ITSM terminology |
+| Field             | Value                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------- |
+| Product           | **Sport IT Service Management ("Sport ITSM")**                                        |
+| Supported service | **Sports Competition Management System (SCMS)**                                       |
+| Document type     | Product Requirements Document — business & functional, technology-agnostic            |
+| Owner             | Product Owner, Sport ITSM                                                             |
+| Status            | Draft for backlog grooming                                                            |
+| Source of truth   | `readme.md` §0.3, §1.1, §1.2 — this PRD elaborates, never contradicts, those sections |
+| Language standard | Technical English, standard Service Desk / ITSM terminology                           |
 
-> **Scope of this document.** This PRD defines *what* the product must do and *why*. It contains no stack, architecture, or implementation detail; those are owned by engineering and live in the architecture skills and in each change's `design.md`. Once approved, requirements here are translated into OpenSpec capability specs and change proposals.
+> **Scope of this document.** This PRD defines _what_ the product must do and _why_. It contains no stack, architecture, or implementation detail; those are owned by engineering and live in the architecture skills and in each change's `design.md`. Once approved, requirements here are translated into OpenSpec capability specs and change proposals.
 
 ---
 
@@ -39,16 +39,12 @@
 
 ### 1.1 Vision statement
 
-> **For** the users and operators of the Sports Competition Management System — players, team managers, tournament organizers, match officials and league administrators on the demand side; Service Desk Agents, Application Support Analysts, Change/Release Managers and Service Owners on the supply side —
-> **who** need the competition platform to stay available and correct precisely when competitions are live,
-> **Sport ITSM** is an **IT Service Management platform** dedicated to supporting the SCMS platform.
-> **It** provides a single, centralized environment to manage Incidents, Service Requests, Problems, Changes, Releases, Assets and operational processes under measurable SLAs, acting as the **Single Point of Contact (SPOC)** for platform users and as the governance layer for platform evolution.
-> **Unlike** generic ticketing tools and fragmented ad-hoc support channels, Sport ITSM is **competition-context aware**: the agent handling a ticket can record that it affects a competition in progress, which raises the assessed Impact and therefore the Priority under the standard Impact × Urgency matrix — keeping prioritization a deliberate, justified and auditable human judgment rather than an opaque automatism.
+> **For** the users and operators of the Sports Competition Management System — players, team managers, tournament organizers, match officials and league administrators on the demand side; Service Desk Agents, Application Support Analysts, Change/Release Managers and Service Owners on the supply side — **who** need the competition platform to stay available and correct precisely when competitions are live, **Sport ITSM** is an **IT Service Management platform** dedicated to supporting the SCMS platform. **It** provides a single, centralized environment to manage Incidents, Service Requests, Problems, Changes, Releases, Assets and operational processes under measurable SLAs, acting as the **Single Point of Contact (SPOC)** for platform users and as the governance layer for platform evolution. **Unlike** generic ticketing tools and fragmented ad-hoc support channels, Sport ITSM is **competition-context aware**: the agent handling a ticket can record that it affects a competition in progress, which raises the assessed Impact and therefore the Priority under the standard Impact × Urgency matrix — keeping prioritization a deliberate, justified and auditable human judgment rather than an opaque automatism.
 
 ### 1.2 Value proposition
 
 | Value driver | Business outcome |
-|---|---|
+| --- | --- |
 | **Operational consistency** | Every interaction follows one controlled lifecycle: logging → categorization → prioritization → assignment → investigation → resolution → closure. No ticket is lost, no lifecycle is improvised. |
 | **Event protection** | Major Incident Management, agent-assessed competition impact and tiered escalation compress time-to-restore for failures that disrupt a competition in progress (scoring outage during finals, standings frozen at league close). |
 | **Controlled platform evolution** | Change Management and Release & Deployment Management deliver SCMS changes with risk assessment, authorization, CMDB impact analysis and change/release scheduling deconfliction — reducing change-induced Incidents. |
@@ -59,7 +55,7 @@
 
 ### 1.3 Product principles
 
-1. **The platform is the subject, the sport is the context.** Sport ITSM manages the SCMS *service*; competition entities are the affected subject of tickets, never tickets themselves.
+1. **The platform is the subject, the sport is the context.** Sport ITSM manages the SCMS _service_; competition entities are the affected subject of tickets, never tickets themselves.
 2. **Competition impact is a human judgment, not an automatism.** Priority always comes from the Impact × Urgency matrix. When an agent assesses that a ticket affects a competition in progress, they record that assessment and the Impact rises accordingly — explicitly, with justification, and fully audited.
 3. **One record, one lifecycle, one audit trail.** Every ticket, Problem, Change and Release is uniquely referenced and fully reconstructable from its history.
 4. **Deflect before you resolve; resolve before you escalate.** Knowledge and self-service first, L1 resolution next, escalation only when justified.
@@ -77,7 +73,7 @@ Competition platforms carry an unusually harsh failure profile: an application f
 ### 2.2 Pain points (AS-IS)
 
 | # | Pain point | Business consequence |
-|---|---|---|
+| --- | --- | --- |
 | P1 | Issues arrive through fragmented, informal channels (personal email, chat, phone calls to whoever is known) | No single queue, no reference number, duplicated and lost work, no demand visibility |
 | P2 | No consistent ticket lifecycle or categorization taxonomy | Cannot distinguish a defect from an entitled service request; no reliable reporting; inconsistent handling quality |
 | P3 | No prioritization model at all — no Impact × Urgency assessment, no way to record competition impact | A cosmetic issue and a scoring outage during a final compete for the same attention |
@@ -106,12 +102,12 @@ A **standardized, auditable and metric-driven service operation** covering both 
 
 ### 3.1 Scope rule (non-negotiable)
 
-> **Sport ITSM supports the SCMS *platform*, not the sporting operation itself.**
+> **Sport ITSM supports the SCMS _platform_, not the sporting operation itself.**
 
 ### 3.2 In scope
 
 | Area | Included |
-|---|---|
+| --- | --- |
 | **Incidents** | Defects, failures, degradations and unavailability of the SCMS platform (login failure, standings not updating, bracket not rendering, score not saving, payment not processed, notification not delivered, export failing, performance degradation). |
 | **Service Requests** | Standard, pre-approved platform services the requester is **entitled** to: account creation, role/entitlement and organizer-access provisioning, password reset / account recovery / unlock, data export (fixtures, standings, rosters, results), billing & registration-payment support, reactivation of a suspended account or competition workspace. |
 | **Problems** | Root cause investigation of recurring or high-impact platform Incidents; Known Error records; workaround publication. |
@@ -126,7 +122,7 @@ A **standardized, auditable and metric-driven service operation** covering both 
 ### 3.3 Out of scope
 
 | Excluded | Rationale / correct owner |
-|---|---|
+| --- | --- |
 | **In-application sport decisions** — match reschedules, roster changes, result disputes, sanctions, seeding decisions, walkovers | Made by organizers and officials **inside SCMS**. They reach Sport ITSM only if they surface as a platform defect ("the reschedule I saved was not applied") or as an entitled Service Request. |
 | **Competition entities as ticket types** | Tournament, League, Group/Division, Bracket, Fixture/Match, Standings/Ranking, Registration, Roster, Team, Player Account, Schedule, Result are the **affected subject** of a ticket only. |
 | **Building or operating SCMS functionality** | Sport ITSM governs SCMS Changes and Releases; it does not implement SCMS competition features. |
@@ -140,7 +136,7 @@ A **standardized, auditable and metric-driven service operation** covering both 
 When a request models an in-application sport decision as a ticket, the Service Desk MUST reframe it:
 
 | Raw demand | Correct classification |
-|---|---|
+| --- | --- |
 | "Move the match to Sunday" | **Out of scope** — organizer action inside SCMS. Deflect with a Knowledge Article. |
 | "I rescheduled the match but the fixture still shows the old date" | **Incident** — affected subject `Fixture / Match`. |
 | "The result is wrong, we actually won" | **Out of scope** unless the platform mis-computed it → then **Incident**, affected subject `Result` / `Standings`. |
@@ -154,7 +150,7 @@ When a request models an in-application sport decision as a ticket, the Service 
 ### 4.1 Demand-side personas (platform users)
 
 | Persona | Description | Primary needs |
-|---|---|---|
+| --- | --- | --- |
 | **Player / Competitor** | End user of SCMS; reports application issues and requests account services | Simple intake, status transparency, fast account recovery |
 | **Team Manager / Captain** | Manages a team's participation; raises team-level support | Roster/registration issues resolved before deadlines |
 | **Tournament Organizer / Admin** | Power user configuring competitions; higher entitlement tier | Priority handling for their competitions; organizer-access provisioning; data export |
@@ -164,7 +160,7 @@ When a request models an in-application sport decision as a ticket, the Service 
 ### 4.2 Supply-side personas (service organization)
 
 | Persona | Description | Primary needs |
-|---|---|---|
+| --- | --- | --- |
 | **Service Desk Agent (L1)** | First-line operator: logs, triages, resolves or routes | Prioritized work list, guided categorization, knowledge at hand, low-friction escalation |
 | **Application Support Analyst (L2/L3)** | Platform specialist / engineering resolver group | Rich diagnostic context, CI linkage, Problem creation, technical work notes |
 | **Change / Release Manager** | Governs Changes; coordinates SCMS Releases and deployments | Risk assessment, CAB approvals, change/release schedule deconfliction, rollback plans |
@@ -174,7 +170,7 @@ When a request models an in-application sport decision as a ticket, the Service 
 ### 4.3 Role / permission model (indicative)
 
 | Role | Key permissions |
-|---|---|
+| --- | --- |
 | Requester (Player/Competitor, Team Manager, Referee/Match Official) | Create and view **own** tickets; add comments; read requester-facing Knowledge Articles; confirm resolution; submit CSAT |
 | Organizer / League Admin | Requester permissions **plus** visibility of tickets affecting **their** competitions; raise entitled organizer requests; act as approver where configured |
 | Agent (L1) | Full ticket queue access; categorize, prioritize, assign, resolve, close; create Knowledge Article drafts; declare Major Incident candidates |
@@ -191,7 +187,7 @@ When a request models an in-application sport decision as a ticket, the Service 
 Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future OpenSpec capability folders.
 
 | # | Capability | OpenSpec capability (target) | Purpose |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | C1 | **Incident Management** | `incident-management` | Restore normal service operation as quickly as possible after a platform failure, minimizing impact on competitions. |
 | C2 | **Service Request Management** | `service-request-management` | Fulfill standard, entitled platform services predictably and with approval where required. |
 | C3 | **Problem Management** | `problem-management` | Eliminate recurring platform Incidents through RCA, Known Errors and workarounds. |
@@ -268,7 +264,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.1 C1 — Incident Management (`incident-management`)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-INC-01 | The system MUST allow an authenticated requester or an agent to log an Incident capturing: reporter, contact channel, short description, detailed description, affected service, **affected competition subject** (Tournament, League, Group/Division, Bracket, Fixture/Match, Standings/Ranking, Registration, Roster, Team, Player Account, Schedule, Result), affected competition instance, and optional attachments. The requester MAY describe competition context in free text, but MUST NOT be able to set priority-bearing fields directly. | M |
 | FR-INC-02 | The system MUST assign every Incident a unique, human-readable reference number at creation and never reuse it. | M |
 | FR-INC-03 | The system MUST support a configurable categorization taxonomy (Category → Subcategory → Item) and MUST require a category before an Incident can leave the `New` state. | M |
@@ -291,7 +287,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 #### 7.1.1 C13 — Major Incident Management (sub-capability)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-MIM-01 | The system MUST allow an authorized role (Service Manager, or Agent with proposal rights) to declare an Incident a **Major Incident**, capturing declaration time, declarer and justification. | M |
 | FR-MIM-02 | Declaration MUST apply the Major Incident protocol: accelerated SLA targets, immediate notification of the Major Incident stakeholder list, and engagement of the designated resolver groups. | M |
 | FR-MIM-03 | The system MUST support linking child Incidents to a parent Major Incident, and MUST propagate resolution and closure from parent to linked children with a shared resolution code. | M |
@@ -302,7 +298,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.2 C2 — Service Request Management (`service-request-management`)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-SRQ-01 | The system MUST allow a requester to raise a Service Request only from a published Service Offering in the Service Catalog. | M |
 | FR-SRQ-02 | The system MUST enforce **eligibility rules** per Service Offering based on the requester's role, entitlement tier and relationship to the affected competition; ineligible offerings MUST NOT be requestable. | M |
 | FR-SRQ-03 | The system MUST render the offering's dynamic request form and MUST validate mandatory fields before submission. | M |
@@ -318,7 +314,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.3 C3 — Problem Management (`problem-management`)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-PRB-01 | The system MUST allow creation of a Problem record manually, from an Incident, or from a Major Incident closure. | M |
 | FR-PRB-02 | The system MUST support linking multiple Incidents to a Problem and MUST display the aggregated Incident count and impact. | M |
 | FR-PRB-03 | The system MUST manage the Problem lifecycle: `New → Investigation → Root Cause Identified → Known Error → Resolved → Closed`. | M |
@@ -332,14 +328,14 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.4 C4 — Change Management (`change-management`)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-CHG-01 | The system MUST support three Change types with distinct workflows: **Standard** (pre-authorized, low risk), **Normal** (assessed and CAB-authorized) and **Emergency** (expedited authorization, retrospective review). | M |
 | FR-CHG-02 | A Change record MUST capture: requester, change type, description, business justification, affected Configuration Items, affected services, planned start and end date/time, implementation plan, test plan, **rollback plan**, and risk & impact assessment. | M |
 | FR-CHG-03 | The system MUST NOT allow a Normal or Emergency Change to move to `Scheduled` without a recorded authorization decision from the configured approver(s)/CAB. | M |
 | FR-CHG-04 | The system MUST manage the Change lifecycle: `Draft → Assessment → Authorization → Scheduled → Implementation → Review → Closed`, plus `Rejected` and `Cancelled`. | M |
 | FR-CHG-05 | The system MUST compute a **risk level** from a configurable assessment (impact scope, number and criticality of affected CIs, rollback feasibility, complexity, past failure history of the affected CIs). | M |
 | FR-CHG-06 | The system MUST maintain a **change schedule** displaying planned and scheduled Changes and Releases over time, filterable by service, environment and Configuration Item. | M |
-| FR-CHG-07 | *(Retired — deployment freeze windows are out of scope; see §3.3. ID retained for traceability and not reused.)* | — |
+| FR-CHG-07 | _(Retired — deployment freeze windows are out of scope; see §3.3. ID retained for traceability and not reused.)_ | — |
 | FR-CHG-08 | The system MUST detect and warn about **scheduling conflicts** between Changes affecting the same Configuration Items. | S |
 | FR-CHG-09 | The system MUST require a **Post-Implementation Review** outcome (`Successful`, `Successful with issues`, `Failed`, `Backed out`) before a Change can be closed. | M |
 | FR-CHG-10 | The system MUST allow linking a Change to originating Incidents/Problems and to the Release that delivers it. | M |
@@ -349,7 +345,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.5 C5 — Release & Deployment Management (`release-management`)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-REL-01 | The system MUST allow creation of a Release record capturing: version identifier, release type (major, minor, patch, hotfix), scope description, target environments, planned deployment date/time, rollout plan and rollback plan. | M |
 | FR-REL-02 | The system MUST support associating one or more authorized Changes to a Release; a Release MUST NOT be approved for deployment while it contains unauthorized Changes. | M |
 | FR-REL-03 | The system MUST manage the Release lifecycle: `Planned → Build/Package → Ready for Deployment → Deploying → Deployed → Verified → Closed`, plus `Rolled Back` and `Cancelled`. | M |
@@ -362,7 +358,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.6 C6 — Asset & Configuration Management (`asset-configuration-management`)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-CMD-01 | The system MUST maintain a CMDB of Configuration Items representing the SCMS platform: services, environments, application components, integrations and data stores. | M |
 | FR-CMD-02 | Each CI MUST record: unique identifier, name, CI type, criticality, environment, owner, operational status and current version. | M |
 | FR-CMD-03 | The system MUST support typed **relationships** between CIs (`depends on`, `runs on`, `part of`, `connects to`) with direction. | M |
@@ -375,7 +371,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.7 C7 — SLA Management & Escalation (`sla-management`)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-SLA-01 | The system MUST allow definition of SLA policies with **response** and **resolution/fulfillment** targets per record type, service, Service Offering and priority. | M |
 | FR-SLA-02 | The system MUST attach exactly one applicable SLA policy to each ticket at creation, re-evaluating on priority or service change. | M |
 | FR-SLA-03 | The system MUST run SLA timers against a configurable **support schedule** (business hours or 24×7) with holiday support, defined per SLA policy. | M |
@@ -390,7 +386,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.8 C8 — Service Catalog Management (`service-catalog`)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-CAT-01 | The system MUST allow a System Administrator to define **Services** and their **Service Offerings**, organized into browsable categories. | M |
 | FR-CAT-02 | Each Service Offering MUST define: description, request form definition, eligibility rules, approval requirements, fulfillment workflow, assignment target and SLA policy. | M |
 | FR-CAT-03 | Offerings MUST have a publication lifecycle (`Draft`, `Published`, `Retired`); only `Published` offerings are visible to requesters. | M |
@@ -401,7 +397,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.9 C9 — Knowledge Management & Self-Service Portal (`knowledge`)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-KNW-01 | The system MUST support Knowledge Articles typed as `How-to`, `Known Issue`, `Workaround`, `FAQ` and `Policy`. | M |
 | FR-KNW-02 | Articles MUST follow an authoring lifecycle: `Draft → Review → Published → Retired`, with an approver role for publication. | M |
 | FR-KNW-03 | Articles MUST carry an audience visibility setting (requester-facing vs. internal/agent-only). No article is accessible without authentication; there is no public/anonymous Knowledge Base. | M |
@@ -416,7 +412,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.10 C10 — Identity & Access Management (`identity-access`)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-IAM-01 | The system MUST authenticate every user before granting access to any function. Sport ITSM exposes no anonymous or public surface — including the Knowledge Base and the Self-Service Portal. | M |
 | FR-IAM-02 | The system MUST implement **role-based access control** aligned with the personas in §4, enforcing **least privilege** by default. | M |
 | FR-IAM-03 | A requester MUST only be able to view and act on their **own** tickets, except where an explicit competition-scoped visibility rule grants broader access (Organizer, League Administrator). | M |
@@ -428,7 +424,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.11 C11 — Omnichannel Intake (cross-cutting)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-OMN-01 | The system MUST accept demand from the Self-Service Portal, email-to-ticket, in-app help and agent-logged (phone/chat) entries, normalizing all into a single ticket model with a unique reference. | M (portal + agent-logged) / S (email, in-app) |
 | FR-OMN-02 | Every ticket MUST record its **origin channel** for reporting. | M |
 | FR-OMN-03 | Email replies to a ticket notification MUST be appended as public comments to the originating ticket rather than creating a new ticket. | S |
@@ -437,7 +433,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.12 C12 — Workflow & Automation Engine (cross-cutting)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-WFL-01 | The system MUST allow a System Administrator to configure lifecycle state models and allowed transitions per record type without code changes. | M |
 | FR-WFL-02 | The system MUST support **business rules** evaluated on record events (create, update, state change) that can set fields, assign, notify, escalate or create tasks. | M |
 | FR-WFL-03 | The system MUST support **automatic categorization and routing** rules mapping category/affected subject/channel to a Resolver Group or queue. | M |
@@ -448,7 +444,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.13 C14 — Assignment & Queue Management (cross-cutting)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-QUE-01 | The system MUST support Resolver Groups (support groups) with members, group manager and coverage schedule. | M |
 | FR-QUE-02 | The system MUST provide each agent a **prioritized work list** ordered by priority, SLA time remaining and age, filterable by group, state and affected competition. | M |
 | FR-QUE-03 | The system MUST allow an agent to take (self-assign) an unassigned ticket from a queue they belong to. | M |
@@ -458,7 +454,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.14 C15 — Approval Engine (cross-cutting)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-APR-01 | The system MUST support configurable approval workflows with one or more sequential and/or parallel approval stages. | M |
 | FR-APR-02 | Approvers MUST be resolvable by role, group, competition ownership or named user. | M |
 | FR-APR-03 | An approval decision MUST be `Approved` or `Rejected`, with a mandatory comment on rejection, recorded with approver identity and timestamp. | M |
@@ -470,7 +466,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.15 C16 — Notification Framework (cross-cutting)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-NOT-01 | The system MUST notify the requester on: ticket creation acknowledgment (with reference number), assignment, request for information, resolution, and closure. | M |
 | FR-NOT-02 | The system MUST notify agents/groups on assignment, escalation and SLA warning/breach. | M |
 | FR-NOT-03 | The system MUST notify approvers on pending approval tasks and reminders. | M |
@@ -483,7 +479,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.16 C17 — Reporting, Dashboards & Analytics (cross-cutting)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-RPT-01 | The system MUST provide an **operational dashboard** for agents and group managers: open tickets by priority and state, tickets approaching SLA breach, unassigned queue depth, my work list. | M |
 | FR-RPT-02 | The system MUST provide a **management dashboard** for the Service Owner: FCR, MTTA, MTTR, SLA Compliance Rate, Reopen Rate, Backlog Volume and ageing, CSAT, ticket volume by category/channel/service. | M |
 | FR-RPT-03 | The system MUST provide **process dashboards** for Change and Release: Change Success Rate, change-induced Incident rate, emergency change ratio, release frequency and lead time. | S |
@@ -495,7 +491,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 7.17 C18 — Audit Trail & Activity History (cross-cutting)
 
 | ID | Requirement | Priority |
-|---|---|---|
+| --- | --- | --- |
 | FR-AUD-01 | The system MUST record an immutable entry for every state transition, field change, assignment, comment, approval, notification and automated rule execution on every record type. | M |
 | FR-AUD-02 | Each audit entry MUST capture: actor (user or system rule), timestamp, record reference, action, previous value and new value. | M |
 | FR-AUD-03 | Audit entries MUST NOT be editable or deletable by any role, including System Administrator. | M |
@@ -512,7 +508,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 8.1 Availability & continuity
 
 | ID | Requirement |
-|---|---|
+| --- | --- |
 | NFR-AVL-01 | Sport ITSM MUST be available to log and view tickets **24×7**, since competitions run outside business hours. Target service availability: **99.5% monthly**, excluding announced maintenance. |
 | NFR-AVL-02 | Sport ITSM MUST be treated as a critical service in its own right: an outage of Sport ITSM removes the only governed channel through which platform failures can be reported, so its own availability target is not subordinate to SCMS activity levels. |
 | NFR-AVL-03 | Ticket intake MUST remain functional in a degraded mode if optional subsystems (knowledge search, reporting, notifications) are unavailable: no user must be prevented from logging an Incident. |
@@ -522,7 +518,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 8.2 Performance & responsiveness (behavioral expectations)
 
 | ID | Requirement |
-|---|---|
+| --- | --- |
 | NFR-PRF-01 | Ticket submission from the Self-Service Portal MUST complete within a perceived time acceptable to an end user under normal load (target: under 3 seconds to acknowledgment with reference number). |
 | NFR-PRF-02 | The agent work list and ticket view MUST load fast enough to sustain first-line handling during peak match-day volume (target: under 2 seconds). |
 | NFR-PRF-03 | The system MUST sustain demand surges without rejecting intake; queuing and graceful degradation are acceptable, data loss is not. |
@@ -531,7 +527,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 8.3 Security & access
 
 | ID | Requirement |
-|---|---|
+| --- | --- |
 | NFR-SEC-01 | All access MUST be authenticated; there is no anonymous ticket submission. |
 | NFR-SEC-02 | Authorization MUST be enforced on every operation server-side; UI concealment alone is not sufficient. |
 | NFR-SEC-03 | Requesters MUST NOT be able to read tickets, comments or personal data belonging to other requesters. |
@@ -543,7 +539,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 8.4 Auditability & compliance
 
 | ID | Requirement |
-|---|---|
+| --- | --- |
 | NFR-AUD-01 | Every record MUST be fully reconstructable: what happened, when, by whom, in what order. |
 | NFR-AUD-02 | No role may alter or erase history; corrections are made by new entries, never by mutation. |
 | NFR-AUD-03 | SLA breach, approval and Change authorization records MUST be tamper-evident and retained for the defined retention period. |
@@ -552,7 +548,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 8.5 Internationalization & localization
 
 | ID | Requirement |
-|---|---|
+| --- | --- |
 | NFR-I18N-01 | All user-facing text MUST be localizable; no user-facing string may be hardcoded in a single language. |
 | NFR-I18N-02 | The system MUST support at least English and Spanish at launch, with the language selected from the user's preference or request context. |
 | NFR-I18N-03 | Dates, times and durations MUST be presented in the user's locale and time zone, while being stored and computed unambiguously; SLA calculations MUST be time-zone correct for competitions in different regions. |
@@ -562,7 +558,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 8.6 Usability & accessibility
 
 | ID | Requirement |
-|---|---|
+| --- | --- |
 | NFR-USE-01 | A requester with no ITSM knowledge MUST be able to submit a correctly categorized ticket without training; ITSM vocabulary MUST be hidden or explained on requester-facing surfaces. |
 | NFR-USE-02 | An agent MUST be able to log a phone-reported Incident in a single, uninterrupted flow. |
 | NFR-USE-03 | User interfaces MUST meet WCAG 2.1 level AA. |
@@ -572,7 +568,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 8.7 Data quality, retention & scalability
 
 | ID | Requirement |
-|---|---|
+| --- | --- |
 | NFR-DAT-01 | Ticket reference numbers MUST be unique, immutable and never reused. |
 | NFR-DAT-02 | Records MUST be retained for a configurable retention period (default: 24 months of operational access, longer for Change/Release authorization evidence). |
 | NFR-DAT-03 | Reference data changes (e.g., renaming a category) MUST NOT retroactively alter historical reporting semantics. |
@@ -582,7 +578,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 8.8 Configurability & operability
 
 | ID | Requirement |
-|---|---|
+| --- | --- |
 | NFR-CFG-01 | Categories, the Impact × Urgency priority matrix, SLA policies, catalog offerings, workflows, approval chains, notification templates and roles MUST be configurable by a System Administrator without a software release. |
 | NFR-CFG-02 | Configuration changes MUST take effect on new records without corrupting in-flight records governed by the previous configuration. |
 | NFR-CFG-03 | The system MUST expose its own operational health so that Sport ITSM outages are detectable independently of user reports. |
@@ -594,7 +590,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 9.1 Standard ITSM KPIs
 
 | KPI | Definition | Baseline | Target (12 months post-launch) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **FCR — First Contact Resolution** | % of Incidents resolved by L1 at first interaction without reassignment | n/a (no measurement today) | ≥ 60% |
 | **MTTA — Mean Time to Acknowledge/Respond** | Mean elapsed time from ticket creation to first agent response | n/a | ≤ 15 min (P1), ≤ 4 h (P3/P4) |
 | **MTTR — Mean Time to Resolution** | Mean elapsed time from creation to `Resolved`, net of clock-stopping pending states | n/a | ≤ 4 h (P1), ≤ 3 business days (P3) |
@@ -608,7 +604,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ### 9.2 Domain KPIs (competition-specific)
 
 | KPI | Definition | Target |
-|---|---|---|
+| --- | --- | --- |
 | **Time-to-restore for competition-impacting Incidents** | MTTR restricted to Incidents flagged by an agent as affecting a competition in progress (FR-INC-05) | ≤ 60 min |
 | **Competition-impacting Incident share** | % of Incidents flagged as affecting a competition in progress, and their SLA Compliance Rate | Downward volume trend; ≥ 98% SLA Compliance on this subset |
 | **Major Incident rate** | Major Incidents declared per 1,000 Incidents | Downward trend |
@@ -623,19 +619,19 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 
 ### 9.3 Product adoption metrics
 
-| Metric | Target |
-|---|---|
-| % of support demand entering through governed channels (vs. informal) | ≥ 90% within 2 quarters |
-| % of tickets with a valid category and affected subject at closure | ≥ 98% |
-| % of platform Changes executed through a Change record | **100%** |
-| Portal active requesters as % of active SCMS users in the reporting period | ≥ 30% |
+| Metric                                                                     | Target                  |
+| -------------------------------------------------------------------------- | ----------------------- |
+| % of support demand entering through governed channels (vs. informal)      | ≥ 90% within 2 quarters |
+| % of tickets with a valid category and affected subject at closure         | ≥ 98%                   |
+| % of platform Changes executed through a Change record                     | **100%**                |
+| Portal active requesters as % of active SCMS users in the reporting period | ≥ 30%                   |
 
 ---
 
 ## 10. Assumptions
 
 | # | Assumption | Impact if false |
-|---|---|---|
+| --- | --- | --- |
 | A1 | Service Desk Agents are trained and competent to assess competition impact from the ticket description and the affected subject, and to apply the competition-in-progress Impact flag consistently. | Prioritization quality degrades and the flag becomes noise; mitigated by justification capture, audit and periodic calibration review (see R8). |
 | A2 | An identity provider / SSO exists for SCMS users and can supply identity and basic profile attributes. | Sport ITSM must own local accounts; onboarding friction and duplicate identity management. |
 | A3 | Personas and entitlement tiers used by SCMS (Player/Competitor, Team Manager, Tournament Organizer, Referee/Match Official, League Administrator) are available to drive catalog eligibility and ticket visibility. | Eligibility rules must be maintained manually in Sport ITSM. |
@@ -651,7 +647,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ## 11. Constraints
 
 | # | Constraint |
-|---|---|
+| --- | --- |
 | K1 | **Scope constraint:** Sport ITSM must not implement or replicate SCMS competition functionality; the sporting operation stays inside SCMS (§3). |
 | K2 | **Terminology constraint:** all artifacts and user-facing agent surfaces use standard ITSM terminology; requester-facing surfaces simplify without contradicting it. |
 | K3 | **Specification constraint:** product behavior is specified in OpenSpec capability specs; behavior is never defined in operational or engineering documents. |
@@ -667,7 +663,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ## 12. Dependencies & Integrations
 
 | # | Dependency | Purpose | Criticality |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | D1 | **SCMS identity provider / SSO** | Authentication and persona/entitlement attributes | High |
 | D2 | **SCMS competition reference data** | Read-only lookup of competition instances (Tournament, League, Fixture…) so a ticket can name its affected subject accurately. Sport ITSM consumes identifiers and labels only — it does **not** consume or maintain a competition calendar and derives no time-based service policy from it. | Medium (free-text fallback acceptable) |
 | D3 | **SCMS ranking / standings engine** | Affected-subject context and impact analysis for standings Incidents | Medium |
@@ -682,7 +678,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 ## 13. Risks & Mitigations
 
 | # | Risk | Probability | Impact | Mitigation |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | R1 | **Scope creep into sport operations** — stakeholders ask Sport ITSM to manage reschedules, disputes or rosters | High | High | Enforce the scope rule at intake (FR-INC-15); PO rejects/reframes such demand; publish deflection Knowledge Articles. |
 | R2 | **P1 targets unachievable outside business hours** — no on-call coverage underpins the published SLA | Medium | High | Confirm A4/A7 with the service organization; define OLAs before publishing SLA targets; degrade the declared support schedule transparently rather than breaching. |
 | R3 | **Change bypass** — engineering deploys without a Change record | Medium | High | 100% Change coverage KPI; unauthorized change rate with zero tolerance; deployment evidence reconciliation via CMDB. |
@@ -715,14 +711,14 @@ Backlog ordering uses **WSJF-style value/effort reasoning** (Cost of Delay = bus
 
 Identity & Access (FR-IAM-01/02/03/05), core ticket record and reference numbering, categorization taxonomy, Resolver Groups, audit trail (FR-AUD-01/02/03/04), localization foundation (NFR-I18N-01/02).
 
-*Exit criterion:* an authenticated user with a role exists, and every action taken is auditable.
+_Exit criterion:_ an authenticated user with a role exists, and every action taken is auditable.
 
 ### 14.3 Phase 1 — **MVP: "Log it, prioritize it, resolve it, prove it"**
 
 **Goal:** replace fragmented support with one governed, measurable Incident and Service Request operation in which competition impact is deliberately assessed and reflected in Priority.
 
 | Capability | MVP inclusion |
-|---|---|
+| --- | --- |
 | **Incident Management** | Full lifecycle FR-INC-01 → 13, FR-INC-18. Portal + agent-logged intake. |
 | **Major Incident Management** | FR-MIM-01, 02, 03 (declaration, protocol, child linking). |
 | **Service Request Management** | FR-SRQ-01 → 09, 11, for the six MVP catalog offerings. |
@@ -739,6 +735,7 @@ Identity & Access (FR-IAM-01/02/03/05), core ticket record and reference numberi
 **Explicitly excluded from MVP:** Problem, Change, Release, CMDB, email-to-ticket, skill-based assignment, delegation, deflection measurement, CSAT automation beyond basic capture.
 
 **MVP acceptance (definition of "MVP is done"):**
+
 - A referee can report a scoring failure while officiating; an agent flags it as affecting a competition in progress with justification, the Impact × Urgency matrix yields P1, the P1 SLA targets are recalculated and start, the ticket escalates on the SLA warning, and the referee receives resolution and confirms it — end to end, audited.
 - A team manager can request organizer access, get it approved and fulfilled, and see the approval trail.
 - A service owner can read SLA Compliance, MTTA, MTTR, FCR, Reopen Rate and backlog for a period.
@@ -755,7 +752,7 @@ Identity & Access (FR-IAM-01/02/03/05), core ticket record and reference numberi
 - Process dashboards (FR-RPT-03).
 - Approval delegation and reminders (FR-APR-04, 05).
 
-*Exit criterion:* no SCMS deployment reaches production without an authorized Change and a Release record; recurring Incidents converge on Problems.
+_Exit criterion:_ no SCMS deployment reaches production without an authorized Change and a Release record; recurring Incidents converge on Problems.
 
 ### 14.5 Phase 3 — Scale, deflection & experience
 
@@ -773,7 +770,7 @@ Proactive Problem Management (FR-PRB-09), configuration drift detection (FR-CMD-
 ### 14.7 Traceability
 
 | Phase | Business objective served | Primary KPIs moved |
-|---|---|---|
+| --- | --- | --- |
 | Phase 1 (MVP) | Operational consistency, event protection, accountability, experience | FCR, MTTA, MTTR, SLA Compliance, Reopen Rate, time-to-restore for competition-impacting Incidents |
 | Phase 2 | Controlled platform evolution, repeat-failure elimination | Change Success Rate, change-induced Incident rate, unauthorized change rate, repeat Incident rate |
 | Phase 3 | Efficiency, deflection, experience at scale | Self-service deflection rate, agent productivity, CSAT, Major Incident rate |
@@ -814,7 +811,7 @@ Proactive Problem Management (FR-PRB-09), configuration drift detection (FR-CMD-
 ## 16. Glossary
 
 | Term | Definition |
-|---|---|
+| --- | --- |
 | **CAB** | Change Advisory Board — the authorizing body for Normal Changes. |
 | **CI / Configuration Item** | A component of the SCMS platform tracked in the CMDB. |
 | **CMDB** | Configuration Management Database — CIs and their relationships. |
