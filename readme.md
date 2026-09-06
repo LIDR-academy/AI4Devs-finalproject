@@ -341,9 +341,13 @@ Hoy los paneles `/admin/dashboard` y `/mechanic/dashboard` solo muestran un salu
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
+
 
 Las imágenes de como luce para los usuarios el sistema se pueden ver en el folder: /docs/Diseño y experiencia de usuario
+
+
+Se puede ver un video del proyecto corriendo en: \docs\Diseño y experiencia de usuario\ProyectoFinal_RFM.mp4
+
 
 
 ### **1.4. Instrucciones de instalación:**
