@@ -16,7 +16,6 @@ Before any analysis, read — in this order:
 
 1. `docs/product/prd.md` — specifically the **Icon legend** (build states), **§6 Feature specifications**, **§7 Functional requirements** and **§8 Non-functional requirements**. The PRD already groups requirements by feature; read that grouping, do not invent one.
 2. `docs/product/implementation-baseline.md` — the reverse-engineered inventory of what exists in code. Your cross-check.
-3. `docs/standards/base-standards.md` §4 — the Nx layer boundaries, so your size estimates reflect the real architecture.
 
 Then **spot-check the code** for anything the PRD marks 🔍 Unverified, and for any group where the PRD's build state and `implementation-baseline.md` disagree. Never resolve a disagreement by picking one — report it.
 

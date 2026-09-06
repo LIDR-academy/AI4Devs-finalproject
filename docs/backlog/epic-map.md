@@ -13,7 +13,7 @@ This map was produced by the `epic-mapper` skill with the deviations mandated by
 | `CaptureStamp()` | Applied; stamp refreshed to `815672f` after the PRD was committed | The analysis was performed at `aa1ea0e` against a then-untracked PRD. `docs/product/PRD.md` was subsequently committed at `815672f` **byte-identical**, so the stamp was advanced without re-running the analysis. Finding **F12** is thereby resolved. |
 | Read `docs/product/prd.md` | Applied against `docs/product/PRD.md` | Uppercase filename in this repository. |
 | Read `docs/product/implementation-baseline.md` | **Not applicable** | The file does not exist; the workspace is greenfield. |
-| Read `docs/standards/base-standards.md` §4 | Substituted by `CLAUDE.md` §3 + `docs/product/ARCHITECTURE.md` §4–§5 | This repository's authoritative Nx layer/boundary baseline. |
+| Read `CLAUDE.md` §3 + `docs/product/ARCHITECTURE.md` §4–§5 | This repository's authoritative Nx layer/boundary baseline. |
 | `CrossCheckAgainstCode()` | **Skipped** | No implementation exists at `815672f`: no `package.json`, no `apps/`, no `libs/`. Nothing to spot-check, no baseline to disagree with. |
 | PRD **Icon legend** (build states) | **Absent from the PRD — expected, not drift** | Nothing has been built, so no build-state legend is warranted. Every requirement is treated as 🔴 Not built. |
 | `SizeEpics()` | Applied in **greenfield** mode | Size = full requirement count **plus** the Nx libraries the epic must create from nothing (`domain` / `application` / `infrastructure` / `contracts` backend, `feature` / `ui` / `data-access` frontend), not a remaining-work delta. |
@@ -67,13 +67,13 @@ Total target structure across all epics: **~80 libraries + 4 applications** (`AR
 
 ### Requirement distribution by MoSCoW (active functional requirements)
 
-| Priority | Count | Share |
-| --- | --: | --: |
-| **M** — Must (MVP) | 95 | 65% |
-| **S** — Should | 33 | 22% |
-| **C** — Could | 11 | 7% |
-| Compound (two or more priorities on one ID) | 2 | 1% |
-| Retired (`FR-CHG-07`) | — | excluded |
+| Priority                                    | Count |    Share |
+| ------------------------------------------- | ----: | -------: |
+| **M** — Must (MVP)                          |    95 |      65% |
+| **S** — Should                              |    33 |      22% |
+| **C** — Could                               |    11 |       7% |
+| Compound (two or more priorities on one ID) |     2 |       1% |
+| Retired (`FR-CHG-07`)                       |     — | excluded |
 
 The 2 compound-priority requirements (`FR-OMN-01`, `FR-NOT-06`) are counted once in the epic totals and are recorded as **F3** in the findings.
 
@@ -91,7 +91,7 @@ Remaining sequence, for context: `C1` → `C8` → `C15` → `C2` → `C16` → 
 
 ### Reconciliation with the PRD's own phasing (§14)
 
-The suggested order **does not override** the PRD's phase plan; it sequences *within* it. Agreements and divergences:
+The suggested order **does not override** the PRD's phase plan; it sequences _within_ it. Agreements and divergences:
 
 | Item | PRD §14 | This map | Verdict |
 | --- | --- | --- | --- |
@@ -207,7 +207,7 @@ The suggested order **does not override** the PRD's phase plan; it sequences *wi
 ### `C11` · Omnichannel Intake (PRD §7.11)
 
 - **Requirements:** `FR-OMN-01` 🔴 **M (portal + agent-logged) / S (email, in-app)** · `FR-OMN-02` 🔴 M · `FR-OMN-03` 🔴 S · `FR-OMN-04` 🔴 M
-- **What actually remains:** Everything, but **no new libraries and no bounded context**: `ARCHITECTURE.md` §4.1 classifies omnichannel intake as an *adapter concern*. Portal and agent-logged intake are the same inbound HTTP adapter over the same use case; email-to-ticket becomes an additional inbound adapter in Phase 3. Only `originChannel` (`FR-OMN-02`) enters the domain, as a value object in `libs/shared/domain`. Delivers channel normalization into one ticket model with a unique reference (`FR-OMN-01`), origin-channel recording for reporting (`FR-OMN-02`), email-reply threading appended as public comments rather than new tickets (`FR-OMN-03`), and identity capture with no anonymous submission (`FR-OMN-04`).
+- **What actually remains:** Everything, but **no new libraries and no bounded context**: `ARCHITECTURE.md` §4.1 classifies omnichannel intake as an _adapter concern_. Portal and agent-logged intake are the same inbound HTTP adapter over the same use case; email-to-ticket becomes an additional inbound adapter in Phase 3. Only `originChannel` (`FR-OMN-02`) enters the domain, as a value object in `libs/shared/domain`. Delivers channel normalization into one ticket model with a unique reference (`FR-OMN-01`), origin-channel recording for reporting (`FR-OMN-02`), email-reply threading appended as public comments rather than new tickets (`FR-OMN-03`), and identity capture with no anonymous submission (`FR-OMN-04`).
 - **Depends on:** `C1` and `C2` (declared — normalization targets the ticket model these epics own) · `C10` (declared — `FR-OMN-04` requires requester identity) · D7 email gateway (external, `FR-OMN-01` email slice and `FR-OMN-03`)
 - **Size:** **S** — 4 requirements, 0 new libraries, 0 new aggregates. The email adapter is real work but is a Phase 3 slice with an external dependency.
 - **Findings:** **F3** (`FR-OMN-01` carries a compound M/S priority and straddles Phase 1 and Phase 3 — it must be split before it can be scheduled), **F9** (`FR-OMN-02`, `FR-OMN-04` are not explicitly phased, though §14.3 implies them via the MVP Incident row).
@@ -263,7 +263,7 @@ The suggested order **does not override** the PRD's phase plan; it sequences *wi
   - **§8.6 Usability & accessibility:** `NFR-USE-01` · `NFR-USE-02` · `NFR-USE-03` · `NFR-USE-04` · `NFR-USE-05`
   - **§8.7 Data quality, retention & scalability:** `NFR-DAT-01` · `NFR-DAT-02` · `NFR-DAT-03` · `NFR-DAT-04` · `NFR-DAT-05`
   - **§8.8 Configurability & operability:** `NFR-CFG-01` · `NFR-CFG-02` · `NFR-CFG-03`
-  > §8 carries no MoSCoW column — non-functional requirements in this PRD are stated as unconditional obligations. Recorded as a characteristic, not a defect.
+    > §8 carries no MoSCoW column — non-functional requirements in this PRD are stated as unconditional obligations. Recorded as a characteristic, not a defect.
 - **What actually remains:** Everything, split into two very different kinds of work. **Standalone build:** the i18n scaffolding on both platforms (`nestjs-i18n` driven by `Accept-Language`, Transloco plus the locale interceptor) with per-language template and article variants and a fallback language (`NFR-I18N-01/02/04/05`); time-zone-correct storage and SLA computation (`NFR-I18N-03`); the WCAG 2.1 AA baseline in `libs/shared/ui` (`NFR-USE-03`) and the responsive requester surfaces (`NFR-USE-04`); health and self-monitoring endpoints so Sport ITSM outages are detectable independently of user reports (`NFR-CFG-03`, `NFR-AVL-02`); degraded-mode intake when knowledge, reporting or notifications are down (`NFR-AVL-03`); restart-safe SLA timers (`NFR-AVL-05`); retention jobs (`NFR-DAT-02`, `NFR-AUD-03`); transactional audited bulk operations (`NFR-DAT-05`); and GDPR pseudonymization that erases personal data without destroying audit integrity (`NFR-SEC-07`, constraint K9). **Absorbed as acceptance criteria:** roughly two-thirds of §8 — the security posture (`NFR-SEC-01→06`), auditability (`NFR-AUD-01→04`), performance budgets (`NFR-PRF-01→04`), configurability (`NFR-CFG-01/02`) and data-quality rules (`NFR-DAT-01/03/04`) — is verified inside the epic that implements the behavior, not built separately. See finding **F10**.
 - **Depends on:** all 18 capability epics (inferred — cross-cutting by definition; §8 constrains behavior that the other epics implement)
 - **Size:** **XL** — by raw count the largest epic in the map (38 requirements) and it touches every library in the workspace, including two platform-wide mechanisms (i18n on both stacks, the a11y baseline in the design system) and one legally-driven feature (pseudonymization). Sized XL on count and reach, with the explicit caveat in **F10** that a large share of it must be scheduled as acceptance criteria on other epics rather than as standalone stories — otherwise this epic is double-counted against the rest of the map.
@@ -275,27 +275,27 @@ The suggested order **does not override** the PRD's phase plan; it sequences *wi
 
 The key **is** the PRD's own capability ID from the §7 subsection title (`### 7.1 C1 — Incident Management`). No mnemonic is minted, no PRD ID is renumbered, and every key is ≤4 characters. §8 is the single `NFR` epic.
 
-| Key | PRD section | Bounded context (`ARCHITECTURE.md` §4.1) | New Nx libraries | Story/ticket ID prefix |
-| --- | --- | --- | --: | --- |
-| `C1` | §7.1 | `incident` | 6 | `US-C1-nn` / `T-C1-nn` |
-| `C13` | §7.1.1 | `incident` (shared with C1) | 0 | `US-C13-nn` / `T-C13-nn` |
-| `C2` | §7.2 | `service-request` | 6 | `US-C2-nn` / `T-C2-nn` |
-| `C3` | §7.3 | `problem` (phase 2) | 6 | `US-C3-nn` / `T-C3-nn` |
-| `C4` | §7.4 | `change` (phase 2) | 6 | `US-C4-nn` / `T-C4-nn` |
-| `C5` | §7.5 | `release` (phase 2) | 6 | `US-C5-nn` / `T-C5-nn` |
-| `C6` | §7.6 | `asset-config` (phase 2) | 6 | `US-C6-nn` / `T-C6-nn` |
-| `C7` | §7.7 | `sla` | 3 | `US-C7-nn` / `T-C7-nn` |
-| `C8` | §7.8 | `service-catalog` | 6 | `US-C8-nn` / `T-C8-nn` |
-| `C9` | §7.9 | `knowledge` | 6 | `US-C9-nn` / `T-C9-nn` |
-| `C10` | §7.10 | `identity-access` + **`shared` kernel + 4 applications** | 5 + 9 | `US-C10-nn` / `T-C10-nn` |
-| `C11` | §7.11 | none — inbound adapter concern (§4.1) | 0 | `US-C11-nn` / `T-C11-nn` |
-| `C12` | §7.12 | none — `StateModel` primitive in `shared/domain` (§4.1) | 0 | `US-C12-nn` / `T-C12-nn` |
-| `C14` | §7.13 | `identity-access` (shared with C10) | 0 | `US-C14-nn` / `T-C14-nn` |
-| `C15` | §7.14 | `approval` | 6 | `US-C15-nn` / `T-C15-nn` |
-| `C16` | §7.15 | `notification` | 4 | `US-C16-nn` / `T-C16-nn` |
-| `C17` | §7.16 | `reporting` | 6 | `US-C17-nn` / `T-C17-nn` |
-| `C18` | §7.17 | `audit` | 4 | `US-C18-nn` / `T-C18-nn` |
-| `NFR` | §8 | cross-cutting — no context of its own | 0 | `US-NFR-nn` / `T-NFR-nn` |
+| Key   | PRD section | Bounded context (`ARCHITECTURE.md` §4.1)                 | New Nx libraries | Story/ticket ID prefix   |
+| ----- | ----------- | -------------------------------------------------------- | ---------------: | ------------------------ |
+| `C1`  | §7.1        | `incident`                                               |                6 | `US-C1-nn` / `T-C1-nn`   |
+| `C13` | §7.1.1      | `incident` (shared with C1)                              |                0 | `US-C13-nn` / `T-C13-nn` |
+| `C2`  | §7.2        | `service-request`                                        |                6 | `US-C2-nn` / `T-C2-nn`   |
+| `C3`  | §7.3        | `problem` (phase 2)                                      |                6 | `US-C3-nn` / `T-C3-nn`   |
+| `C4`  | §7.4        | `change` (phase 2)                                       |                6 | `US-C4-nn` / `T-C4-nn`   |
+| `C5`  | §7.5        | `release` (phase 2)                                      |                6 | `US-C5-nn` / `T-C5-nn`   |
+| `C6`  | §7.6        | `asset-config` (phase 2)                                 |                6 | `US-C6-nn` / `T-C6-nn`   |
+| `C7`  | §7.7        | `sla`                                                    |                3 | `US-C7-nn` / `T-C7-nn`   |
+| `C8`  | §7.8        | `service-catalog`                                        |                6 | `US-C8-nn` / `T-C8-nn`   |
+| `C9`  | §7.9        | `knowledge`                                              |                6 | `US-C9-nn` / `T-C9-nn`   |
+| `C10` | §7.10       | `identity-access` + **`shared` kernel + 4 applications** |            5 + 9 | `US-C10-nn` / `T-C10-nn` |
+| `C11` | §7.11       | none — inbound adapter concern (§4.1)                    |                0 | `US-C11-nn` / `T-C11-nn` |
+| `C12` | §7.12       | none — `StateModel` primitive in `shared/domain` (§4.1)  |                0 | `US-C12-nn` / `T-C12-nn` |
+| `C14` | §7.13       | `identity-access` (shared with C10)                      |                0 | `US-C14-nn` / `T-C14-nn` |
+| `C15` | §7.14       | `approval`                                               |                6 | `US-C15-nn` / `T-C15-nn` |
+| `C16` | §7.15       | `notification`                                           |                4 | `US-C16-nn` / `T-C16-nn` |
+| `C17` | §7.16       | `reporting`                                              |                6 | `US-C17-nn` / `T-C17-nn` |
+| `C18` | §7.17       | `audit`                                                  |                4 | `US-C18-nn` / `T-C18-nn` |
+| `NFR` | §8          | cross-cutting — no context of its own                    |                0 | `US-NFR-nn` / `T-NFR-nn` |
 
 > Library counts for the four Phase-2 contexts (`problem`, `change`, `release`, `asset-config`) are **inferred**: `ARCHITECTURE.md` §5.1 lists them without a per-lib breakdown ("phase 2 — not scaffolded in phase 1"). Six libraries each is assumed by analogy with `incident` and `service-request`. Confirm with the architect before these epics are sized for delivery.
 
@@ -312,13 +312,13 @@ These are reported, not fixed. `docs/product/PRD.md` was not modified.
 | **F1** | Info | `C13` | **C13 is present in §7**, nested as `#### 7.1.1 C13 — Major Incident Management (sub-capability)` under §7.1, not as a top-level §7.x subsection. It carries its own capability ID, its own `FR-MIM-*` requirement family and its own row in §5. | Keyed as its own epic (`C13`, `US-C13-nn`) with a declared dependency on `C1`. It creates no new libraries — `ARCHITECTURE.md` §4.1 puts C1 and C13 in the same `incident` context. No blocker. |
 | **F2** | Info | `C4` | **`FR-CHG-07` is retired** with priority `—` and the note "ID retained for traceability and not reused" (deployment freeze windows are out of scope, §3.3, ADR-006). | Correct PRD hygiene. Excluded from all counts: `C4` shows 12 declared IDs and **11 active** requirements. No work exists for this ID and none must be generated. |
 | **F3** | **Blocker for scheduling** | `C11`, `C16` | **Two requirements carry compound MoSCoW priorities on a single ID:** `FR-OMN-01` = `M (portal + agent-logged) / S (email, in-app)`, and `FR-NOT-06` = `M (in-app) / S (email) / C (push)`. A single requirement with two or three priorities cannot be scheduled atomically, and `FR-OMN-01` straddles Phase 1 and Phase 3. | The Product Owner must split these into per-channel requirement IDs in the PRD (Mode 1), **or** the Business Analyst must split them at story level and record the split. Do not drill `C11` or `C16` until this is resolved. |
-| **F4** | Medium | `C7`, `C8` | **Mutual reference:** `FR-SLA-01` defines SLA targets "per record type, service, **Service Offering** and priority", while `FR-CAT-02` requires each Service Offering to define "…and **SLA policy**". Each capability's requirement names the other as its own content. | Not a true cycle at implementation level — the offering holds an SLA policy *identifier* and the policy registry (`C7`) is authored first. But the build sequence must be explicit, or two teams will each wait for the other. Reflected in the suggested order (`C7` at 5, `C8` at 8). |
+| **F4** | Medium | `C7`, `C8` | **Mutual reference:** `FR-SLA-01` defines SLA targets "per record type, service, **Service Offering** and priority", while `FR-CAT-02` requires each Service Offering to define "…and **SLA policy**". Each capability's requirement names the other as its own content. | Not a true cycle at implementation level — the offering holds an SLA policy _identifier_ and the policy registry (`C7`) is authored first. But the build sequence must be explicit, or two teams will each wait for the other. Reflected in the suggested order (`C7` at 5, `C8` at 8). |
 | **F5** | Medium | `C10`, `C18` | **Mutual reference at phase 0:** `FR-IAM-05` requires role assignment/revocation to be "fully audited" (needs `C18`), while `FR-AUD-02` requires every audit entry to capture an actor (needs `C10`). `ARCHITECTURE.md` §4.1 places `audit` at phase 0 and `identity-access` at phase 0/1. | The two must be **co-delivered** as a single phase-0 increment. Do not sequence them as two independent epics; treat `C18` as an early parallel track inside the `C10` foundation rather than a strict successor. |
 | **F6** | Medium | `C1`, `C18`, `NFR` | **Three epics are not phase-atomic.** §14.2 Phase 0 pulls "core ticket record and reference numbering, categorization taxonomy" out of `C1` (i.e. `FR-INC-01/02/03`) while §14.3 lists `FR-INC-01 → 13, 18` in Phase 1 MVP — the two lists overlap without stating where the boundary falls. The same split applies to `C18` (`FR-AUD-01→04` Phase 0 vs `FR-AUD-05` Phase 1) and `NFR` (`NFR-I18N-01/02` Phase 0, the rest unphased). | The epic map keys and counts remain correct, but a drill of `C1`, `C18` or `NFR` must first settle the Phase 0/Phase 1 cut with the Product Owner, or Phase 0 stories will be written twice. |
 | **F7** | Medium | `C4`, `C5`, `C17` | **Two KPI-bearing requirements are unphased.** §14.4 lists Change as `FR-CHG-01 → 06, 08 → 10, 12` — **omitting `FR-CHG-11`** (change-induced Incident attribution) — and Release as `FR-REL-01 → 06` — **omitting `FR-REL-07`** (verification as a closure gate) **and `FR-REL-08`** (release lead time). Yet §9.2 defines the change-induced Incident rate and release lead time as tracked KPIs, and §14.7 assigns both to Phase 2. | Phase 2's stated exit KPIs cannot be computed from Phase 2's stated requirement set. `FR-RPT-03` (process dashboards, Phase 2) therefore depends on requirements that no phase schedules. Assign `FR-CHG-11`, `FR-REL-07` and `FR-REL-08` to Phase 2 before drilling `C4`, `C5` or `C17`. |
 | **F8** | Info | `C12` | **PRD/architecture modelling divergence, deliberate and documented.** The PRD models C12 as a capability with its own requirement family; `ARCHITECTURE.md` §4.1 explicitly refuses a `workflow` bounded context ("it would become a god context every other context depends on") and realizes C12 as a `StateModel` primitive in `libs/shared/domain` plus per-context configuration. | Not a contradiction — the PRD is behavior, the architecture is structure. But the epic `C12` creates **zero libraries of its own**: its code lands in `shared/domain` (owned by `C10`) and in each consuming context. Sizing and ticket placement must account for that, or `C12` will look empty and its consumers will look over-sized. |
 | **F9** | Low | `C1`, `C8`, `C10`, `C11`, `C14`, `C16`, `C18` | **Eleven further requirements are assigned to no phase in §14:** `FR-INC-15`, `FR-INC-16`, `FR-CAT-06`, `FR-IAM-04`, `FR-IAM-06`, `FR-IAM-07`, `FR-OMN-02`, `FR-OMN-04`, `FR-QUE-04`, `FR-QUE-05`, `FR-AUD-06`. (`FR-NOT-06` is arguably covered by §14.3's parenthetical "in-app mandatory, email if available".) Notably, `FR-INC-15` is the stated mitigation for risk **R1** (scope creep into sport operations) and `FR-IAM-06` (session timeout, step-up authentication) is a security control. | Mostly Should/Could items, so low urgency — but `FR-INC-15` guards the product's non-negotiable scope rule and `FR-OMN-02`/`FR-OMN-04` are Must requirements implied by the MVP without being listed. Recommend a §14 pass in Mode 1 to phase all 147 active requirements explicitly. |
-| **F10** | Medium | `NFR` | **NFR absorption / double-count risk.** The `NFR` epic carries 38 requirements — 20% of the map — but roughly two-thirds of them (`NFR-SEC-01→06`, `NFR-AUD-01→04`, `NFR-PRF-01→04`, `NFR-CFG-01/02`, `NFR-DAT-01/03/04`) are constraints verified *inside* the epic that implements the behavior, not standalone deliverables. Counting them once in `NFR` and again as acceptance criteria on `C1`…`C18` inflates the backlog. | Before drilling, decide the policy: either (a) `NFR` produces only the standalone-build stories (i18n scaffolding, a11y baseline, health/observability, retention, pseudonymization) and the rest become a Definition-of-Done checklist applied to every epic, or (b) `NFR` produces verification stories and the other epics reference them. Option (a) is recommended and is consistent with §15.2 Definition of Done items 3–8. |
+| **F10** | Medium | `NFR` | **NFR absorption / double-count risk.** The `NFR` epic carries 38 requirements — 20% of the map — but roughly two-thirds of them (`NFR-SEC-01→06`, `NFR-AUD-01→04`, `NFR-PRF-01→04`, `NFR-CFG-01/02`, `NFR-DAT-01/03/04`) are constraints verified _inside_ the epic that implements the behavior, not standalone deliverables. Counting them once in `NFR` and again as acceptance criteria on `C1`…`C18` inflates the backlog. | Before drilling, decide the policy: either (a) `NFR` produces only the standalone-build stories (i18n scaffolding, a11y baseline, health/observability, retention, pseudonymization) and the rest become a Definition-of-Done checklist applied to every epic, or (b) `NFR` produces verification stories and the other epics reference them. Option (a) is recommended and is consistent with §15.2 Definition of Done items 3–8. |
 
 ## Findings — drift against upstream sources
 

@@ -14,7 +14,6 @@ Replaces the former `product-owner` skill, which extracted personas and requirem
 
 - `docs/product/prd.md` — icon legend, §6 feature specs, §7 functional requirements, §8 NFRs
 - `docs/product/implementation-baseline.md` — the code-side inventory, used as cross-check
-- `docs/standards/base-standards.md` §4 — layer boundaries, for realistic sizing
 - The code itself — for 🔍 Unverified requirements and PRD/baseline disagreements
 
 ## Writes

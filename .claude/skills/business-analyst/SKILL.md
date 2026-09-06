@@ -17,7 +17,7 @@ Before writing a single story, read — in this order:
 1. **`docs/backlog/epic-map.md`** — specifically your epic's section. It owns the epic key, the requirement list, each requirement's build state, and the "what actually remains" paragraph. **You may not re-derive the grouping or the keys.**
 2. `docs/product/prd.md` — only the sections your epic's requirements live in. Never read it whole.
 3. **The code**, for every requirement marked 🟡 Partial, ⚫ Broken or 🔍 Unverified. This is not optional and it is not a formality: you cannot write a gap story without knowing what the gap is.
-4. `docs/standards/base-standards.md` §4 — the layer boundaries, so your acceptance criteria are expressible in this architecture.
+4. `CLAUDE.md` §4 — the layer boundaries, so your acceptance criteria are expressible in this architecture.
 
 If the epic map and the code disagree, say so in the output. Do not silently pick one.
 
