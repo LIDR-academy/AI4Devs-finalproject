@@ -1187,3 +1187,191 @@ como no ejecutado, nunca como pasado.
 Implementado ticket T-C10-05
 
 </br>
+
+**Prompt 6:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Implementa UN SOLO ticket: docs/backlog/C10/tickets/T-C10-06.md · Scaffold `apps/api-e2e` y
+`apps/web-e2e` — arneses Cypress 15.20 + Cucumber
+Raíz del repositorio: d:\repositories\ai4devs\proyecto_final\AI4Devs-finalproject
+
+#### Rol
+El ticket lleva `agent: —` a propósito: no es de `backend-engineer` ni de `frontend-engineer`.
+Trabaja en el hilo principal aplicando las skills `sport-itsm-workflow`, `sport-itsm-architecture`
+y `ci-cd` (project.json, targets, configuración del gestor de paquetes). Si delegas, el reparto
+honesto es: `ci-cd-expert` para el cableado del arnés y `testing-implementer` SOLO para los dos
+`.feature` de humo y sus step definitions. No delegues el diseño de los targets.
+
+#### Precondición
+T-C10-01 … T-C10-05 deben estar hechos. Compruébalo antes de tocar nada:
+
+    ls package.json nx.json eslint.config.mjs pnpm-workspace.yaml tools/boundary-probes/verify.mjs
+    ls apps/api/project.json apps/web/project.json
+    node -v                    # v22.x
+    pnpm nx show projects      # EXACTAMENTE: api, web
+    pnpm verify:boundaries     # 9/9 en verde, exit 0
+    pnpm nx build api          # exit 0
+    pnpm nx build web          # exit 0
+    pnpm prettier --check .    # exit 0
+
+Si `verify:boundaries` falla, PARA: este ticket crea los dos primeros proyectos `type:e2e`, que son
+justamente los que ponen a prueba la fila `e2e` de la matriz de tipos.
+
+#### El ticket es el contrato
+Lee docs/backlog/C10/tickets/T-C10-06.md entero: su `## Scope` es exhaustivo y su lista de
+"Out of scope" es vinculante. Lee además, y no de memoria:
+
+- **ADR-011** (docs/product/ARCHITECTURE.md, "The E2E harness drives Cypress directly"). Explica por
+  qué `@nx/cypress` NO se instala y por qué el target `e2e` es `nx:run-commands`. No lo reabras.
+- **ADR-002** (`type:app` y `type:e2e`) y ARCHITECTURE.md §5.2/§5.3 — la fila `e2e` de la matriz:
+  `type:e2e` solo puede depender de `type:contracts` y `type:util`.
+- CLAUDE.md §2, tabla Backend, fila Testing: los pins exactos del arnés y el suelo de Cypress 15.18.0.
+- docs/product/PROJECT-STRUCTURE.md, el árbol de `apps/api-e2e` y `apps/web-e2e`
+  (`src/features/*.feature`, `src/step-definitions/*.steps.ts`, `src/support/`, `cypress.config.ts`,
+  `project.json`) y la fila "Tests" de su tabla de convenciones. Ese es el destino.
+- docs/backlog/C10/test-plan.md §"Test stack" — para saber qué NO es de este ticket.
+
+#### Pins y dependencias — todas exactas, todas en devDependencies de la raíz
+`package.json` no tiene un solo rango `^`: mantenlo así.
+
+- `cypress` **15.20.x** (el preprocesador exige ≥ 15.18.0; por debajo no arranca).
+- `@badeball/cypress-cucumber-preprocessor` **28.0.x**
+- `@bahmutov/cypress-esbuild-preprocessor` **2.2.x**
+- `esbuild` como dependencia **directa**, porque el bundler lo declara como peer y pnpm no lo iza a
+  la raíz. Fíjalo en la versión que **ya resuelve `@angular/build`** para no duplicar el binario
+  nativo: hoy `node_modules/.pnpm` contiene `esbuild@0.28.1` (y un `esbuild@0.25.5` transitivo
+  previo). Ejecuta `pnpm why esbuild` ANTES y DESPUÉS y pega ambas salidas: si tu pin añade una
+  tercera copia, has elegido mal la versión.
+- Ni una dependencia más. En particular: **nada de `@nx/cypress`** (ADR-011), nada de `cross-env`,
+  nada de `supertest`, nada de `start-server-and-test` salvo que justifiques por escrito por qué
+  `nx:run-commands` no basta — y entonces repórtalo como ampliación de Scope, no lo cueles.
+
+#### La enmienda al gestor de paquetes — es parte del Scope, no un detalle
+Cypress descarga su binario en un `postinstall` y **pnpm 10 bloquea los build scripts por defecto**.
+Hoy no existe ninguna lista de permitidos: `grep -n "onlyBuiltDependencies" pnpm-workspace.yaml
+package.json` no devuelve nada, y `.npmrc` no existe. Sin la enmienda, `cypress run` falla con
+`No version of Cypress is installed`.
+
+- Añade el permitido donde ya viven los ajustes de pnpm de este workspace: `pnpm-workspace.yaml`
+  (que ya contiene `autoInstallPeers` y `strictPeerDependencies`). **No crees un `.npmrc`** y no
+  desactives scripts globalmente ni uses `--ignore-scripts`/`--unsafe-perm`.
+- No uses `pnpm approve-builds` interactivo: la lista debe quedar **declarada en el repositorio**,
+  porque CI corre `pnpm install --frozen-lockfile` sin humano delante.
+- Verifica el resultado de verdad: `pnpm exec cypress version` debe imprimir 15.20.x, y
+  `pnpm install` no debe emitir el aviso de "Ignored build scripts" para `cypress`.
+- `pnpm-lock.yaml` cambiará. Es correcto y está en `.prettierignore`; no lo edites a mano.
+
+#### El problema real de este ticket: el proceso vivo y el entorno
+Aquí está el 80% del trabajo de diseño. Léelo entero antes de escribir el primer `project.json`.
+
+- El AC1 exige que el arnés de `api-e2e` **alcance un proceso API vivo**. Un `dependsOn` sobre
+  `api:build` compila, **no arranca nada**. El ticket escribe literalmente `build` para `api` y
+  `serve` para `web`: reconcilia esa letra con el AC y **explica en el informe qué has hecho**.
+- El AC2 exige que arranque **sin `.env`**. `.env` está en `.gitignore`, y
+  `apps/api/src/config/env.validation.ts` declara `NODE_ENV` y `PORT` obligatorias **sin default en
+  código**: si faltan, el boot aborta. Así que el target debe suministrarlas él mismo.
+  `nx:run-commands` acepta `options.env` — esa es la vía nativa, sin `cross-env` ni `dotenv`.
+  Ojo si tiras de `api:serve`: usa el ejecutor `@nx/js:node`, que **no** tiene opción `env`.
+- Nx 21 tiene tareas continuas: `api:serve` y `web:serve` ya están declaradas `"continuous": true`,
+  y un `dependsOn` sobre una tarea continua la levanta, espera y la derriba. Es la herramienta
+  natural para `web-e2e`. Decide para `api-e2e` entre esa forma y arrancar el artefacto construido
+  (`node dist/apps/api/main.js`) desde el propio target con su `env`, y justifica la elección.
+- **Windows:** en T-C10-04/05 matar el envoltorio de `nx` dejó vivo el proceso hijo de node.
+  Comprueba al terminar que los puertos (3000 de la API, 4200 del web) quedan libres. Si algo queda
+  colgado, dilo; no lo escondas.
+
+#### Los dos `.feature` de humo — qué pueden afirmar y qué no
+- **api-e2e:** `apps/api` no declara ningún controlador hasta T-C10-28, y `main.ts` monta el prefijo
+  global `/api` con `/health/live` y `/health/ready` exentos pero **no implementados**. Es decir:
+  todo responde 404. El humo prueba que el proceso está arriba y habla HTTP por el puerto
+  configurado — `cy.request({ failOnStatusCode: false })` y aserción sobre el status/cuerpo.
+  **Prohibido añadir una ruta para ponerlo más verde**: eso es T-C10-28.
+- **web-e2e:** el shell no renderiza copy de usuario (Transloco es del épico NFR). Afirma el landmark
+  `main#main-content` de `apps/web/src/app/app.component.ts` y que la ruta por defecto ha resuelto;
+  **nada de texto visible**.
+- Un `.feature` por proyecto, mínimo. Los escenarios de aceptación del épico están catalogados en
+  docs/backlog/C10/test-plan.md y **no son de este ticket**.
+
+#### Cableado Cucumber — una sola convención para los dos proyectos
+- `specPattern` sobre `**/*.feature`; `setupNodeEvents` con `addCucumberPreprocessorPlugin` +
+  `createBundler({ plugins: [createEsbuildPlugin(config)] })`, y **devuelve `config`** (olvidarlo es
+  el fallo silencioso clásico).
+- La configuración del preprocesador (glob de step definitions) se resuelve relativa al `cwd` con el
+  que corre Cypress. El ticket quiere **una convención compartida**: decide si eso significa un
+  fichero de configuración por proyecto con la misma forma o uno en la raíz, **compruébalo
+  ejecutando** — no lo deduzcas del README del paquete — y explica en el informe qué resolvió el
+  preprocesador de verdad.
+- Cada proyecto necesita su propio `tsconfig.json` extendiendo `../../tsconfig.base.json` con los
+  `types` de Cypress y Node. La base es `strict` + `noUnusedLocals`: no la relajes por proyecto.
+  **No añadas `paths` a `tsconfig.base.json`** — sigue en `{}` y así debe quedar (no hay `libs/`).
+
+#### Lo que NO debes tocar
+- **`eslint.config.mjs`.** Ya prevé este ticket: enruta `angular-eslint` a `apps/web-e2e/**/*.ts` y
+  ya tiene un bloque de reglas para `**/*.cy.ts` y `**/*.steps.ts`. Si una regla te molesta, el
+  arreglo está en el `tsconfig` del proyecto e2e o en tu código, **nunca** en relajar la config raíz.
+- **`nx.json`.** Ya trae `targetDefaults.e2e` (cache + `dependsOn: ["^build"]`) y ya excluye
+  `cypress/**`, `cypress.config.*` y `**/*.cy.*` del namedInput `production`. Si crees que necesitas
+  cambiarlo, párate, explícalo y pide confirmación antes.
+- **`apps/api` y `apps/web`.** Ni una línea. Ni ruta, ni controlador, ni health endpoint.
+- **`.github/workflows/deploy-stage.yml`.** Declara explícitamente que no corre `nx e2e`. No lo
+  cambies. Pero ojo: CI ejecuta `pnpm nx run-many -t lint test build`, así que los dos proyectos
+  nuevos entran ahí — su `lint` inferido debe pasar. **No** les des target `build`, y **no** les
+  pongas un `jest.config.ts` (el plugin `@nx/jest` inferiría un `test` que no les corresponde).
+- Nada bajo `libs/` (T-C10-07 en adelante), nada de component testing de Cypress, nada de Docker.
+
+#### Verificación — ejecútala, no la afirmes
+Los cinco AC son mecánicos. Ejecuta cada comprobación de verdad y pega su salida:
+
+1. `pnpm install` sin aviso de build scripts ignorados para `cypress`; `pnpm exec cypress version`
+   imprime 15.20.x; `pnpm why esbuild` antes/después.
+2. **AC2 literal:** aparta el `.env` local (renómbralo) y con el checkout SIN `.env` ejecuta
+   `pnpm nx e2e api-e2e`. Debe pasar. Restaura el `.env` después y dilo.
+3. `pnpm nx e2e web-e2e` pasa contra el shell servido, con la aserción del landmark.
+4. Tags: `pnpm nx show project api-e2e --json` y `... web-e2e --json` — exactamente tres tags cada
+   uno, con el `platform:` de la aplicación bajo prueba.
+5. **Sonda del AC4.** `type:e2e` solo puede depender de `contracts` y `util`. Hazla sobre un
+   proyecto e2e **real**: crea una librería desechable etiquetada `type:domain` con un alias
+   temporal en `tsconfig.base.json` — exactamente el patrón de `tools/boundary-probes/verify.mjs` —
+   impórtala desde `apps/api-e2e`, comprueba que `pnpm nx lint api-e2e` **falla**, pega el mensaje
+   literal de ESLint y **revierte la sonda entera** (librería, alias e import) antes de cerrar.
+   No importes desde `apps/api`: eso choca antes con la regla del sumidero `type:app` (ADR-002) y no
+   prueba nada sobre la fila `e2e`.
+   Matiz que debes reportar con honestidad: la sonda `p6` de `verify:boundaries` **ya** prueba
+   `e2e → infrastructure` de forma aislada sobre un proyecto sintético; cítala, no la dupliques. Lo
+   que tu sonda añade es que la regla muerde sobre el proyecto real. Y di también que la dirección
+   *permitida* (`e2e → contracts/util`) todavía no se puede probar porque no existe ninguna librería.
+6. `pnpm nx show projects` devuelve exactamente `api`, `api-e2e`, `web`, `web-e2e` y nada más.
+7. `pnpm verify:boundaries` sigue en 9/9, exit 0, y deja `tsconfig.base.json` idéntico
+   (`git diff --stat tsconfig.base.json` vacío).
+8. `pnpm nx run-many -t lint test build` en verde — es lo que corre CI.
+9. `pnpm prettier --check .` pasa y `pnpm install` no emite `WARN Unsupported engine`.
+10. Puertos 3000 y 4200 liberados, sin procesos node huérfanos.
+
+Un criterio que no has ejecutado se reporta como no ejecutado, jamás como pasado. Si alguno falla,
+pega la salida completa.
+
+#### Restricciones
+- No modifiques nada bajo `docs/` ni bajo `.claude/`. El ticket no se edita ni se marca como hecho.
+- No instales dependencias que el Scope no pida.
+- No hagas commit ni push salvo que te lo pida explícitamente.
+- Si necesitas red (Cypress descarga ~200 MB) y no la tienes, para y dilo.
+
+#### Informa al terminar
+- Ficheros creados o modificados y dependencias añadidas con su versión exacta.
+- **Cómo resolviste el proceso vivo y el entorno sin `.env`**, y por qué esa forma honra a la vez la
+  letra del ticket (`dependsOn: build` para api) y el AC1.
+- Dónde acabó la configuración del preprocesador Cucumber y qué resolvió realmente al ejecutar.
+- La salida de las diez verificaciones, incluido el mensaje literal de ESLint de la sonda.
+- Qué notas de estado quedan obsoletas — readme.md §2.3.6, docs/product/ARCHITECTURE.md §12.3 y la
+  nota de estado final de docs/product/PROJECT-STRUCTURE.md ("no existe ninguna de las dos suites de
+  aceptación"): **repórtalas, no las corrijas**.
+- Si crees que `deploy-stage.yml` debería ganar un job de e2e: dilo como recomendación, no lo hagas.
+
+### Response:
+
+Implementado ticket T-C10-06
+
+</br>

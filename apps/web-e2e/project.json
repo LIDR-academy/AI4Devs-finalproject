@@ -1,0 +1,22 @@
+{
+  "name": "web-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/web-e2e/src",
+  "projectType": "application",
+  "tags": ["platform:frontend", "scope:shared", "type:e2e"],
+  "targets": {
+    "e2e": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["web:serve"],
+      "cache": false,
+      "options": {
+        "commands": [
+          "node ../../tools/e2e/wait-for-http.mjs http://localhost:4200",
+          "cypress run"
+        ],
+        "parallel": false,
+        "cwd": "apps/web-e2e"
+      }
+    }
+  }
+}

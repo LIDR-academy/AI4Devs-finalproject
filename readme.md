@@ -254,7 +254,7 @@ Honest accounting of what this architecture costs:
 - **Eventual consistency in the cross-cutting path.** Audit and notification writes sit outside the ticket transaction. Mitigated with an in-process dispatcher with retry and audit-completeness assertions in acceptance tests, but it is a real trade-off against strict transactional auditing.
 - **Learning curve.** DDD + hexagonal + Nx tags is a steep onboarding cost, and the discipline degrades quickly if boundary violations are silenced instead of fixed.
 
-> **Status:** this is the **target architecture**, now partly materialized. The Nx workspace, the pinned toolchain, the ESLint 9 / Prettier 3 layer and the three-axis tag scheme all exist (`T-C10-01` … `T-C10-03`), and `@nx/enforce-module-boundaries` enforces the type matrix, the scope rule and the platform rule — proven to bite by `pnpm verify:boundaries` (9/9). Two applications are scaffolded: `apps/api` (`T-C10-04`) and `apps/web` (`T-C10-05`), so `pnpm nx show projects` reports exactly `api` and `web` and `pnpm nx lint` passes for both. What is still absent is everything the boundary rules are actually *for*: there is **no `libs/` directory**, so no bounded context, no hexagon layer and not a single cross-project dependency edge exists. `pnpm nx graph` shows two nodes and zero edges.
+> **Status:** this is the **target architecture**, now partly materialized. The Nx workspace, the pinned toolchain, the ESLint 9 / Prettier 3 layer and the three-axis tag scheme all exist (`T-C10-01` … `T-C10-03`), and `@nx/enforce-module-boundaries` enforces the type matrix, the scope rule and the platform rule — proven to bite by `pnpm verify:boundaries` (9/9). All four applications are scaffolded: `apps/api` (`T-C10-04`), `apps/web` (`T-C10-05`) and the two Cypress + Cucumber acceptance harnesses `apps/api-e2e` and `apps/web-e2e` (`T-C10-06`), so `pnpm nx show projects` reports exactly `api`, `api-e2e`, `web` and `web-e2e` and `pnpm nx lint` passes for all four. What is still absent is everything the boundary rules are actually *for*: there is **no `libs/` directory**, so no bounded context, no hexagon layer and not a single cross-project dependency edge exists. `pnpm nx graph` shows four nodes and zero edges — each acceptance suite reaches its application through an Nx *task* dependency, which is not a code edge and puts nothing in the graph.
 
 ### **2.2. Descripción de componentes principales:**
 
@@ -664,7 +664,7 @@ The consequence worth stating plainly: **in this repository the folder structure
 
 Every command runs from the **repository root**, through **pnpm + Nx**. **Node 22 LTS** is required (pinned in `.nvmrc` and in `package.json` → `engines`) and **pnpm is the only supported package manager** — running `npm install` or `yarn` here would produce a second lockfile and is forbidden.
 
-The **Availability** column distinguishes what runs *today* — on a workspace holding `apps/api` and `apps/web` and nothing else — from what only becomes meaningful once the acceptance suites and `libs/` are generated.
+The **Availability** column distinguishes what runs *today* — on a workspace holding the four applications `apps/api`, `apps/web`, `apps/api-e2e` and `apps/web-e2e`, and nothing else — from what only becomes meaningful once `libs/` is generated.
 
 **Workspace and toolchain**
 
@@ -680,7 +680,7 @@ ESLint 9 uses a **flat config** at `eslint.config.mjs` (there is no `.eslintrc` 
 
 | Command | What it does | Availability |
 | --- | --- | --- |
-| `pnpm nx run-many -t lint` | Runs the `lint` target of every project — today `api` and `web`, both green. It no longer exits `0` vacuously, but a green lint over legal code still does not prove the boundary rule bites; see the boundary verification below. | Now |
+| `pnpm nx run-many -t lint` | Runs the `lint` target of every project — today `api`, `web`, `api-e2e` and `web-e2e`, all green. It no longer exits `0` vacuously, but a green lint over legal code still does not prove the boundary rule bites; see the boundary verification below. | Now |
 | `pnpm eslint <path>` | Lints files directly, bypassing Nx and its project graph. Useful for exercising the config on a path that belongs to no project. | Now |
 | `pnpm eslint --print-config <path>` | Prints the fully resolved config for one file path. Use it to check *which* rules apply where — Angular rules must appear on `apps/web/**` and the frontend library types, and must be absent on `apps/api/**`. | Now |
 | `pnpm prettier --check .` | Fails if any non-ignored file deviates from `.prettierrc` (`singleQuote`, `semi`). The CI formatting gate. | Now |
@@ -691,7 +691,7 @@ ESLint 9 uses a **flat config** at `eslint.config.mjs` (there is no `.eslintrc` 
 
 | Command | What it does | Availability |
 | --- | --- | --- |
-| `pnpm nx show projects` | Lists every Nx project in the workspace. Currently returns exactly `api` and `web`; anything else means a project was generated outside its ticket. | Now |
+| `pnpm nx show projects` | Lists every Nx project in the workspace. Currently returns exactly `api`, `api-e2e`, `web` and `web-e2e`; anything else means a project was generated outside its ticket. | Now |
 | `pnpm nx graph` | Opens the interactive dependency graph in a browser. The visual check that a context depends only on itself and `scope:shared`. | Now |
 | `pnpm nx graph --file=tmp/graph.json` | Writes the same graph as JSON without opening a browser — the CI-friendly and scriptable form. | Now |
 | `pnpm nx lint <project>` | Runs ESLint on one project, **including `@nx/enforce-module-boundaries`**. This is the command that turns the three-axis tag scheme of §2.3.4 into a build failure. | Now |
@@ -705,7 +705,7 @@ ESLint 9 uses a **flat config** at `eslint.config.mjs` (there is no `.eslintrc` 
 | `pnpm nx serve api` / `pnpm nx serve web` | Runs the NestJS API / the Angular web client in development mode with watch. | Now |
 | `pnpm nx build api` / `pnpm nx build web` | Produces the production bundle of each application under `dist/`. | Now |
 | `pnpm nx test <project>` | Runs the Jest unit/component suite of one project (`incident-domain`, `api`, `web`…). Runs today for `api` and `web`, but **both suites are empty** and pass via `passWithNoTests` — a green result proves the runner works, nothing more. | Now |
-| `pnpm nx e2e api-e2e` / `pnpm nx e2e web-e2e` | Runs the Cypress + Cucumber acceptance suites (Gherkin `*.feature` + `*.steps.ts`). | Once `*-e2e` apps exist |
+| `pnpm nx e2e api-e2e` / `pnpm nx e2e web-e2e` | Runs the Cypress + Cucumber acceptance suites (Gherkin `*.feature` + `*.steps.ts`). Each target starts the application under test itself and tears it down afterwards. Both hold **one smoke scenario** proving the harness runs end to end; the epic's own scenarios arrive with the tickets that own the behavior. | Now |
 
 **Schema evolution (TypeORM)**
 
@@ -783,7 +783,7 @@ pnpm nx show projects
 
 Expected: the command exits `0`, writes `tmp/graph.json` (a gitignored path), prints `projects: 0`, and `pnpm nx show projects` returns nothing.
 
-> This criterion was satisfied **at `T-C10-01`**, when the workspace was empty, and is recorded here as that ticket's evidence. **Re-running it today gives `projects: 2`** — `api` (`T-C10-04`) and `web` (`T-C10-05`). The re-runnable form of the check is now "exactly the projects the tickets created, and nothing else": `pnpm nx show projects` must return `api` and `web`.
+> This criterion was satisfied **at `T-C10-01`**, when the workspace was empty, and is recorded here as that ticket's evidence. **Re-running it today gives `projects: 4`** — `api` (`T-C10-04`), `web` (`T-C10-05`) and `api-e2e` / `web-e2e` (`T-C10-06`). The re-runnable form of the check is now "exactly the projects the tickets created, and nothing else": `pnpm nx show projects` must return `api`, `api-e2e`, `web` and `web-e2e`.
 
 ##### Lint and format verification
 
@@ -795,7 +795,7 @@ These are the acceptance criteria of ticket **`T-C10-02` · ESLint 9 flat config
  NX   No tasks were run
 ```
 
-**Zero projects meant zero lint tasks, so that exit code proved nothing about the configuration.** Today the same command runs real tasks for `api` and `web` and passes — but a green lint over *legal* code still proves only that the config loads, never that an illegal import is caught; that is what `pnpm verify:boundaries` below is for. To exercise the config on a path belonging to no project, drive ESLint directly:
+**Zero projects meant zero lint tasks, so that exit code proved nothing about the configuration.** Today the same command runs real tasks for all four applications and passes — but a green lint over *legal* code still proves only that the config loads, never that an illegal import is caught; that is what `pnpm verify:boundaries` below is for. To exercise the config on a path belonging to no project, drive ESLint directly:
 
 ```bash
 pnpm eslint --print-config eslint.config.mjs   # resolves 456 rules, 69 enabled
@@ -858,7 +858,7 @@ The script scaffolds throwaway projects under `libs/__boundary-probe/`, each car
 The three `pass` rows matter as much as the six `fail` rows: a configuration that forbade everything would satisfy the failures and silently block `apps/api` and `libs/shared/ui`.
 
 Run it after **any** change to the tag vocabulary, the type matrix or the `depConstraints` block — adding a context, widening a row, introducing an ADR-driven exception. Real project code cannot replace it: legal code never exercises the prohibition.
-> **Status:** the workspace **bootstrap** (`T-C10-01`), the **lint/format toolchain and tag vocabulary** (`T-C10-02`) and the **enforced `depConstraints` matrix** (`T-C10-03`) are done, and every check above passes. Two applications are scaffolded on top of them — `apps/api` (`T-C10-04`) and `apps/web` (`T-C10-05`) — so `pnpm nx lint` now runs against real project code and passes for both, and `pnpm verify:boundaries` still reports 9/9 with a frontend project in the graph. That green lint is **not** evidence the boundary rule bites: neither application imports another project, so no dependency edge has ever been judged. Everything under `libs/` on this page remains **target structure** — there is no `libs/` directory and neither acceptance suite (`apps/api-e2e`, `apps/web-e2e`) exists yet.
+> **Status:** the workspace **bootstrap** (`T-C10-01`), the **lint/format toolchain and tag vocabulary** (`T-C10-02`) and the **enforced `depConstraints` matrix** (`T-C10-03`) are done, and every check above passes. All **four applications** are now scaffolded on top of them — `apps/api` (`T-C10-04`), `apps/web` (`T-C10-05`) and both Cypress + Cucumber acceptance harnesses, `apps/api-e2e` and `apps/web-e2e` (`T-C10-06`) — so `pnpm nx lint` runs against real project code and passes for all four, and `pnpm verify:boundaries` still reports 9/9 with both platforms in the graph. That green lint is **not** evidence the boundary rule bites: no application imports another project, so no permanent dependency edge has ever been judged. The `type:e2e` row was additionally probed against the real `apps/api-e2e` while closing `T-C10-06` — the illegal import was rejected, and the probe reverted — but the standing proof remains `verify:boundaries`, not the applications. Everything under `libs/` on this page remains **target structure**: there is no `libs/` directory. The two acceptance suites are executable and hold **one smoke scenario each**, proving the harness reaches a live API process and the served shell; the epic's own acceptance scenarios belong to the tickets that own the behavior.
 
 ### **2.4. Infraestructura y despliegue**
 

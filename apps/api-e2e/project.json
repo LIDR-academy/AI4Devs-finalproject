@@ -1,0 +1,37 @@
+{
+  "name": "api-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/api-e2e/src",
+  "projectType": "application",
+  "tags": ["platform:backend", "scope:shared", "type:e2e"],
+  "targets": {
+    "serve-under-test": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "dependsOn": ["api:build"],
+      "cache": false,
+      "options": {
+        "command": "node tools/e2e/serve-under-test.mjs dist/apps/api/main.js tmp/e2e/api-under-test.json",
+        "env": {
+          "NODE_ENV": "test",
+          "PORT": "3333"
+        },
+        "parallel": true,
+        "readyWhen": "Sport ITSM API listening on"
+      }
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["api:build", "serve-under-test"],
+      "cache": false,
+      "options": {
+        "commands": [
+          "node ../../tools/e2e/assert-under-test.mjs ../../tmp/e2e/api-under-test.json",
+          "cypress run"
+        ],
+        "parallel": false,
+        "cwd": "apps/api-e2e"
+      }
+    }
+  }
+}

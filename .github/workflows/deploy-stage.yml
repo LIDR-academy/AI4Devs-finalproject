@@ -1,20 +1,26 @@
 # Sport ITSM — pipeline and stage deploy.
 #
-# Two jobs:
+# Three jobs:
 #   verify        — the gates this workspace actually has (CLAUDE.md §3,
 #                    .claude/skills/ci-cd/references/pipeline.md). Runs on
 #                    every push and pull request.
+#   acceptance    — Cypress smoke suites for both harnesses built by
+#                    T-C10-06 (`apps/api-e2e`, `apps/web-e2e`), driven by
+#                    `nx:run-commands` — not `@nx/cypress`, which is not
+#                    installed (ADR-011). Runs on every push and pull
+#                    request, after `verify`.
 #   deploy-stage   — builds both images from docker/docker-compose.stage.yml,
 #                    pushes them to ghcr.io, then calls both Render deploy
 #                    hooks (ADR-013, docs/product/ARCHITECTURE.md §10). Runs
 #                    only on a push to `main` — never on a branch or a PR —
 #                    because Render has a single stage environment and no
-#                    preview environments exist.
+#                    preview environments exist. Gated on both `verify` and
+#                    `acceptance` so a broken smoke suite blocks the deploy
+#                    the same way a broken build does.
 #
-# What this workflow deliberately does not do: run `nx e2e api-e2e` /
-# `web-e2e` (neither project exists — T-C10-06) or any `typeorm migration:*`
-# command (no data source — T-C10-16). Adding either here ahead of those
-# tickets would be inventing a gate this repository cannot pass.
+# What this workflow deliberately does not do: run any `typeorm migration:*`
+# command (no data source — T-C10-16). Adding one ahead of that ticket would
+# be inventing a gate this repository cannot pass.
 name: Pipeline
 
 on:
@@ -55,6 +61,19 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
+      # `pnpm install` downloads the Cypress binary in a postinstall
+      # (pnpm-workspace.yaml's `onlyBuiltDependencies`) even though this job
+      # never runs Cypress — the binary is a devDependency of the whole
+      # workspace. Without this cache every `verify` run re-downloads
+      # ~200 MB for nothing. Keyed on the lockfile so a Cypress version bump
+      # invalidates it automatically; unrelated to the `acceptance` job's own
+      # cache below because each job is a separate runner.
+      - name: Cache Cypress binary
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-binary-${{ hashFiles('pnpm-lock.yaml') }}
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -80,9 +99,56 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+  acceptance:
+    name: Acceptance (Cypress smoke — api-e2e, web-e2e)
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      # No `nx affected` here, so a shallow clone (the default) is enough —
+      # unlike `verify`, this job never diffs against `main`.
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # Same rationale as `verify`'s identically-named step, on this job's
+      # own runner. Cypress ships headless Electron bundled in this binary —
+      # no separate browser install is needed.
+      - name: Cache Cypress binary
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-binary-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # `api-e2e:e2e` depends on `api:build` and its own `serve-under-test`
+      # target (continuous), which supplies NODE_ENV=test and PORT=3333 —
+      # apps/api needs no `.env` and no database to boot. `assert-under-test`
+      # refuses to run the suite if the app under test is not the process
+      # this run started (see tools/e2e/*.mjs) rather than risk a false
+      # green against a stale server.
+      - name: Run API acceptance suite
+        run: pnpm nx e2e api-e2e
+
+      # `web-e2e:e2e` depends on `web:serve` (continuous dev-server on
+      # :4200) and waits for it to actually answer before starting Cypress,
+      # since Nx only waits for a continuous task to start, not to be ready
+      # (tools/e2e/wait-for-http.mjs).
+      - name: Run web acceptance suite
+        run: pnpm nx e2e web-e2e
+
   deploy-stage:
     name: Build, push and deploy stage images
-    needs: verify
+    needs: [verify, acceptance]
     # Render has one stage environment and no preview environments (ADR-013).
     # Restrict to a push landing on the default branch — never a PR, and
     # never any other branch — so a feature branch can never trigger a
