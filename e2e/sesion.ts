@@ -13,7 +13,9 @@ export const PASSWORD = "clickoteca";
 export async function login(page: Page, email: string): Promise<void> {
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Contraseña").fill(PASSWORD);
+  // Exacto: el ojo de mostrar/ocultar se llama "Mostrar contraseña" y `getByLabel`
+  // busca por subcadena, así que sin `exact` el selector casaría con los dos.
+  await page.getByLabel("Contraseña", { exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Entrar" }).click();
   await page.waitForURL(/\/(portal|backoffice)/);
 }

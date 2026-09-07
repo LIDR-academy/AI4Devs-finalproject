@@ -47,7 +47,9 @@ test("el alta con plan deja la cuenta operativa y el plan se cambia desde el por
 
   await page.getByLabel("Nombre y apellidos").fill("Nueva Suscriptora");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Contraseña").fill(PASSWORD);
+  // Exacto: el ojo del campo se llama "Mostrar contraseña" y `getByLabel` busca
+  // por subcadena, así que sin `exact` el selector casaría con los dos.
+  await page.getByLabel("Contraseña", { exact: true }).fill(PASSWORD);
   await page.getByLabel("Dirección").fill("Calle Nueva 1");
   await page.getByLabel("Localidad").fill("Girona");
   await page.getByLabel("Código postal").fill("17001");

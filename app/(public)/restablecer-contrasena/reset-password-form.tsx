@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { PasswordInput } from "@/components/password-input";
 import { Button } from "@/components/ui/button";
 
 interface FieldIssue {
@@ -92,16 +93,18 @@ export function ResetPasswordForm({ token }: { token: string }) {
         <label htmlFor="password" className="text-sm font-medium">
           Contraseña nueva
         </label>
-        <input
+        {/* Los dos ojos de esta pantalla se llaman distinto: dos botones con el mismo
+            nombre son ambiguos para quien navega por nombre, y aquí la comparación
+            entre los dos campos es justo lo que se quiere poder mirar. */}
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="new-password"
           required
           minLength={8}
           aria-invalid={issueFor("password") ? true : undefined}
           aria-describedby={issueFor("password") ? "password-error" : "password-hint"}
-          className="h-9 rounded-md border px-3 text-sm"
+          toggleLabel="Mostrar la contraseña nueva"
         />
         {issueFor("password") ? (
           <p id="password-error" className="text-sm text-[var(--destructive)]">
@@ -118,17 +121,16 @@ export function ResetPasswordForm({ token }: { token: string }) {
         <label htmlFor="passwordConfirmation" className="text-sm font-medium">
           Repite la contraseña
         </label>
-        <input
+        <PasswordInput
           id="passwordConfirmation"
           name="passwordConfirmation"
-          type="password"
           autoComplete="new-password"
           required
           aria-invalid={issueFor("passwordConfirmation") ? true : undefined}
           aria-describedby={
             issueFor("passwordConfirmation") ? "passwordConfirmation-error" : undefined
           }
-          className="h-9 rounded-md border px-3 text-sm"
+          toggleLabel="Mostrar la contraseña repetida"
         />
         {issueFor("passwordConfirmation") ? (
           <p id="passwordConfirmation-error" className="text-sm text-[var(--destructive)]">

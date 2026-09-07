@@ -48,8 +48,8 @@ test("la confirmación es idéntica exista o no la cuenta", async ({ page }) => 
 
 test("un enlace que no vale lo dice y ofrece pedir otro", async ({ page }) => {
   await page.goto("/restablecer-contrasena?token=esto-no-es-un-token");
-  await page.getByLabel("Contraseña nueva").fill("una-contraseña-nueva");
-  await page.getByLabel("Repite la contraseña").fill("una-contraseña-nueva");
+  await page.getByLabel("Contraseña nueva", { exact: true }).fill("una-contraseña-nueva");
+  await page.getByLabel("Repite la contraseña", { exact: true }).fill("una-contraseña-nueva");
   await page.getByRole("button", { name: "Guardar contraseña" }).click();
 
   // `p[role=alert]` y no `getByRole("alert")`: Next monta su propio anunciador de ruta
@@ -61,8 +61,8 @@ test("un enlace que no vale lo dice y ofrece pedir otro", async ({ page }) => {
 
 test("la confirmación que no coincide se corrige sin gastar el enlace", async ({ page }) => {
   await page.goto("/restablecer-contrasena?token=esto-no-es-un-token");
-  await page.getByLabel("Contraseña nueva").fill("una-contraseña-nueva");
-  await page.getByLabel("Repite la contraseña").fill("otra-cosa");
+  await page.getByLabel("Contraseña nueva", { exact: true }).fill("una-contraseña-nueva");
+  await page.getByLabel("Repite la contraseña", { exact: true }).fill("otra-cosa");
   await page.getByRole("button", { name: "Guardar contraseña" }).click();
 
   // El error es del formulario, no del enlace: el formulario sigue en pie. La regla se
@@ -74,5 +74,5 @@ test("la confirmación que no coincide se corrige sin gastar el enlace", async (
 test("un enlace sin token no pinta el formulario", async ({ page }) => {
   await page.goto("/restablecer-contrasena");
   await expect(page.locator('p[role="alert"]')).toContainText("Este enlace está incompleto");
-  await expect(page.getByLabel("Contraseña nueva")).toHaveCount(0);
+  await expect(page.getByLabel("Contraseña nueva", { exact: true })).toHaveCount(0);
 });

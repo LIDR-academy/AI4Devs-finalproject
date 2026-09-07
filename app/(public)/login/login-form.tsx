@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { PasswordInput } from "@/components/password-input";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -82,13 +83,12 @@ export function LoginForm({ next }: { next?: string }) {
             ¿Has olvidado la contraseña?
           </Link>
         </div>
-        <input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           required
-          className="h-9 rounded-md border px-3 text-sm"
+          toggleLabel="Mostrar contraseña"
         />
       </div>
 

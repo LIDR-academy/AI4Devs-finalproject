@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { PasswordInput } from "@/components/password-input";
 import { Terms } from "@/components/terms";
 import { numericField } from "@/lib/form-values";
 import { Button } from "@/components/ui/button";
@@ -36,23 +37,34 @@ function Field({
   autoComplete?: string;
   inputMode?: "numeric";
 }) {
+  const control = {
+    id: name,
+    name,
+    autoComplete,
+    // El error se asocia al campo por aria-describedby para que un lector de
+    // pantalla lo anuncie al enfocarlo (objetivo WCAG 2.1 AA).
+    "aria-invalid": issue ? true : undefined,
+    "aria-describedby": issue ? `${name}-error` : undefined,
+  };
+
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={name} className="text-sm font-medium">
         {label}
       </label>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        autoComplete={autoComplete}
-        inputMode={inputMode}
-        // El error se asocia al campo por aria-describedby para que un lector de
-        // pantalla lo anuncie al enfocarlo (objetivo WCAG 2.1 AA).
-        aria-invalid={issue ? true : undefined}
-        aria-describedby={issue ? `${name}-error` : undefined}
-        className="h-9 rounded-md border px-3 text-sm"
-      />
+      {type === "password" ? (
+        // La contraseña la escribe quien se da de alta y no puede releerla: el ojo es
+        // aquí más útil que en el login, porque un error tipográfico no se descubre
+        // hasta el primer intento de entrar.
+        <PasswordInput {...control} toggleLabel={`Mostrar ${label.toLowerCase()}`} />
+      ) : (
+        <input
+          {...control}
+          type={type}
+          inputMode={inputMode}
+          className="h-9 rounded-md border px-3 text-sm"
+        />
+      )}
       {issue ? (
         <p id={`${name}-error`} className="text-sm text-[var(--destructive)]">
           {issue}

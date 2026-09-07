@@ -1741,3 +1741,84 @@ todos, y vaciar un buzón vacío no es un error—. **Y escribirlo destapó un d
 nadie había visto:** `GET /api/notifications` contaba los "sin leer" sobre la lista
 devuelta, recortada a 50, así que daba de menos a quien tuviera más pendientes y con
 `?unread=1` devolvía directamente el tamaño de la página.
+
+### [2026-09-07] — El ojo de mostrar/ocultar la contraseña en el login
+
+**Prompt:** "En formulario login, en campo password quiero un icono/check tipo ojo que
+se tacha para mostrar o no la password que se está escribiendo"
+
+**Resumen.** Un botón con el ojo de `lucide-react` dentro del recuadro del campo, que
+alterna el `type` del input entre `password` y `text`. Tres cosas que el encargo no
+decía y había que decidir:
+
+**Botón conmutador, no `checkbox`.** Lo que se activa y desactiva es algo que ya está
+en pantalla, no un dato que viaje en el envío; un `checkbox` con `name` acabaría en el
+`FormData` que se serializa al API. Y `type="button"` no es cosmético: dentro de un
+`<form>`, un botón sin tipo **envía**, así que mirar la contraseña habría intentado
+entrar con ella a medio escribir. Hay una prueba dedicada a eso, porque es el fallo que
+se cuela sin que se note al probarlo a mano con la contraseña ya completa.
+
+**El nombre accesible no cambia; cambia `aria-pressed`.** La alternativa —reescribir el
+`aria-label` a "Ocultar contraseña" al mostrarla— es la más vista, pero deja el estado
+en el nombre del control, y que un lector de pantalla vuelva a leer un nombre que ha
+cambiado bajo el foco no está garantizado. Con el patrón de botón conmutador de ARIA
+(nombre fijo, estado en `aria-pressed`) el cambio de estado sí se anuncia al activarlo.
+El icono tachado es esa misma información para quien ve la pantalla, no otra.
+
+**Y una trampa que solo aparece al ejecutarlo:** `getByLabel` de Playwright busca por
+**subcadena**, así que el botón —"Mostrar contraseña"— pasó a casar también con el
+`getByLabel("Contraseña")` con el que `e2e/sesion.ts` inicia sesión, y el modo estricto
+habría tumbado casi toda la suite, no solo el login. Se arregla con `{ exact: true }`,
+que además hace el selector más preciso de lo que era. El contraste del icono no hubo
+que medirlo: usa `--muted-foreground`, que `tests/design-tokens.test.ts` ya sostiene a
+4,5:1 en los dos temas, muy por encima del 3:1 que pide un control (WCAG 1.4.11).
+
+**Probado como componente** (`tests/login-form.test.tsx`, 4 casos) por lo mismo que el
+resto de estado de interfaz: no toca servidor ni base. Se comprobó **en los dos
+sentidos** —fijando el `type` a `password` la prueba se pone roja—. La pantalla sigue
+pasando la auditoría de `axe` del E2E. **Solo el login**: `/registro` y
+`/restablecer-contrasena` también tienen campos de contraseña y se han dejado como
+estaban, que es lo que se pidió.
+
+**Verificado en verde:** `tsc`, `eslint`, `vitest run` (484, 4 nuevos), `next build` y
+`npm run test:e2e` (56).
+
+### [2026-09-08] — El ojo, en el resto de campos de contraseña
+
+**Prompt:** "hazlo en el resto de campos tipo password"
+
+**Resumen.** Con el segundo campo llegó el momento de extraer
+`components/password-input.tsx`, que es el criterio con el que nació
+`components/ui/input.tsx` en su día: se extrae cuando hay copias, no antes. Lo usan
+ahora **login**, **alta de suscriptor** y los **dos** campos de la contraseña nueva. En
+el alta el ojo cambia de sitio: el campo pasa por el `Field` genérico del formulario,
+que ahora elige control según el `type` y deja de duplicar las propiedades ARIA.
+
+**El componente conserva las clases crudas de esos campos** en vez de adoptar las del
+primitivo `Input`. Son distintas —`Input` usa `--input` para el borde, `text-base` en
+móvil y su propio anillo de foco—, y adoptarlas habría cambiado el aspecto de cuatro
+formularios en un encargo que era "añade el ojo".
+
+**El alta de personal se queda fuera, y no por olvido.** Su "Contraseña inicial" es
+`type="text"` por decisión ya escrita en el código: el admin tiene que **leerla** para
+poder entregarla, y no es su propia contraseña lo que teclea. No es un campo oculto al
+que le falte el interruptor; es uno deliberadamente visible, y ponérselo solo añadiría
+la posibilidad de esconderla.
+
+**`toggleLabel` es obligatorio y sin valor por defecto.** La pantalla de contraseña
+nueva tiene dos campos, y dos botones llamados igual son ambiguos para quien navega por
+nombre —y quedarían indistinguibles para los selectores del E2E—. Obligarlo fuerza a
+diferenciarlos al escribir el segundo campo, y hay una prueba que comprueba que los
+nombres de esa pantalla no se repiten.
+
+**La trampa del selector se multiplicó por cinco.** Lo que en el login era una línea
+—`getByLabel` busca por subcadena, y "Mostrar contraseña" casa con "Contraseña"— aquí
+alcanzaba al alta (`circuito-completo`) y a los cuatro selectores de
+`recuperar-contrasena`, incluido `getByLabel("Repite la contraseña")`, que el botón
+"Mostrar la contraseña repetida" también habría capturado. Los seis llevan ahora
+`{ exact: true }`.
+
+**Verificado en verde:** `tsc`, `eslint`, `vitest run` (489, 9 nuevos), `next build` y
+`npm run test:e2e` (56, con la auditoría de `axe` sobre las tres pantallas). Comprobado
+en los dos sentidos: fijando el `type` a `password` en el componente, la suite se pone
+roja.

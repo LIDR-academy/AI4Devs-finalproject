@@ -1407,6 +1407,38 @@ project. Read it at the start of every session.
   pendientes y con `?unread=1` devolvía el tamaño de la página. Ahora se cuenta en la
   base, como ya hacía `/portal/avisos`.
 
+- **Mostrar/ocultar la contraseña, en los cuatro campos (2026-09-07/08):**
+  `components/password-input.tsx` — el campo con el ojo de `lucide-react` dentro del
+  recuadro, que alterna el `type` entre `password` y `text`. Lo usan **login**, **alta
+  de suscriptor** y los **dos** de la contraseña nueva. Se extrajo al llegar el
+  segundo: mismo criterio con el que nació `components/ui/input.tsx`. Conserva las
+  clases crudas que ya tenían esos campos y **no** el estilo del primitivo `Input`
+  —añadir el ojo no era motivo para restilizar cuatro formularios—.
+  **Es botón conmutador, no `checkbox`** (alterna algo que ya está en pantalla; un
+  `checkbox` con `name` acabaría en el `FormData` que se serializa al API) y lleva
+  **`type="button"`**, sin el cual un botón dentro de un `<form>` envía y mirar la
+  contraseña intentaría entrar con ella a medio escribir. El nombre accesible es
+  **fijo** y el estado va en **`aria-pressed`**: patrón conmutador de ARIA, así el
+  cambio sí se anuncia al activarlo, cosa que un `aria-label` reescrito bajo el foco no
+  garantiza.
+  **`toggleLabel` es obligatorio y sin valor por defecto**, a propósito: la pantalla de
+  contraseña nueva tiene dos campos, y dos botones con el mismo nombre son ambiguos
+  para quien navega por nombre e indistinguibles para el E2E.
+  **El alta de personal queda fuera**: su "Contraseña inicial" es `type="text"` por
+  decisión escrita —el admin tiene que leerla para entregarla—, no un campo oculto al
+  que le falte el ojo.
+  **La trampa fue el E2E, no la pantalla:** `getByLabel` de Playwright busca por
+  **subcadena**, así que "Mostrar contraseña" casaba también con el
+  `getByLabel("Contraseña")` de `e2e/sesion.ts` —el login de casi toda la suite— y el
+  modo estricto lo habría tumbado entero. Los seis selectores de contraseña llevan
+  ahora `{ exact: true }`. Quien añada un control cuyo nombre contenga el de un campo,
+  que mire ahí primero.
+  El icono usa `--muted-foreground`, ya sostenido a 4,5:1 en los dos temas por
+  `tests/design-tokens.test.ts` (un control pide 3:1, WCAG 1.4.11).
+  **Verificado en verde:** `tsc`, `eslint`, `vitest run` (489, 9 nuevos en
+  `tests/password-input.test.tsx`), `next build` y `npm run test:e2e` (56, con las
+  auditorías de `axe` sobre las tres pantallas).
+
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → **Vercel +
 Supabase** (`ADR-0003`, 2026-08-22, sustituye la VM única de `ADR-0001` §5); auth →
