@@ -6,14 +6,56 @@ create / rename / delete domain actions, plus the **zone↔geography membership*
 zone bundle one or more entries from the seeded geography catalog **at any level** — country,
 comunidad autónoma, or municipio. This is the data and domain layer only: no route, no Livewire
 component, no Blade view, no picker. It is the story that turns
-[PRD §2.4](../../docs/PRD/PRD.md#24-shipping)'s confirmed divergence — zones are admin-created and
+[PRD §2.4](../../../docs/PRD/PRD.md#24-shipping)'s confirmed divergence — zones are admin-created and
 fully editable, not a fixed list of badges — into schema and behaviour.
 
+> **Phase 2 correction (code-reviewer INVEST validation, 2026-09-07).** Six things drifted between
+> this task's Phase 1 debate (2026-08-18) and Phase 3 start, re-verified against the real tree
+> rather than assumed:
+>
+> 1. **D-6's SQLite premise is false.** `phpunit.xml:29` pins `DB_CONNECTION=mysql` (fixed
+>    2026-08-26, per `ai-spec/tasks/ci-database-connection-gap.md` — MySQL is the only supported
+>    engine, in CI and locally). Every place below that says "CI runs SQLite" or treats a SQLite/MySQL
+>    engine split as a reason a check must be driver-conditional (the migration comment, the
+>    `ZoneGeographyAssignmentTest` "engine-portable" bullet, the `getForeignKeys()`-on-SQLite caveat
+>    in the schema-independence test, the "no index-existence test" exclusion, and **R-9**) is
+>    **stale text kept for its historical reasoning, not a live constraint** — Phase 3 targets MySQL
+>    only. D-6's *conclusion* is unaffected: the PHP-normalised comparison is still authoritative and
+>    the `UNIQUE` index is still only the race-guard, matching shipped `ProductCategoryValidationRules`.
+>    One consequence this unlocks: InnoDB really does auto-create the pivot's FK-support index, so
+>    **R-1 is now directly measurable** (`php artisan db:table passkeys` against the live MySQL
+>    connection), and an index-shape assertion on the pivot is feasible if Phase 3 wants one.
+> 2. **`sales_regions` exists** (`App\Models\SalesRegion`, since task 0016). The schema-independence
+>    test file's `->skip('sales_regions does not exist yet — story 0016')` stub is stale — write the
+>    real `Schema::hasTable('sales_regions')`-unchanged-by-a-zone-create assertion instead of skipping
+>    it. **OQ-E is moot** (0032 already ships without the `hasTable === false` assertion this story
+>    argued against).
+> 3. **A skip this story must close, not merely a new file.** `tests/Feature/Seeders/GeographyCatalogSeederTest.php:238` — `test('creating a shipping zone leaves the Sales Region catalog untouched')->skip('shipping_zones does not exist yet -- see story 0033')` — is now unblocked and **must be un-skipped as part of Phase 3**, in addition to `CreateShippingZoneTest.php`'s own assertion of the same scenario.
+> 4. R-8's "there is no `->skip()` anywhere in the current suite" is stale (nine exist today,
+>    including the one item 3 names); doesn't change the risk's substance.
+> 5. **OQ-C is RESOLVED.** `ai-spec/tasks/0034-shipping-zones-ui.md` already retitled itself
+>    "Shipping zones — UI (list, editor, geography picker)" and names this story's DoD hand-off as
+>    its own dependency — the widened-0034 recommendation was adopted.
+> 6. **D-12's obligation to 0023 is discharged, with a different signature than assumed below.**
+>    `ProductCategoryValidationRules::nameRules()` takes the normalizer as an **injected parameter**
+>    (`nameRules(NormalizeForSearch $normalizer, ?string $id = null)`), not a bare call resolved
+>    internally. `shippingZoneNameRules()` and its unit test should follow the same injected-parameter
+>    shape for consistency, i.e. `shippingZoneNameRules(NormalizeForSearch $normalizer, ?string $id = null)`.
+>
+> Two more notes for whoever implements Phase 3: `GeographyEntryFactory::community()`/`municipality()`
+> require an explicit parent argument (`community(GeographyEntry $country)`) — the "most tests need
+> only a row with the right `level`" claim below undersells the community/municipality cases, which
+> always need a `for($parent, 'parent')` or the equivalent constructor argument. And
+> `geographyEntryIdsRules()`'s single-closure bulk-exists check (below) diverges from the two-pass
+> `max:` + `.*` shape [security/array-validation-bounds.md](../../../docs/security/array-validation-bounds.md)
+> documents for 0026/0027/0028 — cite that page and note the divergence is deliberate (one query
+> instead of N) rather than an oversight, or Phase 4 will raise it as a finding.
+
 ## Type
-backend | related_task_id: **0034** (paired UI — see OQ-C, its exact scope is not settled) |
+backend | related_task_id: **0034** (paired UI — see OQ-C, its exact scope is not settled — **RESOLVED, see the Phase 2 correction above**) |
 includes database-expert: **yes**
 
-**PRD coverage.** [§2.4 Shipping](../../docs/PRD/PRD.md#24-shipping), rewritten 2026-08-17. This
+**PRD coverage.** [§2.4 Shipping](../../../docs/PRD/PRD.md#24-shipping), rewritten 2026-08-17. This
 story owns these scenarios from its `Feature: Shipping zones (extends the prototype)` block:
 *Create a shipping zone*, *Rename a shipping zone*, *Delete a shipping zone no rate rule
 references* (the delete half — see the table in **Tests to perform**), the *Assign geography
@@ -28,11 +70,11 @@ It does **not** own: the picker's search/filter/empty-state scenarios (0022 + 00
 **Boundaries with the sibling Epic 2 stories**, referenced and never redefined here:
 
 - **0032 — shipping geography catalog seed**
-  ([`0032-shipping-geography-catalog-seed.md`](done/0032-shipping-geography-catalog-seed.md)). Owns
+  ([`0032-shipping-geography-catalog-seed.md`](../done/0032-shipping-geography-catalog-seed.md)). Owns
   `geography_entries` entirely: its **bigint** PK (the one confirmed exception to the UUIDv7
   policy), the `level` discriminator, the self-referencing `parent_id`, the model, the factory,
   the CSV fixtures and the seeder. **This story adds nothing to it and changes nothing in it.**
-- **0035 — shipping carriers** ([`0035-shipping-carriers-backend.md`](0035-shipping-carriers-backend.md)).
+- **0035 — shipping carriers** ([`0035-shipping-carriers-backend.md`](../0035-shipping-carriers-backend.md)).
   Owns `/shipping`, `App\Livewire\Shipping\Index`, `resources/views/livewire/shipping.blade.php`,
   `app/Actions/Shipping/ToggleShippingCarrier.php`, and **creates** `lang/en|es/shipping.php`.
 - **0036 — rate rules.** Owns `shipping_rates`, its `foreignUuid('shipping_zone_id')`, the FK's
@@ -176,7 +218,7 @@ Feature: Shipping zones
 > still referenced by a rate rule is hard-blocked with a count"* is **confirmed as a functional
 > decision** (D-1) but is **not implementable here**: `shipping_rates` does not exist until story
 > 0036, so no zone can be in use and there is nothing to count. It is handed off to 0036 exactly as
-> [0023](done/0023-product-categories-backend.md) handed the identical product-category guard to 0024
+> [0023](../done/0023-product-categories-backend.md) handed the identical product-category guard to 0024
 > (its decision **D-10**). See D-1 for what this story pre-shapes so the hand-off is a one-file
 > extension rather than a new rule in a new place.
 
@@ -206,14 +248,14 @@ behavioural regression for anyone who relied on it. Two rules genuinely rejected
   everything or nothing. That is a pricing bug wearing a nullable column, and it would surface in
   Epic 3 as wrong money rather than as an error.
 
-**Consistency**: this is the same rule [0023/0024](done/0023-product-categories-backend.md) apply to
+**Consistency**: this is the same rule [0023/0024](../done/0023-product-categories-backend.md) apply to
 product categories, so the panel answers "you cannot delete something that is in use" the same way
 in two modules. That mattered enough to the PRD to be named as the model; it is honoured.
 
 **Two layers, and the second one is not optional.** The application-layer count guard is a
 **pre-flight check, not a race guard** — admin A opens the confirmation while admin B creates a
 rate for that zone; A's count read zero; A deletes; B's rate is orphaned. That is the same class of
-gap [`signed-link-verification.md`](../../docs/security/signed-link-verification.md#a-pre-flight-check-is-not-a-race-guard--re-check-under-a-lock-and-let-the-unique-index-have-the-last-word)
+gap [`signed-link-verification.md`](../../../docs/security/signed-link-verification.md#a-pre-flight-check-is-not-a-race-guard--re-check-under-a-lock-and-let-the-unique-index-have-the-last-word)
 already documents. So:
 
 - **Application layer (0036):** count the referencing rate rules and refuse with a `:count`-bearing
@@ -224,7 +266,7 @@ already documents. So:
   `23000`, so the losing side of that race must be caught and re-rendered as the *same* human
   message the count guard produces — never a 500. This is the repo's established two-layer shape
   (`Rule::unique()` + `UNIQUE` index + `23000` catch in
-  [`App\Actions\Users\CreateUser`](../../app/Actions/Users/CreateUser.php)).
+  [`App\Actions\Users\CreateUser`](../../../app/Actions/Users/CreateUser.php)).
 
 **The guard belongs in the action, never in the policy.** Two independent reasons, the second
 decisive:
@@ -232,10 +274,10 @@ decisive:
 1. It is a **data precondition**, not an authorization rule. In the policy it would produce a 403
    `AuthorizationException`; the PRD requires a message stating *how many* rate rules reference the
    zone, which is a `ValidationException` with a placeholder. (Contrast
-   [`UserPolicy::delete()`](../../app/Policies/UserPolicy.php)'s trashed-target refusal, which
+   [`UserPolicy::delete()`](../../../app/Policies/UserPolicy.php)'s trashed-target refusal, which
    genuinely *is* an authorization rule — nobody may ever delete a trashed user.)
 2. **A policy-level rule is reachable by the Super Admin `Gate::before` bypass**
-   ([authorization.md](../../docs/architecture/authorization.md)). Putting the block in the policy
+   ([authorization.md](../../../docs/architecture/authorization.md)). Putting the block in the policy
    would let a Super Admin punch straight through it and destroy rate rules — the precise outcome
    this decision exists to prevent. That alone settles it.
 
@@ -299,8 +341,8 @@ Three consequences recorded now:
 - **A cheap mitigation exists and is explicitly not a constraint**: the zone editor may show an
   informational notice — *"Gijón is already covered by Zona Norte"* — computed on save. That is a
   **UI hint**, structurally the same as the per-row `Gate::allows()` hints in
-  [`App\Livewire\Users\Index`](../../app/Livewire/Users/Index.php)
-  ([authorization.md](../../docs/architecture/authorization.md#gateallows-in-a-list-query-is-a-ui-hint-not-a-layer)):
+  [`App\Livewire\Users\Index`](../../../app/Livewire/Users/Index.php)
+  ([authorization.md](../../../docs/architecture/authorization.md#gateallows-in-a-list-query-is-a-ui-hint-not-a-layer)):
   helpful, never a validation failure. Named here so nobody builds it as a blocking rule.
 
 **Where precedence is owned — a correction to the brief this story was given.** The instruction was
@@ -360,7 +402,7 @@ destination, which is a silent pricing gap rather than an error.
 ### D-6 — Zone names are **unique**, enforced in PHP first and by the index last.
 
 Two "Península" rows in the rate modal's zone selector is a real defect, so uniqueness is required.
-It is enforced exactly as [0023](done/0023-product-categories-backend.md)'s **D-4** enforces product
+It is enforced exactly as [0023](../done/0023-product-categories-backend.md)'s **D-4** enforces product
 category names, and for a verified reason: `phpunit.xml` pins `DB_DATABASE` but **not**
 `DB_CONNECTION`, `.env.example` sets `DB_CONNECTION=sqlite`, and `config/database.php` pins
 `utf8mb4_unicode_ci` on MySQL. SQLite's `BINARY` is case-sensitive; `utf8mb4_unicode_ci` folds case
@@ -381,7 +423,7 @@ ship a second copy.
 ### D-7 — `ShippingZone` must **not** use `SoftDeletes`.
 
 Not a preference — soft deletes would silently disable two FK behaviours this whole design rests
-on. [`schema.md`](../../docs/database/schema.md#soft-deletes) already records that
+on. [`schema.md`](../../../docs/database/schema.md#soft-deletes) already records that
 `cascadeOnDelete()` never fires on a soft delete (which is why trashed users keep their `passkeys`
 rows); the same is true of `restrictOnDelete`. Adding the trait would therefore leave a trashed
 zone's memberships in place **and** stop 0036's restrict guard firing at all, letting a zone be
@@ -391,13 +433,13 @@ squat its name forever. Deletes here are hard deletes, and a test pins the absen
 
 ### D-8 — This story ships **no route, no Livewire component and no Blade view**.
 
-It follows [0023](done/0023-product-categories-backend.md)'s pure-domain-layer shape, **not**
-[0035](0035-shipping-carriers-backend.md)'s. Four reasons, in descending strength:
+It follows [0023](../done/0023-product-categories-backend.md)'s pure-domain-layer shape, **not**
+[0035](../0035-shipping-carriers-backend.md)'s. Four reasons, in descending strength:
 
 1. **The route and the view path are already taken.** 0035 ships
    `Route::livewire('shipping', ShippingIndex::class)->name('shipping.index')` and
    `resources/views/livewire/shipping.blade.php` — which is *the* path Livewire's
-   [`Index`-in-a-subfolder exception](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
+   [`Index`-in-a-subfolder exception](../../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name)
    forces for `App\Livewire\Shipping\Index`. A zone component here either collides on it or invents
    a second shipping route nobody has asked for.
 2. **The zone editor's core interaction is blocked on unbuilt work.** Without the geography picker
@@ -409,9 +451,19 @@ It follows [0023](done/0023-product-categories-backend.md)'s pure-domain-layer s
 4. **This story's Gherkin needs no HTTP layer.** Its scenarios are satisfiable through the actions
    and the policy, which is how 0023's are.
 
-**The cost, stated rather than hidden:** `ShippingZonePolicy` ships with **zero call sites**, so
-nothing in this story can regress if it is wrong. That is carried as an explicit Definition-of-Done
-hand-off to the consuming story, and mitigated by direct `Gate::forUser()` tests.
+**The cost, stated rather than hidden — as originally planned, and superseded by Phase 4's F-1 fix
+below.** This paragraph originally read: *"`ShippingZonePolicy` ships with **zero call sites**, so
+nothing in this story can regress if it is wrong. That is carried as an explicit
+Definition-of-Done hand-off to the consuming story, and mitigated by direct `Gate::forUser()`
+tests."* Quoted rather than silently rewritten, per this project's audit-authored-page convention.
+Phase 4's security audit (finding F-1) corrected the actions' own docblocks to self-authorize
+against `ShippingZonePolicy`, so the policy no longer ships with zero call sites — see **D-9**'s
+own correction block. The narrowed, accurate cost: this story still ships **no route and no
+Livewire component** (D-8's real point, unaffected), so `ShippingZonePolicy` has no
+`Gate::authorize()`-reachable ability for a real HTTP actor and no per-row `Gate::allows()` UI hint
+anywhere yet — that residual gap is still carried as a Definition-of-Done hand-off to the
+consuming story, mitigated by direct `Gate::forUser()` tests, but it is defence-in-depth for an
+already-real gate rather than the only gate that exists.
 
 **If Phase 2 overrules this**, the concrete shape is class `App\Livewire\Shipping\Zones` → view
 `resources/views/livewire/shipping/zones.blade.php` (the `Index` exception does **not** apply — it
@@ -421,11 +473,33 @@ with `can:`, never `permission:`.
 
 ### D-9 — Ship `ShippingZonePolicy`, diverging from 0035 knowingly.
 
+> **Corrected at Phase 4 security audit (finding F-1) — the paragraph below described a plan this
+> story did NOT ship, and is quoted in full rather than silently rewritten, per this project's
+> audit-authored-page convention.** It used to read: *"0035 refused a policy because a carrier
+> toggle has no per-target rule and its component is a real enforcement surface. **Neither half
+> holds here.** This story ships no component, and the actions deliberately self-authorize
+> nothing (matching `CreateUser`/`UpdateUser`), so without a policy this story would ship *zero*
+> authorization artifacts..."* The "actions deliberately self-authorize nothing, matching
+> `CreateUser`/`UpdateUser`" premise was **false when written**: `CreateUser`/`UpdateUser` both
+> self-authorize as their own first statement, per
+> [base-standards.md](../../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)'s
+> "an authorization rule belongs to the action, not to one of its callers" convention — there was
+> never a precedent in this codebase for an action that authorizes nothing while having no
+> collaborator relationship excusing it. Phase 4 corrected this: all four actions in
+> `app/Actions/Shipping/` (`CreateShippingZone`, `RenameShippingZone`, `DeleteShippingZone`,
+> `SyncShippingZoneGeography`) now self-authorize via a constructor-injected
+> `App\Actions\Auth\LogRefusedPrivilegedAttempt`, called as their own first statement — the
+> identical shape `App\Actions\ProductCategories\{Create,Rename,Delete}ProductCategory` (story
+> 0025) already uses, **not** `CreateUser`/`UpdateUser` (whose self-authorization was real all
+> along; the citation was wrong about *them*, not about the convention). See each action's own
+> corrected docblock.
+
 0035 refused a policy because a carrier toggle has no per-target rule and its component is a real
-enforcement surface. **Neither half holds here.** This story ships no component, and the actions
-deliberately self-authorize nothing (matching `CreateUser`/`UpdateUser`), so without a policy this
-story would ship *zero* authorization artifacts — and
-[`livewire-authorization.md`](../../docs/security/livewire-authorization.md#authorization-that-lives-only-in-the-component-is-bypassed-by-every-other-call-site-of-the-action)'s
+enforcement surface. **Neither half holds here.** This story ships no component, so without a
+policy this story's only-just-corrected self-authorizing actions would still be this app's *sole*
+authorization artifact for the shipping zone catalog, with no `Gate::authorize()`-reachable ability
+a consuming UI story can bind a per-row hint to — and
+[`livewire-authorization.md`](../../../docs/security/livewire-authorization.md#authorization-that-lives-only-in-the-component-is-bypassed-by-every-other-call-site-of-the-action)'s
 rule says the policy is the right home regardless of which consumer arrives first. 0023 hit exactly
 this and shipped `ProductCategoryPolicy`.
 
@@ -450,7 +524,7 @@ non-shipping consumer could reuse the catalog. A pivot sorting under `g`, adjace
 deliberately-generic table while being 100% shipping-owned, is therefore not merely unhelpful —
 it is misleading about ownership. The cost is one explicit string in one relation method, and this
 repo already treats that kind of explicitness as a feature (0016's `constrained('sales_regions')`;
-[`migrations.md`](../../docs/database/migrations.md)'s be-explicit-about-indexes section).
+[`migrations.md`](../../../docs/database/migrations.md)'s be-explicit-about-indexes section).
 `shipping_zone_areas` was rejected outright: "area" is a new domain word appearing nowhere in the
 PRD, and a noun-shaped pivot name invites someone to give it a model and attributes it must never
 have. **Phase 2 may overrule this; nothing else in the design changes if it does.**
@@ -475,7 +549,7 @@ Epic 2 Phase 1 debates. It is a **five-story** decision, not the two-story one O
 utility** — one function that is the single source of truth for what "normalized" means: the
 invokable **`App\Actions\NormalizeForSearch`**, at `app/Actions/NormalizeForSearch.php`, with the
 signature `__invoke(string $value): string`, implemented as trim → `Str::lower` → `Str::ascii` →
-collapse whitespace, owned by [0022](done/0022-searchable-multi-select-component.md)'s **D13**.
+collapse whitespace, owned by [0022](../done/0022-searchable-multi-select-component.md)'s **D13**.
 Concretely:
 
 - `app/Concerns/ShippingZoneValidationRules.php`'s `shippingZoneNameRules()` folds by **calling that
@@ -640,7 +714,7 @@ therefore asserts *this story's use of* the shared utility, while the utility's 
 ### Application
 
 - `app/Concerns/ShippingZoneValidationRules.php` — **new**, following
-  [naming.md](../../docs/conventions/naming.md#traits-and-their-methods)'s `<Noun>ValidationRules`
+  [naming.md](../../../docs/conventions/naming.md#traits-and-their-methods)'s `<Noun>ValidationRules`
   / `<noun>Rules()` convention.
 
   **The name method is `shippingZoneNameRules()`, not `nameRules()`.**
@@ -681,7 +755,7 @@ therefore asserts *this story's use of* the shared utility, while the utility's 
 
 - `app/Actions/Shipping/CreateShippingZone.php` — **new**. `__invoke(string $name): ShippingZone`.
   Trims **before** validating, catches `QueryException` `23000` → `ValidationException` on `name`,
-  exactly as [`App\Actions\Users\CreateUser`](../../app/Actions/Users/CreateUser.php) does for
+  exactly as [`App\Actions\Users\CreateUser`](../../../app/Actions/Users/CreateUser.php) does for
   `email`. Takes a name only — never an id array (D-4 keeps membership a separate operation, which
   is also how the PRD splits its own scenarios).
 
@@ -695,12 +769,23 @@ therefore asserts *this story's use of* the shared utility, while the utility's 
 
 - `app/Actions/Shipping/SyncShippingZoneGeography.php` — **new**.
 
+  > **Corrected at Phase 4 security audit (finding F-1) — the docblock this spec originally
+  > proposed is quoted below, and is FALSE as shipped**, per this project's audit-authored-page
+  > convention (correct in place, don't silently rewrite). It originally read: *"Performs NO
+  > authorization, matching App\Actions\Users\CreateUser and UpdateUser: the caller gates first.
+  > See the DoD hand-off note."* That citation was wrong for the same reason **D-9**'s own
+  > correction states: `CreateUser`/`UpdateUser` both self-authorize as their own first statement.
+  > The shipped action authorizes `update` on `$shippingZone` as its own first statement, through
+  > a constructor-injected `App\Actions\Auth\LogRefusedPrivilegedAttempt`, the identical
+  > self-authorizing shape `App\Actions\ProductCategories\RenameProductCategory` already uses —
+  > **not** a "the caller gates first" contract. This closes exactly the "method most likely to
+  > ship ungated because it does not look like saving" risk the DoD hand-off (below) used to name
+  > as something the *consuming* story must still guard against; it no longer needs to, for this
+  > method specifically. See the real file for the corrected docblock.
+
   ```php
   /**
    * Replace the zone's geography membership with the given catalog entries.
-   *
-   * Performs NO authorization, matching App\Actions\Users\CreateUser and
-   * UpdateUser: the caller gates first. See the DoD hand-off note.
    *
    * Passing an empty array detaches everything -- that is legal (D-5).
    *
@@ -727,7 +812,7 @@ therefore asserts *this story's use of* the shared utility, while the utility's 
   group, key-for-key identical across both locales. **No `zones.delete_blocked` key** (D-1).
 
   > **Shared-file hazard.** These two files are created by 0035 and modified here. Per
-  > [contracts.md](../../docs/contracts.md#parallel-agent-file-ownership-rule)'s Parallel Agent
+  > [contracts.md](../../../docs/contracts.md#parallel-agent-file-ownership-rule)'s Parallel Agent
   > File-Ownership Rule, 0033 and 0035 must **not** be implemented by concurrently-dispatched
   > agents. Sequential only.
 
@@ -777,7 +862,7 @@ OQ-1 (the INE dataset, its licence and vintage) resolving. If 0032 splits, 0033 
       CI accepts what MySQL rejects with a `23000` (D-6).
 - [ ] A duplicate that bypasses validation surfaces as a `ValidationException` on `name`, never a
       500 — **drive the collision through the real unique index**, per
-      [signed-link-verification.md](../../docs/security/signed-link-verification.md#a-pre-flight-check-is-not-a-race-guard--re-check-under-a-lock-and-let-the-unique-index-have-the-last-word).
+      [signed-link-verification.md](../../../docs/security/signed-link-verification.md#a-pre-flight-check-is-not-a-race-guard--re-check-under-a-lock-and-let-the-unique-index-have-the-last-word).
 - [ ] A newly created zone has **no** geography memberships (guards a create path that helpfully
       attaches something).
 
@@ -897,7 +982,7 @@ OQ-1 (the INE dataset, its licence and vintage) resolving. If 0032 splits, 0033 
 ### Not worth writing
 - **Migration `up()`/`down()` mechanics** — `RefreshDatabase` exercises them every run;
   `down()` symmetry is a code-review item
-  ([what-not-to-test.md](../../docs/testing/qa/what-not-to-test.md)).
+  ([what-not-to-test.md](../../../docs/testing/qa/what-not-to-test.md)).
 - **Eloquent's `belongsToMany` / `sync()` / `detach()` internals.** Test the *semantic decision*
   (what set the zone ends up holding), never the method.
 - **`HasUuids` itself** — the one UUID assertion that stays tests this app's wiring, not the trait.
@@ -981,25 +1066,49 @@ action.
 
 ## Definition of Done
 - [ ] Tests written and green, plus the **full** suite per
-      [contracts.md](../../docs/contracts.md)'s Full Test Suite Gate Rule.
+      [contracts.md](../../../docs/contracts.md)'s Full Test Suite Gate Rule.
+- [ ] `tests/Feature/Seeders/GeographyCatalogSeederTest.php:238`'s named skip —
+      `test('creating a shipping zone leaves the Sales Region catalog untouched')->skip('shipping_zones does not exist yet -- see story 0033')`
+      — is **un-skipped** and turned into a real assertion (Phase 2 correction item 3 above).
 - [ ] Code reviewed (code-reviewer).
-- [ ] No security findings (appsec-auditor). Expected focus: the unbounded-array vector on
-      `geographyEntryIds` (`max:500` + the single-query existence check), that the `exists` check is
-      a pre-flight rather than a race guard with the FK behind it, and that the actions
-      deliberately self-authorize nothing so the hand-off below is the real control.
-- [ ] Documentation updated (docs-keeper): `docs/database/schema.md` (both tables + ER diagram, the
+- [x] Security audit (appsec-auditor), 3 rounds, all closed. **Expected-focus text corrected in
+      place rather than left stale**: this bullet originally named as an expected-focus item "that
+      the actions deliberately self-authorize nothing so the hand-off below is the real control" —
+      the opposite of what the audit actually found and fixed. Round 1's finding **F-1** was
+      exactly the reverse: the actions' docblocks claimed no self-authorization (falsely citing
+      `CreateUser`/`UpdateUser`, see **D-9**'s correction), and the fix made all four actions in
+      `app/Actions/Shipping/` self-authorize as their own first statement. The genuinely-confirmed
+      focus areas were the unbounded-array vector on `geographyEntryIds` (**F-2**: `max:500`
+      alone did not bound the closure's own work before the fix — see
+      `App\Concerns\ShippingZoneValidationRules::geographyEntryIdsRules()`'s docblock), an
+      integer-overflow crash on a numeric-string id exceeding `PHP_INT_MAX` (**F-3**), and that
+      the `exists` check is a pre-flight rather than a race guard with the FK behind it (confirmed
+      as designed, narrowed to MySQL error 1452 rather than the whole `23000` class — **F-4**).
+- [x] Documentation updated (docs-keeper): `docs/database/schema.md` (both tables + ER diagram, the
       mixed-key-type pivot, and the inherit-the-connection-collation decision closing 0032's
       **OQ-6** for these tables); `docs/architecture/authorization.md` (`ShippingZonePolicy` and the
-      reconciling policy-vs-permission rule from **D-9**); `docs/conventions/naming.md` if the
-      `<Model>NameRules` collision-avoidance rule is worth generalizing; and — if the `passkeys`
-      duplicate-index suspicion (**R-1**) is confirmed — a correction to
-      `docs/database/migrations.md` plus an `docs/errors-log.md` entry.
-- [ ] **Hand-off to the consuming story recorded** (the policy ships with zero call sites, so this
-      is the only thing making it real): that story must (a) `Gate::authorize()` before invoking
-      **every** action, including the sync action — which is the method most likely to ship ungated
-      because it does not look like "saving" — and (b) keep the zone id feeding
-      `Rule::unique()->ignore()` server-authoritative via `#[Locked]` plus a re-read, per
-      [livewire-authorization.md](../../docs/security/livewire-authorization.md#locked-is-what-makes-ruleunique-ignore-safe-here).
+      reconciling policy-vs-permission rule from **D-9**); `docs/conventions/naming.md` confirmed
+      as needing no edit (no new naming pattern — `shippingZoneNameRules()`/`geographyEntryIdsRules()`
+      already follow the established `<Noun>ValidationRules`/`<noun>Rules()` convention). The
+      **R-1** `passkeys` duplicate-index suspicion was **disproven, not confirmed**: measured
+      directly (`php artisan db:table passkeys`), InnoDB auto-creates an FK-support index only
+      when none already exists, so the hand-written index is not a duplicate — no
+      `docs/errors-log.md` entry (per this bullet's own conditional). A correction to
+      `docs/database/migrations.md` was still needed regardless, because that page's own **prose**
+      (not the `passkeys` schema itself) asserted the duplicate-index claim as fact; corrected in
+      place per the audit-authored-page convention, quoting what it used to say.
+- [x] **Hand-off to the consuming story recorded — narrowed by Phase 4's F-1 fix, not moot.**
+      Originally: *"the policy ships with zero call sites, so this is the only thing making it
+      real"* — quoted rather than silently rewritten. Phase 4 gave `ShippingZonePolicy` its first
+      real call sites (all four actions now self-authorize against it — see **D-9**'s correction),
+      so the hand-off below is now **defence-in-depth** on top of an already-enforced gate, plus a
+      genuinely separate concern Phase 4's fix does not touch at all: that story must (a) still
+      `Gate::authorize()` (or re-check via `Gate::allows()` for a UI hint) before invoking every
+      action, including the sync action, so a real HTTP actor is refused by the *route*/component
+      layer rather than only by the action deep in the call stack — and (b) keep the zone id
+      feeding `Rule::unique()->ignore()` server-authoritative via `#[Locked]` plus a re-read, per
+      [livewire-authorization.md](../../../docs/security/livewire-authorization.md#locked-is-what-makes-ruleunique-ignore-safe-here)
+      — a concern about validation-bypass safety that no action-level authorization fix touches.
 - [ ] **Obligations written into 0036's task file**: un-skip the delete stub; implement the
       count guard in `DeleteShippingZone`; `restrictOnDelete` on `shipping_rates.shipping_zone_id`;
       catch `23000` and re-render the count message; assert the count for ≥2 distinct reference
@@ -1026,7 +1135,7 @@ action.
   `migrations.md` correction plus an `errors-log.md` entry, and this story found it. Either way,
   **do not hand-write `index('geography_entry_id')`** — verify the resulting index list with
   `php artisan db:table shipping_zone_geography_entry`, per the `users_uuid_unique` rule
-  ([errors-log.md](../../docs/errors-log.md)).
+  ([errors-log.md](../../../docs/errors-log.md)).
 - **R-2 — the missing `->ignore()` on rename.** Highest-likelihood functional bug; mitigated by the
   deliberate three-test treatment above.
 - **R-3 — two accent-folding normalisers drifting.** Invisible in CI, because SQLite reproduces
@@ -1043,7 +1152,7 @@ action.
   from parallel branches can produce a pivot migration timestamped *before* the catalog's; the
   developer who already ran `migrate` sees nothing, and the failure lands on the next clean run.
   Guard: after merging, run a full fresh migration against a **throwaway** database — which, per
-  [contracts.md](../../docs/contracts.md#destructive-database-command-rule)'s Destructive Database
+  [contracts.md](../../../docs/contracts.md#destructive-database-command-rule)'s Destructive Database
   Command Rule, must be a deliberate, separately-authorized step, never assumed.
 - **R-7 — `restrictOnDelete` on the catalog side turns an INE vintage refresh into a hard failure**
   when a merged/removed municipio is held by a zone. That is the *correct* failure (a human must
@@ -1082,8 +1191,8 @@ reviews it as a decision rather than inheriting it. Changing it after data exist
 migration.
 
 **OQ-C — who owns the zone management *screen*? (genuinely unresolved)**
-[0032](done/0032-shipping-geography-catalog-seed.md) describes **0034** as *"the zone geography
-picker"*; [0022](done/0022-searchable-multi-select-component.md) describes it as owning *"its resolver,
+[0032](../done/0032-shipping-geography-catalog-seed.md) describes **0034** as *"the zone geography
+picker"*; [0022](../done/0022-searchable-multi-select-component.md) describes it as owning *"its resolver,
 the by-level grouping content, and the search query/index"*; this story's brief calls it *"the
 paired UI story"*. Those are not the same scope, and **0035 already owns `/shipping` and
 `App\Livewire\Shipping\Index`**. So either 0034 absorbs the whole zone CRUD screen (and should be
@@ -1112,9 +1221,9 @@ consumer, so any class using both is a fatal error. This story avoids it with
 
 ## Provenance
 Phase 1 Three Amigos debate, 2026-08-18: `product-owner` + `backend-expert` + `backend-qa` +
-`database-expert` (added per [workflow.md](../../docs/workflow.md#task-classification-rule)'s
+`database-expert` (added per [workflow.md](../../../docs/workflow.md#task-classification-rule)'s
 classification rule — the task creates two tables). Scope derives from PRD
-[§2.4 Shipping](../../docs/PRD/PRD.md#24-shipping) as rewritten 2026-08-17, and this debate
+[§2.4 Shipping](../../../docs/PRD/PRD.md#24-shipping) as rewritten 2026-08-17, and this debate
 **closes the two items that section marked `pending Phase 1 confirmation`** — the in-use delete
 rule (**D-1**) and the overlap policy (**D-2**). Every expert disagreement is recorded in place
 rather than resolved silently: the pivot name (**D-10**), the policy-vs-permission divergence from

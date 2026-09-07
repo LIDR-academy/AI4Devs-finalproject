@@ -4,8 +4,8 @@
 Build the `shipping_rates` table and its domain layer: per-carrier rate rules keyed on a shipping
 zone and a weight bracket, carrying a price and a delivery estimate, plus the grouped-by-carrier
 query the Shipping screen renders. This story additionally discharges two obligations its siblings
-deferred to it: the **in-use delete guard** on shipping zones ([0033](0033-shipping-zones-backend.md)
-**D-1**), and the **rate-precedence-on-overlap** rule ([0033](0033-shipping-zones-backend.md)
+deferred to it: the **in-use delete guard** on shipping zones ([0033](done/0033-shipping-zones-backend.md)
+**D-1**), and the **rate-precedence-on-overlap** rule ([0033](done/0033-shipping-zones-backend.md)
 **D-2**). Data and domain layer only — no route, no Livewire component, no Blade view.
 
 ## Type
@@ -32,7 +32,7 @@ place they are formalised, and the scenarios below are written from scratch:
 - **0032 — geography catalog** ([`0032-shipping-geography-catalog-seed.md`](done/0032-shipping-geography-catalog-seed.md)).
   Owns `geography_entries`: its bigint PK, the `level` discriminator, the self-FK `parent_id`, the
   fixture and the seeder. **This story reads that ancestry chain and changes nothing in it.**
-- **0033 — shipping zones** ([`0033-shipping-zones-backend.md`](0033-shipping-zones-backend.md)).
+- **0033 — shipping zones** ([`0033-shipping-zones-backend.md`](done/0033-shipping-zones-backend.md)).
   Owns `shipping_zones`, the `shipping_zone_geography_entry` pivot, `ShippingZone`,
   `ShippingZonePolicy`, and the four zone actions. This story **modifies exactly one of its files**,
   `app/Actions/Shipping/DeleteShippingZone.php`, which 0033 pre-shaped as this story's extension
@@ -231,7 +231,7 @@ Phase 2 or Phase 3 except on new evidence.
 
 ### D-1 — Rate precedence on overlap: **most-specific tier wins, and the tier does not reopen on weight**. CONFIRMED.
 
-[0033](0033-shipping-zones-backend.md) **D-2** allowed overlapping zones and assigned the precedence
+[0033](done/0033-shipping-zones-backend.md) **D-2** allowed overlapping zones and assigned the precedence
 rule here. This is that rule, stated as an algorithm because "most specific wins" is ambiguous in
 exactly the place it matters:
 
@@ -270,7 +270,7 @@ apply.
 **No-fallback wins anyway, on a precedent this project has already recorded.** Fallback's failure
 mode is *undercharging*: a zone "España" catch-all quoting the mainland price for a 3 kg parcel to
 the Canaries, silently, on every such order, for as long as nobody audits it. No-fallback's failure
-mode is a *visible refusal to quote*. [0033](0033-shipping-zones-backend.md) **D-1** rejected
+mode is a *visible refusal to quote*. [0033](done/0033-shipping-zones-backend.md) **D-1** rejected
 `nullOnDelete` for this exact tradeoff, in these words: *"That is a pricing bug wearing a nullable
 column, and it would surface in Epic 3 as wrong money rather than as an error."* The same principle
 decides the same way here. An error is recoverable; wrong money that nobody notices is not.
@@ -451,7 +451,7 @@ free text as an oversight.
 
 ### D-10 — This story ships **no route, no Livewire component and no Blade view**.
 
-Identical to [0033](0033-shipping-zones-backend.md) **D-8**, and for the same first reason, which is
+Identical to [0033](done/0033-shipping-zones-backend.md) **D-8**, and for the same first reason, which is
 dispositive here: **the route and the view path are already taken.** 0035 ships
 `Route::livewire('shipping', ShippingIndex::class)->name('shipping.index')` and
 `resources/views/livewire/shipping.blade.php` — *the* path Livewire's
@@ -465,15 +465,29 @@ consumer, and it owns the whole screen including the carrier cards 0035 stubbed.
 
 ### D-11 — Ship `ShippingRatePolicy`, with zero call sites.
 
-Same reasoning as 0033 **D-9**: this story ships no component, and the actions deliberately
-self-authorize nothing (matching `CreateUser` / `UpdateUser`), so without a policy this story ships
-*zero* authorization artifacts — and
+> **Corrected before this story reaches Phase 3 — the citation below is FALSE and is quoted rather
+> than silently rewritten, per this project's audit-authored-page convention.** 0033's own **D-9**
+> made the identical claim ("the actions deliberately self-authorize nothing (matching
+> `CreateUser`/`UpdateUser`)") and it was found false at that story's Phase 4 security audit
+> (finding F-1): `CreateUser`/`UpdateUser` both self-authorize as their own first statement, per
+> [base-standards.md](../../docs/conventions/base-standards.md#an-authorization-rule-belongs-to-the-action-not-to-one-of-its-callers)'s
+> "an authorization rule belongs to the action, not to one of its callers" convention. 0033's four
+> `app/Actions/Shipping/*` actions were corrected to self-authorize against `ShippingZonePolicy` as
+> their own first statement, the same shape `App\Actions\ProductCategories\*` (story 0025) already
+> uses — this story's own actions (`CreateShippingRate`/`UpdateShippingRate`/`DeleteShippingRate`)
+> should follow that corrected precedent when debated, not the false one this paragraph originally
+> cited. See the same correction under **File to create/modify**'s `CreateShippingRate.php` entry
+> below.
+
+Same reasoning as 0033 **D-9**: this story ships no component, so without a policy this story would
+have no `Gate::authorize()`-reachable ability for the shipping rate catalog at all — and
 [livewire-authorization.md](../../docs/security/livewire-authorization.md#authorization-that-lives-only-in-the-component-is-bypassed-by-every-other-call-site-of-the-action)
 says the policy is the right home regardless of which consumer arrives first.
 
-**The cost, stated rather than hidden:** nothing in this story can regress if the policy is wrong.
-Mitigated by direct `Gate::forUser()` tests, and carried as an explicit Definition-of-Done hand-off
-to 0037.
+**The cost, stated rather than hidden:** until the actions are corrected to self-authorize (per the
+note above, mirroring 0033's own Phase 4 fix), nothing in this story can regress if the policy is
+wrong. Mitigated by direct `Gate::forUser()` tests, and carried as an explicit Definition-of-Done
+hand-off to 0037.
 
 ### D-12 — **FK indexes only.** No composite index on `shipping_rates`.
 
@@ -688,8 +702,13 @@ absence of the trait.
   the actions catch `23000`).
 
 - `app/Actions/Shipping/CreateShippingRate.php` — **new**.
-  `__invoke(array $attributes): ShippingRate`. Trims before validating. Performs **no**
-  authorization, matching `CreateUser` / `UpdateUser`: the caller gates first.
+  `__invoke(array $attributes): ShippingRate`. Trims before validating.
+
+  > **Corrected — see D-11's own correction above.** This entry originally read *"Performs **no**
+  > authorization, matching `CreateUser` / `UpdateUser`: the caller gates first"* — the same false
+  > citation D-11 makes, quoted rather than silently rewritten. Should self-authorize `create` on
+  > `ShippingRate::class` against `ShippingRatePolicy` as its own first statement when this story
+  > is implemented, mirroring 0033's corrected `App\Actions\Shipping\CreateShippingZone`.
 
 - `app/Actions/Shipping/UpdateShippingRate.php` — **new**.
   `__invoke(ShippingRate $rate, array $attributes): ShippingRate`.

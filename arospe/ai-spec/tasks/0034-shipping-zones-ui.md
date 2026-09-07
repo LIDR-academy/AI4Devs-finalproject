@@ -6,7 +6,7 @@ creates / renames / deletes a zone, and — inside that editor — the geography
 lets an administrator add and remove seeded geography-catalog entries at country, comunidad autónoma
 or municipio level. The picker is [0022](done/0022-searchable-multi-select-component.md)'s shared
 searchable multi-select bound to this story's own geography resolver; every mutation goes through
-[0033](0033-shipping-zones-backend.md)'s four domain actions. This story ships the first — and
+[0033](done/0033-shipping-zones-backend.md)'s four domain actions. This story ships the first — and
 currently only — caller of `ShippingZonePolicy`.
 
 ## Type
@@ -72,7 +72,7 @@ unresolved items are in **Open questions**, not here.
 
 ### D-1 — The screen is its own route, `shipping/zones`. Not a tab inside `/shipping`.
 
-Adopted exactly as [0033 **D-8**](0033-shipping-zones-backend.md) prescribes if a screen is built:
+Adopted exactly as [0033 **D-8**](done/0033-shipping-zones-backend.md) prescribes if a screen is built:
 class `App\Livewire\Shipping\Zones` → view `resources/views/livewire/shipping/zones.blade.php`,
 route `Route::livewire('shipping/zones', ...)->middleware(['can:shipping.view'])->name('shipping.zones.index')`.
 
@@ -1198,7 +1198,7 @@ creates no table, migration or index — its two reads run against 0032's existi
 > participants.**
 
 Scope derives from [PRD §2.4 Shipping](../../docs/PRD/PRD.md#24-shipping) as rewritten 2026-08-17,
-and from the widening [0033's **OQ-C**](0033-shipping-zones-backend.md) recommended and this debate
+and from the widening [0033's **OQ-C**](done/0033-shipping-zones-backend.md) recommended and this debate
 accepts — which also names this story as the consumer 0033's Definition-of-Done hand-off required,
 closing that open question. Grounding read in full: 0033, 0032, 0022 and 0035; PRD §2.4;
 `workflow.md`; `contracts.md`; `api/routes.md`; `gherkin-guidelines.md`; `coverage-policy.md`;
