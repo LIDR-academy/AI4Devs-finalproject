@@ -1,8 +1,9 @@
 import { IAiConfigurationRepository } from '../../../domain/settings/repositories/IAiConfigurationRepository.js';
 import { AiConfiguration } from '../../../domain/settings/entities/AiConfiguration.js';
 import { AiProviderType } from '../../../domain/settings/value-objects/AiProvider.js';
-import { CredentialEncryptionService } from '../../../infrastructure/security/CredentialEncryptionService.js';
+import { ICredentialCipher } from '../../../domain/settings/gateways/ICredentialCipher.js';
 import { AiConfigDTO } from './GetAiConfigUseCase.js';
+import { resolveProviderApiKey } from '../resolveProviderApiKey.js';
 
 export interface UpdateAiConfigRequest {
   provider: AiProviderType;
@@ -10,16 +11,14 @@ export interface UpdateAiConfigRequest {
   apiKey?: string | null;
   endpointUrl?: string | null;
   temperature: number;
-  replenishmentOn?: boolean;
   rescueRecipesOn?: boolean;
-  anomalyAuditOn?: boolean;
   updatedBy?: string | null;
 }
 
 export class UpdateAiConfigUseCase {
   constructor(
     private readonly repository: IAiConfigurationRepository,
-    private readonly encryptionService: CredentialEncryptionService
+    private readonly cipher: ICredentialCipher
   ) {}
 
   async execute(request: UpdateAiConfigRequest): Promise<AiConfigDTO> {
@@ -27,7 +26,7 @@ export class UpdateAiConfigUseCase {
 
     let newEncryptedApiKey = current.encryptedApiKey;
     if (request.apiKey && request.apiKey.trim().length > 0) {
-      newEncryptedApiKey = this.encryptionService.encrypt(request.apiKey.trim());
+      newEncryptedApiKey = this.cipher.encrypt(request.apiKey.trim());
     }
 
     const updated = new AiConfiguration({
@@ -37,9 +36,7 @@ export class UpdateAiConfigUseCase {
       endpointUrl: request.endpointUrl !== undefined ? request.endpointUrl : current.endpointUrl,
       encryptedApiKey: newEncryptedApiKey,
       temperature: request.temperature,
-      replenishmentOn: request.replenishmentOn ?? current.replenishmentOn,
       rescueRecipesOn: request.rescueRecipesOn ?? current.rescueRecipesOn,
-      anomalyAuditOn: request.anomalyAuditOn ?? current.anomalyAuditOn,
       updatedAt: new Date(),
       updatedBy: request.updatedBy,
     });
@@ -52,10 +49,8 @@ export class UpdateAiConfigUseCase {
       modelName: updated.modelName,
       endpointUrl: updated.endpointUrl,
       temperature: updated.temperature,
-      hasApiKey: updated.hasApiKey || Boolean(process.env.AI_API_KEY && process.env.AI_API_KEY.trim().length > 0),
-      replenishmentOn: updated.replenishmentOn,
+      hasApiKey: updated.hasApiKey || resolveProviderApiKey(updated.provider) !== null,
       rescueRecipesOn: updated.rescueRecipesOn,
-      anomalyAuditOn: updated.anomalyAuditOn,
       updatedAt: updated.updatedAt,
     };
   }

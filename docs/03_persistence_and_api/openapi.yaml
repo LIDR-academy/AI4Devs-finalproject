@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: RestoStock API
   description: REST API specification for RestoStock real-time inventory and FEFO traceability system.
-  version: 6.0.0 # TK-128 / US-035: RescueRecipeProposal.preventedWasteEstimate (physical quantity, meaningless — summed heterogeneous units, AUDIT-DEV-007 F-1) -> preventedWasteCost (nullable monetary string). oasdiff-confirmed breaking change, deliberate: the previous metric was wrong by construction. Single consumer is this monorepo's own frontend, updated in TK-128-FE. Prior: 5.0.0 = TK-108/ADR-004 (POST /kitchen/remanentes/{id}/consume requires reasonId).
+  version: 7.0.0 # TK-129 / AUDIT-DEV-012 L-3: /settings/ai GET+PUT drop the inert replenishmentOn / anomalyAuditOn fields (no use case ever read them). oasdiff-confirmed removal of required response properties; deliberate. Single consumer is this repo's own frontend (TK-129-FE). Prior: 6.0.0 = TK-128 / US-035: RescueRecipeProposal.preventedWasteEstimate (physical quantity, meaningless — summed heterogeneous units, AUDIT-DEV-007 F-1) -> preventedWasteCost (nullable monetary string). oasdiff-confirmed breaking change, deliberate: the previous metric was wrong by construction. Single consumer is this monorepo's own frontend, updated in TK-128-FE. Prior: 5.0.0 = TK-108/ADR-004 (POST /kitchen/remanentes/{id}/consume requires reasonId).
 servers:
   - url: http://localhost:3000
     description: Local Development Server
@@ -2494,9 +2494,7 @@ components:
         - modelName
         - temperature
         - hasApiKey
-        - replenishmentOn
         - rescueRecipesOn
-        - anomalyAuditOn
         - updatedAt
       properties:
         id:
@@ -2519,15 +2517,10 @@ components:
         hasApiKey:
           type: boolean
           example: true
-        replenishmentOn:
-          type: boolean
-          example: true
         rescueRecipesOn:
           type: boolean
+          description: Único módulo cognitivo implementado (TK-129 retiró los toggles inertes replenishmentOn/anomalyAuditOn).
           example: true
-        anomalyAuditOn:
-          type: boolean
-          example: false
         updatedAt:
           type: string
           format: date-time
@@ -2559,15 +2552,9 @@ components:
           minimum: 0.0
           maximum: 0.2
           example: 0.0
-        replenishmentOn:
-          type: boolean
-          default: true
         rescueRecipesOn:
           type: boolean
           default: true
-        anomalyAuditOn:
-          type: boolean
-          default: false
 
     TestAiConnectionResponse:
       type: object

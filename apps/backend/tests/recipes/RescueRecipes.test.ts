@@ -87,9 +87,7 @@ describe('TK-122: Endpoint de Recetas de Rescate Inteligentes (POST /api/v1/reci
         endpointUrl: null,
         encryptedApiKey: null,
         temperature: 0.0,
-        replenishmentOn: false,
         rescueRecipesOn: true,
-        anomalyAuditOn: false,
       })
     );
 

@@ -10,9 +10,7 @@ interface AiConfigurationRecord {
   endpointUrl?: string | null;
   encryptedApiKey?: string | null;
   temperature: number | { toString(): string };
-  replenishmentOn: boolean;
   rescueRecipesOn: boolean;
-  anomalyAuditOn: boolean;
   updatedAt?: Date;
   updatedBy?: string | null;
 }
@@ -41,9 +39,7 @@ export class PrismaAiConfigurationRepository implements IAiConfigurationReposito
           endpointUrl: null,
           encryptedApiKey: null,
           temperature: 0.0,
-          replenishmentOn: true,
           rescueRecipesOn: true,
-          anomalyAuditOn: false,
         },
       });
     }
@@ -55,9 +51,7 @@ export class PrismaAiConfigurationRepository implements IAiConfigurationReposito
       endpointUrl: c.endpointUrl,
       encryptedApiKey: c.encryptedApiKey,
       temperature: Number(c.temperature),
-      replenishmentOn: c.replenishmentOn,
       rescueRecipesOn: c.rescueRecipesOn,
-      anomalyAuditOn: c.anomalyAuditOn,
       updatedAt: c.updatedAt,
       updatedBy: c.updatedBy,
     });
@@ -70,9 +64,7 @@ export class PrismaAiConfigurationRepository implements IAiConfigurationReposito
       endpointUrl: config.endpointUrl,
       encryptedApiKey: config.encryptedApiKey,
       temperature: config.temperature,
-      replenishmentOn: config.replenishmentOn,
       rescueRecipesOn: config.rescueRecipesOn,
-      anomalyAuditOn: config.anomalyAuditOn,
       updatedBy: config.updatedBy,
     };
 

@@ -133,6 +133,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-127** | `recipes` | **Bajo** | **Baja** | 5 SP | Depende de `TK-125`, `TK-126`. Remediación de `AUDIT-DEV-007` G-C (F-5/F-7/F-8/F-10): `CreateRecipeUseCase` con `IdGenerator` inyectado + validación de insumos en batch; Zod de `POST /recipes` endurecido (regex `Decimal(12,4)`, topes de longitud/nº, rechazo de `insumoId` duplicado — 400 en vez de 500); `PrismaRecipeRepository.save` rama `update` reconstruye ingredientes; `IRecipeRepository.findByInsumoIds` para el ranking de rescate (deja de cargar todo el catálogo). ✅ Done — auditoría `AUDIT-DEV-010` APROBADO. | 🟢 P2 - Media |
 | **TK-128** | `recipes` | **Medio** | **Baja** | 5 SP | Depende de `TK-125`..`TK-127`. `AUDIT-DEV-007` G-D (F-1/F-16) → cascada US-035 Esc. 5/6: `preventedWasteEstimate` (cantidad física sin sentido — sumaba KG+L+UNIDAD) → `preventedWasteCost` (`string` monetario `null`), valorizado `unitCost × cantidad` con la semántica de `US-019`; desempate del ranking corregido (más valor primero). Contrato mayor `openapi.yaml` `6.0.0` (oasdiff-confirmado, único consumidor es el frontend propio). Aplica `C-DEV-007-1`. ✅ Done — auditoría `AUDIT-DEV-011` APROBADO. | 🟡 P1 - Alta |
 | **TK-128-FE** | `recipes` | **Bajo** | **Baja** | 2 SP | Depende de `TK-128`. Muestra `preventedWasteCost` como valor monetario (`{símbolo}{monto} de merma evitada`) o "Valor de merma no disponible" cuando es `null`, con `currencySymbol` de `SettingsService`. `RescueRecipesModal` refactorizado (`useCurrencySymbol`/`useCatalogSaver`/`ModeSelector`/`SourceBar`) para bajar de los límites de longitud. ✅ Done. | 🟢 P2 - Media |
+| **TK-129** | `settings` | **Medio** | **Baja** | 5 SP | Sin dependencias. `AUDIT-DEV-012` L-3/L-4/L-5: elimina los toggles `replenishmentOn`/`anomalyAuditOn` (inertes, ningún use case los leía — migración `DROP COLUMN` ×2); `Update`/`Test` use cases dejan de importar infra (puerto `ICredentialCipher`); env var unificada (`resolveProviderApiKey`); API key de la sonda de Gemini al header `x-goog-api-key`. Contrato `openapi.yaml` `7.0.0` (breaking deliberado). ✅ Done — auditoría `AUDIT-DEV-013` APROBADO. | 🟡 P1 - Alta |
+| **TK-129-FE** | `settings` | **Bajo** | **Baja** | 2 SP | Depende de `TK-129`. Quita el toggle de reabastecimiento inerte de `AiSettingsSection`; `useAiSettings` refactorizado en sub-hooks y el componente en sub-componentes para respetar los límites de longitud. ✅ Done. | 🟢 P2 - Media |
 
 ---
 
@@ -183,6 +185,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-105** | [US-029](../11_user_stories/reports/US-029.md) | Reporte de Mermas de Preparación + Auditoría del Consumo Ad-hoc | `reports` | 5 | Should Have | [reports/backend/TK-105.md](reports/backend/TK-105.md) |
 | **TK-122** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Generación de Recetas de Rescate con IA y Fallback Heurístico (Backend) | `recipes` | 5 | Should Have | [recipes/backend/TK-122.md](recipes/backend/TK-122.md) |
 | **TK-123** | [US-034](../11_user_stories/settings/US-034_configuracion_agente_ia.md) | Modelo de Persistencia y Endpoints de Configuración de IA (Backend) | `settings` | 3 | Should Have | [settings/backend/TK-123.md](settings/backend/TK-123.md) |
+| **TK-129** | N/A (Técnico) | Saneamiento del Módulo de Configuración de IA (AUDIT-DEV-012 L-3/L-4/L-5) | `settings` | 5 | Should Have | [settings/backend/TK-129.md](settings/backend/TK-129.md) |
 | **TK-124** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Modo Dual de Rescate (Catálogo Propio Zero-Leakage & Creativo IA) (Backend) | `recipes` | 3 | Must Have | [recipes/backend/TK-124.md](recipes/backend/TK-124.md) |
 | **TK-125** | N/A (Técnico) | Aislamiento Hexagonal y De-duplicación del Caso de Uso de Recetas de Rescate (AUDIT-DEV-007 F-2/F-6/F-13) | `recipes` | 5 | Should Have | [recipes/backend/TK-125.md](recipes/backend/TK-125.md) |
 | **TK-126** | N/A (Técnico) | Frontera de Confianza y Endurecimiento de los Adapters de IA de Recetas (AUDIT-DEV-007 F-3/F-4/F-11/F-14) | `recipes` | 5 | Should Have | [recipes/backend/TK-126.md](recipes/backend/TK-126.md) |
@@ -256,6 +259,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-123-FE** | [US-034](../11_user_stories/settings/US-034_configuracion_agente_ia.md) | Sub-ruta y Panel de Configuración de Agentes IA (Frontend) | `settings` | 3 | Should Have | [settings/frontend/TK-123-FE.md](settings/frontend/TK-123-FE.md) |
 | **TK-124-FE** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Selector de Modo Dual y Badge de Privacidad Zero-Leakage (Frontend) | `recipes` | 2 | Must Have | [recipes/frontend/TK-124-FE.md](recipes/frontend/TK-124-FE.md) |
 | **TK-128-FE** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Mostrar la Merma Evitada como Valor Monetario en el Modal de Rescate (Esc. 5/6) | `recipes` | 2 | Should Have | [recipes/frontend/TK-128-FE.md](recipes/frontend/TK-128-FE.md) |
+| **TK-129-FE** | N/A (Técnico) | Quitar el Toggle de Reabastecimiento Inerte de la Pantalla de Configuración de IA | `settings` | 2 | Should Have | [settings/frontend/TK-129-FE.md](settings/frontend/TK-129-FE.md) |
 
 ---
 
@@ -299,6 +303,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 ### ⚙️ Configuración (`settings/`)
 *   **[TK-075: System Settings API](settings/backend/TK-075.md)** (Backend)
 *   **[TK-075-FE: System Settings UI](settings/frontend/TK-075-FE.md)** (Frontend)
+*   **[TK-129: Saneamiento del Módulo de Configuración de IA](settings/backend/TK-129.md)** (Backend) — ✅ Done. `AUDIT-DEV-012` L-3/L-4/L-5: elimina `replenishmentOn`/`anomalyAuditOn` (toggles inertes, migración `DROP COLUMN` ×2); puerto `ICredentialCipher` (aísla `Update`/`Test` de infra); `resolveProviderApiKey` unifica la env var; API key de la sonda Gemini al header. `openapi.yaml` `7.0.0`. Auditoría [AUDIT-DEV-013](../../audits/AUDIT-DEV-013-TK-129-quality-report.md) APROBADO.
+*   **[TK-129-FE: Quitar el Toggle de Reabastecimiento Inerte](settings/frontend/TK-129-FE.md)** (Frontend) — ✅ Done. `CognitiveModulesControl` deja solo el toggle de recetas de rescate; `useAiSettings` y `AiSettingsSection` descompuestos por los límites de longitud de función.
 
 ### 🍳 Cocina (`kitchen/`)
 *   **[TK-004: Remanentes Activos FEFO](kitchen/backend/TK-004.md)** (Backend)

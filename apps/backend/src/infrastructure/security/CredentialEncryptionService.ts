@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
+import { ICredentialCipher } from '../../domain/settings/gateways/ICredentialCipher.js';
 
-export class CredentialEncryptionService {
+export class CredentialEncryptionService implements ICredentialCipher {
   private readonly key: Buffer;
 
   constructor(masterSecret?: string) {

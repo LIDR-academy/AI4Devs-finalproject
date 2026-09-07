@@ -154,9 +154,7 @@ model AiConfiguration {
   endpointUrl     String?
   encryptedApiKey String?
   temperature     Decimal  @default(0.0) @db.Decimal(3, 2)
-  replenishmentOn Boolean  @default(true)
   rescueRecipesOn Boolean  @default(true)
-  anomalyAuditOn  Boolean  @default(false)
   updatedAt       DateTime @updatedAt
   updatedBy       String?
 

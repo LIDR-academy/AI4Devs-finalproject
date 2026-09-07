@@ -532,3 +532,17 @@ inputs:
   - Mutation scoped: `preventedWasteCost.ts` **100%**, `rescueSuggestionsMapper.ts` **100%**, `SuggestRescueRecipesUseCase.ts` 72.9% — todos ≥ 70.
   - Auditoría adversarial [`AUDIT-DEV-011`](../audits/AUDIT-DEV-011-TK-128-quality-report.md) → **APROBADO** (ambos tickets).
   - **Sin push / sin PR** — instrucción del humano.
+
+### 2026-09-07 (cont.) - AUDIT-DEV-012 + TK-129/TK-129-FE: saneamiento del módulo de configuración de IA
+- **Hito:** el humano pidió analizar la fuga de datos al modelo de IA + cobertura CRUD ("haz todo"). Análisis → [`AUDIT-DEV-012`](../audits/AUDIT-DEV-012-ai-config-leakage-and-crud-coverage.md): **el módulo de IA NO filtra secretos** (CATALOG 100% local; CREATIVE solo insumos genéricos + cantidades — riesgo residual L-1/L-2 aceptado por el humano; test de conexión no envía nada). Deuda real: 2 toggles inertes (L-3) + deuda de capa/secretos (L-4/L-5). Guard 28: 4 decisiones consultadas (L-3 quitar toggles; C-1 editar insumo `name`/`unitCost`/`barcode`; C-2 soft-delete + edición condicional de recetas; anonimización CREATIVE = sin cambio).
+- **Acciones (TK-129 — remediación técnica `N/A (Técnico) · AUDIT-DEV-012 L-3/L-4/L-5`):**
+  - ✅ **L-3:** `AiConfiguration.replenishmentOn` / `anomalyAuditOn` eliminados de schema (migración `20260907120000_drop_inert_ai_toggles`, `DROP COLUMN` ×2), entidad, repos, `Get`/`Update` use cases, Zod, OpenAPI, frontend. `anomalyAuditOn` ni siquiera aparecía en la UI.
+  - ✅ **L-4:** puerto de dominio `ICredentialCipher`; `Update`/`Test` use cases dejan de importar `CredentialEncryptionService` de infra (`grep infrastructure/` en `application/settings/` producción → 0). Helper `resolveProviderApiKey(provider)` unifica `AI_API_KEY` (inconsistente) → `GEMINI_API_KEY`/`OPENAI_API_KEY`.
+  - ✅ **L-5:** la sonda de conexión de Gemini pasa la API key en `x-goog-api-key`, no en `?key=`.
+  - `openapi.yaml` `6.0.0 → 7.0.0` (breaking deliberado, oasdiff-confirmado — campos inertes). Migración verificada contra Postgres real (parity + seed idempotency).
+- **Acciones (TK-129-FE):** `CognitiveModulesControl` deja solo el toggle de recetas de rescate; `useAiSettings` (145 líneas) → `useAiConfigForm`/`useAiConnectionTest`/compositor; `AiSettingsSection` (3 arrows >60) → `ProviderSelect`/`HeuristicInfoCard`/`ProviderConfigBody`/`ApiKeyMaskedView`/`ApiKeyInputView`. Lint frontend 11 → 7 warnings.
+- **Estado:**
+  - Backend 507→**529** tests (+22: `resolveProviderApiKey.test.ts`, `TestAiConnectionUseCase.test.ts` nuevos + casos de `Get`/`Update`), frontend 231, build/lint verdes. Gates de duplicación/complejidad/código-muerto verdes.
+  - Mutation scoped: `resolveProviderApiKey` 100%, `GetAiConfigUseCase` 100%, `AiConfiguration` 87.5%, `TestAiConnectionUseCase` 86.6%, `UpdateAiConfigUseCase` 76.2% — todos ≥ 70.
+  - Auditoría adversarial [`AUDIT-DEV-013`](../audits/AUDIT-DEV-013-TK-129-quality-report.md) → **APROBADO** (ambos tickets).
+  - **Pendiente de AUDIT-DEV-012:** US-036/TK-130 (editar insumo — C-1, urgente por TK-128), US-037/TK-131 (editar/baja receta — C-2). Sin push.

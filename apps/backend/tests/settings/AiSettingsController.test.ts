@@ -71,9 +71,7 @@ describe('TK-123: Endpoints de Configuración de IA (/api/v1/settings/ai) (US-03
         modelName: 'gemini-2.5-flash',
         apiKey: 'secret-gemini-key-xyz',
         temperature: 0.1,
-        replenishmentOn: true,
         rescueRecipesOn: true,
-        anomalyAuditOn: false,
       });
 
     expect(res.status).toBe(200);

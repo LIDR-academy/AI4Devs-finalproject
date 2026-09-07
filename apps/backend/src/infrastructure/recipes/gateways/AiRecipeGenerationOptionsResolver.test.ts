@@ -14,9 +14,7 @@ function config(overrides: Partial<AiConfigurationProps> = {}): AiConfiguration 
     endpointUrl: null,
     encryptedApiKey: null,
     temperature: 0.1,
-    replenishmentOn: false,
     rescueRecipesOn: true,
-    anomalyAuditOn: false,
     ...overrides,
   });
 }

@@ -8,9 +8,7 @@ describe('AiConfiguration Entity', () => {
     expect(config.id).toBe('default');
     expect(config.provider).toBe('HEURISTIC');
     expect(config.temperature).toBe(0.0);
-    expect(config.replenishmentOn).toBe(true);
     expect(config.rescueRecipesOn).toBe(true);
-    expect(config.anomalyAuditOn).toBe(false);
     expect(config.hasApiKey).toBe(false);
   });
 
@@ -21,9 +19,7 @@ describe('AiConfiguration Entity', () => {
       modelName: 'gemini-2.5-flash',
       encryptedApiKey: 'iv:tag:cipher',
       temperature: 0.1,
-      replenishmentOn: true,
       rescueRecipesOn: true,
-      anomalyAuditOn: false,
     });
 
     expect(config.hasApiKey).toBe(true);
@@ -38,9 +34,7 @@ describe('AiConfiguration Entity', () => {
         provider: 'GEMINI',
         modelName: 'gemini-2.5-flash',
         temperature: 0.5,
-        replenishmentOn: true,
         rescueRecipesOn: true,
-        anomalyAuditOn: false,
       });
     }).toThrow(/temperatura.*0\.2/i);
   });
@@ -52,9 +46,7 @@ describe('AiConfiguration Entity', () => {
         provider: 'INVALID_PROVIDER' as unknown as import('../value-objects/AiProvider.js').AiProviderType,
         modelName: 'gemini-2.5-flash',
         temperature: 0.0,
-        replenishmentOn: true,
         rescueRecipesOn: true,
-        anomalyAuditOn: false,
       });
     }).toThrow(/proveedor/i);
   });

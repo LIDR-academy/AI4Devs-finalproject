@@ -1,6 +1,7 @@
 import { IAiConfigurationRepository } from '../../../domain/settings/repositories/IAiConfigurationRepository.js';
 import { AiConfiguration } from '../../../domain/settings/entities/AiConfiguration.js';
-import { CredentialEncryptionService } from '../../../infrastructure/security/CredentialEncryptionService.js';
+import { ICredentialCipher } from '../../../domain/settings/gateways/ICredentialCipher.js';
+import { resolveProviderApiKey } from '../resolveProviderApiKey.js';
 
 export interface TestAiConnectionResult {
   success: boolean;
@@ -11,7 +12,7 @@ export interface TestAiConnectionResult {
 export class TestAiConnectionUseCase {
   constructor(
     private readonly repository: IAiConfigurationRepository,
-    private readonly encryptionService: CredentialEncryptionService
+    private readonly cipher: ICredentialCipher
   ) {}
 
   async execute(): Promise<TestAiConnectionResult> {
@@ -40,10 +41,10 @@ export class TestAiConnectionUseCase {
 
   private resolveApiKey(config: AiConfiguration): string {
     if (!config.encryptedApiKey) {
-      return process.env.AI_API_KEY ?? '';
+      return resolveProviderApiKey(config.provider) ?? '';
     }
     try {
-      return this.encryptionService.decrypt(config.encryptedApiKey);
+      return this.cipher.decrypt(config.encryptedApiKey);
     } catch {
       return '';
     }
@@ -52,8 +53,12 @@ export class TestAiConnectionUseCase {
   private buildProbeRequest(config: AiConfiguration, apiKey: string): { url: string; headers: Record<string, string> } {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (config.provider === 'GEMINI') {
+      // AUDIT-DEV-012 L-5: la API key va en el header, nunca en la query string.
       const baseUrl = config.endpointUrl?.trim() || 'https://generativelanguage.googleapis.com';
-      return { url: `${baseUrl.replace(/\/$/, '')}/v1beta/models?key=${apiKey}`, headers };
+      if (apiKey) {
+        headers['x-goog-api-key'] = apiKey;
+      }
+      return { url: `${baseUrl.replace(/\/$/, '')}/v1beta/models`, headers };
     }
     const baseUrl = config.endpointUrl?.trim() || 'http://localhost:11434/v1';
     if (apiKey) {

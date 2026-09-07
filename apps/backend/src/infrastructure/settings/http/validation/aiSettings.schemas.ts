@@ -7,7 +7,5 @@ export const updateAiConfigSchema = z.object({
   apiKey: z.string().nullable().optional(),
   endpointUrl: z.string().url('La URL del endpoint debe ser válida.').nullable().optional().or(z.literal('')),
   temperature: z.number().min(0.0).max(0.2, 'La temperatura máxima permitida es 0.2 para garantizar determinismo (Guard 9).'),
-  replenishmentOn: z.boolean().optional(),
   rescueRecipesOn: z.boolean().optional(),
-  anomalyAuditOn: z.boolean().optional(),
 });

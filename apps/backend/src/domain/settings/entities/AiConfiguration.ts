@@ -7,9 +7,8 @@ export interface AiConfigurationProps {
   endpointUrl?: string | null;
   encryptedApiKey?: string | null;
   temperature: number;
-  replenishmentOn: boolean;
+  /** Único módulo cognitivo implementado (TK-129 quitó replenishmentOn / anomalyAuditOn, inertes). */
   rescueRecipesOn: boolean;
-  anomalyAuditOn: boolean;
   updatedAt?: Date;
   updatedBy?: string | null;
 }
@@ -32,9 +31,7 @@ export class AiConfiguration {
       endpointUrl: null,
       encryptedApiKey: null,
       temperature: 0.0,
-      replenishmentOn: true,
       rescueRecipesOn: true,
-      anomalyAuditOn: false,
     });
   }
 
@@ -62,16 +59,8 @@ export class AiConfiguration {
     return this.props.temperature;
   }
 
-  get replenishmentOn(): boolean {
-    return this.props.replenishmentOn;
-  }
-
   get rescueRecipesOn(): boolean {
     return this.props.rescueRecipesOn;
-  }
-
-  get anomalyAuditOn(): boolean {
-    return this.props.anomalyAuditOn;
   }
 
   get updatedAt(): Date | undefined {
