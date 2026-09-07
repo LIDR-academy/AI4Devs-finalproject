@@ -1,8 +1,9 @@
 # CI/CD — Pipeline (GitHub Actions)
 
-> **Status: not built.** There is no `.github/workflows/` in this repository and no ticket owns one.
-> This document describes what a pipeline for *this* workspace must do, derived from the command
-> surface that actually exists — not a pipeline that runs somewhere.
+> **Status: built.** `.github/workflows/deploy-stage.yml` implements the `verify` job on every push
+> and pull request, and the `deploy-stage` job (build → push to `ghcr.io` → call both Render deploy
+> hooks, ADR-013) gated to a push on `main`. This document still describes the command surface it is
+> built from — read it before changing the workflow, not as a description of something unbuilt.
 
 The remote is GitHub (`origin` → `github.com/igomez-ai4devs-projects/AI4Devs-finalproject`), so the
 platform is **GitHub Actions**. The default branch is `main` (`nx.json` → `defaultBase`).
@@ -58,18 +59,23 @@ no `e2e-ci` target and no `ciWebServerCommand`: the workflow starts the applicat
 **Artifact and cache paths must be relative to the workspace.** A path outside the checkout is not
 archived; copy it into the workspace first, then cache the relative path.
 
-## Job shape
+## Job shape — as built in `deploy-stage.yml`
 
-A sensible decomposition for this repository, given the gates above:
+1. **`verify`** — runs on every push and pull request: checkout with full history, pnpm before Node
+   (`.nvmrc`), `pnpm install --frozen-lockfile`, `prettier --check`, `nx run-many -t lint test build`,
+   `verify:boundaries`, then uploads `dist/` as an artifact so `deploy-stage` never rebuilds it.
+2. **`deploy-stage`** — `needs: verify`, gated to `github.ref == 'refs/heads/main'` on a `push` event
+   only (never a PR, never another branch — Render has one stage environment, no previews). Downloads
+   the `dist/` artifact, logs in to `ghcr.io` with the built-in `GITHUB_TOKEN` (`packages: write`),
+   builds and pushes both images via `docker compose -f docker/docker-compose.stage.yml build|push`,
+   then calls both Render deploy hooks with `imgURL` pinned to the commit SHA that was just pushed.
 
-1. **`setup`** — checkout with full history, pnpm, Node from `.nvmrc`, `pnpm install --frozen-lockfile`.
-2. **`quality`** — `prettier --check`, `nx run-many -t lint`, `verify:boundaries`. Cheap, fails fast.
-3. **`build-test`** — `nx run-many -t test build`, or `nx affected -t test build` on pull requests.
-4. **`acceptance`** — the Cypress suites, **once `T-C10-06` lands**. Needs a database once the API
-   has one.
+Not yet added, and deliberately: an **`acceptance`** job for the Cypress suites — blocked on
+`T-C10-06` — and any `typeorm migration:*` step — blocked on `T-C10-16`. Adding either now would be a
+gate this repository cannot actually pass.
 
-Use `concurrency` keyed on the ref so a new push cancels the previous run, and pin every action by
-version tag or SHA.
+`concurrency` is keyed on `github.ref` so a new push cancels the previous run for that ref, and every
+action is pinned by commit SHA (with the version tag as a trailing comment) rather than a mutable tag.
 
 ## Rules
 

@@ -864,6 +864,101 @@ Run it after **any** change to the tag vocabulary, the type matrix or the `depCo
 
 > Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
 
+The deployment model is fixed by [ADR-013](docs/product/ARCHITECTURE.md#adr-013--stage-only-deployment-on-render-from-prebuilt-ghcrio-images-configured-in-the-dashboard): the system runs on **Render**, deployed as **prebuilt container images** pulled from **GitHub Container Registry**, in a **single stage environment**. There is **no production environment** and none is planned for this delivery — driver K8 in the architecture document ("academic/portfolio delivery capacity") is the reason. The scope is stated up front because several product non-functional requirements (availability targets, backup and restore drills, load behavior) presuppose a production environment and therefore cannot be demonstrated here.
+
+The infrastructure is deliberately as small as the architecture allows. Sport ITSM is a **modular monolith** (ADR-004): two deployables — the NestJS API and the nginx-served Angular bundle — plus one PostgreSQL 18 system of record. No message broker, no cache tier, no separate reporting store, no orchestrator.
+
+#### 2.4.1 Environments
+
+| Environment | Where it runs | How it is started | Database | Purpose |
+|---|---|---|---|---|
+| **Local (native)** | Developer machine, Node 22 | `pnpm nx serve api` / `pnpm nx serve web` | Dockerized PostgreSQL 18.6 | Day-to-day development with hot reload |
+| **Local (Docker)** | Developer machine, containers | `docker compose -f docker/docker-compose.dev.yml up` | `postgres:18.6` service, named volume | Run the system the way it is packaged, before pushing |
+| **E2E** | Developer machine or CI | `docker/docker-compose.e2e.yml` | Disposable `postgres:18.6` | Cypress + Cucumber acceptance runs against a throwaway database |
+| **Stage** | **Render** | Deployed by the GitHub Actions pipeline | **Render managed PostgreSQL** | The only hosted environment; the deployed system |
+| ~~Production~~ | — | — | — | **Does not exist.** Out of scope for this delivery |
+
+The three local environments are described by the compose files under `docker/`; they are platform-neutral and owned by the CI/CD role. Stage is the only environment whose configuration lives outside this repository — see §2.4.4.
+
+#### 2.4.2 Stage topology
+
+```mermaid
+flowchart LR
+    DEV["Developer<br/>push / merge to the release branch"]
+
+    subgraph GH["GitHub"]
+        GHA["<b>GitHub Actions</b><br/>build images from docker/docker-compose.stage.yml<br/>docker/backend/Dockerfile - docker/frontend/Dockerfile"]
+        GHCR[("<b>ghcr.io</b><br/>GitHub Container Registry - private<br/>api image + web image")]
+    end
+
+    subgraph RND["Render - stage environment only"]
+        WEBSVC["<b>Web service: web</b><br/>image-backed<br/>nginx alpine serving dist/apps/web/browser<br/>SPA fallback, gzip, security headers, /health"]
+        APISVC["<b>Web service: api</b><br/>image-backed<br/>Node 22, NestJS 11 on Express 5<br/>pre-deploy command: TypeORM migration:run<br/>/health/live and /health/ready"]
+        PG[("<b>Render managed PostgreSQL 18</b><br/>single system of record<br/>reached over Render's private network")]
+    end
+
+    USER["Browser<br/>Requesters and Service Organization"]
+
+    DEV --> GHA
+    GHA -->|"docker push"| GHCR
+    GHA -->|"deploy hook - explicit pipeline step, optional imgURL pins the tag or digest"| WEBSVC
+    GHA -->|"deploy hook - explicit pipeline step"| APISVC
+    GHCR -.->|"image pull - read:packages PAT held as a Render registry credential"| WEBSVC
+    GHCR -.->|"image pull"| APISVC
+
+    USER -->|"HTTPS"| WEBSVC
+    USER -->|"HTTPS / JSON REST - Bearer JWT, Accept-Language"| APISVC
+    APISVC -->|"TCP 5432, private network"| PG
+
+    classDef ci fill:#1f6feb,stroke:#0b3d91,color:#ffffff
+    classDef reg fill:#6e40c9,stroke:#3f1f75,color:#ffffff
+    classDef svc fill:#0969da,stroke:#0b3d91,color:#ffffff
+    classDef store fill:#0e7c66,stroke:#064e40,color:#ffffff
+    classDef extn fill:#e8e8e8,stroke:#8b8b8b,color:#111111
+    class GHA ci
+    class GHCR reg
+    class WEBSVC,APISVC svc
+    class PG store
+    class DEV,USER extn
+```
+
+Three Render resources, created by hand in the dashboard: two **web services**, each backed by an image rather than by a platform-side source build, and one **managed PostgreSQL** instance reached over Render's private network at its internal address. The API is the only consumer of the database. The web service serves a static bundle behind nginx and holds no server-side state, no session and no secret — the browser calls the API directly, so nginx is not an API reverse proxy in this topology.
+
+#### 2.4.3 Deployment process, end to end
+
+| # | Step | Executed by | Note |
+|---|---|---|---|
+| 1 | Build both applications — `pnpm nx build api --configuration=production`, `pnpm nx build web` | GitHub Actions | Both Dockerfiles are **runtime-only**: they expect `dist/apps/api` and `dist/apps/web/browser` to already exist in the build context. The build is a pipeline step, never a stage inside the image |
+| 2 | Build the two images from `docker/docker-compose.stage.yml` | GitHub Actions | That compose file's purpose is now the **image build definition**, not a description of how stage runs — Render is |
+| 3 | Tag and push both images to `ghcr.io` | GitHub Actions | Private registry; the push credential is a GitHub Actions secret |
+| 4 | **Call each service's Render deploy hook** | GitHub Actions | **Mandatory, explicit step** — see the warning below |
+| 5 | Pull the image and run the **pre-deploy command** | Render | `migration:run` against the managed database. A failing migration fails the deploy **before** the new version serves traffic |
+| 6 | Start the new version and cut traffic over | Render | Health endpoints: `/health/live` and `/health/ready` on the API, `/health` on nginx |
+
+> **The step that cannot be skipped.** An image-backed Render service **does not redeploy automatically when a new image is pushed to its tag**. Pushing to `ghcr.io` deploys nothing. If the pipeline omits the deploy-hook call, the build goes green while Render keeps serving the previous image — a silent failure. The deploy hook is a per-service URL taken from the service's Settings page, callable by `GET` or `POST`, and it accepts an optional `imgURL` query parameter that pins the exact tag or digest to deploy; passing the tag just pushed makes a deploy name its own artifact instead of trusting a moving tag.
+
+**Migrations are a deploy step, never a boot step.** `synchronize` is `false` in every environment, and `docker/backend/docker-entrypoint.sh` deliberately runs no migration — it only hands off to the container's `CMD`. On Render, schema evolution is the service's **pre-deploy command**, which runs before the new version starts serving. This is the rule in `CLAUDE.md` §3 ("no unconditional migration auto-run in staging/prod") given a concrete home.
+
+#### 2.4.4 Configuration and secrets
+
+There is **no `render.yaml` blueprint in this repository, and no infrastructure-as-code of any kind**. The Render services, their environment variables and the database connection settings are created and maintained **by hand in the Render dashboard**.
+
+| Value | Lives in |
+|---|---|
+| API runtime configuration (`NODE_ENV`, `PORT`, database connection…) | Render dashboard, on the API service |
+| Database credentials | Render dashboard — the managed PostgreSQL instance's own connection variables, copied onto the API service |
+| `ghcr.io` **pull** credential | Render registry credential: a GitHub username plus a personal access token scoped `read:packages` |
+| `ghcr.io` **push** credential and the deploy hook URLs | GitHub Actions secrets. A deploy hook URL is itself a secret — anyone holding it can trigger a deploy |
+| The **names** of the variables the API requires | `.env.example`, in this repository — the only in-repo record. The API validates them at boot through `@nestjs/config` and aborts naming any missing key |
+
+The consequence is stated plainly because it is a real property of the system: **the stage environment is not reproducible from this repository.** There is no service definition to diff, review or restore from; if the Render account is lost, the environment is rebuilt from this section. That is an accepted trade for a portfolio-scale delivery — recorded in ADR-013 as a known limitation rather than left to be discovered — and it is reversible: adopting a `render.yaml` blueprint later is additive and touches neither application.
+
+#### 2.4.5 What the platform choice does *not* couple
+
+Both images are plain OCI containers built from Dockerfiles that contain nothing Render-specific, and the API reads every setting from environment variables through its validated configuration schema. Moving to another container host is a pipeline change plus a dashboard exercise: no application code, no library boundary, no Nx tag and no database schema is involved. The dependency on Render is deliberately shallow.
+
+> **Status.** This section records a **decision**, not a running system. Nothing is deployed yet: the images build and run locally, and the GitHub Actions workflow that implements the steps above does not exist under `.github/workflows/` at the time of writing. Pipeline implementation is owned by the CI/CD role; this section and ADR-013 are the specification it implements.
+
 ### **2.5. Seguridad**
 
 > Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede

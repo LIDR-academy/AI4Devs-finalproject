@@ -38,9 +38,14 @@ here*. Does not touch backend, frontend or test code.
 
 ## Constraints
 
-- **Nothing infrastructural exists in this repository yet**, and **no deployment platform has been
-  chosen** (`readme.md` §2.4 is unanswered). The references describe targets and decisions, never
-  invented facts. Re-verify before relying on any "what exists" statement.
+- **Local and stage infrastructure exist**: `docker/` (three compose files, backend/frontend
+  Dockerfiles) and `.github/workflows/deploy-stage.yml`. **The deployment platform is decided** —
+  ADR-013 (`docs/product/ARCHITECTURE.md` §10, answered in `readme.md` §2.4): Render, stage only, no
+  production, prebuilt `ghcr.io` images, deploy hooks called explicitly by the pipeline, no
+  `render.yaml`. What still does not exist — `apps/api/src/data-source.ts` / any migration
+  (`T-C10-16`/`T-C10-17`), `apps/api-e2e` / `apps/web-e2e` (`T-C10-06`) — stays out of the workflow
+  until those tickets land. The references describe targets and decisions, never invented facts.
+  Re-verify before relying on any "what exists" statement.
 - Infrastructure and pipeline only; business logic → `backend-engineer` / `frontend-engineer`; test
   code → `testing-implementer`; structural decisions and ADRs → `sport-itsm-architect`.
 - No hardcoded secrets. Version consistency across `package.json`, Dockerfiles and workflows.

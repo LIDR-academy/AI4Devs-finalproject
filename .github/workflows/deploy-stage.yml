@@ -1,0 +1,166 @@
+# Sport ITSM — pipeline and stage deploy.
+#
+# Two jobs:
+#   verify        — the gates this workspace actually has (CLAUDE.md §3,
+#                    .claude/skills/ci-cd/references/pipeline.md). Runs on
+#                    every push and pull request.
+#   deploy-stage   — builds both images from docker/docker-compose.stage.yml,
+#                    pushes them to ghcr.io, then calls both Render deploy
+#                    hooks (ADR-013, docs/product/ARCHITECTURE.md §10). Runs
+#                    only on a push to `main` — never on a branch or a PR —
+#                    because Render has a single stage environment and no
+#                    preview environments exist.
+#
+# What this workflow deliberately does not do: run `nx e2e api-e2e` /
+# `web-e2e` (neither project exists — T-C10-06) or any `typeorm migration:*`
+# command (no data source — T-C10-16). Adding either here ahead of those
+# tickets would be inventing a gate this repository cannot pass.
+name: Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: pipeline-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify (format, lint, test, build, boundaries)
+    runs-on: ubuntu-latest
+    steps:
+      # `nx affected` (used implicitly by `verify:boundaries` probes and
+      # available to a future job) diffs against `main`, so history is
+      # needed — a shallow clone makes `affected` either fail or silently
+      # treat everything as affected (.claude/skills/ci-cd/references/pipeline.md).
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # pnpm before Node: actions/setup-node's `cache: pnpm` needs pnpm on
+      # PATH to resolve the store location.
+      - name: Set up pnpm
+        uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm prettier --check .
+
+      - name: Lint, test and build every project
+        run: pnpm nx run-many -t lint test build
+
+      # The gate lint alone cannot provide: proves a deliberate boundary
+      # violation is still rejected, not only that legal code lints clean.
+      - name: Verify module boundaries still bite
+        run: pnpm verify:boundaries
+
+      # Handed to deploy-stage so it does not have to rebuild `api` and
+      # `web` a second time. Both Dockerfiles are runtime-only and expect
+      # these paths to already exist in the build context.
+      - name: Upload production build output
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: dist
+          retention-days: 1
+          if-no-files-found: error
+
+  deploy-stage:
+    name: Build, push and deploy stage images
+    needs: verify
+    # Render has one stage environment and no preview environments (ADR-013).
+    # Restrict to a push landing on the default branch — never a PR, and
+    # never any other branch — so a feature branch can never trigger a
+    # deploy.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      # Tags both images with the commit that produced them, so a deploy
+      # names the exact artifact it deploys instead of trusting a moving
+      # tag (ADR-013's own reasoning for the `imgURL` parameter).
+      IMAGE_TAG: ${{ github.sha }}
+      API_IMAGE: ghcr.io/igomez-ai4devs-projects/sport-itsm-api
+      WEB_IMAGE: ghcr.io/igomez-ai4devs-projects/sport-itsm-web
+      # Hoisted to job level so the deploy steps below can guard on them. A
+      # step's own `env:` block is not visible to that same step's `if:`, and
+      # the `secrets` context is not available in a condition at all, so
+      # job-level `env` is the only form that works.
+      DEPLOY_HOOK_API: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
+      DEPLOY_HOOK_WEB: ${{ secrets.RENDER_DEPLOY_HOOK_WEB }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download production build output
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: dist
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          # The push credential: the workflow's own built-in token, scoped
+          # by the `packages: write` permission above. No GitHub secret to
+          # create for this — see the CI/CD report for what Render's PULL
+          # side needs instead, which is a separate credential configured
+          # in the Render dashboard, not here.
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # docker/docker-compose.stage.yml declares an `image:` per service, so
+      # `build` tags with it and `push` ships it — no extra `docker tag` /
+      # `docker push` step needed. Neither command uses the file's `ports`,
+      # `healthcheck` or `restart` clauses; those exist for a local smoke
+      # test only, see the comment at the top of that file.
+      - name: Build stage images
+        run: docker compose -f docker/docker-compose.stage.yml build
+
+      - name: Push stage images to ghcr.io
+        run: docker compose -f docker/docker-compose.stage.yml push
+
+      # The step that cannot be skipped (ADR-013): an image-backed Render
+      # service does NOT redeploy when a new image is pushed to its tag.
+      # Without this call the job above goes green while Render keeps
+      # serving the previous image. `imgURL` pins the exact tag just
+      # pushed, named via `IMAGE_TAG`, so the deploy cannot silently drift
+      # onto a different image than the one just verified and pushed.
+      # Both deploy steps are skipped until their secret exists, so the
+      # pipeline is green before Render is configured: the images still build
+      # and push to ghcr.io, only the deploy is deferred. Create
+      # RENDER_DEPLOY_HOOK_API / RENDER_DEPLOY_HOOK_WEB in the repository's
+      # Actions secrets and the deploy activates on the next push to main,
+      # with no change to this file. A skipped step is reported as skipped in
+      # the run summary, so an absent deploy is visible rather than implied.
+      - name: Trigger Render deploy — api
+        if: env.DEPLOY_HOOK_API != ''
+        run: |
+          curl --fail-with-body --silent --show-error --get \
+            --data-urlencode "imgURL=${API_IMAGE}:${IMAGE_TAG}" \
+            "$DEPLOY_HOOK_API"
+
+      - name: Trigger Render deploy — web
+        if: env.DEPLOY_HOOK_WEB != ''
+        run: |
+          curl --fail-with-body --silent --show-error --get \
+            --data-urlencode "imgURL=${WEB_IMAGE}:${IMAGE_TAG}" \
+            "$DEPLOY_HOOK_WEB"

@@ -23,22 +23,36 @@ If a task implies one, it is a scope change, not an infrastructure detail.
 | Environment | State | Notes |
 |---|---|---|
 | Local, no containers | **Works today** | `pnpm nx serve api` / `serve web`. This is the daily loop |
-| Local PostgreSQL in Docker | **Planned — `T-C10-16`** | `docker-compose.yml` with a named volume and credentials from the environment |
-| Pipeline runner | **Not built** | GitHub Actions — see `pipeline.md` |
-| Staging / production | **Undecided** | No platform chosen; see below |
+| Local Docker stack | **Works today** | `docker/docker-compose.dev.yml` — `postgres:18.6` plus `api`/`web` dev images |
+| E2E database | **Works today, unused until `T-C10-06`** | `docker/docker-compose.e2e.yml` — disposable `postgres:18.6` |
+| Pipeline runner | **Built** | GitHub Actions, `.github/workflows/deploy-stage.yml` — see `pipeline.md` |
+| Stage | **Decided and built (ADR-013), not yet deployed** | Render, prebuilt `ghcr.io` images from `docker/docker-compose.stage.yml`; see below |
+| Production | **Does not exist and none is planned** | ADR-013, driver K8 (academic/portfolio delivery capacity) |
 
-## Undecided — do not invent
+## The deployment decision — ADR-013
 
-- **Deployment platform.** `readme.md` §2.4 ("Infraestructura y despliegue") is still the unanswered
-  template question, and no ADR covers it. Container host, managed platform, or plain VM: nobody has
-  decided. This blocks Dockerfiles for the applications, the reverse proxy, and any deploy job.
-- **Reverse proxy / static hosting for `apps/web`.** Follows from the platform choice.
-- **Application Dockerfiles.** No ticket owns them. The only container in the backlog is the local
-  PostgreSQL of `T-C10-16`.
-- **Secrets management.** No secret exists yet because nothing connects to anything.
+`readme.md` §2.4 ("Infraestructura y despliegue") is answered and [ADR-013](../../../../docs/product/ARCHITECTURE.md)
+(`docs/product/ARCHITECTURE.md` §10) records it. Do not re-derive or re-open it — read both before
+touching anything platform-related.
 
-When a task needs one of these, **stop and say so**: it is an architecture decision owned by
-`sport-itsm-architect` and recorded as an ADR.
+| Aspect | Decision |
+|---|---|
+| Platform | **Render**, one service per deployable, **stage only** — no production |
+| Artifact | Prebuilt OCI images (`docker/backend/Dockerfile`, `docker/frontend/Dockerfile`), not a platform-side source build |
+| Registry | `ghcr.io`, private. Render pulls with a username + `read:packages` PAT held as a Render registry credential |
+| Pipeline | GitHub Actions builds the images from `docker/docker-compose.stage.yml`, pushes to `ghcr.io`, then **calls each Render deploy hook explicitly** — an image-backed service does not redeploy on its own when its tag gets a new push |
+| Database | Render managed PostgreSQL, created by hand; its connection variables live on the API service |
+| Migrations | Render's **pre-deploy command** — never `docker-entrypoint.sh`, never unconditional |
+| IaC | **None.** No `render.yaml`. Services and every environment variable are configured by hand in the Render dashboard |
+
+Still genuinely open, and not this skill's call to make:
+
+- **The compiled data source + migrations artifact the pre-deploy command needs inside the running
+  image** — `apps/api/src/data-source.ts` does not exist yet (`T-C10-16`). See the packaging note
+  flagged in `docker/backend/Dockerfile` above the `pnpm install --prod` line.
+- **Secrets and dashboard configuration.** Nobody has created the GitHub Secrets (`RENDER_DEPLOY_HOOK_API`,
+  `RENDER_DEPLOY_HOOK_WEB`) or the Render registry credential yet — that is a manual, one-time setup
+  step for the repository owner, not something this skill or a workflow run can do.
 
 ## Environment variables
 

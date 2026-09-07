@@ -1,0 +1,123 @@
+# ===================================
+# Docker Compose — LOCAL DEVELOPMENT STACK
+# ===================================
+# `name` is not cosmetic. Without it, Compose derives the project name from the
+# parent directory — `docker` — and this file, docker-compose.e2e.yml and
+# docker-compose.stage.yml all live in `docker/`, so all three would resolve to
+# the SAME project. A `docker compose -f docker-compose.e2e.yml down` would then
+# tear this stack down too, taking the postgres-data volume with it. An explicit
+# project name per file keeps the stacks addressable independently.
+#
+# Sport ITSM is one Angular client (`web`) and one NestJS API (`api`) — a
+# modular monolith, not the two-frontend product this folder was adapted from
+# (ARCHITECTURE.md §3, driver K8).
+# ===================================
+name: sport-itsm-dev
+
+services:
+  postgres:
+    # PostgreSQL 18 is a hard functional floor, not only a version policy: the
+    # first migration relies on the core `uuidv7()` function, which does not
+    # exist before PostgreSQL 18 (ADR-012). Pinned to an explicit patch tag —
+    # never `postgres:18` or `postgres:latest` — per CLAUDE.md §2.
+    image: postgres:18.6
+    container_name: sport-itsm-postgres-dev
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_DB: sport_itsm_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
+    networks:
+      - dev-network
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile.dev
+      args:
+        - PORT=${PORT:-3000}
+    # `apps/api/src/data-source.ts` and the migration chain do not exist yet
+    # (T-C10-16 / T-C10-17), so there is nothing to run before `nx serve` today
+    # — the auto-run-on-boot step (gated to development only) is added here
+    # once those tickets land, not invented ahead of them.
+    command: pnpm exec nx serve api --host 0.0.0.0
+    ports:
+      - '${PORT:-3000}:${PORT:-3000}'
+    volumes:
+      # Mount source only, never the whole app — protects node_modules below
+      # from being shadowed by the (empty) host mount.
+      - ../apps/api/src:/usr/local/app/apps/api/src
+      - /usr/local/app/node_modules
+      - /usr/local/app/apps/api/node_modules
+    environment:
+      # Exactly the two keys apps/api/src/config/env.validation.ts recognises
+      # today. Both are mandatory with no in-code default — an unset or
+      # malformed value aborts the boot by design. Do not add a variable here
+      # before it is added to env.validation.ts and .env.example together.
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=${PORT:-3000}
+    depends_on:
+      # Ordering only: the API does not talk to PostgreSQL yet (no data
+      # source). Kept so the database is ready by the time T-C10-16 wires the
+      # connection, without requiring another compose edit then.
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # `/health/live` is reserved in apps/api/src/main.ts but not implemented
+      # — the API registers no controller yet, so every HTTP route (including
+      # any health path) returns 404. A probe expecting 200 would never pass.
+      # Checking that the port accepts TCP connections is the honest signal
+      # available until the observability slice (T-C10-28) lands.
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('net').createConnection({port:process.env.PORT||3000},()=>process.exit(0)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: on-failure
+    networks:
+      - dev-network
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/frontend/Dockerfile.dev
+    command: pnpm exec nx serve web --host 0.0.0.0 --port 4200
+    ports:
+      - '4200:4200'
+    volumes:
+      - ../apps/web/src:/usr/local/app/apps/web/src
+      - /usr/local/app/node_modules
+      - /usr/local/app/apps/web/node_modules
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4200']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: on-failure
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge
+volumes:
+  postgres-data:

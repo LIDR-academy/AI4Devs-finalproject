@@ -1,0 +1,106 @@
+# ===================================
+# Docker Compose — STAGE IMAGE BUILD DEFINITION
+# ===================================
+# Sport ITSM deploys to Render, stage only, from prebuilt ghcr.io images —
+# ADR-013 in docs/product/ARCHITECTURE.md §10 (readme.md §2.4 is the
+# human-readable topology). This file's purpose follows from that decision:
+# it is no longer a description of how stage *runs* — Render is — it is the
+# **image build (and push) definition** the pipeline drives.
+#
+# Both applications must already be built before this file is used:
+# `pnpm nx build api --configuration=production` and `pnpm nx build web`
+# produce `dist/apps/api` and `dist/apps/web/browser`. Both Dockerfiles are
+# runtime-only (no build stage inside the image), so `docker compose build`
+# against this file only packages what already exists on disk.
+#
+# `.github/workflows/deploy-stage.yml` drives this file two ways:
+#   docker compose -f docker/docker-compose.stage.yml build   # tags with `image:`
+#   docker compose -f docker/docker-compose.stage.yml push    # to ghcr.io
+# Neither command uses `ports`, `healthcheck`, `depends_on` or `restart` —
+# they are kept anyway, see the note below.
+#
+# It correctly has no `postgres` service: stage uses Render's managed
+# PostgreSQL instance, not a container this file could own.
+#
+# `IMAGE_TAG` defaults to `local` so `docker compose build` works
+# out of the box for a manual smoke test; the pipeline overrides it with the
+# commit SHA before build/push so every pushed image is traceable to the
+# commit that produced it, and that same tag is passed to Render's deploy
+# hook as `imgURL` so a deploy names the exact artifact it deploys.
+#
+# Judgement call on `ports:` / `restart:` — kept, not dropped. In the
+# pipeline's own use (`build` then `push`) they are inert: Compose ignores
+# them for both commands. They are kept because this file remains useful for
+# a second purpose neither Render nor the pipeline provide — running
+# `docker compose -f docker/docker-compose.stage.yml up` locally, against the
+# exact images about to be pushed, as a pre-push smoke test. Dropping them
+# would save nothing in the pipeline and would remove that capability, and
+# it would make this the only compose file under `docker/` without a runnable
+# shape, inconsistent with docker-compose.dev.yml and docker-compose.e2e.yml.
+#
+# `name`: see the equivalent note in docker-compose.dev.yml.
+# ===================================
+name: sport-itsm-stage
+
+services:
+  api:
+    image: ghcr.io/igomez-ai4devs-projects/sport-itsm-api:${IMAGE_TAG:-local}
+    build:
+      context: .. # Context from docker/ to the project root.
+      dockerfile: docker/backend/Dockerfile
+    container_name: sport-itsm-api-stage
+    ports:
+      - '${PORT:-3000}:${PORT:-3000}'
+    environment:
+      # Exactly the two keys apps/api/src/config/env.validation.ts recognises
+      # today — see the equivalent note in docker-compose.dev.yml. Database,
+      # auth and any other feature's variables are added here only once that
+      # feature's ticket adds them to env.validation.ts and .env.example.
+      # Render itself sets these (and, once T-C10-16 lands, the database
+      # variables) by hand in the dashboard — this block only serves the
+      # local smoke-test path described above.
+      - NODE_ENV=${NODE_ENV:-staging}
+      - PORT=${PORT:-3000}
+    healthcheck:
+      # TCP-only — see docker/backend/Dockerfile.dev for why an HTTP probe
+      # against a health path is not honest today.
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('net').createConnection({port:process.env.PORT||3000},()=>process.exit(0)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - stage-network
+
+  web:
+    image: ghcr.io/igomez-ai4devs-projects/sport-itsm-web:${IMAGE_TAG:-local}
+    build:
+      context: ..
+      dockerfile: docker/frontend/Dockerfile
+    container_name: sport-itsm-web-stage
+    ports:
+      - '4200:80'
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost/']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - stage-network
+
+networks:
+  stage-network:
+    driver: bridge

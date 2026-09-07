@@ -19,18 +19,24 @@ configuration and deploys. Maintains and evolves the infrastructure without touc
 Detailed reference content lives in `references/` — this `SKILL.md` is the process index; read the
 reference that matches the task.
 
-## Read this first: almost nothing exists yet
+## Read this first: what exists today
 
-This repository has **no infrastructure at all**. There is no `docker/`, no `Dockerfile`, no
-`docker-compose.yml`, no reverse proxy config, no `scripts/`, and **no `.github/workflows/`**. The
-only planned piece is a local PostgreSQL 18 `docker-compose.yml`, owned by ticket **`T-C10-16`**.
+Local and stage infrastructure is scaffolded: `docker/` holds the three compose files
+(`docker-compose.dev.yml`, `docker-compose.e2e.yml`, `docker-compose.stage.yml`) plus
+`docker/backend/` and `docker/frontend/` Dockerfiles, and `.github/workflows/deploy-stage.yml` builds,
+pushes and deploys stage. Still absent: `apps/api/src/data-source.ts` and any migration (both owned by
+`T-C10-16` / `T-C10-17`) and the `apps/api-e2e` / `apps/web-e2e` projects (`T-C10-06`) — so no TypeORM
+CLI command and no `nx e2e` run belongs in a workflow yet.
 
-**No deployment platform has been chosen.** `readme.md` §2.4 ("Infraestructura y despliegue") is
-still an unanswered template question and no ADR covers it. Choosing one is an architecture decision
-owned by `sport-itsm-architect` and recorded as an ADR — never a side effect of a pipeline change.
+**The deployment platform is decided.** [ADR-013](../../../docs/product/ARCHITECTURE.md) (`docs/product/ARCHITECTURE.md`
+§10) — Render, stage only, no production, prebuilt images pushed to `ghcr.io` and deployed by calling
+each service's deploy hook; no `render.yaml`, services and env vars configured by hand in the Render
+dashboard. `readme.md` §2.4 is the human-readable topology this ADR answers. Read both before touching
+`docker/docker-compose.stage.yml` or `.github/workflows/`.
 
-Consequences for you: describe targets as targets, mark what is undecided as undecided, and **never
-invent infrastructure that no ticket asked for**.
+Consequences for you: describe what exists as what exists, keep the workflow limited to gates this
+repository actually has, and **never invent infrastructure beyond what ADR-013 and a ticket ask
+for**.
 
 ## "CI" means Configuration Item here
 

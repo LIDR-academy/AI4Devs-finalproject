@@ -3,8 +3,8 @@
 > Sources: `docs/backlog/C10/user-stories.md` (16 stories, all greenfield) · `docs/backlog/epic-map.md` (§ `C10`, § **Foundation ownership (priced once)**) · `CLAUDE.md` §3 · `docs/product/ARCHITECTURE.md` §5, §9 · PRD §7.10, §4.3, §14.2
 > Test plan: [`../test-plan.md`](../test-plan.md)
 
-**67 tickets · 171h.** One ticket exceeds the 3h cap — `T-C10-06`, which records why in its `## Context`.
-18 tickets are **foundation** work with `story: —` — the whole workspace, priced into `C10` by the epic map and deliberately left storyless by the Business Analyst (finding **F14**).
+**69 tickets · 174h.** One ticket exceeds the 3h cap — `T-C10-06`, which records why in its `## Context`.
+20 tickets are **foundation** work with `story: —`. 18 are the whole workspace, priced into `C10` by the epic map and deliberately left storyless by the Business Analyst (finding **F14**); the 19th, `T-C10-68`, is a defect found in that same shipped foundation output; the 20th, `T-C10-69`, is a scope gap found while implementing ADR-013 (deployment) against that same foundation — see **Block I** and **Block J**.
 5 tickets are **blocked**: 4 by **F16** (nobody has enumerated which operations are *privileged*), 1 by **F17** (nobody has decided where a denied authorization is recorded).
 
 The numbering **is** the implementation order. `T-C10-01` is built first. Where the order departs from the story sequence, the reason is stated below the affected block.
@@ -17,13 +17,13 @@ The numbering **is** the implementation order. `T-C10-01` is built first. Where 
 | `foundation` | `true` when no story backs it; the owning source is cited in its `## Context` |
 | `layer` | DDD layer per `ARCHITECTURE.md` §5.3 |
 | `platform` | `backend` / `frontend` / `shared` — stated for every ticket, and load-bearing where `agent` is `—` |
-| `agent` | `backend-engineer`, `frontend-engineer`, or `—` for workspace tooling and E2E test code, which neither dev agent owns |
+| `agent` | `backend-engineer`, `frontend-engineer`, `ci-cd-expert` for Docker/CI/per-project tooling (`T-C10-68` is this epic's first use, `T-C10-69` its second), or `—` for workspace tooling and E2E test code that predates a named owner for that kind of work |
 | `phase` | `0` per PRD §14.2, or `unphased` where the PRD assigns none (finding **F9**) |
 | `blocked_by` | The finding that must be resolved before the ticket is real work |
 
 ---
 
-## Block A · Workspace foundation — 17 tickets · 46h · all `foundation: true`, phase 0
+## Block A · Workspace foundation — 17 tickets · 45.5h · all `foundation: true`, phase 0
 
 Source: epic map, **Foundation ownership (priced once)**. Nothing else in this epic — or in the other 18 epics — compiles until this block lands.
 
@@ -44,7 +44,7 @@ Source: epic map, **Foundation ownership (priced once)**. Nothing else in this e
 | [T-C10-13](T-C10-13.md) | `libs/shared/ui` — form primitives | ui | frontend-engineer | 3h |
 | [T-C10-14](T-C10-14.md) | `libs/shared/ui` — overlay primitive, focus trap/restore and `aria-live` announcer | ui | frontend-engineer | 3h |
 | [T-C10-15](T-C10-15.md) | `libs/shared/ui` — table, badge and state primitives | ui | frontend-engineer | 3h |
-| [T-C10-16](T-C10-16.md) | PostgreSQL 18 provisioning and the TypeORM data source | infrastructure | backend-engineer | 2.5h |
+| [T-C10-16](T-C10-16.md) | The TypeORM data source and its database connection configuration | infrastructure | backend-engineer | 2h |
 | [T-C10-17](T-C10-17.md) | Base migration chain and the bootstrap migration | infrastructure | backend-engineer | 3h |
 
 **Order note.** The tag scheme (`T-C10-02`) precedes the boundary matrix (`T-C10-03`) because the matrix is expressed in those tags, and both precede every project so that the first illegal import fails the build rather than review. `libs/shared/ui` is four tickets because with no third-party component library every primitive is hand-built; it lands before the first screen (`T-C10-31`), which is exactly why the epic map prices the design system into `C10`.
@@ -170,11 +170,33 @@ Source: epic map, **Foundation ownership (priced once)**. Nothing else in this e
 
 ---
 
+## Block I · Workspace defect cleanup — 1 ticket · 0.5h · `foundation: true`, phase 0
+
+| # | Title | Layer | Agent | Est. |
+|---|---|---|---|---:|
+| [T-C10-68](T-C10-68.md) | Remove the two `@nx/js` targets `apps/api/project.json` can never run | workspace tooling | ci-cd-expert | 0.5h |
+
+**Numbered last, not scheduled last.** `T-C10-68` is a defect in the output of `T-C10-04` (Block A, done and committed), found after that ticket shipped — it has no forward dependency and blocks nothing, so unlike the rest of this README the ticket number is **not** its implementation order. It may be picked up any time after `T-C10-04` lands, including immediately; it was appended here, at the next free ID, rather than inserted into Block A, because ticket IDs are stable and Block A's `T-C10-01`–`T-C10-17` are already implemented.
+
+---
+
+## Block J · Deployable migration packaging — 1 ticket · 3h · `foundation: true`, phase 0
+
+| # | Title | Layer | Agent | Est. |
+|---|---|---|---|---:|
+| [T-C10-69](T-C10-69.md) | Compile the data source and migrations into the deployable API image | workspace tooling (apps/api build pipeline + docker/backend) | ci-cd-expert | 3h |
+
+**A scope gap in Block A, not a defect in it.** `T-C10-16` and `T-C10-17` (Block A) wire the data source and the migration chain for local `ts-node` use and explicitly exclude `docker/**`. Implementing `ADR-013` (deployment: migrations run as Render's pre-deploy command, *inside* the deployed image) surfaced that neither ticket — nor any other — produces a compiled data source or compiled migrations the image can run, and `docker/backend/Dockerfile` already carries a comment marking the spot. Unlike `T-C10-68`, this is not a defect in already-shipped output: it is missing scope, found before `T-C10-16`/`T-C10-17` are implemented. It is numbered last for the same reason `T-C10-68` is — ticket IDs are stable and appended at the next free ID — but it belongs, logically, immediately after `T-C10-17` in Block A, and must be **implemented** after both: it compiles what they produce and adds nothing on its own. It blocks no other ticket in this epic; nothing deploys until `ADR-013`'s pipeline is exercised for real, which is outside `C10`.
+
+**Ownership split, not a shared ticket.** The local half (`apps/api/src/data-source.ts`, the migration files, the extension-agnostic glob convention) stays `backend-engineer`'s, inside `T-C10-16`/`T-C10-17` — both were widened slightly (no estimate change) to fix that glob convention once, since `T-C10-69` depends on it. The deployable half (a new `apps/api` build target, the `docker/backend/Dockerfile` `COPY`, the production migration script) is `ci-cd-expert`'s alone, matching who already owns `docker/**`, the workflow, and — per the `T-C10-68` precedent — per-project `project.json` build targets. One ticket spanning both agents was rejected: the two halves are reviewed against different correctness criteria (TypeScript/domain correctness vs. build-and-image correctness) by people who don't overlap, so forcing them into a single ticket would not have been "one reviewable unit," it would have been two units wearing one ID.
+
+---
+
 ## Totals
 
 | Block | Tickets | Hours | Phase |
 |---|--:|--:|---|
-| A · Workspace foundation | 17 | 46.0 | 0 |
+| A · Workspace foundation | 17 | 45.5 | 0 |
 | B · Identity core | 17 | 41.5 | 0 |
 | C · RBAC | 6 | 15.0 | 0 |
 | D · Record visibility | 6 | 14.5 | 0 |
@@ -182,8 +204,10 @@ Source: epic map, **Foundation ownership (priced once)**. Nothing else in this e
 | F · Session lifecycle | 6 | 16.0 | unphased |
 | G · Denied-authorization recording | 2 | 5.0 | unphased |
 | H · SCMS SSO | 4 | 9.5 | unphased |
-| **Total** | **67** | **171.0** | |
+| I · Workspace defect cleanup | 1 | 0.5 | 0 |
+| J · Deployable migration packaging | 1 | 3.0 | 0 |
+| **Total** | **69** | **174.0** | |
 
-Foundation (`story: —`): **18 tickets · 48h** — all of block A plus `T-C10-18`. Phase 0: 55 tickets · 140.5h. Unphased: 12 tickets · 30.5h.
+Foundation (`story: —`): **20 tickets · 51h** — all of block A, plus `T-C10-18`, plus `T-C10-68` (block I) and `T-C10-69` (block J). Phase 0: 57 tickets · 143.5h. Unphased: 12 tickets · 30.5h.
 
-By agent: `backend-engineer` 48 · `frontend-engineer` 13 · `—` 6. The six are three workspace-tooling tickets, the two scaffolding tickets that span both platforms, and one API-E2E spec — work that belongs to neither dev agent, so each names its layer and platform instead.
+By agent: `backend-engineer` 48 · `frontend-engineer` 13 · `ci-cd-expert` 2 · `—` 6. The six `—` tickets are three workspace-tooling tickets, the two scaffolding tickets that span both platforms, and one API-E2E spec — work that belongs to neither dev agent, so each names its layer and platform instead. `T-C10-68` is the first ticket in this epic to name `ci-cd-expert` explicitly, for per-project `project.json` target ownership, and `T-C10-69` its second — see the note below the Reading-a-ticket table if that agent is not yet recognised by whoever picks this up.

@@ -28,7 +28,7 @@ Before writing any test, always:
 
 `apps/api-e2e` and `apps/web-e2e` **do not exist yet**. They are created by ticket **`T-C10-06`**, and until it lands there is no `.feature`, no step definition, no `cypress.config.ts` and no support file anywhere in this repository. There are also **no libraries at all** — `libs/` does not exist — so there is nothing to import beyond the two application shells.
 
-Both application shells are empty: `apps/api` declares no controller (every route answers `404` until `T-C10-28`), and `apps/web` renders a `<main id="main-content">` landmark with an empty router outlet and no user-facing copy (Transloco is not wired). If a test you were asked to write depends on behavior that does not exist yet, **say so and stop** — do not add a route, a controller or a component to make your own test pass. That work belongs to the ticket that owns the behavior.
+Both application shells are empty: `apps/api` declares no controller at all, so **every route answers `404`** — including `/health/live` and `/health/ready`, which are reserved in the global-prefix exclusion list but not implemented. (`apps/api/src/main.ts` attributes the observability slice to `T-C10-28`; that citation is wrong — `T-C10-28` is the global JWT guard, and no C10 ticket owns `@nestjs/terminus`/`nestjs-pino`/Swagger. It belongs to the `NFR` epic, which has not been drilled into tickets.) `apps/web` renders a `<main id="main-content">` landmark with an empty router outlet and no user-facing copy (Transloco is not wired). If a test you were asked to write depends on behavior that does not exist yet, **say so and stop** — do not add a route, a controller or a component to make your own test pass. That work belongs to the ticket that owns the behavior.
 
 ## Testing stack
 
@@ -236,7 +236,7 @@ Note on long-running processes: `pnpm nx serve` spawns a child that survives the
 
 ## CI/CD
 
-**None exists in this repository** — there is no `.gitlab-ci.yml` and no `.github/workflows/`. Do not write configuration for a pipeline that does not exist, and do not assume artifacts, health-check loops or report formats. If CI is needed, that is a separate ticket.
+**A pipeline now exists**: `.github/workflows/deploy-stage.yml` (ADR-013) runs `prettier --check`, `nx run-many -t lint test build` and `verify:boundaries` on every push and pull request, and deploys to Render from a push to `main`. It carries **no acceptance job yet** — that is blocked on `T-C10-06`, and adding one before the suites exist would be a gate this repository cannot pass. If your work needs to run in the pipeline, say what the job must do and report it; the workflow file is owned by `ci-cd-expert`, not by you.
 
 ## Code conventions
 
