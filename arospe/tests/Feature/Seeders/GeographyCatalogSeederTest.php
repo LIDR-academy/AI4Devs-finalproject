@@ -1,10 +1,14 @@
 <?php
 
 use App\Actions\NormalizeForSearch;
+use App\Actions\Shipping\CreateShippingZone;
 use App\Enums\GeographyLevel;
 use App\Models\GeographyEntry;
 use App\Models\SalesRegion;
+use App\Models\User;
 use Database\Seeders\GeographyCatalogSeeder;
+use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\SalesRegionSeeder;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Permission;
@@ -234,8 +238,36 @@ test('seeding the geography catalog leaves the Sales Region catalog untouched', 
     expect(SalesRegion::count())->toBe($before);
 });
 
-test('creating a shipping zone leaves the Sales Region catalog untouched')
-    ->skip('shipping_zones does not exist yet -- see story 0033');
+// Story 0033, Phase 2 correction item 3: this named skip is now unblocked (shipping_zones'
+// migration/model/action land in that story) and MUST be un-skipped as part of its own Phase 3,
+// alongside CreateShippingZoneTest.php's own assertion of the same scenario (belt and braces --
+// two independent tests of one invariant from two different files/perspectives is deliberate,
+// not duplication, per that story's Definition of Done).
+//
+// Snapshot the WHOLE catalog (every column, every row, in a stable order) rather than merely a
+// count -- a count survives a row being mutated in place (a rate silently changed, a default flag
+// silently moved) with no failure, which is exactly the "no Sales Region entry, rate, or default
+// flag is changed" wording in the PRD's own Gherkin scenario (story 0033's D-1).
+//
+// Phase 4 security audit, finding F-1: CreateShippingZone now authorizes `create` on
+// ShippingZone::class as its own first statement (see CreateShippingZoneTest.php's corrected file
+// banner), so this test needs an actor holding `shipping.create` -- seeded and granted locally
+// rather than via a file-wide beforeEach, since this is the only test in this file calling a
+// Shipping action.
+test('creating a shipping zone leaves the Sales Region catalog untouched', function () {
+    $this->seed(SalesRegionSeeder::class);
+    $this->seed(RolePermissionSeeder::class);
+
+    $actor = User::factory()->create();
+    $actor->givePermissionTo('shipping.create');
+    $this->actingAs($actor);
+
+    $before = SalesRegion::query()->orderBy('id')->get()->toArray();
+
+    app(CreateShippingZone::class)('Zona Norte');
+
+    expect(SalesRegion::query()->orderBy('id')->get()->toArray())->toBe($before);
+});
 
 test('the catalog ships with no way for an administrator to add to it', function () {
     // No route, no permission, no policy -- this is the honest form of the PRD scenario
