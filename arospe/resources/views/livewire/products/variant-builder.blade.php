@@ -20,27 +20,57 @@
         </div>
 
         @if ($this->attributeTypes()->isNotEmpty() && ! $showForm)
-            @if ($canManageVariants)
-                <flux:button
-                    variant="primary"
-                    icon="plus"
-                    data-test="open-create-variant-form"
-                    wire:click="openCreateForm"
-                    class="cursor-pointer!"
-                >
-                    {{ __('products.variants.builder.add') }}
-                </flux:button>
-            @else
-                {{-- T3: a Flux `tooltip` prop cannot be conditionally bound (Blaze presence trap) --
-                a written-out @if/@else with <flux:tooltip> wrapping only the disabled branch,
-                copying users.blade.php/attribute-types.blade.php verbatim. cursor-not-allowed! sits
-                on the flux:tooltip WRAPPER, never the disabled:pointer-events-none button (T4). --}}
-                <flux:tooltip :content="__('products.variants.builder.action_not_allowed')" class="cursor-not-allowed! inline-block">
-                    <flux:button variant="primary" icon="plus" data-test="open-create-variant-form" disabled>
+            <div class="flex gap-3">
+                {{-- Story 0031a, D-17: the cartesian generator trigger -- SECONDARY, beside the
+                existing primary "Añadir variante" (the single-variant path stays the default
+                gesture, FE-V12). `outline`, not `ghost` (code-reviewer finding N9) -- `ghost` is
+                this codebase's reserved shape for icon-only row actions and low-emphasis inline
+                controls, while `outline` is the established secondary-beside-primary (Editor's own
+                Back button, every modal Cancel including this story's own
+                `cancel-generate-combinations`). Absent entirely when the catalog holds no
+                attribute types (the surrounding @if already covers this), never merely disabled
+                for that reason -- the "no attribute types" empty state below already explains the
+                dead end. --}}
+                @if ($canManageVariants)
+                    <flux:button
+                        variant="outline"
+                        icon="squares-plus"
+                        data-test="open-generate-combinations"
+                        wire:click="openGenerateModal"
+                        class="cursor-pointer!"
+                    >
+                        {{ __('products.variants.generate.trigger') }}
+                    </flux:button>
+                @else
+                    <flux:tooltip :content="__('products.variants.builder.action_not_allowed')" class="cursor-not-allowed! inline-block">
+                        <flux:button variant="outline" icon="squares-plus" data-test="open-generate-combinations" disabled>
+                            {{ __('products.variants.generate.trigger') }}
+                        </flux:button>
+                    </flux:tooltip>
+                @endif
+
+                @if ($canManageVariants)
+                    <flux:button
+                        variant="primary"
+                        icon="plus"
+                        data-test="open-create-variant-form"
+                        wire:click="openCreateForm"
+                        class="cursor-pointer!"
+                    >
                         {{ __('products.variants.builder.add') }}
                     </flux:button>
-                </flux:tooltip>
-            @endif
+                @else
+                    {{-- T3: a Flux `tooltip` prop cannot be conditionally bound (Blaze presence trap) --
+                    a written-out @if/@else with <flux:tooltip> wrapping only the disabled branch,
+                    copying users.blade.php/attribute-types.blade.php verbatim. cursor-not-allowed! sits
+                    on the flux:tooltip WRAPPER, never the disabled:pointer-events-none button (T4). --}}
+                    <flux:tooltip :content="__('products.variants.builder.action_not_allowed')" class="cursor-not-allowed! inline-block">
+                        <flux:button variant="primary" icon="plus" data-test="open-create-variant-form" disabled>
+                            {{ __('products.variants.builder.add') }}
+                        </flux:button>
+                    </flux:tooltip>
+                @endif
+            </div>
         @endif
     </div>
 
@@ -241,6 +271,83 @@
             </flux:card>
         @endif
 
+        {{-- Story 0031a, D-17.3: the generation result -- a DISMISSIBLE inline panel, never a
+        flash and never rendered inside the modal itself, so it survives the modal closing and
+        stays readable while looking at the table it just changed. `attempted` is deliberately
+        NEVER rendered here (D-17.3): it is a reconciliation figure that should always agree with
+        created+skipped+refused, and showing it unconditionally would invite arithmetic the code
+        already did. Scoped entirely under one [data-test] hook (FP-V22) so a page-wide assertSee
+        of a bare number can never pass against the wrong count. --}}
+        @if ($generationSummary !== null)
+            <div class="mt-4" data-test="generate-summary">
+                <flux:card class="space-y-4">
+                    <div class="flex items-start justify-between gap-4">
+                        <flux:heading size="sm">{{ __('products.variants.generate.result_title') }}</flux:heading>
+
+                        <flux:button
+                            variant="ghost"
+                            size="sm"
+                            data-test="dismiss-generate-summary"
+                            wire:click="dismissGenerationSummary"
+                            class="cursor-pointer!"
+                        >
+                            {{ __('products.variants.generate.result_dismiss') }}
+                        </flux:button>
+                    </div>
+
+                    {{-- D-17.3: 0029b's OWN summary sentence -- the action owns the outcome
+                    vocabulary, so this renders its key verbatim rather than composing an
+                    equivalent one out of the created/skipped/refused counts. --}}
+                    <flux:text>
+                        {{ trans_choice('products.variants.generate.summary', $generationSummary['created'], ['count' => $generationSummary['created']]) }}
+                    </flux:text>
+
+                    {{-- `skipped` are NOT errors -- an administrator who generated deliberately
+                    over an existing set expects them. Neutral zinc badges, deliberately OUTSIDE
+                    the danger callout below (D-17.3). --}}
+                    @if ($generationSummary['skipped'] !== [])
+                        <div data-test="generate-summary-skipped">
+                            <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
+                                {{ trans_choice('products.variants.generate.result_skipped', count($generationSummary['skipped']), ['count' => count($generationSummary['skipped'])]) }}
+                            </flux:text>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                @foreach ($generationSummary['skipped'] as $skipped)
+                                    <flux:badge color="zinc">{{ $skipped['label'] }}</flux:badge>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- `refused` are ALWAYS expanded, one row each -- never collapsed, never a
+                    count alone (D-17.3). Each names the combination, its derived SKU, 0029b's own
+                    message (which already names the conflicting record) and the same remedy hint
+                    the single-variant path's SKU refusal renders, since the remedy is identical on
+                    both paths and the administrator cannot retype a derived SKU on either. --}}
+                    @if ($generationSummary['refused'] !== [])
+                        <flux:callout
+                            variant="danger"
+                            icon="x-circle"
+                            :heading="trans_choice('products.variants.generate.result_refused', count($generationSummary['refused']), ['count' => count($generationSummary['refused'])])"
+                            data-test="generate-summary-refused"
+                        >
+                            <div class="mt-2 space-y-3">
+                                @foreach ($generationSummary['refused'] as $refused)
+                                    <div data-test="generate-summary-refused-row">
+                                        <flux:text class="font-medium">{{ $refused['label'] }} ({{ $refused['sku'] }})</flux:text>
+                                        <flux:text size="sm">{{ $refused['message'] }}</flux:text>
+                                    </div>
+                                @endforeach
+
+                                <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
+                                    {{ __('products.variants.sku.remedy_hint') }}
+                                </flux:text>
+                            </div>
+                        </flux:callout>
+                    @endif
+                </flux:card>
+            </div>
+        @endif
+
         {{-- The variants list -- a #[Computed] over a fresh query (D-5 R1), never a mount()-time
         array, paginated at 25 (D-17). --}}
         <div class="mt-6">
@@ -408,8 +515,10 @@
         />
     @endcan
 
-    {{-- Delete confirmation modal (D-11): the only flux:modal on this screen (D-12) -- it opens no
-    nested modal, so the native <dialog> nesting concern never applies here. --}}
+    {{-- Delete confirmation modal (D-11) -- D-12's original comment named this the ONLY
+    flux:modal on this screen; story 0031a adds a second one below for the cartesian generator's
+    axis picker, safe for the SAME reason this one always was: neither opens a nested media
+    gallery, so the native <dialog>-nesting concern (T10) never applies to either. --}}
     <flux:modal name="delete-variant-modal" class="max-w-md md:min-w-md" wire:model="showDeleteModal" @close="closeDeleteModal">
         @if ($showDeleteModal)
             <div class="space-y-6">
@@ -436,6 +545,83 @@
                         data-test="confirm-delete-variant"
                     >
                         {{ __('products.variants.delete.title') }}
+                    </flux:button>
+                </div>
+            </div>
+        @endif
+    </flux:modal>
+
+    {{-- Story 0031a, D-17.1: the cartesian generator's axis-picker modal. T11: wrapped in
+    @if ($showGenerateModal) so only one "Cancelar"-ish control is ever in the DOM at a time,
+    matching the delete modal above. --}}
+    <flux:modal name="generate-combinations-modal" class="max-w-lg md:min-w-lg" wire:model="showGenerateModal" @close="closeGenerateModal">
+        @if ($showGenerateModal)
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <flux:heading size="lg">{{ __('products.variants.generate.modal_title') }}</flux:heading>
+                    <flux:text class="text-zinc-500 dark:text-zinc-400">
+                        {{ __('products.variants.generate.intro') }}
+                    </flux:text>
+                </div>
+
+                {{-- D-17.1: every catalog type is offered, ordered (position ASC, id ASC) -- the
+                SAME order the derived SKU reads in, so the list previews the shape of the output
+                for free. `attributeTypeIds` auto-renders its own error, requiring no explicit
+                flux:error, because the property name equals the bag key -- but ONLY once the
+                group carries a `:label` (or `:description`) of its own: Flux's own
+                `flux:with-field` renders its error slot exclusively inside the branch guarded by
+                `isset($label) || isset($description) || isset($descriptionTrailing)`
+                (vendor/livewire/flux/stubs/resources/views/flux/with-field.blade.php), so a bare
+                `flux:checkbox.group` wrapped in a SEPARATE `flux:fieldset` (as tried first, and
+                reproduced failing by execution) renders no error at all. `:label`/`:description`
+                go directly on `flux:checkbox.group` itself, matching roles.blade.php's own
+                precedent (`<flux:checkbox.group wire:model="..." :label="__('Permissions')">`). --}}
+                <flux:checkbox.group
+                    wire:model.live="attributeTypeIds"
+                    :label="__('products.variants.generate.types_legend')"
+                    :description="__('products.variants.generate.types_help')"
+                    class="mt-2 space-y-2"
+                >
+                    @foreach ($this->attributeTypes() as $type)
+                        <flux:checkbox
+                            value="{{ $type->id }}"
+                            :label="$type->name"
+                            data-test="generate-type-{{ $type->id }}"
+                        />
+                    @endforeach
+                </flux:checkbox.group>
+
+                {{-- D-17.1: a LIVE count, deliberately never disabling the confirm button -- the
+                server rule stays the single authority, and the count is a client-visible estimate
+                of a set the server re-derives and re-bounds itself (0029b's D-G5). --}}
+                <flux:text size="sm" data-test="generate-combination-count">
+                    {{ trans_choice('products.variants.generate.count', $this->generateCombinationCount(), ['count' => $this->generateCombinationCount()]) }}
+                </flux:text>
+
+                @if ($this->generateCombinationCount() > \App\Actions\Products\GenerateProductVariantCombinations::MAX_COMBINATIONS)
+                    <flux:callout
+                        variant="warning"
+                        data-test="generate-over-limit-warning"
+                        :heading="__('products.variants.generate.over_limit', [
+                            'count' => $this->generateCombinationCount(),
+                            'limit' => \App\Actions\Products\GenerateProductVariantCombinations::MAX_COMBINATIONS,
+                        ])"
+                    />
+                @endif
+
+                <div class="flex justify-end gap-3">
+                    <flux:button variant="outline" wire:click="closeGenerateModal" data-test="cancel-generate-combinations">
+                        {{ __('products.variants.generate.cancel') }}
+                    </flux:button>
+
+                    <flux:button
+                        variant="primary"
+                        wire:click="generateCombinations"
+                        wire:loading.attr="disabled"
+                        wire:target="generateCombinations"
+                        data-test="confirm-generate-combinations"
+                    >
+                        {{ __('products.variants.generate.confirm') }}
                     </flux:button>
                 </div>
             </div>

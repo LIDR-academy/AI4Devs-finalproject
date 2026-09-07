@@ -77,6 +77,24 @@ return [
             'empty_type' => 'The attribute type ":type" has no values, so it cannot be used to generate combinations.',
             'too_many' => 'Generating these types would create :attempted combinations, above the limit of :limit. Select fewer types or values.',
             'summary' => ':count variant created.|:count variants created.',
+
+            // Story 0031a -- the control-facing keys for the cartesian generator UI (D-15). The
+            // three above are 0029b's own outcome vocabulary and are rendered as-is, never
+            // reassembled from parts.
+            'trigger' => 'Generate combinations',
+            'modal_title' => 'Generate combinations',
+            'intro' => 'Pick the attribute types to combine. Every value of every selected type is combined with every value of the others.',
+            'types_legend' => 'Attribute types',
+            'types_help' => 'Every type in the catalog is offered, whether or not this product uses it yet.',
+            'count' => ':count combination.|:count combinations.',
+            'over_limit' => 'This selection would create :count combinations, above the limit of :limit. Select fewer types.',
+            'confirm' => 'Generate',
+            'cancel' => 'Cancel',
+            'result_title' => 'Generation result',
+            'result_skipped' => ':count combination already existed.|:count combinations already existed.',
+            'result_refused' => ':count combination could not be created.|:count combinations could not be created.',
+            'result_dismiss' => 'Dismiss',
+            'no_types_selected' => 'Select at least one attribute type.',
         ],
 
         // Story 0031 -- the single-variant builder nested in the product editor (D-15). Nested

@@ -5,6 +5,7 @@ namespace App\Livewire\Products;
 use App\Actions\Products\CreateProductVariant;
 use App\Actions\Products\DeleteProductVariant;
 use App\Actions\Products\DeriveVariantSku;
+use App\Actions\Products\GenerateProductVariantCombinations;
 use App\Actions\Products\UpdateProductVariant;
 use App\Concerns\ProductVariantValidationRules;
 use App\Models\Media;
@@ -44,6 +45,19 @@ class VariantBuilder extends Component
 {
     use ProductVariantValidationRules;
     use WithPagination;
+
+    /**
+     * Story 0031a, security-audit finding L-1: variantAttributeTypeIdsRules()'s own `max:5` bounds
+     * $attributeTypeIds only at the SAVE path (generateCombinations()'s $this->validate() call).
+     * generateCombinationCount() below reads the array on every `.live` round trip while the
+     * modal is open, so a client-sized array reaching it (a forged payload well past the legal
+     * maximum) would cost an unbounded Collection::whereIn() scan with no save ever attempted.
+     * Capped at the MUTATION POINT (updatedAttributeTypeIds()), rather than only where it is
+     * later validated -- docs/security/array-validation-bounds.md's own rule ("cap an array where
+     * it grows"), matching SearchableMultiSelect's shipped array_slice() shape for the identical
+     * hazard.
+     */
+    public const MAX_GENERATE_AXES = 5;
 
     /**
      * Re-declared per the embed's own obligation (D-1) -- the parent Product is re-read with
@@ -110,6 +124,45 @@ class VariantBuilder extends Component
      */
     #[Locked]
     public bool $canManageVariants = false;
+
+    /**
+     * Story 0031a, D-17.1: the cartesian generator's axis picker -- one selected attribute type id
+     * per checked box. 🔴 Named EXACTLY `attributeTypeIds`, the same bag key
+     * GenerateProductVariantCombinations's own ValidationException throws on, so a Flux field
+     * whose wire:model path equals its error key auto-renders with no explicit `flux:error` in the
+     * template. Every element is a STRING id, matching every other id-array on this component.
+     *
+     * @var list<string>
+     */
+    public array $attributeTypeIds = [];
+
+    /**
+     * Story 0031a, D-17.1: the axis-picker modal container -- safe here (unlike the create form,
+     * D-12) because it opens no media gallery, so 0031's own nested-<dialog> hazard (T10) never
+     * applies on this path. #[Locked], matching $showDeleteModal's own precedent (security-audit
+     * finding L-2): unlocked, a forged `$set('showGenerateModal', true)` would render the axis
+     * picker -- and, via generateCombinationCount(), reach an unbounded client-sized
+     * $attributeTypeIds scan (L-1) -- without ever passing through the gated openGenerateModal().
+     */
+    #[Locked]
+    public bool $showGenerateModal = false;
+
+    /**
+     * Story 0031a, D-17.3: the outcome of the last successful generation, or null before one has
+     * run and after it is dismissed. #[Locked] and entirely server-derived -- it survives the
+     * modal closing on purpose, cleared only by dismissGenerationSummary() or the next successful
+     * generateCombinations() call, never by a session flash.
+     *
+     * `attempted` (the action's own return array's fourth key) is deliberately NOT stored here --
+     * D-17.3 renders it only when it disagrees with created+skipped+refused, a reconciliation
+     * figure that should never actually fire. Without `attempted` in this shape, that disagreement
+     * can never be detected or rendered; accepted as correct, since the three counts here are
+     * already the whole of what a normal outcome needs.
+     *
+     * @var array{created: int, skipped: array<int, array{value_ids: array<int, string>, label: string}>, refused: array<int, array{value_ids: array<int, string>, label: string, sku: string, message: string}>}|null
+     */
+    #[Locked]
+    public ?array $generationSummary = null;
 
     /**
      * `$productId` arrives from the embedding Editor view's own `:product-id="$productId"`
@@ -375,6 +428,157 @@ class VariantBuilder extends Component
         $id = $media[0]['id'] ?? null;
 
         $this->featuredMediaId = is_string($id) ? $id : null;
+    }
+
+    /**
+     * Story 0031a, D-17.1: opens the axis picker, pre-selected with the attribute types this
+     * product's EXISTING variants already use -- the mitigation 0031's D-3 recommended, now doing
+     * double duty. Read from the CURRENTLY LOADED page of variants() (D-6's own `values.type`
+     * eager load) rather than a second, purpose-built query; a product whose variants span more
+     * than one page may pre-select fewer types than it technically uses, and a product with no
+     * variants yet pre-selects nothing. Code-reviewer finding N6: calling `variants()` here (method
+     * syntax) re-runs the query rather than reading Livewire's `#[Computed]` request cache --
+     * that cache is populated only by property-style access (`$this->variants`), via
+     * `__get()`/`BaseComputed::handleMagicGet()` -- a pre-existing characteristic of every
+     * `#[Computed]` method called this way elsewhere on this component (`attributeTypes()`
+     * included), not something this method introduces. This is a convenience default, never
+     * authoritative -- every catalog type is still offered regardless (D-17.1), and nothing stops
+     * the administrator checking more.
+     *
+     * D-10: authorizes `update` on the parent product, matching every other opener on this
+     * component -- the trigger's own render guard in the view is not a substitute for this.
+     */
+    public function openGenerateModal(): void
+    {
+        Gate::authorize('update', $this->product());
+
+        $this->attributeTypeIds = $this->usedAttributeTypeIds();
+        $this->showGenerateModal = true;
+        $this->resetErrorBag('attributeTypeIds');
+        $this->resetValidation('attributeTypeIds');
+    }
+
+    /**
+     * Story 0031a, D-17.1/D-17.3: dismisses the picker WITHOUT touching a summary that may already
+     * be showing -- $generationSummary is a separate #[Locked] property that survives the modal
+     * closing on purpose (D-17.3).
+     */
+    public function closeGenerateModal(): void
+    {
+        $this->showGenerateModal = false;
+        $this->attributeTypeIds = [];
+        $this->resetErrorBag('attributeTypeIds');
+        $this->resetValidation('attributeTypeIds');
+    }
+
+    /**
+     * Story 0031a, D-17.2: the generator's own gated method -- the SEVENTH on this component.
+     * Authorizes `update` on the parent product before anything else, mirroring
+     * GenerateProductVariantCombinations's own D-G0 at the UI layer.
+     *
+     * D-15 `no_types_selected`: a deliberate, named client-side companion to 0029b's own
+     * `required`/`min:1` rule on `attributeTypeIds` -- a friendlier message than Laravel's default
+     * for the single most common refusal. 0029b's own `empty_type`/`too_many` messages are already
+     * well-worded and are left to flow through UNMODIFIED from the action's own
+     * ValidationException, never re-composed here.
+     *
+     * D-17.3: the modal closes and the summary panel renders ONLY on a successful call. A refused
+     * call -- over the cap, an empty type, or nothing selected -- throws before any of the closing
+     * statements below run, leaving the modal open with the message on `attributeTypeIds` (Livewire
+     * routes a thrown ValidationException into the component's error bag with no plumbing at the
+     * call site, matching ProductCategories\Index::deleteProductCategory()'s own precedent) and no
+     * summary panel at all.
+     */
+    public function generateCombinations(GenerateProductVariantCombinations $generate): void
+    {
+        Gate::authorize('update', $this->product());
+
+        $this->validate(
+            ['attributeTypeIds' => $this->variantAttributeTypeIdsRules()],
+            [
+                'attributeTypeIds.required' => __('products.variants.generate.no_types_selected'),
+                'attributeTypeIds.min' => __('products.variants.generate.no_types_selected'),
+            ],
+        );
+
+        $result = $generate($this->product(), $this->attributeTypeIds);
+
+        $this->generationSummary = [
+            'created' => $result['created']->count(),
+            'skipped' => $result['skipped'],
+            'refused' => $result['refused'],
+        ];
+
+        $this->showGenerateModal = false;
+        $this->attributeTypeIds = [];
+    }
+
+    /**
+     * Story 0031a, D-17.3: the "explicit dismiss" the summary survives everything else -- the
+     * modal closing, an unrelated round trip -- but not this.
+     */
+    public function dismissGenerationSummary(): void
+    {
+        $this->generationSummary = null;
+    }
+
+    /**
+     * Story 0031a, security-audit finding L-1: the mutation-point cap for $attributeTypeIds --
+     * see the MAX_GENERATE_AXES constant's own docblock (top of class) for why this exists as
+     * well as variantAttributeTypeIdsRules()'s server-authoritative max:5.
+     */
+    public function updatedAttributeTypeIds(): void
+    {
+        $this->attributeTypeIds = array_slice($this->attributeTypeIds, 0, self::MAX_GENERATE_AXES);
+    }
+
+    /**
+     * Story 0031a, D-17.1: the live combination count for the CURRENT selection -- multiplies the
+     * selected types' own value counts, read from attributeTypes()'s own `values` relation, which
+     * is always eager-loaded (`with('values')`) rather than N+1'd regardless of how many times
+     * attributeTypes() itself is called (see its own N6 note). Purely advisory:
+     * GenerateProductVariantCombinations re-derives and re-bounds this figure itself (0029b's
+     * D-G5), and this count is never used to disable the confirm button (D-17.1: the server rule
+     * stays the single authority).
+     *
+     * Security-audit finding INFO-2: a selection matching NO live catalog type (a stale or
+     * forged id) must read 0, not 1 -- Collection::reduce() over an empty filtered set returns
+     * its own initial value unchanged, which would otherwise render a plausible-looking "1" for a
+     * selection the action would refuse outright.
+     */
+    #[Computed]
+    public function generateCombinationCount(): int
+    {
+        if ($this->attributeTypeIds === []) {
+            return 0;
+        }
+
+        $matched = $this->attributeTypes()->whereIn('id', $this->attributeTypeIds);
+
+        if ($matched->isEmpty()) {
+            return 0;
+        }
+
+        return $matched->reduce(fn (int $carry, ProductAttributeType $type): int => $carry * $type->values->count(), 1);
+    }
+
+    /**
+     * Story 0031a, D-17.1: the attribute types this product's variants already use, from the
+     * CURRENTLY LOADED page of variants() -- see openGenerateModal()'s own docblock for the
+     * pre-selection trade-off and the N6 note on what "currently loaded" does and doesn't mean
+     * for a `#[Computed]` method called with `()`.
+     *
+     * @return list<string>
+     */
+    private function usedAttributeTypeIds(): array
+    {
+        $ids = $this->variants()->getCollection()
+            ->flatMap(fn (ProductVariant $variant): \Illuminate\Support\Collection => $variant->values->pluck('type.id'))
+            ->unique()
+            ->map(fn (mixed $id): string => (string) $id)
+            ->all();
+
+        return array_values($ids);
     }
 
     /**
