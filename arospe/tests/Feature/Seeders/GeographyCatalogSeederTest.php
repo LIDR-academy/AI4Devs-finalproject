@@ -160,6 +160,29 @@ test('a row with the wrong column count aborts the whole seed transaction', func
     expect(GeographyEntry::count())->toBe(0);
 });
 
+test('a municipio row whose ine_code does not match the 5-digit shape is refused rather than silently colliding with a comunidad row', function () {
+    // Phase 4 finding F-1: `ine_code` is UNIQUE per column, not per level, so an
+    // under-length code (e.g. a 2-digit comunidad-shaped value) risked upserting over an
+    // already-seeded comunidad row and rewriting its level/parent_id in place.
+    TestableGeographyCatalogSeeder::$municipalityFixture = base_path('tests/Fixtures/geography/es-municipalities-invalid-code-format.csv');
+
+    expect(fn () => app(TestableGeographyCatalogSeeder::class)->run())
+        ->toThrow(RuntimeException::class, 'malformed INE code');
+
+    expect(GeographyEntry::count())->toBe(0);
+});
+
+test('a comunidad autonoma code mapping to two conflicting names in the source is refused rather than silently first-wins', function () {
+    // Phase 4 finding F-2: a second row disagreeing on community_name for an
+    // already-seen community_ine_code used to be silently discarded.
+    TestableGeographyCatalogSeeder::$municipalityFixture = base_path('tests/Fixtures/geography/es-municipalities-conflicting-community-name.csv');
+
+    expect(fn () => app(TestableGeographyCatalogSeeder::class)->run())
+        ->toThrow(RuntimeException::class, 'conflicting names');
+
+    expect(GeographyEntry::count())->toBe(0);
+});
+
 // --- Country-fixture guards (seedCountries()'s own refusal paths, distinct from the
 // municipality-fixture guards above -- these abort BEFORE any row is written at all,
 // rather than after 249 country rows already committed inside the same transaction) ---
