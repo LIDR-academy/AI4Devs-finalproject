@@ -45,12 +45,13 @@ function toRescueRecipeProposal(raw: RawRescueProposalJson): RescueRecipeProposa
     isAtRisk: Boolean(ing.isAtRisk),
   }));
 
+  // `preventedWasteEstimate` que reporta el modelo se ignora — el valor autoritativo
+  // se calcula desde `unitCost` en el mapper (TK-128 F-1).
   return new RescueRecipeProposal(
     raw.name,
     raw.description,
     raw.category || DEFAULT_CATEGORY,
     raw.estimatedPortions || DEFAULT_PORTIONS,
-    ingredients,
-    new DecimalQuantity(raw.preventedWasteEstimate || 0)
+    ingredients
   );
 }

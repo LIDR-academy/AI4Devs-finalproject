@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: RestoStock API
   description: REST API specification for RestoStock real-time inventory and FEFO traceability system.
-  version: 5.0.0 # TK-108 / ADR-004: POST /kitchen/remanentes/{id}/consume now requires `reasonId` (genuine breaking change — oasdiff confirmed it, major bump per docs/04_governance_and_quality/scripts/check_contract_drift.sh's own instruction). Deliberate business-rule change: every consumption must state a structured reason (US-004 v1.1.0). Single consumer is this monorepo's own frontend, updated next in TK-108-FE — no external API consumers to notify.
+  version: 6.0.0 # TK-128 / US-035: RescueRecipeProposal.preventedWasteEstimate (physical quantity, meaningless — summed heterogeneous units, AUDIT-DEV-007 F-1) -> preventedWasteCost (nullable monetary string). oasdiff-confirmed breaking change, deliberate: the previous metric was wrong by construction. Single consumer is this monorepo's own frontend, updated in TK-128-FE. Prior: 5.0.0 = TK-108/ADR-004 (POST /kitchen/remanentes/{id}/consume requires reasonId).
 servers:
   - url: http://localhost:3000
     description: Local Development Server
@@ -2618,7 +2618,7 @@ components:
         - category
         - estimatedPortions
         - ingredients
-        - preventedWasteEstimate
+        - preventedWasteCost
       properties:
         name:
           type: string
@@ -2636,8 +2636,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RescueIngredientItem'
-        preventedWasteEstimate:
-          $ref: '#/components/schemas/DecimalString'
+        preventedWasteCost:
+          type: string
+          nullable: true
+          description: >
+            Valor monetario del stock en riesgo que la receta aprovecharía
+            (suma de unitCost x cantidad sobre los ingredientes isAtRisk,
+            2 decimales). `null` si algún ingrediente en riesgo no tiene
+            unitCost registrado (US-035 Escenario 5/6, AUDIT-DEV-007 F-1).
+          example: "42.50"
 
     RescueSuggestionsRequest:
       type: object

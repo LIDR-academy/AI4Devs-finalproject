@@ -6,6 +6,7 @@ import { IRescueRecipeGenerationGateway } from '../../../domain/recipes/gateways
 import { AtRiskRemanenteContext, AvailableInsumoContext } from '../../../domain/recipes/gateways/IAiRecipeGeneratorGateway.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 import { RescueRecipeProposal, RescueIngredientItem } from '../../../domain/recipes/entities/RescueRecipeProposal.js';
+import { computePreventedWasteCost } from '../../../domain/recipes/services/preventedWasteCost.js';
 import { Insumo } from '../../../domain/stock/entities/Insumo.js';
 import { Recipe } from '../../../domain/recipes/entities/Recipe.js';
 import { RescueSuggestionsDto, toRescueSuggestionsDto } from '../mappers/rescueSuggestionsMapper.js';
@@ -18,6 +19,14 @@ const FALLBACK_REMANENTE_SAMPLE = 5;
 const DEFAULT_CATALOG_PORTIONS = 4;
 const CATALOG_DESCRIPTION_FALLBACK =
   'Receta del catálogo propio para aprovechar insumos en riesgo sin generar mermas.';
+
+type UnitCostMap = ReadonlyMap<string, DecimalQuantity>;
+
+interface ScoredProposal {
+  proposal: RescueRecipeProposal;
+  matchingCount: number;
+  cost: DecimalQuantity | null;
+}
 
 export class SuggestRescueRecipesUseCase {
   constructor(
@@ -32,12 +41,13 @@ export class SuggestRescueRecipesUseCase {
     const activeRemanentes = await this.remanenteQueryRepo.findActiveRemanentes();
     const atRiskRemanentes = this.filterAtRiskRemanentes(activeRemanentes);
     const allInsumos = await this.insumoRepo.findAll();
+    const unitCostByInsumoId = this.buildUnitCostMap(allInsumos);
 
     // MODO CATALOG: Zero Data Leakage (Guard 9). 100% local, sin invocar IA externa.
     if (mode === 'CATALOG') {
       const insumoMap = new Map<string, Insumo>(allInsumos.map((i) => [i.id, i]));
-      const proposals = await this.buildCatalogProposals(atRiskRemanentes, insumoMap);
-      return toRescueSuggestionsDto('CATALOG', proposals);
+      const proposals = await this.buildCatalogProposals(atRiskRemanentes, insumoMap, unitCostByInsumoId);
+      return toRescueSuggestionsDto('CATALOG', proposals, unitCostByInsumoId);
     }
 
     // MODO CREATIVE: generación con IA externa (o fallback heurístico local), con la
@@ -53,47 +63,65 @@ export class SuggestRescueRecipesUseCase {
       availableInsumos,
       options
     );
-    return toRescueSuggestionsDto(source, proposals);
+    return toRescueSuggestionsDto(source, proposals, unitCostByInsumoId);
+  }
+
+  private buildUnitCostMap(allInsumos: Insumo[]): UnitCostMap {
+    const map = new Map<string, DecimalQuantity>();
+    for (const insumo of allInsumos) {
+      if (insumo.unitCost) {
+        map.set(insumo.id, insumo.unitCost);
+      }
+    }
+    return map;
   }
 
   private async buildCatalogProposals(
     atRiskRemanentes: AtRiskRemanenteContext[],
-    insumoMap: Map<string, Insumo>
+    insumoMap: Map<string, Insumo>,
+    unitCostByInsumoId: UnitCostMap
   ): Promise<RescueRecipeProposal[]> {
     const atRiskInsumoIds = new Set(atRiskRemanentes.map((r) => r.insumoId));
     // AUDIT-DEV-007 F-7: solo las recetas que tocan un insumo en riesgo, no todo el catálogo.
     const candidateRecipes = await this.recipeRepo.findByInsumoIds([...atRiskInsumoIds]);
-    return this.rankCatalogRecipes(candidateRecipes, atRiskInsumoIds).map(({ recipe, preventedWaste }) =>
-      this.toCatalogProposal(recipe, preventedWaste, insumoMap, atRiskInsumoIds)
+    const proposals = candidateRecipes.map((recipe) =>
+      this.toCatalogProposal(recipe, insumoMap, atRiskInsumoIds)
     );
+    return this.rankCatalogProposals(proposals, unitCostByInsumoId).slice(0, CATALOG_PROPOSAL_LIMIT);
   }
 
-  // `candidateRecipes` ya viene filtrado por `findByInsumoIds` — toda receta aquí
-  // tiene al menos un ingrediente en riesgo (F-7).
-  private rankCatalogRecipes(candidateRecipes: Recipe[], atRiskInsumoIds: Set<string>) {
-    const scored = candidateRecipes.map((recipe) => {
-      const matching = recipe.ingredients.filter((ing) => atRiskInsumoIds.has(ing.insumoId));
-      let preventedWaste = new DecimalQuantity('0');
-      for (const ing of matching) {
-        preventedWaste = preventedWaste.add(ing.quantity);
-      }
-      return { recipe, matchingCount: matching.length, preventedWaste };
-    });
+  private rankCatalogProposals(
+    proposals: RescueRecipeProposal[],
+    unitCostByInsumoId: UnitCostMap
+  ): RescueRecipeProposal[] {
+    const scored: ScoredProposal[] = proposals.map((proposal) => ({
+      proposal,
+      matchingCount: proposal.ingredients.filter((ing) => ing.isAtRisk).length,
+      cost: computePreventedWasteCost(proposal.ingredients, unitCostByInsumoId),
+    }));
 
     scored.sort((a, b) => {
       if (b.matchingCount !== a.matchingCount) return b.matchingCount - a.matchingCount;
-      const bWaste = b.preventedWaste.toDecimal();
-      const aWaste = a.preventedWaste.toDecimal();
-      if (!bWaste.equals(aWaste)) return bWaste.greaterThan(aWaste) ? -1 : 1;
-      return a.recipe.name.localeCompare(b.recipe.name);
+      // AUDIT-DEV-007 F-16: la receta que rescata MÁS valor va primero (`null` al final).
+      const byCost = this.compareCostDescending(a.cost, b.cost);
+      if (byCost !== 0) return byCost;
+      return a.proposal.name.localeCompare(b.proposal.name);
     });
 
-    return scored.slice(0, CATALOG_PROPOSAL_LIMIT);
+    return scored.map((entry) => entry.proposal);
+  }
+
+  private compareCostDescending(a: DecimalQuantity | null, b: DecimalQuantity | null): number {
+    if (a === null && b === null) return 0;
+    if (a === null) return 1;
+    if (b === null) return -1;
+    const [aValue, bValue] = [a.toDecimal(), b.toDecimal()];
+    if (aValue.equals(bValue)) return 0;
+    return bValue.greaterThan(aValue) ? 1 : -1;
   }
 
   private toCatalogProposal(
     recipe: Recipe,
-    preventedWaste: DecimalQuantity,
     insumoMap: Map<string, Insumo>,
     atRiskInsumoIds: Set<string>
   ): RescueRecipeProposal {
@@ -113,8 +141,7 @@ export class SuggestRescueRecipesUseCase {
       recipe.description || CATALOG_DESCRIPTION_FALLBACK,
       recipe.category,
       DEFAULT_CATALOG_PORTIONS,
-      ingredients,
-      preventedWaste
+      ingredients
     );
   }
 

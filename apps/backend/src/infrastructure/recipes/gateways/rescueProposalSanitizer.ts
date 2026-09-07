@@ -7,8 +7,6 @@ import { RescueRecipeProposal } from '../../../domain/recipes/entities/RescueRec
  * ingrediente inválido; si la propuesta queda sin ingredientes válidos, se descarta
  * entera. Ningún `insumoId` alucinado cruza hacia la capa de aplicación.
  *
- * `preventedWasteEstimate` se conserva tal como lo reportó el modelo — esa métrica ya
- * está identificada como defectuosa (F-1) y se rehace por completo en G-D.
  */
 export function sanitizeRescueProposals(
   proposals: RescueRecipeProposal[],
@@ -33,8 +31,7 @@ export function sanitizeRescueProposals(
         proposal.description,
         proposal.category,
         proposal.estimatedPortions,
-        keptIngredients,
-        proposal.preventedWasteEstimate
+        keptIngredients
       )
     );
   }

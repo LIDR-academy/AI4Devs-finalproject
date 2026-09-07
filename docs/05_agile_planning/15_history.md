@@ -516,3 +516,19 @@ inputs:
   - Mutation scoped — ver AUDIT-DEV-010.
   - Auditoría adversarial [`AUDIT-DEV-010`](../audits/AUDIT-DEV-010-TK-127-quality-report.md) → **APROBADO PARA COMMIT**.
   - **Sin push / sin PR** — instrucción del humano.
+
+### 2026-09-07 (cont.) - TK-128 + TK-128-FE: valorización monetaria de la merma evitada (AUDIT-DEV-007 G-D, cascada US-035 Esc. 5/6)
+- **Hito:** F-1 cambia el contrato y lo que ve el usuario → NO es remediación técnica pura. Se ejecutó cascada acotada: US-035 gana la Pregunta 5 (Guard 28, decisión Q1 documentada) + Escenarios 5-6; `openapi.yaml` `RescueRecipeProposal`; tickets TK-128 (backend) + TK-128-FE (frontend).
+- **Acciones (TK-128 backend):**
+  - ✅ **F-1:** `RescueRecipeProposal` pierde `preventedWasteEstimate` (métrica que sumaba KG+L+UNIDAD). Nueva función pura de dominio `computePreventedWasteCost(ingredients, unitCostByInsumoId)` — suma `unitCost × quantity` de los `isAtRisk`, `null` si falta algún costo (semántica de `US-019`, `C-DEV-007-1`). El mapper (`toRescueSuggestionsDto`) lo calcula y serializa a 2 decimales; el use case construye `unitCostByInsumoId` desde `allInsumos` para ambos modos.
+  - ✅ **F-16:** `rankCatalogProposals` desempata por valor monetario **descendente** (`null` al final), luego por nombre — antes ordenaba ascendente (bug). El guard muerto que quedó tras TK-127 ya se había eliminado.
+  - Ripple mecánico: los 6 sitios de construcción de `RescueRecipeProposal` (parser, heurístico ×3, fake, sanitizer) pierden el argumento.
+  - **Contrato breaking deliberado:** `openapi.yaml` `5.0.0 → 6.0.0`, oasdiff-confirmado (`response-required-property-removed`), documentado en el comentario de versión (formato de TK-108). Único consumidor = frontend propio, actualizado en TK-128-FE.
+- **Acciones (TK-128-FE):**
+  - `recipes.service.ts`: `preventedWasteEstimate: string` → `preventedWasteCost: string | null`. Se quitó `export` de 2 interfaces de uso interno (knip).
+  - `RescueRecipesModal`: `PreventedWasteBadge` → `{símbolo}{monto} de merma evitada` o "Valor de merma no disponible"; `currencySymbol` de `SettingsService.fetchSettings()` (default `$`). El componente se **refactorizó** (deuda de longitud de función preexistente que el gate diff-scoped exige pagar al tocarlo): `useCurrencySymbol` / `useCatalogSaver` / `useRescueRecipes` compositor / `ModeSelector` / `SourceBar`. Frontend lint 13 → 11 warnings.
+- **Estado:**
+  - Backend 499→**506** tests, frontend 231, build/lint verdes (0 errores). Gates de duplicación (20→19)/complejidad/código-muerto verdes. `check_contract_drift` reporta el breaking change **intencional** (no regresión).
+  - Mutation scoped: `preventedWasteCost.ts` **100%**, `rescueSuggestionsMapper.ts` **100%**, `SuggestRescueRecipesUseCase.ts` 72.9% — todos ≥ 70.
+  - Auditoría adversarial [`AUDIT-DEV-011`](../audits/AUDIT-DEV-011-TK-128-quality-report.md) → **APROBADO** (ambos tickets).
+  - **Sin push / sin PR** — instrucción del humano.

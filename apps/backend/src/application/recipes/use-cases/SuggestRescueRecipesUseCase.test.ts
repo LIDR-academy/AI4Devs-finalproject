@@ -37,6 +37,7 @@ describe('TK-122 / TK-124 / TK-125: SuggestRescueRecipesUseCase Application Suit
         name: 'Tomate Perita',
         unitOfMeasure: 'KG',
         warehouseStock: new DecimalQuantity('10.000'),
+        unitCost: new DecimalQuantity('2.00'),
       })
     );
     stockRepo.seedInsumo(
@@ -45,6 +46,7 @@ describe('TK-122 / TK-124 / TK-125: SuggestRescueRecipesUseCase Application Suit
         name: 'Crema de Leche',
         unitOfMeasure: 'L',
         warehouseStock: new DecimalQuantity('5.000'),
+        // sin unitCost — ejercita el camino preventedWasteCost = null
       })
     );
 
@@ -91,7 +93,8 @@ describe('TK-122 / TK-124 / TK-125: SuggestRescueRecipesUseCase Application Suit
       expect(result.proposals[0].name).toBe('Salsa Pomodoro Clásica');
       expect(result.proposals[0].ingredients[0].insumoName).toBe('Tomate Perita');
       expect(result.proposals[0].ingredients[0].isAtRisk).toBe(true);
-      expect(result.proposals[0].preventedWasteEstimate).toBe('1.500');
+      // 1.500 KG de tomate en riesgo × unitCost 2.00 = 3.00
+      expect(result.proposals[0].preventedWasteCost).toBe('3.00');
       // ZERO DATA LEAKAGE: el gateway de generación JAMÁS es invocado
       expect(generationFake.callCount).toBe(0);
     });
@@ -251,8 +254,7 @@ describe('TK-122 / TK-124 / TK-125: SuggestRescueRecipesUseCase Application Suit
       expect(byId['ins-crema']).toBe(false);
     });
 
-    it('a igual cobertura, la receta que evita MENOS merma va primero (F-16, comportamiento actual)', async () => {
-      // Documenta el desempate invertido de rankCatalogRecipes (AUDIT-DEV-007 F-16).
+    it('TK-128 F-16: a igual cobertura, la receta que rescata MÁS valor va primero', async () => {
       await recipeRepo.save(
         new Recipe('rec-alta', 'AltaMerma', 'SALSAS', [
           new RecipeIngredient('ra', 'rec-alta', 'ins-tomate', new DecimalQuantity('9.000')),
@@ -266,7 +268,28 @@ describe('TK-122 / TK-124 / TK-125: SuggestRescueRecipesUseCase Application Suit
 
       const result = await useCase.execute('CATALOG');
 
-      expect(result.proposals.map((p) => p.name)).toEqual(['BajaMerma', 'AltaMerma']);
+      expect(result.proposals.map((p) => p.name)).toEqual(['AltaMerma', 'BajaMerma']);
+      expect(result.proposals[0].preventedWasteCost).toBe('18.00'); // 9.000 × 2.00
+      expect(result.proposals[1].preventedWasteCost).toBe('1.00'); // 0.500 × 2.00
+    });
+
+    it('TK-128: a igual cobertura, una propuesta sin valorizar (null) va detrás de una valorizada', async () => {
+      // rec-cebolla cubre solo ins-cebolla (sin unitCost) → preventedWasteCost null.
+      await recipeRepo.save(
+        new Recipe('rec-cebolla', 'SoloCebolla', 'SALSAS', [
+          new RecipeIngredient('rce', 'rec-cebolla', 'ins-cebolla', new DecimalQuantity('1.000')),
+        ])
+      );
+      await recipeRepo.save(
+        new Recipe('rec-tom', 'SoloTomate', 'SALSAS', [
+          new RecipeIngredient('rto', 'rec-tom', 'ins-tomate', new DecimalQuantity('0.100')),
+        ])
+      );
+
+      const result = await useCase.execute('CATALOG');
+
+      expect(result.proposals.map((p) => p.name)).toEqual(['SoloTomate', 'SoloCebolla']);
+      expect(result.proposals[1].preventedWasteCost).toBeNull();
     });
 
     it('resuelve nombre y unidad "Insumo"/"UNIDAD" cuando el insumo del ingrediente no está en el catálogo de stock', async () => {

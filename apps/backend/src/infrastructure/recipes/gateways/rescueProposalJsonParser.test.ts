@@ -20,7 +20,7 @@ describe('TK-125: parseRescueProposalsJson (parser JSON compartido Gemini/OpenAI
     expect(proposal.name).toBe('Salteado de Rescate');
     expect(proposal.estimatedPortions).toBe(4);
     expect(proposal.ingredients[0].quantity.toString()).toBe('0.800');
-    expect(proposal.preventedWasteEstimate.toString()).toBe('0.800');
+    expect(proposal.ingredients[0].isAtRisk).toBe(true);
   });
 
   it('tolera el envoltorio ```json ... ``` de los modelos', () => {

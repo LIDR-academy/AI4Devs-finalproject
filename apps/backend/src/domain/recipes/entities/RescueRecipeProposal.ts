@@ -14,8 +14,7 @@ export class RescueRecipeProposal {
     public readonly description: string,
     public readonly category: string,
     public readonly estimatedPortions: number,
-    public readonly ingredients: RescueIngredientItem[],
-    public readonly preventedWasteEstimate: DecimalQuantity
+    public readonly ingredients: RescueIngredientItem[]
   ) {
     if (!name || name.trim().length === 0) {
       throw new Error('El nombre de la propuesta de receta no puede estar vacío.');

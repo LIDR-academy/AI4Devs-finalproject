@@ -45,6 +45,7 @@ describe('TK-122: Endpoint de Recetas de Rescate Inteligentes (POST /api/v1/reci
         name: 'Espinaca Fresca',
         unitOfMeasure: 'KG',
         warehouseStock: new DecimalQuantity(10),
+        unitCost: new DecimalQuantity('3.00'),
       })
     );
 
@@ -133,7 +134,40 @@ describe('TK-122: Endpoint de Recetas de Rescate Inteligentes (POST /api/v1/reci
     expect(first).toHaveProperty('ingredients');
     expect(first.ingredients[0].insumoName).toBe('Espinaca Fresca');
     expect(first.ingredients[0].isAtRisk).toBe(true);
-    expect(first).toHaveProperty('preventedWasteEstimate');
+    // TK-128: 1.000 KG en riesgo × unitCost 3.00
+    expect(first.preventedWasteCost).toBe('3.00');
+  });
+
+  it('TK-128: preventedWasteCost es null si el insumo en riesgo no tiene unitCost', async () => {
+    stockRepo.seedInsumo(
+      new Insumo({ id: 'ins-sin-costo', name: 'Perejil', unitOfMeasure: 'KG', warehouseStock: new DecimalQuantity(2) })
+    );
+    await recipeRepo.save(
+      new Recipe('rec-perejil', 'Pesto de Perejil', 'SALSAS', [
+        new RecipeIngredient('rp-1', 'rec-perejil', 'ins-sin-costo', new DecimalQuantity('0.500')),
+      ])
+    );
+    remanenteQueryRepo.seedRemanente({
+      id: 'rem-perejil-1',
+      insumoId: 'ins-sin-costo',
+      insumoName: 'Perejil',
+      unitOfMeasure: 'KG',
+      currentQuantity: '0.400',
+      initialQuantity: '1.000',
+      location: 'Cocina Fría',
+      expirationDate: new Date(Date.now() + 10 * 3600 * 1000),
+      status: 'ACTIVE',
+      createdAt: new Date(),
+      hoursRemaining: 10,
+      isCriticalAlert: true,
+    });
+
+    const res = await request(buildApp())
+      .post('/api/v1/recipes/rescue-suggestions')
+      .set('Authorization', `Bearer ${staffToken}`);
+
+    const pesto = res.body.proposals.find((p: { name: string }) => p.name === 'Pesto de Perejil');
+    expect(pesto.preventedWasteCost).toBeNull();
   });
 
   it('devuelve 200 OK con propuestas generadas en Modo CREATIVE', async () => {

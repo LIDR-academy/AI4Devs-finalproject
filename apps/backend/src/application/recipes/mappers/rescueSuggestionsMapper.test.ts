@@ -1,54 +1,56 @@
 import { describe, it, expect } from 'vitest';
 import { toRescueSuggestionsDto } from './rescueSuggestionsMapper.js';
-import { RescueRecipeProposal } from '../../../domain/recipes/entities/RescueRecipeProposal.js';
+import { RescueRecipeProposal, RescueIngredientItem } from '../../../domain/recipes/entities/RescueRecipeProposal.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 
-function buildProposal(): RescueRecipeProposal {
-  return new RescueRecipeProposal(
-    'Crema de Rescate',
-    'Aprovecha remanentes en riesgo.',
-    'SOPAS',
-    6,
-    [
-      {
-        insumoId: 'ins-esp',
-        insumoName: 'Espinaca',
-        quantity: new DecimalQuantity('1.250'),
-        unit: 'KG',
-        isAtRisk: true,
-      },
-    ],
-    new DecimalQuantity('1.250')
-  );
+function ing(insumoId: string, qty: string, isAtRisk: boolean): RescueIngredientItem {
+  return { insumoId, insumoName: insumoId, quantity: new DecimalQuantity(qty), unit: 'KG', isAtRisk };
 }
 
-describe('TK-125: toRescueSuggestionsDto (mapper único dominio → DTO)', () => {
-  it('serializa cantidades DecimalQuantity a string con la precisión del VO', () => {
-    const dto = toRescueSuggestionsDto('GEMINI', [buildProposal()]);
+const NO_COSTS = new Map<string, DecimalQuantity>();
+
+describe('TK-125 / TK-128: toRescueSuggestionsDto (mapper único dominio → DTO)', () => {
+  it('serializa cantidades y valoriza preventedWasteCost desde unitCost', () => {
+    const proposal = new RescueRecipeProposal('Crema de Rescate', 'x', 'SOPAS', 6, [
+      ing('ins-esp', '2.000', true),
+      ing('ins-sal', '1.000', false),
+    ]);
+    const costs = new Map([
+      ['ins-esp', new DecimalQuantity('3.00')],
+      ['ins-sal', new DecimalQuantity('1.50')],
+    ]);
+
+    const dto = toRescueSuggestionsDto('GEMINI', [proposal], costs);
 
     expect(dto.source).toBe('GEMINI');
-    expect(dto.proposals).toHaveLength(1);
     expect(dto.proposals[0]).toEqual({
       name: 'Crema de Rescate',
-      description: 'Aprovecha remanentes en riesgo.',
+      description: 'x',
       category: 'SOPAS',
       estimatedPortions: 6,
       ingredients: [
-        { insumoId: 'ins-esp', insumoName: 'Espinaca', quantity: '1.250', unit: 'KG', isAtRisk: true },
+        { insumoId: 'ins-esp', insumoName: 'ins-esp', quantity: '2.000', unit: 'KG', isAtRisk: true },
+        { insumoId: 'ins-sal', insumoName: 'ins-sal', quantity: '1.000', unit: 'KG', isAtRisk: false },
       ],
-      preventedWasteEstimate: '1.250',
+      // Solo el ingrediente en riesgo: 2.000 × 3.00 = 6.00
+      preventedWasteCost: '6.00',
     });
   });
 
+  it('preventedWasteCost es null si un ingrediente en riesgo no tiene unitCost', () => {
+    const proposal = new RescueRecipeProposal('Sin Costo', 'x', 'SALSAS', 4, [ing('ins-x', '1.000', true)]);
+    const dto = toRescueSuggestionsDto('HEURISTIC', [proposal], NO_COSTS);
+    expect(dto.proposals[0].preventedWasteCost).toBeNull();
+  });
+
   it('acepta el origen CATALOG y una lista vacía de propuestas', () => {
-    const dto = toRescueSuggestionsDto('CATALOG', []);
-    expect(dto).toEqual({ source: 'CATALOG', proposals: [] });
+    expect(toRescueSuggestionsDto('CATALOG', [], NO_COSTS)).toEqual({ source: 'CATALOG', proposals: [] });
   });
 
   it('preserva el orden de las propuestas recibidas', () => {
-    const a = buildProposal();
-    const b = new RescueRecipeProposal('Segunda', 'x', 'SALSAS', 2, a.ingredients, new DecimalQuantity('0.100'));
-    const dto = toRescueSuggestionsDto('HEURISTIC', [a, b]);
-    expect(dto.proposals.map((p) => p.name)).toEqual(['Crema de Rescate', 'Segunda']);
+    const a = new RescueRecipeProposal('Primera', 'x', 'SALSAS', 4, [ing('ins-1', '1', true)]);
+    const b = new RescueRecipeProposal('Segunda', 'x', 'SALSAS', 2, [ing('ins-1', '1', true)]);
+    const dto = toRescueSuggestionsDto('HEURISTIC', [a, b], NO_COSTS);
+    expect(dto.proposals.map((p) => p.name)).toEqual(['Primera', 'Segunda']);
   });
 });

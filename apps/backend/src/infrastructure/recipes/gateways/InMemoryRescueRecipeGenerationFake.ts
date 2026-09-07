@@ -55,8 +55,7 @@ export class InMemoryRescueRecipeGenerationFake implements IRescueRecipeGenerati
                   unit: 'KG',
                   isAtRisk: false,
                 },
-              ],
-          new DecimalQuantity(0.8)
+              ]
         ),
       ],
     };

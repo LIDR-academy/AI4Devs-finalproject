@@ -39,11 +39,6 @@ export class HeuristicRecipeGeneratorAdapter implements IAiRecipeGeneratorGatewa
       isAtRisk: true,
     }));
 
-    let totalPrevented = new DecimalQuantity(0);
-    for (const ing of ingredients) {
-      totalPrevented = totalPrevented.add(ing.quantity);
-    }
-
     const complementary = insumos
       .filter((ins) => !ingredients.some((pi) => pi.insumoId === ins.id))
       .slice(0, 2);
@@ -65,8 +60,7 @@ export class HeuristicRecipeGeneratorAdapter implements IAiRecipeGeneratorGatewa
       `Receta de rescate culinario FEFO para consumir remanentes próximos a expirar en menos de 48 horas.`,
       'PLATO_PRINCIPAL',
       4,
-      ingredients,
-      totalPrevented
+      ingredients
     );
   }
 
@@ -79,18 +73,12 @@ export class HeuristicRecipeGeneratorAdapter implements IAiRecipeGeneratorGatewa
       isAtRisk: true,
     }));
 
-    let totalPrevented = new DecimalQuantity(0);
-    for (const ing of ingredients) {
-      totalPrevented = totalPrevented.add(ing.quantity);
-    }
-
     return new RescueRecipeProposal(
       'Crema Concentrada de Cocina FEFO',
       'Reducción y emulsión para base de platos o menú del día evitando merma directa.',
       'ENTRANTE',
       6,
-      ingredients,
-      totalPrevented
+      ingredients
     );
   }
 
@@ -113,8 +101,7 @@ export class HeuristicRecipeGeneratorAdapter implements IAiRecipeGeneratorGatewa
         'Elaboración para mantener flujo continuo de cocina sin ingredientes en riesgo crítico.',
         'GUARNICION',
         4,
-        selected,
-        new DecimalQuantity(0)
+        selected
       ),
     ];
   }

@@ -8,7 +8,7 @@ function ing(insumoId: string): RescueIngredientItem {
 }
 
 function proposal(name: string, insumoIds: string[]): RescueRecipeProposal {
-  return new RescueRecipeProposal(name, 'x', 'PLATO_PRINCIPAL', 4, insumoIds.map(ing), new DecimalQuantity('2.000'));
+  return new RescueRecipeProposal(name, 'x', 'PLATO_PRINCIPAL', 4, insumoIds.map(ing));
 }
 
 describe('TK-126: sanitizeRescueProposals (frontera de confianza LLM, F-4)', () => {
@@ -26,7 +26,6 @@ describe('TK-126: sanitizeRescueProposals (frontera de confianza LLM, F-4)', () 
     expect(out).toHaveLength(1);
     expect(out[0].ingredients.map((i) => i.insumoId)).toEqual(['ins-1', 'ins-3']);
     expect(out[0].name).toBe('Mixta');
-    expect(out[0].preventedWasteEstimate.toString()).toBe('2.000');
   });
 
   it('descarta la propuesta entera si ningún ingrediente es válido', () => {

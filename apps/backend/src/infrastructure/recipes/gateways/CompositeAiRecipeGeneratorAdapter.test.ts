@@ -22,7 +22,7 @@ class StubLeafGateway implements IAiRecipeGeneratorGateway {
     insumoIds: string[] = ['ins-1']
   ) {
     this.proposals = [
-      new RescueRecipeProposal(`Propuesta ${label}`, 'x', 'PLATO_PRINCIPAL', 4, insumoIds.map(ing), new DecimalQuantity(1)),
+      new RescueRecipeProposal(`Propuesta ${label}`, 'x', 'PLATO_PRINCIPAL', 4, insumoIds.map(ing)),
     ];
   }
 

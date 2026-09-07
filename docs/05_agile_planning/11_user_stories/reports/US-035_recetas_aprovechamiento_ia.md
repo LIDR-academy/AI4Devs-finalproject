@@ -27,6 +27,8 @@ Actualmente, el sistema alerta sobre remanentes por vencer mediante notificacion
 *   **Respuesta:** Conmutación automática transparente: el sistema ejecuta de inmediato el motor heurístico local determinista (agrupa remanentes por categoría y sugiere preparaciones base como caldos, salsas o salteados), devolviendo un resultado válido con badge `"Origen: Motor Heurístico Local"`.
 *   **Pregunta 4:** ¿Cómo se maneja la precisión de cantidades y costos?
 *   **Respuesta:** Cumplimiento estricto de Guard 17: las cantidades y costos sugeridos se representan en cadenas numéricas decimales y se instancian como `DecimalQuantity` con `decimal.js`, sin operaciones flotantes primitivas.
+*   **Pregunta 5 (2026-09-07, `AUDIT-DEV-007` F-1):** ¿Qué representa exactamente el indicador de "merma evitada" de cada propuesta?
+*   **Respuesta:** El **valor monetario** del stock en riesgo que la receta aprovecharía — la suma de `unitCost × cantidad` sobre los ingredientes marcados `isAtRisk`, con la misma semántica que la valorización de mermas de `US-019` (`totalDiscardedCost`). Si algún ingrediente en riesgo de la propuesta **no tiene `unitCost` registrado**, el indicador es `null` explícito (nunca `"0.00"`), para no dar una cifra falsamente precisa. La implementación previa sumaba cantidades físicas de unidades heterogéneas (KG + L + UNIDAD) en un único número sin sentido — corregido en `TK-128`. El campo del contrato pasa de `preventedWasteEstimate` (cantidad) a `preventedWasteCost` (`string` monetario `| null`).
 
 ---
 
@@ -51,6 +53,15 @@ Actualmente, el sistema alerta sobre remanentes por vencer mediante notificacion
 - **Given** Una propuesta de aprovechamiento creativo desplegada en la pantalla.
 - **When** El chef pulsa "Guardar en Catálogo de Recetas".
 - **Then** El sistema persiste la nueva entidad `Receta` con sus `RecetaIngredientes` asociados en base de datos, mostrándola disponible de inmediato para consumo rápido mediante `US-007`.
+
+### Escenario 5: Valorización monetaria de la merma evitada (`AUDIT-DEV-007` F-1)
+- **Given** Una propuesta de rescate cuyos ingredientes en riesgo tienen `unitCost` registrado.
+- **When** El sistema presenta la propuesta.
+- **Then** El campo `preventedWasteCost` muestra la suma de `unitCost × cantidad` de los ingredientes en riesgo, formateada a 2 decimales, y el frontend la rotula como valor en la moneda del sistema.
+
+### Escenario 6: Ingrediente en riesgo sin costo registrado
+- **Given** Una propuesta de rescate donde al menos un ingrediente en riesgo no tiene `unitCost`.
+- **Then** `preventedWasteCost` es `null` y el frontend muestra "valor no disponible" en lugar de una cifra.
 
 ---
 
