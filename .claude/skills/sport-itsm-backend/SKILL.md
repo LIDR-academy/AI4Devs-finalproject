@@ -18,10 +18,10 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 # Technology Stack (source of truth)
 
 ## Core
-- **Node.js 20 LTS** — runtime.
+- **Node.js 22 LTS** — runtime.
 - **TypeScript 5.9** — **strict mode** (`strict: true`); no implicit `any`, no unchecked non-null assertions without justification.
 - **NestJS 11** — modular framework; use dependency injection and decorators idiomatically.
-- **Express 4** — HTTP adapter under NestJS. (NestJS 11 also supports Express 5; the Express 4 pin is intentional — do not upgrade without an approved change.)
+- **Express 5** — HTTP adapter under NestJS. `@nestjs/platform-express@11` has bundled Express 5 since `11.0.0`, so NestJS 11 never shipped on Express 4; there is no Express 4 pin to preserve and no pnpm override may be added to force one. Never declare `express` directly in `package.json` — the adapter pins it. Note that Express 5 routes through `path-to-regexp@8`, where the Express 4 wildcard forms (`*`, `:param*`) are rejected: route patterns must be literal or use the v8 grammar.
 - **Nx 21.6** — monorepo orchestration.
 
 ## Package manager
@@ -127,4 +127,4 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 - **Do NOT** prefix the health endpoints with `/api`, and do NOT expose Swagger outside dev.
 - **Do NOT** hand-format code against Prettier, or add stylistic ESLint rules that conflict with it.
 - **Do NOT** introduce `npm`/`yarn` lockfiles or a second package manager.
-- **Do NOT** downgrade or bump pinned major versions (Node 20, NestJS 11, Express 4, TypeORM 0.3, etc.) without an approved change.
+- **Do NOT** downgrade or bump pinned major versions (Node 22, NestJS 11, Express 5, TypeORM 0.3, etc.) without an approved change.

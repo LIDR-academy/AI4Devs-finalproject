@@ -49,3 +49,9 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+# Local environment. The API reads its configuration from the process
+# environment; `.env.example` is the committed template, `.env` never is.
+.env
+.env.*
+!.env.example

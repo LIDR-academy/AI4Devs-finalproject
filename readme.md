@@ -161,7 +161,7 @@ flowchart TB
 
     subgraph boundary["Sport ITSM system boundary"]
         WEB["<b>Web Client</b> - apps/web<br/>Angular 20.3, standalone components, signals,<br/>in-house SCSS component library, Reactive Forms, Transloco<br/>Self-Service Portal, Agent Workspace, Admin Console"]
-        API["<b>API</b> - apps/api<br/>NestJS 11 on Express 4, Node.js 20 LTS<br/>Inbound HTTP adapter plus composition root<br/>Passport JWT, class-validator, nestjs-i18n, pino"]
+        API["<b>API</b> - apps/api<br/>NestJS 11 on Express 5, Node.js 22 LTS<br/>Inbound HTTP adapter plus composition root<br/>Passport JWT, class-validator, nestjs-i18n, pino"]
         DB[("<b>PostgreSQL 16</b><br/>single system of record<br/>tickets, SLA timers, catalog, knowledge,<br/>approvals, append-only audit<br/>TypeORM 0.3, synchronize always false")]
     end
 
@@ -286,7 +286,7 @@ The client is an **Angular 20.3** application: standalone components only, signa
 
 | Component | Responsibility | Technology |
 | --- | --- | --- |
-| **Controllers** | Thin inbound adapter: route, validate, delegate to a use case, map the result to a contract response. No business logic. | NestJS 11 on Express 4, `@nestjs/swagger` decorators |
+| **Controllers** | Thin inbound adapter: route, validate, delegate to a use case, map the result to a contract response. No business logic. | NestJS 11 on Express 5, `@nestjs/swagger` decorators |
 | **Global `ValidationPipe`** | Reject unvalidated or unexpected payloads (`whitelist`, `forbidNonWhitelisted`, `transform`) | `class-validator` + `class-transformer` |
 | **Auth guards & strategy** | Verify the JWT, resolve the actor and their roles for the use-case authorization check | Passport JWT (`passport-jwt`, `@nestjs/jwt`), `bcrypt` for local credentials |
 | **License gating** | `@LicenseFeature()` decorator restricting access to gated capabilities | Custom NestJS decorator + guard |
@@ -667,7 +667,7 @@ The consequence worth stating plainly: **in this repository the folder structure
 
 #### 2.3.6 Useful commands
 
-Every command runs from the **repository root**, through **pnpm + Nx**. **Node 20 LTS** is required (pinned in `.nvmrc` and in `package.json` → `engines`) and **pnpm is the only supported package manager** — running `npm install` or `yarn` here would produce a second lockfile and is forbidden.
+Every command runs from the **repository root**, through **pnpm + Nx**. **Node 22 LTS** is required (pinned in `.nvmrc` and in `package.json` → `engines`) and **pnpm is the only supported package manager** — running `npm install` or `yarn` here would produce a second lockfile and is forbidden.
 
 The **Availability** column distinguishes what runs *today*, on the bootstrapped-but-empty workspace, from what only becomes meaningful once `apps/` and `libs/` are generated.
 
@@ -749,10 +749,10 @@ Expected: `pnpm install` exits `0`, and the scan returns `./pnpm-lock.yaml` as t
 pnpm nx report
 ```
 
-Expected — Nx **21.6.x**, TypeScript **5.9.x**, Node **20.x**:
+Expected — Nx **21.6.x**, TypeScript **5.9.x**, Node **22.x**:
 
 ```
-Node           : 20.17.0
+Node           : 22.20.0
 pnpm           : 10.18.3
 nx             : 21.6.11
 @nx/js         : 21.6.11

@@ -939,3 +939,112 @@ un hallazgo de arquitectura, no un detalle de implementación: dilo claramente.
 Implementado ticket T-C10-03
 
 </br>
+
+**Prompt 4:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Actúa como backend-engineer e implementa UN SOLO ticket: docs/backlog/C10/tickets/T-C10-04.md · Scaffold `apps/api` — NestJS 11 composition root with validated configuration
+Raíz del repositorio: d:\repositories\ai4devs\proyecto_final\AI4Devs-finalproject
+
+#### Precondición
+T-C10-01, T-C10-02 y T-C10-03 deben estar hechos. Compruébalo antes de tocar nada:
+
+    ls package.json nx.json eslint.config.mjs tools/boundary-probes/verify.mjs
+    pnpm nx report
+    pnpm verify:boundaries
+
+`verify:boundaries` debe salir 0 con las 9 sondas en verde. Si falla, PARA: la regla de fronteras
+está rota y este ticket crea el primer proyecto que la va a pisar de verdad.
+
+#### El ticket es el contrato
+Lee docs/backlog/C10/tickets/T-C10-04.md entero. Su `## Scope` es exhaustivo y su lista de
+"Out of scope" es vinculante — remite a tres tickets distintos, no los invadas. Lee además:
+
+- CLAUDE.md §2 (versiones pinneadas) y §3, apartados "Backend idioms" y "What NOT to do":
+  de ahí salen la prohibición de `process.env` en código de feature, el `ValidationPipe` global,
+  el prefijo `/api` sin health endpoints dentro, y la prohibición de `console.log`.
+- docs/product/ARCHITECTURE.md §5.4 y §6.3 — qué es la raíz de composición y por qué `apps/api`
+  es el único proyecto backend autorizado a cruzar contextos.
+- ADR-002 (`type:app`) y ADR-003 (puertos resueltos en la raíz de composición).
+
+#### Express 5, no Express 4 — el Scope del ticket está desactualizado
+El `## Scope` del ticket dice "NestJS 11 on **Express 4** (pin intentional, `CLAUDE.md` §2)".
+Esa línea ya no es correcta y **CLAUDE.md §2 la reemplaza**: `@nestjs/platform-express@11` incluye
+Express 5 desde su versión `11.0.0`, así que NestJS 11 nunca ha ido sobre Express 4. El pin era
+inalcanzable, no obsoleto. CLAUDE.md, ARCHITECTURE.md y COMPONENTS.md ya están corregidos; el
+ticket no, porque los tickets no se editan.
+
+En consecuencia:
+- Instala NestJS 11 tal cual y deja que llegue Express 5.
+- **No añadas un override de pnpm** ni ninguna otra maniobra para forzar Express 4.
+- Verifica con `pnpm why express` qué versión ha quedado y pega la salida en el informe.
+- Ten en cuenta que Express 5 cambia el emparejado de rutas (`path-to-regexp@8`): los comodines
+  tipo `*` ya no valen como en Express 4. Si defines exclusiones de ruta para el prefijo `/api`,
+  compruébalas de verdad en vez de asumir la sintaxis antigua.
+
+#### Lo que NO debes hacer — el riesgo real de este ticket
+Es el primer proyecto real del monorepo y el generador de Nx quiere darte una aplicación
+"completa". No la aceptes tal cual:
+
+- **No generes `apps/api-e2e`.** El generador de Nx crea el proyecto e2e por defecto; es T-C10-06,
+  y además ese ticket lo quiere con Cypress + Cucumber, no con lo que ponga el generador.
+  Pásale `--e2eTestRunner=none` y verifica después que solo existe UN proyecto.
+- **Ni logging estructurado (pino), ni health probes (`/health/live`, `/health/ready`), ni Swagger.**
+  Son del slice de observabilidad (T-C10-28). Este ticket SOLO reserva las exclusiones de ruta que
+  esos endpoints usarán, para que la lista de exenciones de T-C10-28 no cambie después. Reservar
+  la exclusión no es implementar el endpoint: no crees controladores de health.
+- **Ni conexión a base de datos, ni TypeORM, ni `data-source.ts`, ni migraciones** (T-C10-16).
+- **Ni `apps/web`** (T-C10-05), **ni ninguna librería bajo `libs/`** (T-C10-07 en adelante).
+- **No toques `eslint.config.mjs`.** El vocabulario de tags y la matriz `depConstraints` son de
+  T-C10-02 y T-C10-03. Si el generador de Nx intenta escribir un `.eslintrc` o modificar la config
+  raíz, deshazlo: la flat config es la única fuente.
+- **pnpm es el único gestor.** Si algún generador invoca npm y aparece un `package-lock.json`,
+  párate y dilo.
+
+Adelantarte convierte tickets greenfield en tickets de gap. Haz exactamente el Scope.
+
+#### Verificación — ejecútala, no la afirmes
+Los cinco criterios de aceptación son mecánicos. Ejecuta cada uno de verdad y pega su salida:
+
+1. `pnpm nx build api` termina con éxito.
+2. `pnpm nx serve api` arranca y **responde en el puerto configurado**. No basta con ver el log de
+   arranque: levanta el proceso en segundo plano, haz una petición HTTP real, pega la respuesta y
+   mata el proceso. Si lo dejas colgado, dilo.
+3. Quita una clave de configuración obligatoria del entorno y arranca: debe **fallar rápido** con un
+   mensaje que **nombre la clave que falta**. Pega el mensaje literal. Un arranque con `undefined`
+   es un fallo del criterio, no un detalle.
+4. Los tags del proyecto son exactamente `platform:backend`, `scope:shared`, `type:app` — ni uno más
+   ni uno menos — y `pnpm nx lint api` pasa la regla de fronteras de T-C10-03.
+5. `grep -rn "process.env" apps/api/src` devuelve coincidencias ÚNICAMENTE dentro del módulo de
+   configuración. Pega la salida completa del grep, no un resumen.
+
+Y dos comprobaciones más, porque este ticket cambia el estado del workspace:
+
+6. `pnpm verify:boundaries` sigue en verde ahora que existe un proyecto real.
+7. `pnpm nx show projects` devuelve exactamente `api` y nada más (en particular, ningún `api-e2e`).
+
+Si algún criterio falla, dilo con su salida completa. Un criterio que no has ejecutado se reporta
+como no ejecutado, nunca como pasado.
+
+#### Restricciones
+- No modifiques nada bajo `docs/` ni bajo `.claude/`. El ticket no se edita ni se marca como hecho.
+- No instales dependencias que el Scope no pida.
+- No hagas commit ni push salvo que te lo pida explícitamente.
+- Si necesitas red y no la tienes, para y dilo.
+
+#### Informa al terminar
+- Qué ficheros has creado o modificado, y qué dependencias has añadido con su versión exacta.
+- La salida de las siete verificaciones.
+- La salida de `pnpm why express`, confirmando Express 5 y que no hay ningún override.
+- Qué te ha generado Nx que hayas tenido que quitar o recortar por estar fuera de Scope.
+- Cualquier nota de estado que este ticket deje obsoleta en `readme.md` §2.3.6 o en
+  `docs/product/ARCHITECTURE.md` §12.3: **repórtala, no la corrijas** — yo decido si se actualiza.
+
+### Response:
+
+Implementado ticket T-C10-04
+
+</br>

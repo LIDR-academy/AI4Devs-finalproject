@@ -137,7 +137,7 @@ flowchart TB
 
     subgraph boundary["Sport ITSM system boundary"]
         WEB["<b>Web Client</b> - apps/web<br/>Angular 20.3, standalone components, signals,<br/>in-house SCSS component library, Reactive Forms, Transloco<br/>Self-Service Portal, Agent Workspace, Admin Console"]
-        API["<b>API</b> - apps/api<br/>NestJS 11 on Express 4, Node.js 20 LTS<br/>Inbound HTTP adapter plus composition root<br/>global prefix /api, Swagger at /api/docs in dev,<br/>health at /health/live and /health/ready"]
+        API["<b>API</b> - apps/api<br/>NestJS 11 on Express 5, Node.js 22 LTS<br/>Inbound HTTP adapter plus composition root<br/>global prefix /api, Swagger at /api/docs in dev,<br/>health at /health/live and /health/ready"]
         DB[("<b>PostgreSQL 16</b><br/>single system of record<br/>tickets, SLA timers, catalog, knowledge,<br/>CMDB, approvals, append-only audit<br/>TypeORM 0.3, synchronize always false")]
     end
 

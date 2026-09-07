@@ -19,8 +19,8 @@ Sport ITSM is a single Nx monorepo hosting a NestJS API and an Angular web clien
 
 | Concern | Technology |
 |---|---|
-| Runtime | **Node.js 20 LTS** |
-| Framework | **NestJS 11** on **Express 4** (pin intentional) |
+| Runtime | **Node.js 22 LTS** |
+| Framework | **NestJS 11** on **Express 5** — `@nestjs/platform-express@11` has bundled Express 5 since `11.0.0`; NestJS 11 never shipped on Express 4. Do **not** add a pnpm override to force Express 4. |
 | Language | **TypeScript 5.9** (strict) |
 | Database / ORM | **PostgreSQL 16** + **TypeORM 0.3** (`pg` driver); `synchronize` always `false`, schema changes via **migrations** only |
 | Auth | **Passport JWT** (`passport-jwt`, `@nestjs/jwt`), **bcrypt** hashing; `@LicenseFeature()` license gating |
