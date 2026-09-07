@@ -9,7 +9,6 @@ export interface AiConfigDto {
   temperature: number;
   apiKeyConfigured: boolean;
   apiKeyMasked: string | null;
-  replenishmentOn: boolean;
   rescueRecipesOn: boolean;
 }
 
@@ -19,7 +18,6 @@ export interface UpdateAiConfigDto {
   endpointUrl?: string | null;
   temperature?: number;
   apiKey?: string;
-  replenishmentOn?: boolean;
   rescueRecipesOn?: boolean;
 }
 

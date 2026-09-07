@@ -14,7 +14,6 @@ describe('TK-123-FE: AiSettingsSection Component Suite', () => {
     temperature: 0.1,
     apiKeyConfigured: true,
     apiKeyMasked: 'AIzaSy************************1234',
-    replenishmentOn: false,
     rescueRecipesOn: true,
   };
 
