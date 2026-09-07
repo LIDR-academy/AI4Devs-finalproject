@@ -6,6 +6,11 @@ import {
   RecipeGenerationOptions,
 } from '../../../domain/recipes/gateways/IAiRecipeGeneratorGateway.js';
 import { parseRescueProposalsJson } from './rescueProposalJsonParser.js';
+import { buildRescueDataBlock } from './rescuePromptContext.js';
+import { AI_GENERATION_TIMEOUT_MS, DETERMINISTIC_TOP_P, MAX_TEMPERATURE } from './aiGenerationConstants.js';
+
+const DEFAULT_ENDPOINT = 'http://localhost:11434/v1';
+const DEFAULT_MODEL = 'llama3:8b';
 
 export class OpenAiCompatibleRecipeGeneratorAdapter implements IAiRecipeGeneratorGateway {
   async generateProposals(
@@ -13,11 +18,8 @@ export class OpenAiCompatibleRecipeGeneratorAdapter implements IAiRecipeGenerato
     insumos: AvailableInsumoContext[],
     options: RecipeGenerationOptions
   ): Promise<RescueRecipeProposal[]> {
-    const baseUrl = (options.endpointUrl || 'http://localhost:11434/v1').replace(/\/+$/, '');
+    const baseUrl = (options.endpointUrl || DEFAULT_ENDPOINT).replace(/\/+$/, '');
     const url = `${baseUrl}/chat/completions`;
-    const model = options.modelName || 'llama3:8b';
-
-    const prompt = this.buildPrompt(remanentes, insumos);
 
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (options.apiKey) {
@@ -25,15 +27,16 @@ export class OpenAiCompatibleRecipeGeneratorAdapter implements IAiRecipeGenerato
     }
 
     const body = {
-      model,
-      temperature: Math.min(options.temperature, 0.2),
+      model: options.modelName || DEFAULT_MODEL,
+      temperature: Math.min(options.temperature, MAX_TEMPERATURE),
+      top_p: DETERMINISTIC_TOP_P,
       messages: [
         {
           role: 'system',
           content:
             'Eres un chef asistente de cocina especializado en FEFO y reducción de desperdicios. Genera únicamente un array JSON válido con propuestas de recetas.',
         },
-        { role: 'user', content: prompt },
+        { role: 'user', content: this.buildPrompt(remanentes, insumos) },
       ],
     };
 
@@ -41,7 +44,7 @@ export class OpenAiCompatibleRecipeGeneratorAdapter implements IAiRecipeGenerato
       method: 'POST',
       headers,
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(AI_GENERATION_TIMEOUT_MS),
     });
 
     if (!res.ok) {
@@ -61,22 +64,11 @@ export class OpenAiCompatibleRecipeGeneratorAdapter implements IAiRecipeGenerato
   }
 
   private buildPrompt(remanentes: AtRiskRemanenteContext[], insumos: AvailableInsumoContext[]): string {
-    const remStr = remanentes
-      .map((r) => `- [${r.insumoId}] ${r.insumoName}: ${r.quantity.toString()} ${r.unitOfMeasure}`)
-      .join('\n');
+    return `Genera entre 1 y 2 recetas de aprovechamiento que prioricen los remanentes en riesgo del bloque de datos, usando SOLO esos ingredientes.
 
-    const insStr = insumos
-      .slice(0, 30)
-      .map((i) => `- [${i.id}] ${i.name} (${i.unitOfMeasure})`)
-      .join('\n');
+${buildRescueDataBlock(remanentes, insumos)}
 
-    return `Remanentes próximos a vencer (<48h):
-${remStr}
-
-Insumos disponibles en stock:
-${insStr}
-
-Genera entre 1 y 2 recetas de aprovechamiento usando SOLO estos ingredientes en formato JSON:
+Responde ÚNICAMENTE un array JSON con esta estructura (insumoId EXACTO del bloque, nunca inventado):
 [
   {
     "name": "Nombre",
