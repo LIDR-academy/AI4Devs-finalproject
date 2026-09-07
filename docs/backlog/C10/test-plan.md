@@ -27,7 +27,7 @@
 | API-E2E | `.feature` + step definitions in `apps/api-e2e` (`platform:backend`, `type:e2e`) | No dev agent owns this; it is **e2e-harness work on the backend platform** — the same layer/platform naming used by `T-C10-29` |
 | E2E | `.feature` + step definitions in `apps/web-e2e` (`platform:frontend`, `type:e2e`) | **e2e-harness work on the frontend platform** |
 
-Test stack: **Jest 29** (unit, integration) · **jest-preset-angular** (components + signals) · **@nestjs/testing** (backend wiring) · **Cypress 15 + `@badeball/cypress-cucumber-preprocessor`** (`apps/api-e2e`, `apps/web-e2e`) · Nx targets `test` and `e2e`. Coverage floor 80% on changed libs (`ARCHITECTURE.md` §9).
+Test stack: **Jest 29.7** (unit, integration) · **jest-preset-angular** (components + signals) · **@nestjs/testing** (backend wiring) · **Cypress 15.20 + `@badeball/cypress-cucumber-preprocessor` 28.0** (`apps/api-e2e`, `apps/web-e2e`), driven by `nx:run-commands` rather than `@nx/cypress` (**ADR-011**) · Nx targets `test` and `e2e`. Coverage floor 80% on changed libs (`ARCHITECTURE.md` §9).
 
 **Shared test data.** One seed fixture serves the whole epic: the eight roles of PRD §4.3 seeded by `T-C10-36`; users `requester-a`, `requester-b`, `organizer-x` (grant over competition `X`), `league-admin-l` (grant over league `L` containing `X` and `Y`), `agent-l1`, `sysadmin-1`, `sysadmin-2`, `inactive-user`; scope grants from `T-C10-44`. Every backend scenario uses `FixedClock` from `T-C10-09` so no assertion depends on wall-clock time.
 

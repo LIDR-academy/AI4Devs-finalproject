@@ -3,7 +3,7 @@
 > Sources: `docs/backlog/C10/user-stories.md` (16 stories, all greenfield) · `docs/backlog/epic-map.md` (§ `C10`, § **Foundation ownership (priced once)**) · `CLAUDE.md` §3 · `docs/product/ARCHITECTURE.md` §5, §9 · PRD §7.10, §4.3, §14.2
 > Test plan: [`../test-plan.md`](../test-plan.md)
 
-**67 tickets · 170h · none over the 3h cap.**
+**67 tickets · 171h.** One ticket exceeds the 3h cap — `T-C10-06`, which records why in its `## Context`.
 18 tickets are **foundation** work with `story: —` — the whole workspace, priced into `C10` by the epic map and deliberately left storyless by the Business Analyst (finding **F14**).
 5 tickets are **blocked**: 4 by **F16** (nobody has enumerated which operations are *privileged*), 1 by **F17** (nobody has decided where a denied authorization is recorded).
 
@@ -23,7 +23,7 @@ The numbering **is** the implementation order. `T-C10-01` is built first. Where 
 
 ---
 
-## Block A · Workspace foundation — 17 tickets · 45h · all `foundation: true`, phase 0
+## Block A · Workspace foundation — 17 tickets · 46h · all `foundation: true`, phase 0
 
 Source: epic map, **Foundation ownership (priced once)**. Nothing else in this epic — or in the other 18 epics — compiles until this block lands.
 
@@ -34,7 +34,7 @@ Source: epic map, **Foundation ownership (priced once)**. Nothing else in this e
 | [T-C10-03](T-C10-03.md) | Encode the type constraint matrix and the scope/platform rules | workspace tooling | — (shared) | 3h |
 | [T-C10-04](T-C10-04.md) | Scaffold `apps/api` — NestJS 11 composition root with validated configuration | app | backend-engineer | 3h |
 | [T-C10-05](T-C10-05.md) | Scaffold `apps/web` — Angular 20 standalone shell | app | frontend-engineer | 3h |
-| [T-C10-06](T-C10-06.md) | Scaffold `apps/api-e2e` and `apps/web-e2e` — Cypress 15 + Cucumber harnesses | e2e harness | — (shared) | 3h |
+| [T-C10-06](T-C10-06.md) | Scaffold `apps/api-e2e` and `apps/web-e2e` — Cypress 15.20 + Cucumber harnesses | e2e harness | — (shared) | 4h |
 | [T-C10-07](T-C10-07.md) | `libs/shared/util` — pure helper library | util | backend-engineer | 1h |
 | [T-C10-08](T-C10-08.md) | `libs/shared/domain` — identity and ticket kernel primitives | domain | backend-engineer | 3h |
 | [T-C10-09](T-C10-09.md) | `libs/shared/domain` — `DomainEvent`, `EventPublisherPort` and `ClockPort` | domain | backend-engineer | 2h |
@@ -174,7 +174,7 @@ Source: epic map, **Foundation ownership (priced once)**. Nothing else in this e
 
 | Block | Tickets | Hours | Phase |
 |---|--:|--:|---|
-| A · Workspace foundation | 17 | 45.0 | 0 |
+| A · Workspace foundation | 17 | 46.0 | 0 |
 | B · Identity core | 17 | 41.5 | 0 |
 | C · RBAC | 6 | 15.0 | 0 |
 | D · Record visibility | 6 | 14.5 | 0 |
@@ -182,8 +182,8 @@ Source: epic map, **Foundation ownership (priced once)**. Nothing else in this e
 | F · Session lifecycle | 6 | 16.0 | unphased |
 | G · Denied-authorization recording | 2 | 5.0 | unphased |
 | H · SCMS SSO | 4 | 9.5 | unphased |
-| **Total** | **67** | **170.0** | |
+| **Total** | **67** | **171.0** | |
 
-Foundation (`story: —`): **18 tickets · 47h** — all of block A plus `T-C10-18`. Phase 0: 55 tickets · 139.5h. Unphased: 12 tickets · 30.5h.
+Foundation (`story: —`): **18 tickets · 48h** — all of block A plus `T-C10-18`. Phase 0: 55 tickets · 140.5h. Unphased: 12 tickets · 30.5h.
 
 By agent: `backend-engineer` 48 · `frontend-engineer` 13 · `—` 6. The six are three workspace-tooling tickets, the two scaffolding tickets that span both platforms, and one API-E2E spec — work that belongs to neither dev agent, so each names its layer and platform instead.

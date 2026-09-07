@@ -47,6 +47,6 @@ Tickets are transcribed **by hand** into a GitLab board — there is no API inte
 - **Maximum ticket size:** 3 hours. Break down anything larger.
 - **A ticket inherits its story's shape.** Gap and defect tickets must state what already exists, with file references. Sizing a gap ticket as greenfield is the most common way this skill wastes a week.
 - **Defect stories carry a mandatory regression scenario** — a ⚫ Broken requirement is done when the old behaviour provably cannot come back, not when the new one works.
-- Tickets respect the DDD layers and name the implementing agent (`sport-itsm-backend`, `sport-itsm-frontend`, `ci-cd-expert`).
+- Tickets respect the DDD layers and name the implementing agent (`backend-engineer`, `frontend-engineer`, `ci-cd-expert`).
 - BDD and acceptance criteria in English.
-- **Writes no test code.** Unit tests (`*.spec.ts`, co-located) → the dev agents. E2E / API-E2E / acceptance (Cypress, Axios, `.feature`) → `testing-implementer`.
+- **Writes no test code.** Unit tests (`*.spec.ts`, co-located) → the dev agents. E2E / API-E2E / acceptance (Cypress + Cucumber: `.feature` + `*.steps.ts`) → `testing-implementer`.

@@ -41,8 +41,8 @@ In drill mode, additionally read **`docs/backlog/epic-map.md`** (your epic's sec
 - **Single owner of tickets:** `sport-itsm-product-owner` delegates the granular breakdown here; do not expect it to have produced `T-` tickets.
 - BDD/acceptance criteria are written in **English**, like everything else committed to this repo (the `CLAUDE.md` language standard). They seed the `.feature` files.
 - Every acceptance scenario gets a **priority** (P0 critical / P1 important / P2 nice-to-have) and a **recommended test type**, with justification.
-- **You do NOT write test code.** Delegate implementation split by level: unit tests (`*.spec.ts`, co-located) → the dev agents who wrote the code (`backend-engineer`, `frontend-engineer`); E2E / API-E2E / acceptance (Cypress `.cy.ts`, Axios, `.feature`) → `testing-implementer`.
-- Test plan uses the real stack: Jest (unit/integration), Cypress (E2E), Axios (API-E2E), per Nx project.
+- **You do NOT write test code.** Delegate implementation split by level: unit tests (`*.spec.ts`, co-located) → the dev agents who wrote the code (`backend-engineer`, `frontend-engineer`); E2E / API-E2E / acceptance (`.feature` + `*.steps.ts`, Cypress) → `testing-implementer`.
+- Test plan uses the real stack: Jest (unit/integration) and Cypress + Cucumber (E2E **and** API-E2E), per Nx project. There is no separate HTTP-client test path — `CLAUDE.md` §5 settles it: acceptance is Cypress/Cucumber, never Supertest or a bare HTTP client.
 
 ## Process
 
@@ -180,21 +180,21 @@ Why this exists, in two or three sentences. **For gap and defect tickets, state 
 2. **Define acceptance criteria** — Given/When/Then in English, verifiable and concrete, grouped by scenario.
 3. **Classify test data** — fixtures (JSON), DB seeds, API mocks, prior state; document preconditions.
 4. **Prioritize** — P0 critical (core business flow; if it fails the system is broken), P1 important (relevant edge cases), P2 nice-to-have.
-5. **Recommend test type** — E2E (Cypress, full browser flows) · API-E2E (Jest+Axios, backend endpoints) · Integration (cross-layer/module) · Unit (isolated business logic). Justify the choice; not everything is E2E.
+5. **Recommend test type** — E2E (Cypress + Cucumber, full browser flows against `apps/web`) · API-E2E (Cypress' request runner + Cucumber, backend endpoints against `apps/api`) · Integration (cross-layer/module) · Unit (isolated business logic). Justify the choice; not everything is E2E.
 6. **Identify dependencies** — real DB, mocks, external services, special CI config.
 
 > **Defect stories carry a mandatory regression scenario.** A ⚫ Broken requirement is not done when the new behaviour works — it is done when the old behaviour provably cannot come back.
 
 ## Testing stack (for realistic recommendations)
 
-Cypress 15.9 (E2E — dashboard :4300, landing-page :4200) · Jest 29 (unit/integration) · jest-preset-angular (Angular standalone + signals) · @nestjs/testing (NestJS) · Axios (API-E2E, `apps/api-e2e`) · Nx targets `test` / `e2e` / `e2e-ci`. High-risk areas needing deep coverage: payments, auth, licenses.
+**Cypress 15.20 + `@badeball/cypress-cucumber-preprocessor` 28.0** — `.feature` files are the spec entry point for both suites: `apps/web-e2e` drives the Angular shell in a browser, `apps/api-e2e` drives the API through Cypress' request runner (`cy.request`). Both `e2e` targets are `nx:run-commands` invocations of `cypress run`, **not** `@nx/cypress`, which cannot host Cypress 15 at the pinned Nx 21.6 (**ADR-011**) · **Jest 29.7** (unit/integration) · **jest-preset-angular** (Angular standalone + signals) · **@nestjs/testing** (NestJS wiring) · Nx targets `test` and `e2e`.
 
 ## Implementation handoff (split by level)
 
 You plan; others implement. Per test level:
 
 - **Unit** (`*.spec.ts`, co-located in the lib) → the dev agent that owns the code: `backend-engineer` (use cases, domain/services) · `frontend-engineer` (components, services, stores).
-- **E2E / API-E2E / acceptance** (`*.cy.ts`, Axios specs, `.feature` step definitions) → `testing-implementer`.
+- **E2E / API-E2E / acceptance** (`.feature` files and their `*.steps.ts` step definitions, plus any `*.cy.ts`) → `testing-implementer`.
 
 Write each acceptance scenario concretely enough that the implementer can code it without ambiguity.
 
