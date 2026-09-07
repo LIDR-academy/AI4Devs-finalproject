@@ -579,3 +579,12 @@ inputs:
   - Mutation scoped: `Recipe` (`withDetails`+`deactivated`) **100%**, `DeactivateRecipeUseCase` **83.33%**, `UpdateRecipeUseCase` **92.86%** (agregado 93.22%) — todos ≥ 70. Se simplificó un ternario redundante (`description`) para matar 3 mutantes y borrar una rama muerta.
   - Auditoría adversarial [`AUDIT-DEV-015`](../audits/AUDIT-DEV-015-TK-131-quality-report.md) → **APROBADO**.
   - **Pendiente:** `TK-131-FE` (acciones editar/baja en el recetario). Sin push.
+
+### 2026-09-07 (cont.) - TK-131-FE: edición y baja de recetas en el recetario (US-037)
+- **Acciones:**
+  - `RecipesService.updateRecipe(id, patch)` + `deleteRecipe(id)`; `UpdateRecipeRequest`.
+  - `EditRecipeModal` (nuevo): precarga, `buildPatch` (solo lo cambiado; descripción vaciada → `null`; `ingredients` solo si cambian), `ErrorBanner` para el `409` de composición congelada / `400` / `404`.
+  - `RecipeManageActions` (nuevo) + columna "Acciones" en `RecipeCatalogPanel` cuando `canManage`; `ConfirmModal` para el soft-delete (Guard 38, sin `window.confirm`).
+  - **De-duplicación:** `IngredientRowsEditor` + `recipeIngredientRow.ts` extraídos y consumidos por `CreateRecipeForm` **y** `EditRecipeModal` (elimina el clon del `<select>` de insumos). `shared/components/RowActionButtons` + `rowActionPresets.editRowAction` — fuente única de las barras de acción de fila; `InsumoManageActions` migrado (elimina el clon `RecipeManageActions ⇄ InsumoManageActions`).
+  - `RecipeCatalogPanel` refactorizado en `useRecipeList` + `useRecipeManagement` para respetar el límite de longitud de función.
+- **Estado:** frontend 237 → **243** tests (+6 RTL de `EditRecipeModal`), build/lint verdes (0 errores; warnings 7 → 6). Gates ticket-scoped verdes: duplicación repo 17 → 17 (sin clones nuevos), código muerto y complejidad/longitud limpios. **US-037 completa (backend + frontend).** Sin push — push+PR = 2026-09-10.

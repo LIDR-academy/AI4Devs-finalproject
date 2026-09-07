@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Utensils, Plus, Trash2 } from 'lucide-react';
+import { Utensils } from 'lucide-react';
 import { RecipesService } from '../services/recipes.service.js';
 import { InsumoItem } from '../../stock/services/stock.service.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
+import { IngredientRowsEditor } from './RecipeIngredientRows.js';
+import { IngredientRow, appendIngredientRow } from './recipeIngredientRow.js';
 import styles from './CreateRecipeForm.module.css';
 
 interface CreateRecipeFormProps {
   onCreated: (message: string) => void;
-}
-
-interface IngredientRow {
-  key: number;
-  insumoId: string;
-  quantity: string;
 }
 
 function useInsumosCatalog() {
@@ -45,7 +41,7 @@ function useCreateRecipeForm(onCreated: (message: string) => void, defaultInsumo
   }, [defaultInsumoId]);
 
   const addIngredientRow = () => {
-    setIngredients((prev) => [...prev, { key: prev.length ? Math.max(...prev.map((r) => r.key)) + 1 : 0, insumoId: defaultInsumoId, quantity: '' }]);
+    setIngredients((prev) => appendIngredientRow(prev, defaultInsumoId));
   };
 
   const removeIngredientRow = (key: number) => {
@@ -81,48 +77,6 @@ function useCreateRecipeForm(onCreated: (message: string) => void, defaultInsumo
 
   return { name, setName, category, setCategory, ingredients, addIngredientRow, removeIngredientRow, updateIngredientRow, error, isSubmitting, handleSubmit };
 }
-
-const IngredientRowFields: React.FC<{
-  row: IngredientRow;
-  insumos: InsumoItem[];
-  canRemove: boolean;
-  onChange: (field: 'insumoId' | 'quantity', value: string) => void;
-  onRemove: () => void;
-}> = ({ row, insumos, canRemove, onChange, onRemove }) => (
-  <div className="flex-gap-xs">
-    <select
-      className="input-touch flex-2"
-      value={row.insumoId}
-      onChange={(e) => onChange('insumoId', e.target.value)}
-      required
-      aria-label="Insumo del ingrediente"
-    >
-      {insumos.map((insumo) => (
-        <option key={insumo.id} value={insumo.id}>
-          {insumo.name} ({insumo.unitOfMeasure})
-        </option>
-      ))}
-    </select>
-    <input
-      type="text"
-      className="input-touch flex-1"
-      placeholder="Cantidad"
-      value={row.quantity}
-      onChange={(e) => onChange('quantity', e.target.value)}
-      required
-      aria-label="Cantidad del ingrediente"
-    />
-    <button
-      type="button"
-      className={`btn-touch btn-secondary ${styles['ingredient-row-remove-btn']}`}
-      onClick={onRemove}
-      disabled={!canRemove}
-      aria-label="Quitar ingrediente"
-    >
-      <Trash2 size={16} />
-    </button>
-  </div>
-);
 
 const RecipeBasicFields: React.FC<{
   name: string;
@@ -175,26 +129,13 @@ const IngredientsFieldset: React.FC<{
     <legend className={`form-label ${styles['p-0']}`}>
       Ingredientes:
     </legend>
-    <div className="flex-column flex-gap-xs">
-      {rows.map((row) => (
-        <IngredientRowFields
-          key={row.key}
-          row={row}
-          insumos={insumos}
-          canRemove={rows.length > 1}
-          onChange={(field, value) => onChangeRow(row.key, field, value)}
-          onRemove={() => onRemoveRow(row.key)}
-        />
-      ))}
-    </div>
-    <button
-      type="button"
-      className={`btn-touch btn-secondary flex-center flex-gap-xs ${styles['add-ingredient-btn']}`}
-      onClick={onAddRow}
-    >
-      <Plus size={16} />
-      Agregar Ingrediente
-    </button>
+    <IngredientRowsEditor
+      rows={rows}
+      insumos={insumos}
+      onChangeRow={onChangeRow}
+      onRemoveRow={onRemoveRow}
+      onAddRow={onAddRow}
+    />
   </fieldset>
 );
 

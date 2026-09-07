@@ -26,6 +26,18 @@ export interface RecipeListItem {
   ingredients: CreateRecipeIngredientInput[];
 }
 
+/**
+ * Edición parcial (US-037/TK-131). Solo se envían los campos que cambian.
+ * `description: null` limpia la descripción. `ingredients` reemplaza la composición
+ * completa — el backend responde 409 si la receta tiene una preparación cerrada.
+ */
+export interface UpdateRecipeRequest {
+  name?: string;
+  category?: string;
+  description?: string | null;
+  ingredients?: CreateRecipeIngredientInput[];
+}
+
 interface RescueIngredientItem {
   insumoId: string;
   insumoName: string;
@@ -67,6 +79,15 @@ export class RecipesService {
 
   public static async createRecipe(data: CreateRecipeRequest): Promise<CreateRecipeResult> {
     return apiRequest<CreateRecipeResult>('/recipes', { method: 'POST', body: data });
+  }
+
+  public static async updateRecipe(id: string, data: UpdateRecipeRequest): Promise<CreateRecipeResult> {
+    return apiRequest<CreateRecipeResult>(`/recipes/${id}`, { method: 'PUT', body: data });
+  }
+
+  /** Baja lógica (soft-delete). El backend responde 204 y la receta desaparece del recetario. */
+  public static async deleteRecipe(id: string): Promise<void> {
+    await apiRequest<void>(`/recipes/${id}`, { method: 'DELETE' });
   }
 
   public static async suggestRescueRecipes(mode: 'CATALOG' | 'CREATIVE' = 'CATALOG'): Promise<RescueSuggestionsResponse> {
