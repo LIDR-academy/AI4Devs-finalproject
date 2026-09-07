@@ -2,20 +2,31 @@
 
 ## Purpose
 
-Entry point to the project's **process and operations** standards (not code patterns): repo setup, running services, DB/testing/Nx commands, the mandatory task execution cycle, and documentation standards. 
+Entry point to the project's **process and operations** (not code patterns): the mandatory task
+execution cycle, the verification discipline that decides when a task is done, the Nx/pnpm command
+surface and what is runnable today, artifact ownership, and the change-to-documentation mapping.
 
-Split out from the architecture standards so the two are used at the right time: code patterns while writing code (`sport-itsm-engineering-principles`), process while operating the repo and closing tasks (this skill).
+Split out from the architecture and craft standards so the three are used at the right time:
+structure while placing code (`sport-itsm-architecture`), craft while writing it
+(`sport-itsm-engineering-principles`), process while operating the repo and closing a task (this
+skill).
 
 ## Role
 
-**Process/workflow reference (support skill)** — the *how to operate the repo*.
+**Process/operations reference (support skill)** — the *how to operate the repo*.
 
 ## Loaded by
 
-- `testing-implementer` and the dev agents when closing tasks / verifying a change.
-- Any agent that needs setup, DB, or documentation-update guidance.
+- `testing-implementer` and the dev agents when closing a task or verifying a change.
+- Any agent that needs the command surface, artifact ownership, or documentation-update guidance.
 
 ## Constraints
 
-- **SSOT:** `docs/standards/` wins over any summary here. Never fork its rules into this skill.
-- Covers process/operations only. Code/architecture → `sport-itsm-engineering-principles`.
+- **No `docs/standards/` directory exists in this repository.** Authority is distributed across
+  `CLAUDE.md` §2/§3/§5 and `docs/product/`; the skill carries the map and the process rules that
+  have no other home. Where an authoritative document does cover a rule, cite it rather than
+  restating it — a forked rule drifts.
+- Covers process and operations only. Structure → `sport-itsm-architecture`. Code craft →
+  `sport-itsm-engineering-principles`. Stack detail → `sport-itsm-backend` / `sport-itsm-frontend`.
+- Statements about what exists in the workspace go stale as tickets land. Re-verify before relying
+  on the "not runnable yet" list.
