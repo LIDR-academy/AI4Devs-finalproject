@@ -13,7 +13,7 @@ a modular monolith, not microservices"*:
 |---|---|---|
 | `apps/api` | One NestJS 11.2 process | Every route under `/api`, except `/health/live` and `/health/ready` |
 | `apps/web` | One Angular 20.3 client, built to static assets | No SSR — `apps/web` has no `main.server.ts` and none is planned |
-| PostgreSQL 16 | The single system of record | One database, one schema per bounded context |
+| PostgreSQL 18 | The single system of record | One database, one schema per bounded context |
 
 Deliberately **absent from the MVP**: no message broker, no cache tier, no separate reporting store.
 If a task implies one, it is a scope change, not an infrastructure detail.

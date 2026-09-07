@@ -203,7 +203,7 @@ Anything not implemented today lives here with a **target version** — that is 
 
 - **Assumptions:** `<pricing hypotheses, adoption assumptions, Spain-first bet>`
 - **Dependencies:** `<Polar (MoR) for platform billing, WhatsApp Business API, existing license system, data model>`
-- **Constraints:** `<DDD architecture, Nx monorepo, enforced license limits, tech stack (Angular 20 / NestJS 11 / PostgreSQL 16)>`
+- **Constraints:** `<DDD architecture, Nx monorepo, enforced license limits, tech stack (Angular 20 / NestJS 11 / PostgreSQL 18)>`
 
 ## 12. Risks
 

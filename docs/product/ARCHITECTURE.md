@@ -129,7 +129,7 @@ flowchart TB
 
 ## 3. Level 2 — Containers (C4 L2)
 
-Three deployable/runtime containers plus the identity dependency. Deliberately no message broker, no cache tier and no separate reporting store in the MVP — PostgreSQL 16 is the single system of record (constraint K8).
+Three deployable/runtime containers plus the identity dependency. Deliberately no message broker, no cache tier and no separate reporting store in the MVP — PostgreSQL 18 is the single system of record (constraint K8).
 
 ```mermaid
 flowchart TB
@@ -138,7 +138,7 @@ flowchart TB
     subgraph boundary["Sport ITSM system boundary"]
         WEB["<b>Web Client</b> - apps/web<br/>Angular 20.3, standalone components, signals,<br/>in-house SCSS component library, Reactive Forms, Transloco<br/>Self-Service Portal, Agent Workspace, Admin Console"]
         API["<b>API</b> - apps/api<br/>NestJS 11 on Express 5, Node.js 22 LTS<br/>Inbound HTTP adapter plus composition root<br/>global prefix /api, Swagger at /api/docs in dev,<br/>health at /health/live and /health/ready"]
-        DB[("<b>PostgreSQL 16</b><br/>single system of record<br/>tickets, SLA timers, catalog, knowledge,<br/>CMDB, approvals, append-only audit<br/>TypeORM 0.3, synchronize always false")]
+        DB[("<b>PostgreSQL 18</b><br/>single system of record<br/>tickets, SLA timers, catalog, knowledge,<br/>CMDB, approvals, append-only audit<br/>TypeORM 1.1, synchronize always false")]
     end
 
     IDP["SCMS Identity Provider / SSO"]
@@ -166,7 +166,7 @@ flowchart TB
 |---|---|---|
 | **`apps/web` — Angular client** | Render the Self-Service Portal, Agent Workspace and Admin Console; capture input with Reactive Forms; hold view state in signals; attach JWT and `Accept-Language`; present loading, error and empty states; WCAG 2.1 AA. | Any authorization decision, any priority derivation, any SLA computation, any lifecycle rule. The UI **reflects** server decisions; it never makes them (NFR-SEC-02). |
 | **`apps/api` — NestJS API** | Terminate HTTP; validate DTOs; authenticate and authorize; **compose** the hexagon by binding ports to adapters; execute use cases transactionally; emit and dispatch domain events; expose health and OpenAPI. | Business logic in controllers. Controllers are thin inbound adapters only. |
-| **PostgreSQL 16** | Durable state for every context, including SLA timer timestamps and the append-only audit trail. Schema evolves **only** through TypeORM migrations. | Business logic. No triggers or stored procedures carrying domain rules; the domain lives in TypeScript. |
+| **PostgreSQL 18** | Durable state for every context, including SLA timer timestamps and the append-only audit trail. Schema evolves **only** through TypeORM migrations. | Business logic. No triggers or stored procedures carrying domain rules; the domain lives in TypeScript. |
 
 ### 3.2 Protocols and cross-cutting HTTP contract
 
@@ -548,7 +548,7 @@ flowchart LR
         CLOCK["SystemClock"]
     end
 
-    DBX[("PostgreSQL 16")]
+    DBX[("PostgreSQL 18")]
     MAILX["Email Gateway"]
     SCMSX["SCMS reference data"]
 
@@ -941,6 +941,16 @@ Each decision below should be promoted to a file under `docs/adr/` when scaffold
 **Decision.** Do **not** add `@nx/cypress` to the workspace. Both `type:e2e` projects declare their `e2e` target with the built-in **`nx:run-commands`** executor invoking `cypress run`, and own their `cypress.config.ts` directly. Cypress is pinned at **15.20** (`CLAUDE.md` §2; exact patch in `package.json`), and the Cucumber chain is `@badeball/cypress-cucumber-preprocessor` + `@bahmutov/cypress-esbuild-preprocessor` + a direct `esbuild` dev dependency held at the same version `@angular/build` already resolves, so the workspace carries one copy of the native binary rather than a second. Neither Nx nor Cypress is bumped: the pins of §2 stand, and the plugin that cannot host them is simply not used.
 
 **Consequences.** The two harnesses gain one responsibility Nx would otherwise have covered: sequencing the application under test, expressed as an explicit `dependsOn` on the corresponding `build` (API) or `serve` (web) target rather than inherited from `devServerTarget`. In exchange the workspace stays on its pinned Nx and its pinned Cypress with **no violated peer range and no unusable generator**, and the `e2e` targets become readable shell invocations that any Cypress documentation applies to unchanged. This is not an unprecedented shape: `apps/api` already declares its `build` with `nx:run-commands` over `webpack-cli` instead of the `@nx/webpack` executor, so "drive the tool directly when the Nx wrapper adds no value" is the established pattern here rather than an exception carved for testing. The decision is cheap to revisit: adopting `@nx/cypress` later is a target-definition change in two `project.json` files, and it becomes available without any of this friction whenever Nx 23 is adopted — at which point this ADR should be re-read, not silently overridden.
+
+---
+
+### ADR-012 — The database identifier safety net is `uuidv7()`, and the schema therefore requires PostgreSQL 18
+
+**Context.** `DATA-MODEL.md` §3.1 fixes primary keys as **UUID v7 issued by the repository port** (`nextIdentity()`), never by the database, so that an aggregate is fully constructed and valid in pure domain code before any I/O (ADR-005, §6.2); v7 rather than v4 because time-ordered keys preserve B-tree insert locality on the append-heavy tables (`audit_entry`, `sla_event`, `ntf_dispatch`). Alongside that rule the column dictionary declared a database-level `DEFAULT gen_random_uuid()` — **v4** — described as a safety net for migrations and fixtures only. That mismatch was not a judgement: PostgreSQL 16 had no in-core v7 generator, so v4 was the only core option. The server pin has since moved to **PostgreSQL 18**, which ships **`uuidv7()` in core** (no extension), making the fallback's version a real choice for the first time. Nothing is built — no `data-source.ts`, no migration, no database — so the choice is free today and a multi-schema data migration later, because primary keys are referenced across contexts as soft references with no foreign key (`DATA-MODEL.md` §4).
+
+**Decision.** The database-level safety-net default becomes **`DEFAULT uuidv7()`** on every `uuid` primary key. The repository port remains the **only** legitimate generator of identity in normal operation; the default is still a safety net for fixtures, seed data and hand-written migration steps, and is now consistent with the rule it backs up, so no sanctioned write path can silently produce a v4 key among v7 keys. Two options were rejected: keeping `gen_random_uuid()` (a fallback that degrades the property it exists to protect, failing silently because UUIDs are opaque), and dropping the default entirely (which does not remove the need for an id in a fixture — it relocates the choice into whatever expression each author types). As a direct consequence, **PostgreSQL ≥ 18 becomes a requirement of the schema, not merely the pinned version**. The full argument and the rejected alternatives are recorded in `DATA-MODEL.md` §3.1.1; this ADR exists because the version floor is a stack-level constraint that outlives that document.
+
+**Consequences.** The server major pinned in `CLAUDE.md` §2 can no longer be lowered without a schema change: the first migration would fail with `function uuidv7() does not exist`. That is a loud, immediate, CI-visible failure against an unsupported version, which is strictly preferable to the silent index-locality regression it replaces — and the schema was already PostgreSQL-specific (native enum types, range partitioning, `jsonb`, schema-per-context `GRANT`/`REVOKE`), so the portability actually surrendered is a PostgreSQL major backslide the pin already excludes. No `CREATE EXTENSION` is introduced: `uuidv7()` is core, exactly as `gen_random_uuid()` has been since PostgreSQL 13. This is **not** a `ClockPort` violation (ADR-009) — the timestamp embedded in a surrogate identifier carries no business meaning and is never read as a business fact; `created_at` remains the sole authority for "when" and is still set by the application through `ClockPort`, never by a default or a trigger. The decision is cheap to revisit while no migration exists and expensive afterwards, which is why it is being taken now rather than deferred to the first table-creating migration.
 
 ---
 ## 11. Out of Scope for the MVP

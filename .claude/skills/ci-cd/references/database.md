@@ -34,7 +34,7 @@ The four scripts `T-C10-16` delivers: `migration:generate`, `migration:run`, `mi
 Once `apps/api-e2e` exists (`T-C10-06`) and the API talks to a database, acceptance runs need their
 own instance. The shape that works:
 
-1. Start a disposable PostgreSQL 16 (a service container, or the same compose file with a distinct
+1. Start a disposable PostgreSQL 18 (a service container, or the same compose file with a distinct
    volume and port).
 2. Wait with `pg_isready`, not a fixed sleep.
 3. Run the migration chain against it — the same chain production uses, never `synchronize`.

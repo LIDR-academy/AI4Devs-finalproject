@@ -28,8 +28,8 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 - **pnpm** — the only supported package manager. Use `pnpm` for installs and `pnpm nx …` for Nx targets. Do not introduce `npm`/`yarn` lockfiles.
 
 ## Database & ORM
-- **PostgreSQL 16** — Docker container in dev; managed instance in staging/prod.
-- **TypeORM 0.3** — entities, repositories, migrations.
+- **PostgreSQL 18** — Docker container in dev; managed instance in staging/prod.
+- **TypeORM 1.1** — entities, repositories, migrations.
 - **`pg`** driver.
 - **`synchronize` is ALWAYS `false`** in every environment. Schema changes happen **only** through migrations — never via schema auto-sync.
 - **Migrations execution policy:**
@@ -127,4 +127,4 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 - **Do NOT** prefix the health endpoints with `/api`, and do NOT expose Swagger outside dev.
 - **Do NOT** hand-format code against Prettier, or add stylistic ESLint rules that conflict with it.
 - **Do NOT** introduce `npm`/`yarn` lockfiles or a second package manager.
-- **Do NOT** downgrade or bump pinned major versions (Node 22, NestJS 11, Express 5, TypeORM 0.3, etc.) without an approved change.
+- **Do NOT** downgrade or bump pinned major versions (Node 22, NestJS 11, Express 5, TypeORM 1.1, etc.) without an approved change.

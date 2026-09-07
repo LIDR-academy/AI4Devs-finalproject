@@ -44,7 +44,7 @@ Source: epic map, **Foundation ownership (priced once)**. Nothing else in this e
 | [T-C10-13](T-C10-13.md) | `libs/shared/ui` — form primitives | ui | frontend-engineer | 3h |
 | [T-C10-14](T-C10-14.md) | `libs/shared/ui` — overlay primitive, focus trap/restore and `aria-live` announcer | ui | frontend-engineer | 3h |
 | [T-C10-15](T-C10-15.md) | `libs/shared/ui` — table, badge and state primitives | ui | frontend-engineer | 3h |
-| [T-C10-16](T-C10-16.md) | PostgreSQL 16 provisioning and the TypeORM data source | infrastructure | backend-engineer | 2.5h |
+| [T-C10-16](T-C10-16.md) | PostgreSQL 18 provisioning and the TypeORM data source | infrastructure | backend-engineer | 2.5h |
 | [T-C10-17](T-C10-17.md) | Base migration chain and the bootstrap migration | infrastructure | backend-engineer | 3h |
 
 **Order note.** The tag scheme (`T-C10-02`) precedes the boundary matrix (`T-C10-03`) because the matrix is expressed in those tags, and both precede every project so that the first illegal import fails the build rather than review. `libs/shared/ui` is four tickets because with no third-party component library every primitive is hand-built; it lands before the first screen (`T-C10-31`), which is exactly why the epic map prices the design system into `C10`.

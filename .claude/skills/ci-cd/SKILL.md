@@ -2,7 +2,7 @@
 name: ci-cd
 description: >
   CI/CD, DevOps and environment configuration for Sport ITSM (Nx monorepo, Angular 20.3 +
-  NestJS 11.2 + PostgreSQL 16, pnpm 10 on Node 22). Use it whenever working with
+  NestJS 11.2 + PostgreSQL 18, pnpm 10 on Node 22). Use it whenever working with
   Docker/docker-compose, Dockerfiles, GitHub Actions workflows (`.github/workflows/`), deploy
   configuration, health checks, reverse proxy, environment variables (`.env`), database
   provisioning and backups, per-project build/serve targets (`project.json`), or the
@@ -23,7 +23,7 @@ reference that matches the task.
 
 This repository has **no infrastructure at all**. There is no `docker/`, no `Dockerfile`, no
 `docker-compose.yml`, no reverse proxy config, no `scripts/`, and **no `.github/workflows/`**. The
-only planned piece is a local PostgreSQL 16 `docker-compose.yml`, owned by ticket **`T-C10-16`**.
+only planned piece is a local PostgreSQL 18 `docker-compose.yml`, owned by ticket **`T-C10-16`**.
 
 **No deployment platform has been chosen.** `readme.md` §2.4 ("Infraestructura y despliegue") is
 still an unanswered template question and no ADR covers it. Choosing one is an architecture decision
@@ -86,7 +86,7 @@ Before ANY change:
 Multi-stage Docker and layer optimisation · Docker Compose (healthchecks, `depends_on`, volumes,
 networks) · GitHub Actions (jobs, matrices, caching, artifacts, reusable workflows, concurrency,
 environments and secrets) · Reverse proxy for an SPA (gzip, cache, security headers) ·
-PostgreSQL 16 (`pg_dump`/`restore`, `pg_isready`) · TypeORM 0.3 migrations · Nx (targets,
+PostgreSQL 18 (`pg_dump`/`restore`, `pg_isready`) · TypeORM 1.1 migrations · Nx (targets,
 configurations, `affected`) · Shell scripting (entrypoints, health checks) · Security (CORS,
 headers, secrets, `.env`).
 
