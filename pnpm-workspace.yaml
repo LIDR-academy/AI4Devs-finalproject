@@ -1,0 +1,23 @@
+autoInstallPeers: true
+strictPeerDependencies: false
+
+# Build-script allowlist (pnpm 10).
+#
+# pnpm 10 refuses to run a dependency's install scripts unless the package is
+# named here. Both entries below are packages whose install script fetches or
+# links a platform-specific NATIVE binary — without it the package installs but
+# cannot run:
+#
+#   - cypress: its `postinstall` downloads the Cypress binary into the local
+#     cache. Blocked, `cypress run` aborts with `No version of Cypress is
+#     installed` (T-C10-06 / ADR-011).
+#   - esbuild: its `postinstall` links the `@esbuild/<platform>` binary that the
+#     Cucumber bundler (`@bahmutov/cypress-esbuild-preprocessor`) drives.
+#
+# The list is declared here rather than approved interactively (`pnpm
+# approve-builds`) because CI runs `pnpm install --frozen-lockfile` with no
+# human present: the allowlist has to be part of the repository, not of a
+# developer's machine.
+onlyBuiltDependencies:
+  - cypress
+  - esbuild

@@ -1,0 +1,23 @@
+# Development image — hot reload, for apps/web.
+FROM node:22-alpine
+
+# For the dev server's own health check below (curl is fine here: unlike the
+# API, Angular's dev server genuinely serves 200 at `/`).
+RUN apk add --no-cache curl
+
+RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
+
+WORKDIR /usr/local/app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.base.json ./
+
+# There is no libs/ directory in this repository yet — see the equivalent note
+# in docker/backend/Dockerfile.dev.
+COPY apps ./apps
+
+RUN pnpm install --frozen-lockfile
+
+EXPOSE 4200
+
+# Health check is defined per-service in docker-compose.
+CMD ["pnpm", "exec", "nx", "serve", "web"]
