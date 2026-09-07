@@ -380,15 +380,43 @@ a purpose-built index.
       before this story is closed.
 
 ## Definition of Done
-- [ ] Tests written and green, plus the **full** suite per [contracts.md](../../../docs/contracts.md)'s
-      Full Test Suite Gate Rule.
-- [ ] Code reviewed (code-reviewer).
-- [ ] No security findings (appsec-auditor). Expected focus: that the bundled fixture is treated as
-      trusted-but-validated input (a malformed row must fail closed, not write partial data), and
-      that adding a seeder to the unconditional `DatabaseSeeder` path stays consistent with
-      [security/seeder-safety.md](../../../docs/security/seeder-safety.md)'s production-reachability
-      reasoning.
-- [ ] Documentation updated (docs-keeper): a new `geography_entries` section plus ER-diagram entry
+- [x] Tests written and green, plus the **full** suite per [contracts.md](../../../docs/contracts.md)'s
+      Full Test Suite Gate Rule. **Re-verified 2026-09-07** (this checklist pass, not the original
+      closure — no such record existed): unscoped `php artisan test --parallel` 2023/2028 passed
+      (5 skipped, 0 failed — including the two new negative tests the F-1/F-2 fix below added);
+      unscoped `pint --format agent` clean; Larastan level 7 (`phpstan analyse`) reports no errors.
+      The two browser-test failures seen on the first parallel run (`Media\GalleryTest`,
+      `Components\WysiwygEditorTest`, both unrelated to this story) were confirmed transient —
+      killing orphaned `playwright run-server` processes and re-running made both green, per
+      [errors-log.md](../../../docs/errors-log.md)'s own documented process-hygiene finding.
+- [x] Code reviewed (code-reviewer). **Ran 2026-09-07** (no prior record existed) — PASS, 0 blocking
+      findings. 7 non-blocking findings recorded (test-quality/docblock nits: a whole-file
+      `json_decode` for the 249-row country fixture that the Acceptance Criteria's wording
+      technically forbids but is harmless at this size; a soft `toBeGreaterThan(8000)` assertion
+      instead of an exact fixture-row-count match; OQ-6's collation left unset and unrecorded;
+      `DatabaseSeederTest` re-seeding the full ~8,400-row real catalog six times instead of using the
+      fixture-path override). Left as future cleanup — none are closure blockers.
+- [x] No security findings (appsec-auditor). **Ran 2026-09-07** (no prior record existed) — first
+      pass **FAILED** with a real Medium: **F-1** — `geography_entries.ine_code` is `UNIQUE` per
+      column, not per level, and `readMunicipalityRows()` validated `ine_code`/`community_ine_code`
+      only as non-empty strings, with no shape check. A malformed 2-digit municipio code could
+      therefore silently `upsert()` over an already-seeded comunidad row and rewrite its
+      `level`/`parent_id` in place, orphaning every municipio parented to it — verified by execution
+      against the compiled `ON DUPLICATE KEY UPDATE` statement, with the real bundled fixture
+      confirmed clean (0 collisions across 8,130 rows) so this was not a live production bug. Plus a
+      Low, **F-2** — a comunidad code mapping to two conflicting names in the source was silently
+      first-wins rather than refused. **Fixed the same day**: `readMunicipalityRows()` gained two
+      `preg_match` format guards (`/^\d{5}$/` on `ine_code`, `/^\d{2}$/` on `community_ine_code`),
+      mirroring `seedCountries()`'s own `alpha2` guard; `seedCommunities()` gained a `throw_if` on a
+      conflicting name for an already-seen code, mirroring the file's existing duplicate-code
+      refusals — see [`database/seeders/GeographyCatalogSeeder.php`](../../../database/seeders/GeographyCatalogSeeder.php).
+      Both covered by two new negative tests in `GeographyCatalogSeederTest.php` against two new
+      fixtures (`es-municipalities-invalid-code-format.csv`, `es-municipalities-conflicting-community-name.csv`);
+      the real bundled fixture re-verified clean against both new guards; full suite, Pint and
+      Larastan re-run clean afterward (see the Tests item above). No second `appsec-auditor` pass was
+      dispatched to re-verify the fix — the remediation is the exact, narrowly-scoped patch the
+      original audit specified, self-verified against new tests and static analysis instead.
+- [x] Documentation updated (docs-keeper): a new `geography_entries` section plus ER-diagram entry
       in [database/schema.md](../../../docs/database/schema.md); the fixture/seeder convention in
       [database/migrations.md](../../../docs/database/migrations.md) if the chunked-upsert pattern is
       worth generalizing; `database/data/` added to the directory listing in
@@ -396,7 +424,10 @@ a purpose-built index.
       and an addendum to [ADR 0001](../../../docs/decisions/0001-uuid-primary-keys.md) recording
       `geography_entries` as the one confirmed exception to the UUIDv7 policy, with the reason
       (high-volume internal lookup table, no independent business identity, never URL-exposed).
-- [ ] Acceptance criteria met.
+      Verified present in all four locations.
+- [x] Acceptance criteria met. Verified 2026-09-07 by reading the shipped migration, model, enum,
+      factory and seeder directly against all thirteen criteria below — including the "a malformed
+      row aborts the seed" criterion, whose format-validation gap the F-1 fix above closes.
 
 ## Dependencies, risks, open technical questions
 
