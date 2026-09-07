@@ -17,6 +17,7 @@ Epic 3 add.
 - [Story 0027: the two-pass shape is only half the bound — the mutation point needs one too](#story-0027-the-two-pass-shape-is-only-half-the-bound--the-mutation-point-needs-one-too)
 - [Story 0027 re-audit: a cap on the array's *length* is not a cap on the loop's *work*](#story-0027-re-audit-a-cap-on-the-arrays-length-is-not-a-cap-on-the-loops-work)
 - [Status in story 0028: the rule's first real, shipped, closed call site](#status-in-story-0028-the-rules-first-real-shipped-closed-call-site)
+- [Story 0031a: the mutation point rule extends to a `#[Computed]` render path with no `validate()` in between at all](#story-0031a-the-mutation-point-rule-extends-to-a-computed-render-path-with-no-validate-in-between-at-all)
 
 ## A `max:` rule on an array does not gate that array's `.*` rules
 
@@ -506,53 +507,35 @@ records, and a future rule set with a `.*` wildcard and a database-hitting per-e
 needs the same review question asked of it: *what does one element cost, and who chose the element
 count?*
 
-_Last updated: 2026-09-04 — Story 0027 (products list + editor UI), Phase 4 **re-audit round 3**.
-Closed the ❌ this page opened one round earlier with a ✅ quoting the shipped `take()`-before-`whereIn()`
-shape and the three properties re-verified by execution, plus the ⚠️ that the new regression test pins
-the query *count* but not the *slice* (both shapes issue one query; only the binding count moves) and
-the ⚠️ recording the two Low residuals left in the method — an array-valued `id` reaching `(string)`,
-and the slice running ahead of the dedupe. The ❌ is relabelled **as found** rather than deleted, per
-this project's [audit-authored-page rule](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20):
-a page written during an audit describes a state the next round is expected to change, so the fix gets
-a slot rather than a rewrite._
+## Story 0031a: the mutation point rule extends to a `#[Computed]` render path with no `validate()` in between at all
 
-_Previously: 2026-09-04 — Story 0027 (products list + editor UI), Phase 4 **re-audit**. Added the
-section directly above, verifying the previous round's two fixes and recording the residual the
-second of them introduced, per this project's rule that a security fix is new code and is audited as
-such ([errors-log-archive.md](../errors-log-archive.md#two-of-the-three-security-audit-rounds-found-the-flaw-in-the-previous-rounds-fix--2026-08-19)).
-The save-path ❌ in the section above it is now **closed** and is marked so in place rather than left
-describing a tree that no longer exists; the new ❌ is marked **open** so the next round has a slot to
-fill rather than a framing to rewrite._
+Every instance above bounds a `validate()` call, or a public method whose per-item cost is a database query. Story 0031a's cartesian-generator UI (`App\Livewire\Products\VariantBuilder`, composing onto 0031's already-shipped component) reproduces the same *shape* of hazard — an unbounded client-supplied array reaching per-element work — through a route this page had not yet seen: a `#[Computed]` property read on **every** `.live` round trip while a modal is open, with **no `validate()` call anywhere between the client's write and the array being scanned**.
 
-_Previously: 2026-09-03 — Story 0028 (Product variant attribute types & values — backend), Phase 4.
-Added [Status in story 0028](#status-in-story-0028-the-rules-first-real-shipped-closed-call-site) and
-a third bullet under [The call sites in this repo today](#the-call-sites-in-this-repo-today):
-`App\Livewire\Products\AttributeTypes\Index::save()` is this page's first real, mounted, permission-
-gated caller of the pattern — a Phase 4 finding this time, reproducing the identical O(n²) cost this
-page already documents against `values.*.value`'s `distinct:ignore_case` rule, measured at 51 s of
-CPU at 20,000 submitted rows. Closed with code, not a hand-off: a **three**-pass sequential
-`validate()` structure, the existing two-pass ✅ shape plus one extra pass this domain specifically
-needs (a row-shape check, closing a related but distinct `TypeError` finding on the same submission)
-between the size pass and the O(n²) text-comparison pass. Story 0026's two sites are unchanged and
-remain exactly as open as [Status in story 0026](#status-in-story-0026-bounded-by-a-written-hand-off-not-by-code)
-already records._
+`attributeTypeIds` (the axis picker's `flux:checkbox.group`, `wire:model.live`) is a plain, unlocked public property — the client controls its length directly, on every keystroke, long before `generateCombinations()`'s own `variantAttributeTypeIdsRules()` (`max:5`) ever runs. `generateCombinationCount()`, the `#[Computed]` method that renders the live combination count beside the confirm button, reads it on every one of those round trips:
 
-_Previously: 2026-09-03 — Story 0026 (Product ↔ Sales Region assignment and tax resolution
-backend), Phase 4 **second re-audit**. Written in the previous round as a ❌/✅ pair with the ❌ marked
-**as found and open**, per [errors-log.md](../errors-log.md#a-security-page-documented-the-vulnerable-code-as-current-because-it-was-written-before-its-own-fix--2026-08-20)'s
-rule that an audit-authored page must leave a slot for the fix rather than need its framing
-rewritten — and this pass is that slot being filled, which is the first time on this doc set the rule
-has paid off inside the same story rather than a story later. **The ❌ is still the shipped code and
-is now recorded as a decision** in [Status in story 0026](#status-in-story-0026-bounded-by-a-written-hand-off-not-by-code):
-no code-level cost bound exists or can exist here, because the hazard lives at a `validate()` call
-site this story does not ship; what changed is that the false claim in
-`salesRegionIdsRules()`'s own docblock is gone and the mitigation is now dictated in writing to the
-story that owns the call site (DoD hand-off item 5). That section also records why the batch-query ✅
-was re-examined against D12 and **not** adopted in its place. Added
-[No array-level rule gates them — `list` does not either](#no-array-level-rule-gates-them--list-does-not-either):
-`salesRegionIdsRules()`'s docblock made the identical "runs before the per-element rules" claim about
-`list` that it made about `max:254`, and it is false for the same reason — measured at 30 queries for
-a 30-element associative array, with the same two-pass shape closing it at 0. Every number on this
-page was measured by execution against this worktree's MySQL, not extrapolated; the first measurement
-attempt was discarded because it registered a `DB::listen()` callback per loop iteration and
-therefore multiplied its own counts._
+```php
+// app/Livewire/Products/VariantBuilder.php — generateCombinationCount()
+$matched = $this->attributeTypes()->whereIn('id', $this->attributeTypeIds);   // Collection::whereIn(), not a query
+```
+
+`attributeTypes()` returns an already-eager-loaded, in-memory `Collection` (`with('values')`), so this is **not** the N-queries hazard [The call sites in this repo today](#the-call-sites-in-this-repo-today) documents — there is no database round trip here at all. The cost is CPU, not I/O: `Collection::whereIn()` runs an `in_array()` check against `$attributeTypeIds` for every element of `attributeTypes()`'s own collection, so a client-sized `$attributeTypeIds` (a forged payload well past the legal `max:5`) multiplies that scan's cost on every `.live` round trip the modal is open for — reachable with **zero** save attempted and no `validate()` call in the path at all, which is a strictly earlier and cheaper-to-trigger reach than every prior instance on this page.
+
+✅ **Fixed at the mutation point**, the same rule [Story 0027](#story-0027-the-two-pass-shape-is-only-half-the-bound--the-mutation-point-needs-one-too) states — *"Cap the array in PHP where it grows"* — applied to a `.live`-bound property write rather than to a public method appending to a locked one:
+
+```php
+// app/Livewire/Products/VariantBuilder.php
+public const MAX_GENERATE_AXES = 5;   // matches variantAttributeTypeIdsRules()'s own server-authoritative max:5
+
+public function updatedAttributeTypeIds(): void
+{
+    $this->attributeTypeIds = array_slice($this->attributeTypeIds, 0, self::MAX_GENERATE_AXES);
+}
+```
+
+The identical `array_slice($ids, 0, N)`-at-the-mutation-point shape `App\Livewire\Components\SearchableMultiSelect::resolveIdsAllowingPartialFailure()` already ships (cited by [The shapes that do bound it](#the-shapes-that-do-bound-it) above) — this is that same shape's second confirming instance, not a new mechanism. Server-side validation is unaffected and still authoritative: `updatedAttributeTypeIds()` bounds what the **render path** ever sees, `variantAttributeTypeIdsRules()`'s `max:5` still bounds what the **save path** accepts, and neither substitutes for the other.
+
+**The generalisable half.** The review question [The shapes that do bound it](#the-shapes-that-do-bound-it) ends on — *"who chose the element count, and is there any path that grows this array without passing the rule that bounds it?"* — has to be asked of every **read** of a client-writable array, not only of its `validate()` call and its append-only mutators. A `#[Computed]` method reached from a `.live`-bound property is a read path with no `validate()` gate anywhere upstream of it by construction (Livewire dehydrates and re-renders on every keystroke, independent of any later save), so an unbounded per-element cost on that path is reachable **before** a user ever clicks confirm.
+
+_Last updated: 2026-09-07 — Story 0031a (product variant generator — the cartesian combination builder UI). Added [Story 0031a](#story-0031a-the-mutation-point-rule-extends-to-a-computed-render-path-with-no-validate-in-between-at-all): the mutation-point rule [Story 0027](#story-0027-the-two-pass-shape-is-only-half-the-bound--the-mutation-point-needs-one-too) established (cap a client-writable array where it grows, not only at `validate()`) extends to a `#[Computed]` render-path property reached on every `.live` round trip with no `validate()` call anywhere upstream — `VariantBuilder::generateCombinationCount()`'s `Collection::whereIn()` scan over `$attributeTypeIds`, capped at the mutation point (`updatedAttributeTypeIds()`, `array_slice(..., 0, MAX_GENERATE_AXES)`) rather than only at the save-path `variantAttributeTypeIdsRules()` rule — the second confirming instance of `SearchableMultiSelect`'s own `array_slice()`-at-the-mutation-point shape. Folded this footer's accumulating chain into a single `_Previously:` line, per the doc-growth-management rule in [contracts.md](../contracts.md#doc-growth-management-rule)._
+
+_Previously: through 2026-09-04 — three Phase 4 audit/re-audit passes built out this page's core call-site history. Story 0027 (re-audit round 3) closed the `galleryMediaIds` mutation-point ❌ with the shipped `take()`-before-`whereIn()` shape; its own prior re-audit round added the section verifying that round's two fixes and recording the residual one of them introduced. Story 0028 added [Status in story 0028](#status-in-story-0028-the-rules-first-real-shipped-closed-call-site), the rule's first real, shipped, closed call site (`AttributeTypes\Index::save()`, a three-pass `validate()` structure). Story 0026's second re-audit recorded [Status in story 0026](#status-in-story-0026-bounded-by-a-written-hand-off-not-by-code) (no code-level bound possible — a written hand-off instead) and added [No array-level rule gates them — `list` does not either](#no-array-level-rule-gates-them--list-does-not-either). Every number on this page was measured by execution against a real worktree's MySQL, not extrapolated._
