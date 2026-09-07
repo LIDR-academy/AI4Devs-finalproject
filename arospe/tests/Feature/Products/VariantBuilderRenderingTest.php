@@ -227,6 +227,33 @@ test('the featuredMediaId refusal renders beside the image picker when a chosen 
     $component->assertHasErrors(['featuredMediaId']);
 });
 
+test('the staged image previews inside the form before the variant is saved, and clearing it removes the preview', function () {
+    $this->actingAs(variantRenderingActor());
+
+    $product = Product::factory()->create(['sku' => '0001']);
+    variantRenderingTestAttribute('Talla', 'M');
+    $media = Media::factory()->create(['title' => 'Swatch']);
+
+    $component = Livewire::test(VariantBuilder::class, ['productId' => $product->id]);
+    $component->call('openCreateForm');
+
+    // No preview at all while nothing has been chosen yet -- the empty branch still renders its
+    // data-test hook so a test can assert either state without a conditional selector.
+    $component->assertSeeHtml('data-test="variant-image-preview"');
+    expect($component->instance()->featuredMediaPreview())->toBeNull();
+
+    $component->call('setVariantImage', [['id' => $media->id]]);
+
+    // The whole point: this is visible BEFORE saveVariant() ever runs.
+    $component->assertSee('Swatch');
+    expect($component->instance()->featuredMediaPreview())->not->toBeNull();
+
+    $component->call('clearVariantImage');
+
+    expect($component->get('featuredMediaId'))->toBeNull();
+    expect($component->instance()->featuredMediaPreview())->toBeNull();
+});
+
 // =====================================================================
 // Combination is shown fixed on edit (D-11), never as disabled selects.
 // =====================================================================
