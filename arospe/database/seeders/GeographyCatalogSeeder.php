@@ -167,8 +167,19 @@ class GeographyCatalogSeeder extends Seeder
         foreach ($this->readMunicipalityRows($path) as $row) {
             $code = $row['community_ine_code'];
 
-            if (! isset($communities[$code])) {
-                $communities[$code] = $row['community_name'];
+            $name = $row['community_name'];
+
+            if (isset($communities[$code])) {
+                // Phase 4 finding F-2: a conflicting name for an already-seen community
+                // code used to be silently first-wins. Refuse instead, matching the
+                // duplicate-ine_code/duplicate-alpha2 guards elsewhere in this class.
+                throw_if(
+                    $communities[$code] !== $name,
+                    RuntimeException::class,
+                    "Comunidad autónoma code [{$code}] maps to conflicting names [{$communities[$code]}] and [{$name}] in [{$path}]; refusing to seed a corrupt catalog.",
+                );
+            } else {
+                $communities[$code] = $name;
             }
         }
 
@@ -264,10 +275,11 @@ class GeographyCatalogSeeder extends Seeder
      * Stream the municipality CSV, yielding one associative row per line
      * with O(1) memory -- never the whole file decoded into an array.
      *
-     * A missing file, a row with the wrong column count, or a row missing
-     * its INE code aborts the whole seed (via the exception propagating out
-     * of the enclosing transaction in {@see run()}) rather than silently
-     * skipping or writing a partial row.
+     * A missing file, a row with the wrong column count, a row missing its
+     * INE code, or a row whose `ine_code`/`community_ine_code` does not
+     * match its expected digit-count shape aborts the whole seed (via the
+     * exception propagating out of the enclosing transaction in
+     * {@see run()}) rather than silently skipping or writing a partial row.
      *
      * @return iterable<int, array{ine_code: string, name: string, province_name: string, community_ine_code: string, community_name: string}>
      */
@@ -329,6 +341,24 @@ class GeographyCatalogSeeder extends Seeder
                 || ! is_string($associative['community_name']) || trim($associative['community_name']) === '',
                 RuntimeException::class,
                 "Row at line [{$lineNumber}] in [{$path}] is missing a required field.",
+            );
+
+            // Phase 4 finding F-1: `ine_code` is UNIQUE per column, not per level (see the
+            // migration), and upsertChunked()'s update list rewrites `level`/`parent_id` on
+            // any unique-key collision. Without a format check, a municipio row carrying a
+            // 2-digit code could silently overwrite a comunidad row as a municipality,
+            // orphaning every municipio parented to it. Mirrors seedCountries()'s own
+            // preg_match guard on `alpha2`.
+            throw_if(
+                preg_match('/^\d{5}$/', $associative['ine_code']) !== 1,
+                RuntimeException::class,
+                "Row at line [{$lineNumber}] in [{$path}] has a malformed INE code [{$associative['ine_code']}]; expected 5 digits.",
+            );
+
+            throw_if(
+                preg_match('/^\d{2}$/', $associative['community_ine_code']) !== 1,
+                RuntimeException::class,
+                "Row at line [{$lineNumber}] in [{$path}] has a malformed comunidad autónoma INE code [{$associative['community_ine_code']}]; expected 2 digits.",
             );
 
             /** @var array{ine_code: string, name: string, province_name: string, community_ine_code: string, community_name: string} $associative */
