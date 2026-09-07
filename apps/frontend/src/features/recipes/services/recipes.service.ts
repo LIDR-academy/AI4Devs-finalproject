@@ -44,7 +44,7 @@ export interface RescueRecipeProposal {
 }
 
 export interface RescueSuggestionsResponse {
-  source: 'GEMINI' | 'OPENAI_COMPATIBLE' | 'HEURISTIC';
+  source: 'CATALOG' | 'GEMINI' | 'OPENAI_COMPATIBLE' | 'HEURISTIC';
   proposals: RescueRecipeProposal[];
 }
 
@@ -68,7 +68,11 @@ export class RecipesService {
     return apiRequest<CreateRecipeResult>('/recipes', { method: 'POST', body: data });
   }
 
-  public static async suggestRescueRecipes(): Promise<RescueSuggestionsResponse> {
-    return apiRequest<RescueSuggestionsResponse>('/recipes/rescue-suggestions', { method: 'POST' });
+  public static async suggestRescueRecipes(mode: 'CATALOG' | 'CREATIVE' = 'CATALOG'): Promise<RescueSuggestionsResponse> {
+    return apiRequest<RescueSuggestionsResponse>('/recipes/rescue-suggestions', {
+      method: 'POST',
+      body: { mode },
+    });
   }
 }
+

@@ -142,4 +142,93 @@ describe('TK-122-FE: RescueRecipesModal', () => {
       expect(screen.getByText(/Inconveniente temporal en el servidor/i)).toBeInTheDocument();
     });
   });
+
+  describe('TK-124-FE: Selector de Modo Dual y Zero Data Leakage', () => {
+    it('muestra pestañas de modo, inicia en CATALOG con aviso de privacidad y envía { mode: "CATALOG" }', async () => {
+      const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+        const body = init?.body ? JSON.parse(init.body as string) : {};
+        expect(body.mode).toBe('CATALOG');
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            source: 'CATALOG',
+            proposals: [
+              {
+                name: 'Receta Secreta del Local',
+                description: 'Fórmula exclusiva del restaurante',
+                category: 'PLATO_PRINCIPAL',
+                estimatedPortions: 4,
+                ingredients: [
+                  { insumoId: 'ins-1', insumoName: 'Carne Picada', quantity: '2.000', unit: 'KG', isAtRisk: true },
+                ],
+                preventedWasteEstimate: '2.000 KG',
+              },
+            ],
+          }),
+        };
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      render(<RescueRecipesModal isOpen={true} onClose={() => {}} />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Receta Secreta del Local')).toBeInTheDocument();
+        expect(screen.getByText(/Catálogo Propio \(100% Local \/ Zero Data Leakage\)/i)).toBeInTheDocument();
+        expect(screen.getByText(/Privacidad Garantizada/i)).toBeInTheDocument();
+      });
+    });
+
+    it('alterna a Modo Creativo (IA) al pulsar la pestaña y envía { mode: "CREATIVE" }', async () => {
+      const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+        const body = init?.body ? JSON.parse(init.body as string) : {};
+        if (body.mode === 'CREATIVE') {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              source: 'GEMINI',
+              proposals: [
+                {
+                  name: 'Salteado Culinario IA',
+                  description: 'Propuesta creativa inventada por IA',
+                  category: 'SALTEADOS',
+                  estimatedPortions: 2,
+                  ingredients: [
+                    { insumoId: 'ins-2', insumoName: 'Zanahoria', quantity: '0.500', unit: 'KG', isAtRisk: true },
+                  ],
+                  preventedWasteEstimate: '0.500 KG',
+                },
+              ],
+            }),
+          };
+        }
+        // CATALOG inicial
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            source: 'CATALOG',
+            proposals: [],
+          }),
+        };
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      render(<RescueRecipesModal isOpen={true} onClose={() => {}} />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/No se encontraron recetas en tu catálogo/i)).toBeInTheDocument();
+      });
+
+      const creativeTab = screen.getByRole('tab', { name: /Generación Creativa \(IA\)/i });
+      fireEvent.click(creativeTab);
+
+      await waitFor(() => {
+        expect(screen.getByText('Salteado Culinario IA')).toBeInTheDocument();
+        expect(screen.getByText(/Sugerencias Inteligentes Generadas por IA \(GEMINI\)/i)).toBeInTheDocument();
+      });
+    });
+  });
 });
+

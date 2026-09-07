@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Sparkles, Bot, AlertTriangle, CheckCircle2, Save, RefreshCw } from 'lucide-react';
+import { Sparkles, Bot, AlertTriangle, CheckCircle2, Save, RefreshCw, BookOpen, ShieldCheck, Lock } from 'lucide-react';
 import { Modal } from '../../../shared/components/Modal.js';
 import { ModalHeader } from '../../../shared/components/ModalHeader.js';
 import { ErrorBanner } from '../../../shared/components/ErrorBanner.js';
@@ -18,6 +18,14 @@ interface RescueRecipesModalProps {
 }
 
 const SourceBadge: React.FC<{ source: RescueSuggestionsResponse['source'] }> = ({ source }) => {
+  if (source === 'CATALOG') {
+    return (
+      <div className={styles['source-badge-catalog']} role="status">
+        <ShieldCheck size={16} />
+        <span>Catálogo Propio (100% Local / Zero Data Leakage)</span>
+      </div>
+    );
+  }
   if (source === 'HEURISTIC') {
     return (
       <div className={styles['source-badge-heuristic']} role="status">
@@ -97,6 +105,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isSaving, isSaved
 );
 
 function useRescueRecipes(isOpen: boolean, onRecipeSaved?: () => void) {
+  const [mode, setMode] = useState<'CATALOG' | 'CREATIVE'>('CATALOG');
   const [data, setData] = useState<RescueSuggestionsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,11 +113,12 @@ function useRescueRecipes(isOpen: boolean, onRecipeSaved?: () => void) {
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const loadSuggestions = useCallback(async () => {
+  const loadSuggestions = useCallback(async (targetMode?: 'CATALOG' | 'CREATIVE') => {
+    const activeMode = targetMode ?? mode;
     setIsLoading(true);
     setError(null);
     try {
-      const res = await RecipesService.suggestRescueRecipes();
+      const res = await RecipesService.suggestRescueRecipes(activeMode);
       setData(res);
       setSavedIndexes(new Set());
     } catch (err: unknown) {
@@ -117,7 +127,7 @@ function useRescueRecipes(isOpen: boolean, onRecipeSaved?: () => void) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [mode]);
 
   useEffect(() => {
     if (isOpen) {
@@ -153,6 +163,8 @@ function useRescueRecipes(isOpen: boolean, onRecipeSaved?: () => void) {
   );
 
   return {
+    mode,
+    setMode,
     data,
     isLoading,
     error,
@@ -169,9 +181,18 @@ interface ProposalsGridProps {
   savingIndex: number | null;
   savedIndexes: Set<number>;
   onSave: (proposal: RescueRecipeProposal, idx: number) => void;
+  mode: 'CATALOG' | 'CREATIVE';
+  onSwitchToCreative: () => void;
 }
 
-const ProposalsGrid: React.FC<ProposalsGridProps> = ({ proposals, savingIndex, savedIndexes, onSave }) => (
+const ProposalsGrid: React.FC<ProposalsGridProps> = ({
+  proposals,
+  savingIndex,
+  savedIndexes,
+  onSave,
+  mode,
+  onSwitchToCreative,
+}) => (
   <div className={styles['recipe-cards-grid']}>
     {proposals?.map((proposal, idx) => (
       <ProposalCard
@@ -183,8 +204,22 @@ const ProposalsGrid: React.FC<ProposalsGridProps> = ({ proposals, savingIndex, s
       />
     ))}
     {proposals && proposals.length === 0 && (
-      <div className="flex-center p-8 text-secondary-color">
-        No hay remanentes en riesgo crítico en este momento. La cocina opera en niveles óptimos.
+      <div className="flex-center p-8 flex-column flex-gap-sm text-secondary-color">
+        {mode === 'CATALOG' ? (
+          <>
+            <p>No se encontraron recetas en tu catálogo para los insumos en riesgo, o no hay remanentes en riesgo crítico en este momento.</p>
+            <button
+              type="button"
+              className="btn-touch btn-secondary flex-center flex-gap-xs"
+              onClick={onSwitchToCreative}
+            >
+              <Sparkles size={16} />
+              <span>Generar Nuevas Propuestas con Modo Creativo (IA)</span>
+            </button>
+          </>
+        ) : (
+          <p>No hay remanentes en riesgo crítico en este momento. La cocina opera en niveles óptimos.</p>
+        )}
       </div>
     )}
   </div>
@@ -196,6 +231,8 @@ export const RescueRecipesModal: React.FC<RescueRecipesModalProps> = ({
   onRecipeSaved,
 }) => {
   const {
+    mode,
+    setMode,
     data,
     isLoading,
     error,
@@ -221,13 +258,53 @@ export const RescueRecipesModal: React.FC<RescueRecipesModalProps> = ({
         {successMessage && <SuccessFeedbackBanner message={successMessage} />}
         {error && <ErrorBanner message={error} />}
 
+        <div className={styles['mode-selector']} role="tablist" aria-label="Modo de generación de recetas">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'CATALOG'}
+            className={`${styles['mode-tab']} ${mode === 'CATALOG' ? styles['mode-tab-active'] : ''}`}
+            onClick={() => {
+              setMode('CATALOG');
+              loadSuggestions('CATALOG');
+            }}
+            disabled={isLoading}
+          >
+            <BookOpen size={18} />
+            <span>Recetas del Restaurante (100% Privado)</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'CREATIVE'}
+            className={`${styles['mode-tab']} ${mode === 'CREATIVE' ? styles['mode-tab-active'] : ''}`}
+            onClick={() => {
+              setMode('CREATIVE');
+              loadSuggestions('CREATIVE');
+            }}
+            disabled={isLoading}
+          >
+            <Sparkles size={18} />
+            <span>Generación Creativa (IA)</span>
+          </button>
+        </div>
+
+        {mode === 'CATALOG' && (
+          <div className={styles['privacy-notice']} role="status">
+            <Lock size={16} />
+            <span>
+              <strong>Privacidad Garantizada:</strong> Las recetas y fórmulas del restaurante se procesan únicamente en este servidor. Ningún dato culinario es compartido con proveedores externos de IA.
+            </span>
+          </div>
+        )}
+
         {data && (
           <div className={styles['source-bar']}>
             <SourceBadge source={data.source} />
             <button
               type="button"
               className="btn-touch btn-secondary flex-center flex-gap-xs"
-              onClick={loadSuggestions}
+              onClick={() => loadSuggestions()}
               disabled={isLoading}
               title="Volver a generar sugerencias"
             >
@@ -250,9 +327,15 @@ export const RescueRecipesModal: React.FC<RescueRecipesModalProps> = ({
             savingIndex={savingIndex}
             savedIndexes={savedIndexes}
             onSave={handleSaveToCatalog}
+            mode={mode}
+            onSwitchToCreative={() => {
+              setMode('CREATIVE');
+              loadSuggestions('CREATIVE');
+            }}
           />
         )}
       </div>
     </Modal>
   );
 };
+

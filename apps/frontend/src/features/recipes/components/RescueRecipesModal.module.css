@@ -7,6 +7,45 @@
   padding-right: var(--space-2);
 }
 
+.mode-selector {
+  display: flex;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md, 8px);
+  padding: 4px;
+  gap: var(--space-2);
+}
+
+.mode-tab {
+  flex: 1;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-standard);
+}
+
+.mode-tab:hover:not(:disabled) {
+  color: var(--text-primary);
+  background-color: var(--bg-hover, rgba(255, 255, 255, 0.05));
+}
+
+.mode-tab-active {
+  color: var(--text-primary);
+  background-color: var(--bg-root);
+  border-color: var(--color-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
 .source-bar {
   display: flex;
   align-items: center;
@@ -17,6 +56,15 @@
   background-color: var(--bg-surface);
   border: 1px solid var(--rule);
   border-radius: var(--radius-sm, 4px);
+}
+
+.source-badge-catalog {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--color-success);
 }
 
 .source-badge-ai {
@@ -36,6 +84,19 @@
   font-weight: var(--fw-semibold);
   color: var(--color-warning);
 }
+
+.privacy-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-xs);
+  color: var(--color-success);
+  background-color: color-mix(in srgb, var(--color-success) 10%, transparent);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-sm, 4px);
+}
+
 
 .recipe-cards-grid {
   display: flex;
