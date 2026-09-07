@@ -1,9 +1,9 @@
-import crypto from 'crypto';
 import { Recipe } from '../../../domain/recipes/entities/Recipe.js';
 import { RecipeIngredient } from '../../../domain/recipes/entities/RecipeIngredient.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
 import { IRecipeRepository } from '../../../domain/recipes/repositories/IRecipeRepository.js';
 import { IInsumoRepository } from '../../../domain/stock/repositories/IInsumoRepository.js';
+import { IdGenerator } from '../../../domain/shared/IdGenerator.js';
 import { EntityNotFoundException } from '../../../domain/errors/EntityNotFoundException.js';
 
 export interface CreateRecipeIngredientDTO {
@@ -26,22 +26,18 @@ export interface CreateRecipeResponseDTO {
 export class CreateRecipeUseCase {
   constructor(
     private readonly recipeRepository: IRecipeRepository,
-    private readonly insumoRepository: IInsumoRepository
+    private readonly insumoRepository: IInsumoRepository,
+    private readonly idGenerator: IdGenerator
   ) {}
 
   public async execute(dto: CreateRecipeDTO): Promise<CreateRecipeResponseDTO> {
-    for (const ingredientDto of dto.ingredients) {
-      const insumo = await this.insumoRepository.findById(ingredientDto.insumoId);
-      if (!insumo) {
-        throw new EntityNotFoundException('Insumo', ingredientDto.insumoId);
-      }
-    }
+    await this.assertInsumosExist(dto.ingredients);
 
-    const recipeId = crypto.randomUUID();
+    const recipeId = this.idGenerator.next('rec');
     const ingredients = dto.ingredients.map(
       (ingredientDto) =>
         new RecipeIngredient(
-          crypto.randomUUID(),
+          this.idGenerator.next('ri'),
           recipeId,
           ingredientDto.insumoId,
           new DecimalQuantity(ingredientDto.quantity)
@@ -52,5 +48,15 @@ export class CreateRecipeUseCase {
     await this.recipeRepository.save(recipe);
 
     return { message: 'Recipe created successfully', recipeId };
+  }
+
+  private async assertInsumosExist(ingredients: CreateRecipeIngredientDTO[]): Promise<void> {
+    const uniqueInsumoIds = [...new Set(ingredients.map((i) => i.insumoId))];
+    const found = await Promise.all(uniqueInsumoIds.map((id) => this.insumoRepository.findById(id)));
+
+    const missing = uniqueInsumoIds.find((_, index) => found[index] === null);
+    if (missing) {
+      throw new EntityNotFoundException('Insumo', missing);
+    }
   }
 }

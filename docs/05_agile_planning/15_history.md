@@ -503,3 +503,16 @@ inputs:
   - Contrato HTTP intacto (`RescueSuggestionsDto` sin cambio de forma; la sanitización solo puede reducir ingredientes/propuestas).
   - Auditoría adversarial [`AUDIT-DEV-009`](../audits/AUDIT-DEV-009-TK-126-quality-report.md) → **APROBADO PARA COMMIT**.
   - **Sin push / sin PR** — instrucción del humano.
+
+### 2026-09-07 (cont.) - TK-127: deuda de calidad y eficiencia del módulo de recetas (AUDIT-DEV-007 G-C)
+- **Acciones Realizadas (TK-127 — remediación técnica, `N/A (Técnico) · AUDIT-DEV-007 F-5/F-7/F-8/F-10`):**
+  - ✅ **F-8:** `CreateRecipeUseCase` recibe `IdGenerator` inyectado (`rec-<uuid>` / `ri-<uuid>` en vez de `crypto.randomUUID()` en la capa de aplicación — misma clase que AUDIT-DEV-006 F-3). Validación de insumos en batch (`Promise.all` sobre ids únicos) en vez de loop secuencial `await`.
+  - ✅ **F-10:** `createRecipeSchema` endurecido — `quantity` con regex `^\d{1,8}(\.\d{1,4})?$` alineado a la escala física `Decimal(12,4)` (`backend_rules.md §3`) + `> 0`; `name` max 120, `category` max 60, `description` max 500, `ingredients` max 50; `.superRefine` rechaza `insumoId` duplicado. `"abc"` y `0` pasan de 500 a 400; receta con insumo duplicado pasa de 201 a 400.
+  - ✅ **F-5:** `PrismaRecipeRepository.save` rama `update` del `upsert` reconstruye los ingredientes (`deleteMany: {}` + `create`) — antes solo tocaba `name`/`category`/`description` (trampa latente para el primer `PUT`).
+  - ✅ **F-7:** `IRecipeRepository.findByInsumoIds(insumoIds)` (impl Prisma con `where: { ingredients: { some: { insumoId: { in } } } }` + InMemory); `SuggestRescueRecipesUseCase` lo usa en el ranking CATALOG en vez de `findAll()` — deja de traer todo el catálogo para quedarse con 3.
+  - **Diferido (deuda registrada):** paginación de `GET /recipes` (cambia contrato → decisión de producto); N+1 de `GetRecipeAvailabilityUseCase`/`ConsumeRecipeUseCase` (métodos batch en repos de `stock`/`kitchen`); F-1/F-16 (G-D).
+- **Estado:**
+  - Backend 486→**496** tests, frontend 231, build/lint verdes. Gates de duplicación/complejidad/código-muerto/contrato-drift verdes (el Zod queda más estricto que el `DecimalString` genérico del contrato, sin drift). `CreateRecipeUseCase` sin test dedicado hasta ahora — creado (Guard 11).
+  - Mutation scoped — ver AUDIT-DEV-010.
+  - Auditoría adversarial [`AUDIT-DEV-010`](../audits/AUDIT-DEV-010-TK-127-quality-report.md) → **APROBADO PARA COMMIT**.
+  - **Sin push / sin PR** — instrucción del humano.

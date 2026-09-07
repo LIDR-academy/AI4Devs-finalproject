@@ -22,26 +22,40 @@ export class PrismaRecipeRepository implements IRecipeRepository {
     return list.map((raw) => this.toDomain(raw));
   }
 
+  public async findByInsumoIds(insumoIds: string[]): Promise<Recipe[]> {
+    if (insumoIds.length === 0) {
+      return [];
+    }
+    const list = await this.prisma.recipe.findMany({
+      where: { ingredients: { some: { insumoId: { in: insumoIds } } } },
+      include: { ingredients: true },
+    });
+    return list.map((raw) => this.toDomain(raw));
+  }
+
   public async save(recipe: Recipe): Promise<void> {
+    const ingredientCreate = recipe.ingredients.map((ingredient) => ({
+      id: ingredient.id,
+      insumoId: ingredient.insumoId,
+      quantity: ingredient.quantity.toDecimal(),
+    }));
+
     await this.prisma.recipe.upsert({
       where: { id: recipe.id },
       update: {
         name: recipe.name,
         category: recipe.category,
         description: recipe.description,
+        // AUDIT-DEV-007 F-5: la rama update también reemplaza la composición
+        // (antes solo tocaba name/category/description).
+        ingredients: { deleteMany: {}, create: ingredientCreate },
       },
       create: {
         id: recipe.id,
         name: recipe.name,
         category: recipe.category,
         description: recipe.description,
-        ingredients: {
-          create: recipe.ingredients.map((ingredient) => ({
-            id: ingredient.id,
-            insumoId: ingredient.insumoId,
-            quantity: ingredient.quantity.toDecimal(),
-          })),
-        },
+        ingredients: { create: ingredientCreate },
       },
     });
   }

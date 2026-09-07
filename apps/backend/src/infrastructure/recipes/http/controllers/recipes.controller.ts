@@ -5,19 +5,49 @@ import { ListRecipesUseCase } from '../../../../application/recipes/use-cases/Li
 import { SuggestRescueRecipesUseCase } from '../../../../application/recipes/use-cases/SuggestRescueRecipesUseCase.js';
 import { respondValidationError } from '../../../http/utils/responseUtils.js';
 
-const createRecipeSchema = z.object({
-  name: z.string().min(1, 'El nombre de la receta es requerido.'),
-  category: z.string().min(1, 'La categoría de la receta es requerida.'),
-  description: z.string().optional(),
-  ingredients: z
-    .array(
-      z.object({
-        insumoId: z.string().min(1, 'El ID de insumo es obligatorio.'),
-        quantity: z.union([z.number().positive('La cantidad debe ser positiva.'), z.string().min(1)]),
-      })
-    )
-    .min(1, 'La receta debe tener al menos un ingrediente.'),
-});
+const MAX_INGREDIENTS = 50;
+
+// AUDIT-DEV-007 F-10 / backend_rules.md §3: el regex coincide con la escala física
+// `RecipeIngredient.quantity Decimal(12,4)` (≤ 8 enteros, ≤ 4 decimales) — más estricto
+// que el `DecimalString` genérico del contrato. Rechaza `0` / `"abc"` en la frontera
+// (antes reventaban en `new DecimalQuantity` → HTTP 500).
+const quantitySchema = z.union([
+  z.number().positive('La cantidad debe ser positiva.').finite('La cantidad debe ser finita.'),
+  z
+    .string()
+    .regex(/^\d{1,8}(\.\d{1,4})?$/, 'La cantidad debe ser un decimal de hasta 8 enteros y 4 decimales.')
+    .refine((v) => parseFloat(v) > 0, 'La cantidad debe ser mayor que cero.'),
+]);
+
+const createRecipeSchema = z
+  .object({
+    name: z.string().min(1, 'El nombre de la receta es requerido.').max(120, 'El nombre no puede superar 120 caracteres.'),
+    category: z.string().min(1, 'La categoría de la receta es requerida.').max(60, 'La categoría no puede superar 60 caracteres.'),
+    description: z.string().max(500, 'La descripción no puede superar 500 caracteres.').optional(),
+    ingredients: z
+      .array(
+        z.object({
+          insumoId: z.string().min(1, 'El ID de insumo es obligatorio.'),
+          quantity: quantitySchema,
+        })
+      )
+      .min(1, 'La receta debe tener al menos un ingrediente.')
+      .max(MAX_INGREDIENTS, `La receta no puede tener más de ${MAX_INGREDIENTS} ingredientes.`),
+  })
+  .superRefine((data, ctx) => {
+    const seen = new Set<string>();
+    for (const ingredient of data.ingredients) {
+      if (seen.has(ingredient.insumoId)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `El insumo ${ingredient.insumoId} aparece más de una vez; consolida la cantidad en una sola línea.`,
+          path: ['ingredients'],
+        });
+        return;
+      }
+      seen.add(ingredient.insumoId);
+    }
+  });
 
 const rescueSuggestionsSchema = z.object({
   mode: z.enum(['CATALOG', 'CREATIVE']).optional().default('CATALOG'),

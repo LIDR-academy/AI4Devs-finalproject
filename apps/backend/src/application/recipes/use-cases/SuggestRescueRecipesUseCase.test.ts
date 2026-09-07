@@ -229,6 +229,11 @@ describe('TK-122 / TK-124 / TK-125: SuggestRescueRecipesUseCase Application Suit
 
     it('usa la descripción de la receta y, si falta, un texto por defecto; marca isAtRisk por ingrediente', async () => {
       await recipeRepo.save(
+        new Recipe('rec-desc', 'ConDesc', 'SALSAS', [
+          new RecipeIngredient('rd', 'rec-desc', 'ins-tomate', new DecimalQuantity('1.000')),
+        ], 'Mi salsa artesanal')
+      );
+      await recipeRepo.save(
         new Recipe('rec-mix', 'Mixta', 'GUARNICION', [
           new RecipeIngredient('m1', 'rec-mix', 'ins-tomate', new DecimalQuantity('1.000')), // en riesgo
           new RecipeIngredient('m2', 'rec-mix', 'ins-crema', new DecimalQuantity('0.200')), // NO en riesgo
@@ -237,12 +242,72 @@ describe('TK-122 / TK-124 / TK-125: SuggestRescueRecipesUseCase Application Suit
 
       const result = await useCase.execute('CATALOG');
 
+      expect(result.proposals.find((p) => p.name === 'ConDesc')?.description).toBe('Mi salsa artesanal');
       const mixta = result.proposals.find((p) => p.name === 'Mixta');
       expect(mixta?.description).toContain('catálogo propio');
       expect(mixta?.category).toBe('GUARNICION');
       const byId = Object.fromEntries(mixta!.ingredients.map((i) => [i.insumoId, i.isAtRisk]));
       expect(byId['ins-tomate']).toBe(true);
       expect(byId['ins-crema']).toBe(false);
+    });
+
+    it('a igual cobertura, la receta que evita MENOS merma va primero (F-16, comportamiento actual)', async () => {
+      // Documenta el desempate invertido de rankCatalogRecipes (AUDIT-DEV-007 F-16).
+      await recipeRepo.save(
+        new Recipe('rec-alta', 'AltaMerma', 'SALSAS', [
+          new RecipeIngredient('ra', 'rec-alta', 'ins-tomate', new DecimalQuantity('9.000')),
+        ])
+      );
+      await recipeRepo.save(
+        new Recipe('rec-baja', 'BajaMerma', 'SALSAS', [
+          new RecipeIngredient('rb', 'rec-baja', 'ins-tomate', new DecimalQuantity('0.500')),
+        ])
+      );
+
+      const result = await useCase.execute('CATALOG');
+
+      expect(result.proposals.map((p) => p.name)).toEqual(['BajaMerma', 'AltaMerma']);
+    });
+
+    it('resuelve nombre y unidad "Insumo"/"UNIDAD" cuando el insumo del ingrediente no está en el catálogo de stock', async () => {
+      await recipeRepo.save(
+        new Recipe('rec-huerf', 'Huérfana', 'SALSAS', [
+          new RecipeIngredient('rh1', 'rec-huerf', 'ins-tomate', new DecimalQuantity('1.000')),
+          new RecipeIngredient('rh2', 'rec-huerf', 'ins-borrado', new DecimalQuantity('2.000')),
+        ])
+      );
+
+      const result = await useCase.execute('CATALOG');
+      const huerfana = result.proposals.find((p) => p.name === 'Huérfana');
+      const orphan = huerfana?.ingredients.find((i) => i.insumoId === 'ins-borrado');
+      expect(orphan).toMatchObject({ insumoName: 'Insumo', unit: 'UNIDAD', isAtRisk: false });
+    });
+  });
+
+  describe('TK-125: umbral de riesgo de filterAtRiskRemanentes', () => {
+    it('incluye un remanente con hoursRemaining exactamente 48 aunque no tenga alerta crítica', async () => {
+      const repo = new InMemoryRemanenteQueryRepository();
+      repo.seedRemanente({
+        id: 'rem-48',
+        insumoId: 'ins-tomate',
+        insumoName: 'Tomate Perita',
+        unitOfMeasure: 'KG',
+        currentQuantity: '3.000',
+        initialQuantity: '3.000',
+        location: 'Cocina',
+        expirationDate: new Date(Date.now() + 48 * 3600 * 1000),
+        status: 'ACTIVE',
+        createdAt: new Date(),
+        hoursRemaining: 48,
+        isCriticalAlert: false,
+      });
+      await recipeRepo.save(
+        new Recipe('rec-48', 'R48', 'SALSAS', [new RecipeIngredient('r48', 'rec-48', 'ins-tomate', new DecimalQuantity('1.000'))])
+      );
+      const uc = new SuggestRescueRecipesUseCase(repo, stockRepo, recipeRepo, stubOptionsResolver, generationFake);
+
+      const result = await uc.execute('CATALOG');
+      expect(result.proposals.map((p) => p.name)).toEqual(['R48']);
     });
   });
 

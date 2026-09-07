@@ -295,6 +295,7 @@ graph TD
 | | | [TK-124: Modo Dual de Rescate (Catálogo Propio Zero-Leakage & Creativo IA)](12_tickets/recipes/backend/TK-124.md) | [TK-124-FE: Selector de Modo Dual y Badge de Privacidad Zero-Leakage](12_tickets/recipes/frontend/TK-124-FE.md) | ✅ Done |
 | | remediación [AUDIT-DEV-007](../audits/AUDIT-DEV-007-recipes-module-quality-report.md) G-A | [TK-125: Aislamiento Hexagonal y De-duplicación del Use Case de Rescate (F-2/F-6/F-13)](12_tickets/recipes/backend/TK-125.md) | N/A *(backend-only)* | ✅ Done |
 | | remediación [AUDIT-DEV-007](../audits/AUDIT-DEV-007-recipes-module-quality-report.md) G-B | [TK-126: Frontera de Confianza y Endurecimiento de Adapters de IA (F-3/F-4/F-11/F-14)](12_tickets/recipes/backend/TK-126.md) | N/A *(backend-only)* | ✅ Done |
+| | remediación [AUDIT-DEV-007](../audits/AUDIT-DEV-007-recipes-module-quality-report.md) G-C | [TK-127: Deuda de Calidad y Eficiencia del Módulo de Recetas (F-5/F-7/F-8/F-10)](12_tickets/recipes/backend/TK-127.md) | N/A *(backend-only)* | ✅ Done |
 
 
 

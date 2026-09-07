@@ -6,6 +6,7 @@ import { IRecipeRepository } from '../../../../domain/recipes/repositories/IReci
 import { IInsumoRepository } from '../../../../domain/stock/repositories/IInsumoRepository.js';
 import { SuggestRescueRecipesUseCase } from '../../../../application/recipes/use-cases/SuggestRescueRecipesUseCase.js';
 import { requireRole } from '../../../http/middlewares/requireRole.js';
+import { cryptoIdGenerator } from '../../../shared/cryptoIdGenerator.js';
 
 export function createRecipesRouter(
   recipeRepository: IRecipeRepository,
@@ -13,7 +14,7 @@ export function createRecipesRouter(
   suggestRescueRecipesUseCase?: SuggestRescueRecipesUseCase
 ): Router {
   const router = Router();
-  const createRecipeUseCase = new CreateRecipeUseCase(recipeRepository, insumoRepository);
+  const createRecipeUseCase = new CreateRecipeUseCase(recipeRepository, insumoRepository, cryptoIdGenerator);
   const listRecipesUseCase = new ListRecipesUseCase(recipeRepository);
   const controller = new RecipesController(createRecipeUseCase, listRecipesUseCase, suggestRescueRecipesUseCase);
 

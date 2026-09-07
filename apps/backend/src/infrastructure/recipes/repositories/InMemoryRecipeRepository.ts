@@ -12,6 +12,16 @@ export class InMemoryRecipeRepository implements IRecipeRepository {
     return Array.from(this.recipes.values());
   }
 
+  async findByInsumoIds(insumoIds: string[]): Promise<Recipe[]> {
+    if (insumoIds.length === 0) {
+      return [];
+    }
+    const wanted = new Set(insumoIds);
+    return Array.from(this.recipes.values()).filter((recipe) =>
+      recipe.ingredients.some((ingredient) => wanted.has(ingredient.insumoId))
+    );
+  }
+
   async save(recipe: Recipe): Promise<void> {
     this.recipes.set(recipe.id, recipe);
   }

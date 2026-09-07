@@ -120,6 +120,37 @@ describe('TK-069: Modulo Recipe independiente (alta y listado de recetas)', () =
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('title', 'ValidationError');
     });
+
+    it('TK-127 F-10: rechaza con 400 (no 500) si quantity no es un decimal válido', async () => {
+      const app = buildApp();
+
+      const response = await request(app)
+        .post('/api/v1/recipes')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: 'Cantidad Mala', category: 'Pizzas', ingredients: [{ insumoId: 'ins-harina-1', quantity: 'abc' }] });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('title', 'ValidationError');
+    });
+
+    it('TK-127 F-10: rechaza con 400 si el mismo insumoId aparece dos veces', async () => {
+      const app = buildApp();
+
+      const response = await request(app)
+        .post('/api/v1/recipes')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Insumo Duplicado',
+          category: 'Pizzas',
+          ingredients: [
+            { insumoId: 'ins-harina-1', quantity: '0.100' },
+            { insumoId: 'ins-harina-1', quantity: '0.200' },
+          ],
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.detail).toMatch(/más de una vez/);
+    });
   });
 
   describe('GET /api/v1/recipes', () => {

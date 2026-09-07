@@ -60,26 +60,25 @@ export class SuggestRescueRecipesUseCase {
     atRiskRemanentes: AtRiskRemanenteContext[],
     insumoMap: Map<string, Insumo>
   ): Promise<RescueRecipeProposal[]> {
-    const allRecipes = await this.recipeRepo.findAll();
     const atRiskInsumoIds = new Set(atRiskRemanentes.map((r) => r.insumoId));
-    return this.rankCatalogRecipes(allRecipes, atRiskInsumoIds).map(({ recipe, preventedWaste }) =>
+    // AUDIT-DEV-007 F-7: solo las recetas que tocan un insumo en riesgo, no todo el catálogo.
+    const candidateRecipes = await this.recipeRepo.findByInsumoIds([...atRiskInsumoIds]);
+    return this.rankCatalogRecipes(candidateRecipes, atRiskInsumoIds).map(({ recipe, preventedWaste }) =>
       this.toCatalogProposal(recipe, preventedWaste, insumoMap, atRiskInsumoIds)
     );
   }
 
-  private rankCatalogRecipes(allRecipes: Recipe[], atRiskInsumoIds: Set<string>) {
-    const scored = allRecipes
-      .map((recipe) => {
-        const matching = recipe.ingredients.filter((ing) => atRiskInsumoIds.has(ing.insumoId));
-        if (matching.length === 0) return null;
-
-        let preventedWaste = new DecimalQuantity('0');
-        for (const ing of matching) {
-          preventedWaste = preventedWaste.add(ing.quantity);
-        }
-        return { recipe, matchingCount: matching.length, preventedWaste };
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null);
+  // `candidateRecipes` ya viene filtrado por `findByInsumoIds` — toda receta aquí
+  // tiene al menos un ingrediente en riesgo (F-7).
+  private rankCatalogRecipes(candidateRecipes: Recipe[], atRiskInsumoIds: Set<string>) {
+    const scored = candidateRecipes.map((recipe) => {
+      const matching = recipe.ingredients.filter((ing) => atRiskInsumoIds.has(ing.insumoId));
+      let preventedWaste = new DecimalQuantity('0');
+      for (const ing of matching) {
+        preventedWaste = preventedWaste.add(ing.quantity);
+      }
+      return { recipe, matchingCount: matching.length, preventedWaste };
+    });
 
     scored.sort((a, b) => {
       if (b.matchingCount !== a.matchingCount) return b.matchingCount - a.matchingCount;
