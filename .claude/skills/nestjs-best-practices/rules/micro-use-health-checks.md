@@ -197,11 +197,11 @@ spec:
         - name: api
           image: api-service:latest
           ports:
-            - containerPort: 3000
+            - containerPort: 3300
           livenessProbe:
             httpGet:
               path: /health/live
-              port: 3000
+              port: 3300
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
@@ -209,7 +209,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /health/ready
-              port: 3000
+              port: 3300
             initialDelaySeconds: 5
             periodSeconds: 5
             timeoutSeconds: 3
@@ -217,7 +217,7 @@ spec:
           startupProbe:
             httpGet:
               path: /health/live
-              port: 3000
+              port: 3300
             initialDelaySeconds: 0
             periodSeconds: 5
             failureThreshold: 30

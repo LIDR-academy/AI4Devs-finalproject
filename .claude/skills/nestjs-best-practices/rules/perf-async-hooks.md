@@ -102,7 +102,7 @@ export class ConfigService implements OnModuleInit {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableShutdownHooks(); // Enable SIGTERM/SIGINT handling
-  await app.listen(3000);
+  await app.listen(3300);
 }
 ```
 

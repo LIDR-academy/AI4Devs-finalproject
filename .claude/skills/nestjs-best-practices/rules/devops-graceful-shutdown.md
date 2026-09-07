@@ -15,7 +15,7 @@ Handle SIGTERM and SIGINT signals to gracefully shutdown your NestJS application
 // Ignore shutdown signals
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(3000);
+  await app.listen(3300);
   // App crashes immediately on SIGTERM
   // In-flight requests fail
   // Database connections are abruptly closed
@@ -45,7 +45,7 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   // Optional: Add timeout for forced shutdown
-  const server = await app.listen(3000);
+  const server = await app.listen(3300);
   server.setTimeout(30000); // 30 second timeout
 
   // Handle graceful shutdown

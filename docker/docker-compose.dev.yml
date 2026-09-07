@@ -44,14 +44,14 @@ services:
       context: ..
       dockerfile: docker/backend/Dockerfile.dev
       args:
-        - PORT=${PORT:-3000}
+        - PORT=${PORT:-3300}
     # `apps/api/src/data-source.ts` and the migration chain do not exist yet
     # (T-C10-16 / T-C10-17), so there is nothing to run before `nx serve` today
     # — the auto-run-on-boot step (gated to development only) is added here
     # once those tickets land, not invented ahead of them.
     command: pnpm exec nx serve api --host 0.0.0.0
     ports:
-      - '${PORT:-3000}:${PORT:-3000}'
+      - '${PORT:-3300}:${PORT:-3300}'
     volumes:
       # Mount source only, never the whole app — protects node_modules below
       # from being shadowed by the (empty) host mount.
@@ -64,7 +64,7 @@ services:
       # malformed value aborts the boot by design. Do not add a variable here
       # before it is added to env.validation.ts and .env.example together.
       - NODE_ENV=${NODE_ENV:-development}
-      - PORT=${PORT:-3000}
+      - PORT=${PORT:-3300}
     depends_on:
       # Ordering only: the API does not talk to PostgreSQL yet (no data
       # source). Kept so the database is ready by the time T-C10-16 wires the
@@ -82,7 +82,7 @@ services:
           'CMD',
           'node',
           '-e',
-          "require('net').createConnection({port:process.env.PORT||3000},()=>process.exit(0)).on('error',()=>process.exit(1))",
+          "require('net').createConnection({port:process.env.PORT||3300},()=>process.exit(0)).on('error',()=>process.exit(1))",
         ]
       interval: 30s
       timeout: 10s

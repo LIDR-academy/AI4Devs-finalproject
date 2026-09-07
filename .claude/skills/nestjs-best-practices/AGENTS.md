@@ -1561,7 +1561,7 @@ async function bootstrap() {
     process.exit(1);
   });
 
-  await app.listen(3000);
+  await app.listen(3300);
 }
 ```
 
@@ -2219,7 +2219,7 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3000);
+  await app.listen(3300);
 }
 ```
 
@@ -2411,7 +2411,7 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3000);
+  await app.listen(3300);
 }
 
 // Create well-validated DTOs
@@ -2611,7 +2611,7 @@ export class ConfigService implements OnModuleInit {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableShutdownHooks(); // Enable SIGTERM/SIGINT handling
-  await app.listen(3000);
+  await app.listen(3300);
 }
 ```
 
@@ -3952,7 +3952,7 @@ async findOne(@Param('id') id: string) {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
-  await app.listen(3000);
+  await app.listen(3300);
 }
 
 // Entity with serialization control
@@ -4551,7 +4551,7 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
-  await app.listen(3000);
+  await app.listen(3300);
 }
 
 // Version-specific controllers
@@ -4881,11 +4881,11 @@ spec:
         - name: api
           image: api-service:latest
           ports:
-            - containerPort: 3000
+            - containerPort: 3300
           livenessProbe:
             httpGet:
               path: /health/live
-              port: 3000
+              port: 3300
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
@@ -4893,7 +4893,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /health/ready
-              port: 3000
+              port: 3300
             initialDelaySeconds: 5
             periodSeconds: 5
             timeoutSeconds: 3
@@ -4901,7 +4901,7 @@ spec:
           startupProbe:
             httpGet:
               path: /health/live
-              port: 3000
+              port: 3300
             initialDelaySeconds: 0
             periodSeconds: 5
             failureThreshold: 30
@@ -5342,7 +5342,7 @@ Handle SIGTERM and SIGINT signals to gracefully shutdown your NestJS application
 // Ignore shutdown signals
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(3000);
+  await app.listen(3300);
   // App crashes immediately on SIGTERM
   // In-flight requests fail
   // Database connections are abruptly closed
@@ -5372,7 +5372,7 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   // Optional: Add timeout for forced shutdown
-  const server = await app.listen(3000);
+  const server = await app.listen(3300);
   server.setTimeout(30000); // 30 second timeout
 
   // Handle graceful shutdown
@@ -5601,7 +5601,7 @@ export const databaseConfig = registerAs('database', () => ({
 
 // config/app.config.ts
 export const appConfig = registerAs('app', () => ({
-  port: parseInt(process.env.PORT, 10) || 3000,
+  port: parseInt(process.env.PORT, 10) || 3300,
   environment: process.env.NODE_ENV || 'development',
   apiPrefix: process.env.API_PREFIX || 'api',
 }));
@@ -5611,7 +5611,7 @@ export const validationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'production', 'test')
     .default('development'),
-  PORT: Joi.number().default(3000),
+  PORT: Joi.number().default(3300),
   DB_HOST: Joi.string().required(),
   DB_PORT: Joi.number().default(5432),
   DB_USERNAME: Joi.string().required(),

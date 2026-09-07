@@ -54,7 +54,7 @@ export const databaseConfig = registerAs('database', () => ({
 
 // config/app.config.ts
 export const appConfig = registerAs('app', () => ({
-  port: parseInt(process.env.PORT, 10) || 3000,
+  port: parseInt(process.env.PORT, 10) || 3300,
   environment: process.env.NODE_ENV || 'development',
   apiPrefix: process.env.API_PREFIX || 'api',
 }));
@@ -64,7 +64,7 @@ export const validationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'production', 'test')
     .default('development'),
-  PORT: Joi.number().default(3000),
+  PORT: Joi.number().default(3300),
   DB_HOST: Joi.string().required(),
   DB_PORT: Joi.number().default(5432),
   DB_USERNAME: Joi.string().required(),

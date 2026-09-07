@@ -50,7 +50,7 @@ services:
       dockerfile: docker/backend/Dockerfile
     container_name: sport-itsm-api-stage
     ports:
-      - '${PORT:-3000}:${PORT:-3000}'
+      - '${PORT:-3300}:${PORT:-3300}'
     environment:
       # Exactly the two keys apps/api/src/config/env.validation.ts recognises
       # today — see the equivalent note in docker-compose.dev.yml. Database,
@@ -60,7 +60,7 @@ services:
       # variables) by hand in the dashboard — this block only serves the
       # local smoke-test path described above.
       - NODE_ENV=${NODE_ENV:-staging}
-      - PORT=${PORT:-3000}
+      - PORT=${PORT:-3300}
     healthcheck:
       # TCP-only — see docker/backend/Dockerfile.dev for why an HTTP probe
       # against a health path is not honest today.
@@ -69,7 +69,7 @@ services:
           'CMD',
           'node',
           '-e',
-          "require('net').createConnection({port:process.env.PORT||3000},()=>process.exit(0)).on('error',()=>process.exit(1))",
+          "require('net').createConnection({port:process.env.PORT||3300},()=>process.exit(0)).on('error',()=>process.exit(1))",
         ]
       interval: 30s
       timeout: 10s

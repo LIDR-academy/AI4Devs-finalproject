@@ -42,7 +42,7 @@ export class EnvironmentVariables {
  *
  * The returned instance — not the raw environment — becomes the config source,
  * so `ConfigService` hands out values that are already coerced to their
- * declared types (`PORT` is a `number`, never the string `'3000'`).
+ * declared types (`PORT` is a `number`, never the string `'3300'`).
  *
  * @throws Error naming every offending key, so that an operator reading the
  *   crash sees *which* variable is missing rather than a stack trace about

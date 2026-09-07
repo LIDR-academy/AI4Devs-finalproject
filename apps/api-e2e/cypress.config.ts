@@ -12,9 +12,10 @@ import { defineConfig } from 'cypress';
  * boot with no in-code default, and `.env` is gitignored, so a harness that
  * relied on a developer's local `.env` would not be reproducible.
  *
- * `PORT` here is deliberately *not* the `3000` of `.env.example`: a dedicated
+ * `PORT` here is deliberately *not* the `3300` of `.env.example`: a dedicated
  * port keeps the suite from silently passing against a developer's running dev
- * server instead of the process this target started.
+ * server instead of the process this target started. The API therefore lives in
+ * the `33xx` family — `3300` for development, `3333` for acceptance.
  */
 const API_UNDER_TEST_PORT = 3333;
 

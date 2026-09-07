@@ -38,7 +38,7 @@ export const environment = {
 ```ts
 // environment.development.ts
 export const environment = {
-  apiUrl: 'http://localhost:3000',
+  apiUrl: 'http://localhost:3300',
 };
 ```
 

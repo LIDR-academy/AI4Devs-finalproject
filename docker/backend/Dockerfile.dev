@@ -34,7 +34,7 @@ EXPOSE $PORT
 # would never pass. Confirming the port accepts connections is the honest
 # signal available until the observability slice (T-C10-28) lands.
 HEALTHCHECK --interval=30s --timeout=10s --retries=5 --start-period=60s \
-  CMD node -e "require('net').createConnection({port:process.env.PORT||3000},()=>process.exit(0)).on('error',()=>process.exit(1))"
+  CMD node -e "require('net').createConnection({port:process.env.PORT||3300},()=>process.exit(0)).on('error',()=>process.exit(1))"
 
 # The concrete command (nx serve api --host 0.0.0.0) is set in docker-compose.
 CMD ["pnpm", "exec", "nx", "serve", "api"]

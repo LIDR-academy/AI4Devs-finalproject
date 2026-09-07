@@ -41,12 +41,12 @@ COPY dist/apps/api ./
 RUN pnpm install --prod
 
 ENV NODE_ENV=production
-EXPOSE 3000
+EXPOSE 3300
 
 # TCP-only check — see docker/backend/Dockerfile.dev for why an HTTP probe
 # against a health path is not honest today.
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD node -e "require('net').createConnection({port:process.env.PORT||3000},()=>process.exit(0)).on('error',()=>process.exit(1))"
+  CMD node -e "require('net').createConnection({port:process.env.PORT||3300},()=>process.exit(0)).on('error',()=>process.exit(1))"
 
 COPY docker/backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh

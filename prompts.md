@@ -1280,7 +1280,7 @@ Aquí está el 80% del trabajo de diseño. Léelo entero antes de escribir el pr
   natural para `web-e2e`. Decide para `api-e2e` entre esa forma y arrancar el artefacto construido
   (`node dist/apps/api/main.js`) desde el propio target con su `env`, y justifica la elección.
 - **Windows:** en T-C10-04/05 matar el envoltorio de `nx` dejó vivo el proceso hijo de node.
-  Comprueba al terminar que los puertos (3000 de la API, 4200 del web) quedan libres. Si algo queda
+  Comprueba al terminar que los puertos (3300 de la API, 4200 del web) quedan libres. Si algo queda
   colgado, dilo; no lo escondas.
 
 #### Los dos `.feature` de humo — qué pueden afirmar y qué no
@@ -1348,7 +1348,7 @@ Los cinco AC son mecánicos. Ejecuta cada comprobación de verdad y pega su sali
    (`git diff --stat tsconfig.base.json` vacío).
 8. `pnpm nx run-many -t lint test build` en verde — es lo que corre CI.
 9. `pnpm prettier --check .` pasa y `pnpm install` no emite `WARN Unsupported engine`.
-10. Puertos 3000 y 4200 liberados, sin procesos node huérfanos.
+10. Puertos 3300 y 4200 liberados, sin procesos node huérfanos.
 
 Un criterio que no has ejecutado se reporta como no ejecutado, jamás como pasado. Si alguno falla,
 pega la salida completa.

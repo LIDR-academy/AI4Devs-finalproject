@@ -118,7 +118,7 @@ async function bootstrap() {
     process.exit(1);
   });
 
-  await app.listen(3000);
+  await app.listen(3300);
 }
 ```
 
