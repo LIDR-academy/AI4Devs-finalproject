@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Truck, ChevronRight, ChevronDown } from 'lucide-react';
+import { Package, ChevronRight, ChevronDown } from 'lucide-react';
 import { StockService, InsumoItem } from '../services/stock.service.js';
 import { CreateInsumoModal } from './CreateInsumoModal.js';
 import { RestockInsumoModal } from './RestockInsumoModal.js';
+import { EditInsumoModal } from './EditInsumoModal.js';
+import { InsumoManageActions } from './InsumoManageActions.js';
 import { CatalogToolbar } from './CatalogToolbar.js';
 import { InsumoCatalogGrid } from './InsumoCatalogGrid.js';
 import { CatalogView, getCatalogView, setCatalogView } from '../catalogViewPreference.js';
@@ -37,10 +39,11 @@ const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick
 interface InsumoTableRowProps {
   item: InsumoItem;
   onRestock: (insumo: InsumoItem) => void;
+  onEdit: (insumo: InsumoItem) => void;
   canManage: boolean;
 }
 
-const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock, canManage }) => {
+const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock, onEdit, canManage }) => {
   const [expanded, setExpanded] = useState(false);
   const breakdown = item.stockByLocation ?? [];
 
@@ -67,16 +70,7 @@ const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock, canMan
           {item.warehouseStock} {item.unitOfMeasure}
         </td>
         <td className="text-right">
-          {canManage && (
-            <button
-              type="button"
-              onClick={() => onRestock(item)}
-              className={`btn-touch btn-secondary flex-center flex-gap-xs ${styles['btn-table-action']}`}
-            >
-              <Truck size={16} />
-              Reabastecer
-            </button>
-          )}
+          {canManage && <InsumoManageActions item={item} onRestock={onRestock} onEdit={onEdit} />}
         </td>
       </tr>
       {expanded && breakdown.length > 0 && (
@@ -102,10 +96,11 @@ const InsumoTableRow: React.FC<InsumoTableRowProps> = ({ item, onRestock, canMan
 interface InsumoTableProps {
   insumos: InsumoItem[];
   onRestock: (insumo: InsumoItem) => void;
+  onEdit: (insumo: InsumoItem) => void;
   canManage: boolean;
 }
 
-const InsumoTable: React.FC<InsumoTableProps> = ({ insumos, onRestock, canManage }) => (
+const InsumoTable: React.FC<InsumoTableProps> = ({ insumos, onRestock, onEdit, canManage }) => (
   <div className="table-wrapper">
     <table className="data-table">
       <thead>
@@ -119,7 +114,7 @@ const InsumoTable: React.FC<InsumoTableProps> = ({ insumos, onRestock, canManage
       </thead>
       <tbody>
         {insumos.map((item) => (
-          <InsumoTableRow key={item.id} item={item} onRestock={onRestock} canManage={canManage} />
+          <InsumoTableRow key={item.id} item={item} onRestock={onRestock} onEdit={onEdit} canManage={canManage} />
         ))}
       </tbody>
     </table>
@@ -131,11 +126,12 @@ interface InsumoCatalogBodyProps {
   loading: boolean;
   filteredInsumos: InsumoItem[];
   onRestock: (insumo: InsumoItem) => void;
+  onEdit: (insumo: InsumoItem) => void;
   canManage: boolean;
   view: CatalogView;
 }
 
-const InsumoCatalogBody: React.FC<InsumoCatalogBodyProps> = ({ error, loading, filteredInsumos, onRestock, canManage, view }) => (
+const InsumoCatalogBody: React.FC<InsumoCatalogBodyProps> = ({ error, loading, filteredInsumos, onRestock, onEdit, canManage, view }) => (
   <>
     {error && <ErrorBanner message={error} />}
 
@@ -146,9 +142,9 @@ const InsumoCatalogBody: React.FC<InsumoCatalogBodyProps> = ({ error, loading, f
         No se encontraron insumos registrados en bodega.
       </div>
     ) : view === 'grid' ? (
-      <InsumoCatalogGrid insumos={filteredInsumos} onRestock={onRestock} canManage={canManage} />
+      <InsumoCatalogGrid insumos={filteredInsumos} onRestock={onRestock} onEdit={onEdit} canManage={canManage} />
     ) : (
-      <InsumoTable insumos={filteredInsumos} onRestock={onRestock} canManage={canManage} />
+      <InsumoTable insumos={filteredInsumos} onRestock={onRestock} onEdit={onEdit} canManage={canManage} />
     )}
   </>
 );
@@ -165,32 +161,18 @@ function useCatalogViewState() {
   return { view, handleViewChange };
 }
 
-/**
- * @param canManage `true` sólo para ADMIN — muestra "+ Nuevo Insumo" y "Reabastecer"
- * (endpoints `POST /insumos` y `PATCH /insumos/:id/restock`, ambos `requireRole('ADMIN')`
- * en backend). Default `false`: montado en `/estaciones` (ruta de operario) sólo lista.
- */
-export const InsumoCatalogPanel: React.FC<{ canManage?: boolean }> = ({ canManage = false }) => {
+function useInsumoCatalog() {
   const [insumos, setInsumos] = useState<InsumoItem[]>([]);
-  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [restockTarget, setRestockTarget] = useState<InsumoItem | null>(null);
-  const { view, handleViewChange } = useCatalogViewState();
 
   const fetchInsumos = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await StockService.getInsumos();
-      setInsumos(data);
+      setInsumos(await StockService.getInsumos());
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Error al cargar la lista de insumos.');
-      }
+      setError(err instanceof Error ? err.message : 'Error al cargar la lista de insumos.');
     } finally {
       setLoading(false);
     }
@@ -199,6 +181,22 @@ export const InsumoCatalogPanel: React.FC<{ canManage?: boolean }> = ({ canManag
   useEffect(() => {
     fetchInsumos();
   }, []);
+
+  return { insumos, loading, error, fetchInsumos };
+}
+
+/**
+ * @param canManage `true` sólo para ADMIN — muestra "+ Nuevo Insumo", "Editar" y
+ * "Reabastecer" (endpoints `POST/PUT /insumos` y `PATCH /insumos/:id/restock`, todos
+ * `requireRole('ADMIN')`). Default `false`: montado en `/estaciones` sólo lista.
+ */
+export const InsumoCatalogPanel: React.FC<{ canManage?: boolean }> = ({ canManage = false }) => {
+  const { insumos, loading, error, fetchInsumos } = useInsumoCatalog();
+  const [search, setSearch] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [restockTarget, setRestockTarget] = useState<InsumoItem | null>(null);
+  const [editTarget, setEditTarget] = useState<InsumoItem | null>(null);
+  const { view, handleViewChange } = useCatalogViewState();
 
   const filteredInsumos = insumos.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -213,6 +211,7 @@ export const InsumoCatalogPanel: React.FC<{ canManage?: boolean }> = ({ canManag
         loading={loading}
         filteredInsumos={filteredInsumos}
         onRestock={setRestockTarget}
+        onEdit={setEditTarget}
         canManage={canManage}
         view={view}
       />
@@ -223,6 +222,13 @@ export const InsumoCatalogPanel: React.FC<{ canManage?: boolean }> = ({ canManag
         isOpen={restockTarget !== null}
         insumo={restockTarget}
         onClose={() => setRestockTarget(null)}
+        onSuccess={fetchInsumos}
+      />
+
+      <EditInsumoModal
+        isOpen={editTarget !== null}
+        insumo={editTarget}
+        onClose={() => setEditTarget(null)}
         onSuccess={fetchInsumos}
       />
     </div>

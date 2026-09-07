@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Truck, ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 import { InsumoItem } from '../services/stock.service.js';
+import { InsumoManageActions } from './InsumoManageActions.js';
 import styles from './InsumoCatalogGrid.module.css';
 
 interface InsumoCardProps {
   item: InsumoItem;
   onRestock: (insumo: InsumoItem) => void;
+  onEdit: (insumo: InsumoItem) => void;
   canManage: boolean;
 }
 
-const InsumoCard: React.FC<InsumoCardProps> = ({ item, onRestock, canManage }) => {
+const InsumoCard: React.FC<InsumoCardProps> = ({ item, onRestock, onEdit, canManage }) => {
   const [expanded, setExpanded] = useState(false);
   const breakdown = item.stockByLocation ?? [];
 
@@ -34,12 +36,7 @@ const InsumoCard: React.FC<InsumoCardProps> = ({ item, onRestock, canManage }) =
           )}
           {item.warehouseStock} {item.unitOfMeasure}
         </span>
-        {canManage && (
-          <button type="button" onClick={() => onRestock(item)} className="btn-touch btn-secondary flex-center flex-gap-xs">
-            <Truck size={16} />
-            Reabastecer
-          </button>
-        )}
+        {canManage && <InsumoManageActions item={item} onRestock={onRestock} onEdit={onEdit} />}
       </div>
       {expanded && breakdown.length > 0 && (
         <dl className={styles['stock-breakdown']}>
@@ -60,14 +57,15 @@ const InsumoCard: React.FC<InsumoCardProps> = ({ item, onRestock, canManage }) =
 interface InsumoCatalogGridProps {
   insumos: InsumoItem[];
   onRestock: (insumo: InsumoItem) => void;
+  onEdit: (insumo: InsumoItem) => void;
   canManage: boolean;
 }
 
 /** Vista de grilla del catálogo de bodega (TK-116-FE, US-031) — alternativa a `InsumoTable`. */
-export const InsumoCatalogGrid: React.FC<InsumoCatalogGridProps> = ({ insumos, onRestock, canManage }) => (
+export const InsumoCatalogGrid: React.FC<InsumoCatalogGridProps> = ({ insumos, onRestock, onEdit, canManage }) => (
   <div className={styles['insumo-grid']}>
     {insumos.map((item) => (
-      <InsumoCard key={item.id} item={item} onRestock={onRestock} canManage={canManage} />
+      <InsumoCard key={item.id} item={item} onRestock={onRestock} onEdit={onEdit} canManage={canManage} />
     ))}
   </div>
 );

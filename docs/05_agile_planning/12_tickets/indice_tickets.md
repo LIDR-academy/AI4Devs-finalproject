@@ -262,6 +262,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-124-FE** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Selector de Modo Dual y Badge de Privacidad Zero-Leakage (Frontend) | `recipes` | 2 | Must Have | [recipes/frontend/TK-124-FE.md](recipes/frontend/TK-124-FE.md) |
 | **TK-128-FE** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Mostrar la Merma Evitada como Valor Monetario en el Modal de Rescate (Esc. 5/6) | `recipes` | 2 | Should Have | [recipes/frontend/TK-128-FE.md](recipes/frontend/TK-128-FE.md) |
 | **TK-129-FE** | N/A (Técnico) | Quitar el Toggle de Reabastecimiento Inerte de la Pantalla de Configuración de IA | `settings` | 2 | Should Have | [settings/frontend/TK-129-FE.md](settings/frontend/TK-129-FE.md) |
+| **TK-130-FE** | [US-036](../11_user_stories/catalog/US-036_edicion_insumo.md) | Modal de Edición de Insumo en el Catálogo de Bodega | `stock` | 3 | Must Have | [stock/frontend/TK-130-FE.md](stock/frontend/TK-130-FE.md) |
 
 ---
 
@@ -386,6 +387,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 
 ### 📦 Bodega y Stock (`stock/`) — Post-MVP
 *   **[TK-130: Endpoint de Edición de Insumo (PUT /stock/insumos/:id)](stock/backend/TK-130.md)** (Backend) — ✅ Done. `US-036` / `AUDIT-DEV-012` C-1: un ADMIN corrige `name`/`unitCost`/`barcode` de un insumo (`unitOfMeasure` inmutable). Cierra deuda de `US-012` §[N]; desbloquea la valorización de `TK-128`. Auditoría [AUDIT-DEV-014](../../audits/AUDIT-DEV-014-TK-130-quality-report.md) APROBADO.
+*   **[TK-130-FE: Modal de Edición de Insumo](stock/frontend/TK-130-FE.md)** (Frontend) — ✅ Done. Botón "Editar" (ADMIN) → `EditInsumoModal` con envío parcial (`PUT`, `null` limpia opcionales). `InsumoManageActions` compartido entre tabla y grilla.
 *   **[TK-050: Trazabilidad de Movimientos de Stock](stock/backend/TK-050.md)** (Backend)
 *   **[TK-050-FE: Panel de Auditoría de Movimientos](stock/frontend/TK-050-FE.md)** (Frontend)
 *   **[TK-060: Reabastecimiento de Bodega](stock/backend/TK-060.md)** (Backend) — sin esto, un insumo agotado en bodega quedaba inutilizable para siempre.

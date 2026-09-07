@@ -561,3 +561,7 @@ inputs:
   - Mutation scoped: `UpdateInsumoUseCase` **77.59%** ≥ 70; `Insumo.withDetails` cubierto por 2 tests dedicados.
   - Auditoría adversarial [`AUDIT-DEV-014`](../audits/AUDIT-DEV-014-TK-130-quality-report.md) → **APROBADO**.
   - **Pendiente:** `TK-130-FE` (modal de edición en el catálogo de bodega); `US-037`/`TK-131` (editar/baja de recetas — C-2). Sin push.
+
+### 2026-09-07 (cont.) - TK-130-FE: modal de edición de insumo en el catálogo de bodega (US-036)
+- **Acciones:** `StockService.updateInsumo` + `UpdateInsumoDTO`; `EditInsumoModal` (precarga, `buildPatch` que envía solo lo cambiado, `''` → `null` para limpiar opcionales); `InsumoManageActions` compartido entre `InsumoTableRow` y `InsumoCard` (elimina un clon); `InsumoCatalogPanel`/`InsumoCatalogGrid` propagan `onEdit`; `useInsumoCatalog` extraído.
+- **Estado:** frontend 231→**237** tests (+6 RTL de `EditInsumoModal`), build/lint verdes. Gates ticket-scoped verdes; duplicación 19 → 18. **US-036 completa (backend + frontend).** Sin push.

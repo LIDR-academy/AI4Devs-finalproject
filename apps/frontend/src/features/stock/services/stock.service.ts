@@ -85,6 +85,13 @@ export interface RestockInsumoDTO {
   storageLocationId: string;
 }
 
+/** US-036: edición parcial — solo se envían los campos que cambian; `null` limpia el campo. */
+export interface UpdateInsumoDTO {
+  name?: string;
+  unitCost?: string | null;
+  barcode?: string | null;
+}
+
 export interface RestockInsumoResult {
   insumoId: string;
   insumoName: string;
@@ -101,6 +108,10 @@ export class StockService {
 
   public static async restockInsumo(insumoId: string, data: RestockInsumoDTO): Promise<RestockInsumoResult> {
     return apiRequest<RestockInsumoResult>(`/stock/insumos/${insumoId}/restock`, { method: 'PATCH', body: data });
+  }
+
+  public static async updateInsumo(insumoId: string, data: UpdateInsumoDTO): Promise<InsumoItem> {
+    return apiRequest<InsumoItem>(`/stock/insumos/${insumoId}`, { method: 'PUT', body: data });
   }
 
   // AUDIT-DEV-006 F-5: sin fallback silencioso a datos mock. Un error del backend
