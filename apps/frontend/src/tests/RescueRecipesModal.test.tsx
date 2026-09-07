@@ -29,7 +29,7 @@ describe('TK-122-FE: RescueRecipesModal', () => {
                 ingredients: [
                   { insumoId: 'ins-1', insumoName: 'Tomate', quantity: '0.500', unit: 'KG', isAtRisk: true },
                 ],
-                preventedWasteEstimate: '0.500 KG',
+                preventedWasteCost: '4.50',
               },
             ],
           }),
@@ -45,6 +45,7 @@ describe('TK-122-FE: RescueRecipesModal', () => {
       expect(screen.getByText('Sopa Minestrone de Rescate')).toBeInTheDocument();
       expect(screen.getByText(/Motor Heurístico Local/i)).toBeInTheDocument();
       expect(screen.getByText(/En riesgo/i)).toBeInTheDocument();
+      expect(screen.getByText(/\$4\.50 de merma evitada/)).toBeInTheDocument();
     });
   });
 
@@ -89,7 +90,7 @@ describe('TK-122-FE: RescueRecipesModal', () => {
                 ingredients: [
                   { insumoId: 'ins-calabaza', insumoName: 'Calabaza', quantity: '1.000', unit: 'KG', isAtRisk: true },
                 ],
-                preventedWasteEstimate: '1.000 KG',
+                preventedWasteCost: '9.00',
               },
             ],
           }),
@@ -145,7 +146,10 @@ describe('TK-122-FE: RescueRecipesModal', () => {
 
   describe('TK-124-FE: Selector de Modo Dual y Zero Data Leakage', () => {
     it('muestra pestañas de modo, inicia en CATALOG con aviso de privacidad y envía { mode: "CATALOG" }', async () => {
-      const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+        if (!url.includes('/rescue-suggestions')) {
+          return { ok: true, status: 200, json: async () => ({ currencySymbol: '$' }) };
+        }
         const body = init?.body ? JSON.parse(init.body as string) : {};
         expect(body.mode).toBe('CATALOG');
         return {
@@ -162,7 +166,7 @@ describe('TK-122-FE: RescueRecipesModal', () => {
                 ingredients: [
                   { insumoId: 'ins-1', insumoName: 'Carne Picada', quantity: '2.000', unit: 'KG', isAtRisk: true },
                 ],
-                preventedWasteEstimate: '2.000 KG',
+                preventedWasteCost: null,
               },
             ],
           }),
@@ -176,6 +180,7 @@ describe('TK-122-FE: RescueRecipesModal', () => {
         expect(screen.getByText('Receta Secreta del Local')).toBeInTheDocument();
         expect(screen.getByText(/Catálogo Propio \(100% Local \/ Zero Data Leakage\)/i)).toBeInTheDocument();
         expect(screen.getByText(/Privacidad Garantizada/i)).toBeInTheDocument();
+        expect(screen.getByText(/Valor de merma no disponible/i)).toBeInTheDocument();
       });
     });
 
@@ -197,7 +202,7 @@ describe('TK-122-FE: RescueRecipesModal', () => {
                   ingredients: [
                     { insumoId: 'ins-2', insumoName: 'Zanahoria', quantity: '0.500', unit: 'KG', isAtRisk: true },
                   ],
-                  preventedWasteEstimate: '0.500 KG',
+                  preventedWasteCost: '4.50',
                 },
               ],
             }),

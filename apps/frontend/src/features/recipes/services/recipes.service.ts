@@ -1,7 +1,7 @@
 import { apiRequest } from '../../../shared/http/apiClient.js';
 import { InsumoItem } from '../../stock/services/stock.service.js';
 
-export interface CreateRecipeIngredientInput {
+interface CreateRecipeIngredientInput {
   insumoId: string;
   quantity: string;
 }
@@ -26,7 +26,7 @@ export interface RecipeListItem {
   ingredients: CreateRecipeIngredientInput[];
 }
 
-export interface RescueIngredientItem {
+interface RescueIngredientItem {
   insumoId: string;
   insumoName: string;
   quantity: string;
@@ -40,7 +40,8 @@ export interface RescueRecipeProposal {
   category: string;
   estimatedPortions: number;
   ingredients: RescueIngredientItem[];
-  preventedWasteEstimate: string;
+  /** Valor monetario del stock en riesgo que la receta aprovecha; `null` si falta algún `unitCost` (US-035 Esc. 5/6). */
+  preventedWasteCost: string | null;
 }
 
 export interface RescueSuggestionsResponse {
