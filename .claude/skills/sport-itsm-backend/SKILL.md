@@ -58,9 +58,9 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 - **Structured logging (baseline — mandatory)**: **`nestjs-pino`** (pino) for structured, JSON logs with request correlation. Do not use `console.log` in application code.
 
 ## Testing
-- **Jest 29** with **`ts-jest`** — unit and integration tests.
-- **Cypress 15** — API E2E tests in **`apps/api-e2e/`** using Cypress' request runner.
-- **Cucumber / Gherkin** — acceptance tests via **`@badeball/cypress-cucumber-preprocessor`**.
+- **Jest 29.7** with **`ts-jest`** — unit and integration tests.
+- **Cypress 15.20** — API E2E tests in **`apps/api-e2e/`** using Cypress' request runner. Cypress is invoked through the built-in **`nx:run-commands`** executor, **not** through `@nx/cypress`: that plugin cannot host Cypress 15 at the pinned Nx 21.6, and its generators throw outright on any Cypress major above 14 (**ADR-011**). `apps/api-e2e` owns its `cypress.config.ts` and sequences the API under test with an explicit `dependsOn`.
+- **Cucumber / Gherkin** — acceptance tests via **`@badeball/cypress-cucumber-preprocessor` 28.0**, bundled by **`@bahmutov/cypress-esbuild-preprocessor` 2.2** over a direct **`esbuild` 0.28** dev dependency. `.feature` files are the spec entry point; step definitions resolve per feature. The preprocessor sets the Cypress floor: **below 15.18.0 is unsupported**.
 - **Coverage target: 80%** lines/branches/functions/statements for changed libraries. It is **enforced wherever a `coverageThreshold` is configured** (project/jest config); treat 80% as the minimum bar for new/changed code even where not yet enforced.
 
 ## Development Tools
@@ -106,7 +106,7 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 - Build the API: `pnpm nx build api`
 - Unit/integration tests for a project: `pnpm nx test <project>`
 - Lint a project: `pnpm nx lint <project>`
-- API E2E (Cypress): `pnpm nx e2e api-e2e`
+- API E2E (Cypress + Cucumber): `pnpm nx e2e api-e2e` — an `nx:run-commands` target over `cypress run`, not an `@nx/cypress` executor (ADR-011)
 - Affected checks: `pnpm nx affected -t lint test build`
 - TypeORM migrations (via `ts-node` + `tsconfig-paths`, data source at `apps/api/src/data-source.ts`):
   - Generate: `pnpm typeorm migration:generate -d apps/api/src/data-source.ts <path/Name>`

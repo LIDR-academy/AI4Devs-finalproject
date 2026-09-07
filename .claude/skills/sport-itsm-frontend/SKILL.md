@@ -46,9 +46,9 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 - **`ChangeDetectionStrategy.OnPush` is the default for every component**, paired with signals. Do not rely on default (Zone.js) change detection for component updates; drive the view from signals and immutable inputs.
 
 ## Testing
-- **Jest** + **`jest-preset-angular`** — unit/component tests.
-- **Cypress 15** + **Cucumber preprocessor** (`@badeball/cypress-cucumber-preprocessor`) — E2E and acceptance tests (Gherkin).
-- **Cypress component tests** — for shared UI components (where set up).
+- **Jest 29.7** + **`jest-preset-angular`** — unit/component tests.
+- **Cypress 15.20** + **Cucumber preprocessor** (`@badeball/cypress-cucumber-preprocessor` 28.0, bundled by `@bahmutov/cypress-esbuild-preprocessor` 2.2 over a direct `esbuild` 0.28 dev dependency) — E2E and acceptance tests (Gherkin), in **`apps/web-e2e/`**. Same harness as the backend: Cypress runs through **`nx:run-commands`**, never through `@nx/cypress` (**ADR-011**), and `apps/web-e2e` owns its `cypress.config.ts` and sequences `serve web` with an explicit `dependsOn`.
+- **Cypress component tests** — not set up, and not planned for now: with `@nx/cypress` unadopted (ADR-011) there is no component-test harness in the workspace. Component-level verification is Jest + `jest-preset-angular`.
 - **Coverage target: 80%** lines/branches/functions/statements for changed libraries — matches the backend standard. Enforced wherever a `coverageThreshold` is configured; treat 80% as the minimum bar for new/changed code.
 
 ## Dev Tools
@@ -105,7 +105,7 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 - Build: `pnpm nx build <app>`
 - Unit/component tests (Jest): `pnpm nx test <project>`
 - Lint: `pnpm nx lint <project>`
-- E2E (Cypress + Cucumber): `pnpm nx e2e <app>-e2e`
+- E2E (Cypress + Cucumber): `pnpm nx e2e web-e2e` — an `nx:run-commands` target over `cypress run`, not an `@nx/cypress` executor (ADR-011)
 - Affected checks: `pnpm nx affected -t lint test build`
 - Scaffold: `pnpm nx g @nx/angular:library …` / `@nx/angular:component …`
 
