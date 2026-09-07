@@ -470,20 +470,24 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
         *   **Then** El sistema ejecuta un ping contra el endpoint y muestra una señal visual de estado exitoso con la latencia en milisegundos.
 
 ### US-035: Generador de Recetas de Aprovechamiento Anti-Desperdicio
-*   **Historia:** Como chef o administrador, quiero que el sistema identifique automáticamente los remanentes abiertos con fecha de vencimiento inminente (<48 horas) y me proponga recetas dinámicas o preparaciones de aprovechamiento utilizando exclusivamente ingredientes disponibles en cocina, para minimizar el desperdicio monetario y transformar mermas potenciales en platos vendibles.
+*   **Historia:** Como chef o administrador, quiero que el sistema identifique automáticamente los remanentes abiertos con fecha de vencimiento inminente (<48 horas) y me proponga recetas dinámicas o preparaciones de aprovechamiento con la opción de basarse en el recetario propio del restaurante (100% privado, Zero Data Leakage) o en generación creativa asistida por IA, para minimizar el desperdicio monetario y transformar mermas potenciales en platos vendibles sin arriesgar secretos comerciales.
 *   **Complejidad:** L
 *   **Evaluación INVEST:** Independiente, Negociable, Valiosa, Estimable, Small, Testeable.
-*   **Decisiones de negocio consultadas con el humano (Guard 17/24/28):** Human-in-the-Loop estricto: la IA genera sugerencias en borrador, pero el Chef debe pulsar "Guardar en Catálogo" para hacerla oficial. Fallback automático y transparente: si el proveedor externo de IA no está disponible o falla por timeout/red, el sistema conmuta inmediatamente a un algoritmo heurístico local determinista sin interrumpir la experiencia. Todas las cantidades y costos calculados estrictamente con `decimal.js` y `DecimalQuantity` (Guard 17).
+*   **Decisiones de negocio consultadas con el humano (Guard 9/17/24/28):** Human-in-the-Loop estricto: la IA genera sugerencias en borrador, pero el Chef debe pulsar "Guardar en Catálogo" para hacerla oficial. Modo Dual con blindaje de propiedad intelectual (Guard 9): el usuario puede elegir entre (1) *Modo Catálogo Propio* (Zero Data Leakage: cruce de ingredientes resuelto 100% local en base de datos PostgreSQL, sin enviar datos a APIs externas) y (2) *Modo Creativo Libre* (asistido por IA/Heurística donde solo se transmiten nombres de insumos sobrantes genéricos sin recetas del restaurante). Fallback automático y transparente: si el proveedor externo de IA no está disponible o falla por timeout/red, el sistema conmuta inmediatamente a un algoritmo heurístico local determinista sin interrumpir la experiencia. Todas las cantidades y costos calculados estrictamente con `decimal.js` y `DecimalQuantity` (Guard 17).
 *   **Criterios de Aceptación (BDD - Sintaxis Gherkin):**
-    *   **Escenario 1 (Propuesta asistida por IA con remanentes críticos):**
-        *   **Given** Existen remanentes activos en cocina cuya caducidad es menor a 48 horas.
-        *   **When** El chef solicita propuestas de aprovechamiento desde Reportes o Recetas.
-        *   **Then** El sistema devuelve hasta 3 propuestas estructuradas que aprovechan prioritariamente los insumos en riesgo, indicando ingredientes, cantidades requeridas y justificación de merma evitada.
-    *   **Escenario 2 (Fallback heurístico transparente ante desconexión):**
-        *   **Given** La conectividad con el proveedor de IA externo falla o el modo Heurístico está activo.
+    *   **Escenario 1 (Modo Catálogo Propio — Zero Data Leakage):**
+        *   **Given** Existen remanentes activos en cocina cuya caducidad es menor a 48 horas y el chef selecciona el modo "Recetas del Restaurante".
+        *   **When** El chef solicita propuestas de aprovechamiento.
+        *   **Then** El sistema cruza localmente en el servidor los ingredientes en riesgo contra las recetas del recetario propio, devuelve propuestas basadas exclusivamente en la carta y garantiza que ningún dato o receta fue enviado a un proveedor externo (`source: "CATALOG"`).
+    *   **Escenario 2 (Modo Creativo Asistido por IA con remanentes críticos):**
+        *   **Given** El chef activa el modo "Generación Creativa (IA)" con remanentes en riesgo.
+        *   **When** El chef solicita propuestas de aprovechamiento.
+        *   **Then** El sistema transmite exclusivamente los nombres de los ingredientes sobrantes genéricos y devuelve hasta 3 propuestas creativas estructuradas que aprovechan prioritariamente los insumos en riesgo, indicando ingredientes, cantidades y merma prevenida.
+    *   **Escenario 3 (Fallback heurístico transparente ante desconexión):**
+        *   **Given** En modo creativo la conectividad con el proveedor de IA externo falla o el modo Heurístico está activo.
         *   **When** El chef solicita recetas de aprovechamiento.
         *   **Then** El sistema genera sugerencias mediante el motor heurístico local sin arrojar error HTTP 500, indicando visualmente que se utilizó el motor determinista local.
-    *   **Escenario 3 (Conversión de sugerencia a receta del catálogo):**
+    *   **Escenario 4 (Conversión de sugerencia a receta del catálogo):**
         *   **Given** Una propuesta de aprovechamiento mostrada en pantalla.
         *   **When** El chef hace clic en "Guardar en Catálogo de Recetas".
         *   **Then** El sistema crea una nueva receta en la base de datos con sus ingredientes asociados, lista para ser consumida mediante el flujo de consumo rápido (`US-007`).

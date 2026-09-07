@@ -178,6 +178,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-105** | [US-029](../11_user_stories/reports/US-029.md) | Reporte de Mermas de Preparación + Auditoría del Consumo Ad-hoc | `reports` | 5 | Should Have | [reports/backend/TK-105.md](reports/backend/TK-105.md) |
 | **TK-122** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Generación de Recetas de Rescate con IA y Fallback Heurístico (Backend) | `recipes` | 5 | Should Have | [recipes/backend/TK-122.md](recipes/backend/TK-122.md) |
 | **TK-123** | [US-034](../11_user_stories/settings/US-034_configuracion_agente_ia.md) | Modelo de Persistencia y Endpoints de Configuración de IA (Backend) | `settings` | 3 | Should Have | [settings/backend/TK-123.md](settings/backend/TK-123.md) |
+| **TK-124** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Modo Dual de Rescate (Catálogo Propio Zero-Leakage & Creativo IA) (Backend) | `recipes` | 3 | Must Have | [recipes/backend/TK-124.md](recipes/backend/TK-124.md) |
 
 
 ### 🖥️ Tickets de Frontend
@@ -244,6 +245,8 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-095-FE** | [US-023](../11_user_stories/shared/US-023.md) · [US-024](../11_user_stories/shared/US-024.md) | Pase de Fidelidad Visual y UX vs. Artefacto "Sistema FEFO" | `shared` | 13 | Should Have | [shared/frontend/TK-095-FE.md](shared/frontend/TK-095-FE.md) |
 | **TK-122-FE** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Modal y Visualización de Recetas Anti-Desperdicio (Frontend) | `recipes` | 3 | Should Have | [recipes/frontend/TK-122-FE.md](recipes/frontend/TK-122-FE.md) |
 | **TK-123-FE** | [US-034](../11_user_stories/settings/US-034_configuracion_agente_ia.md) | Sub-ruta y Panel de Configuración de Agentes IA (Frontend) | `settings` | 3 | Should Have | [settings/frontend/TK-123-FE.md](settings/frontend/TK-123-FE.md) |
+| **TK-124-FE** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Selector de Modo Dual y Badge de Privacidad Zero-Leakage (Frontend) | `recipes` | 2 | Must Have | [recipes/frontend/TK-124-FE.md](recipes/frontend/TK-124-FE.md) |
+
 ---
 
 ## 🗂️ 3. Resumen de Fichas Técnicas de Tickets por Módulo
@@ -383,5 +386,10 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-069: Extracción del Módulo `recipes`](recipes/backend/TK-069.md)** (Backend) — mueve `Recipe`/`RecipeIngredient` y el endpoint de `catalog` a un módulo propio (`/api/v1/catalog/recipes` → `/api/v1/recipes`), a pedido explícito del humano tras un análisis de organización de módulos.
 *   **[TK-069-FE: Extracción del Feature `recipes`](recipes/frontend/TK-069-FE.md)** (Frontend) — mueve `CreateRecipeForm`/`catalog.service.ts` a `features/recipes/`; cierra duplicación de endpoints de insumos, código muerto (`CatalogService.createInsumo`) y un bug real de resincronización de `insumoId` encontrado en la verificación en vivo.
 *   **[TK-070-FE: Recetario (lista + búsqueda + alta en modal)](recipes/frontend/TK-070-FE.md)** (Frontend) — restructura la pestaña de recetas para que sea simétrica a Inventario de Bodega; `CreateRecipeForm.tsx` no se modifica, solo se envuelve en un modal nuevo.
+*   **[TK-122: Generación de Recetas de Rescate con IA y Fallback Heurístico](recipes/backend/TK-122.md)** (Backend) — `US-035`, adapter multimodal y use case anti-desperdicio.
+*   **[TK-122-FE: Modal y Visualización de Recetas Anti-Desperdicio](recipes/frontend/TK-122-FE.md)** (Frontend) — `US-035`, modal táctil para generar propuestas y agregarlas al catálogo.
+*   **[TK-124: Modo Dual de Rescate (Catálogo Propio Zero-Leakage & Creativo IA)](recipes/backend/TK-124.md)** (Backend) — `US-035`, cruce local determinista con recetas existentes garantizando Zero Data Leakage.
+*   **[TK-124-FE: Selector de Modo Dual y Badge de Privacidad Zero-Leakage](recipes/frontend/TK-124-FE.md)** (Frontend) — `US-035`, selector accesible táctil (≥48px) y badge de seguridad.
+
 
 `TK-056` cerró la deuda residual de listado de operarios; `TK-057`/`TK-057-FE` cierran la deuda de alta de catálogo (insumos y recetas) y la de `TK-008` — `TK-049`/`TK-049-FE`/`TK-050`/`TK-050-FE`/`TK-057`/`TK-057-FE` quedan sin pendientes conocidos. `TK-059` cierra el fix de conectividad Docker frontend↔backend; `TK-060`/`TK-060-FE` cierran el reabastecimiento de bodega (`US-013`); `TK-061` cierra la deuda de `US-012` sobre `RecipeSelectorModal.tsx`; `TK-069`/`TK-069-FE` extraen las recetas de `catalog` a un módulo `recipes` independiente; `TK-070-FE` le da al Recetario la misma estructura que Inventario de Bodega.

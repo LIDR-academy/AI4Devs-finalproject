@@ -1516,7 +1516,15 @@ paths:
         - Recipes
       security:
         - bearerAuth: []
+      requestBody:
+        description: Generation mode (CATALOG for zero data leakage, CREATIVE for AI)
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RescueSuggestionsRequest'
       responses:
+
         '200':
           description: List of rescue recipe suggestions
           content:
@@ -2631,6 +2639,15 @@ components:
         preventedWasteEstimate:
           $ref: '#/components/schemas/DecimalString'
 
+    RescueSuggestionsRequest:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [CATALOG, CREATIVE]
+          default: CATALOG
+          description: CATALOG uses only local recipes (zero external AI network calls, 100% data privacy). CREATIVE queries AI with anonymized ingredients.
+
     RescueSuggestionsResponse:
       type: object
       required:
@@ -2639,10 +2656,11 @@ components:
       properties:
         source:
           type: string
-          enum: [GEMINI, OPENAI_COMPATIBLE, HEURISTIC]
-          example: "GEMINI"
+          enum: [CATALOG, GEMINI, OPENAI_COMPATIBLE, HEURISTIC]
+          example: "CATALOG"
         proposals:
           type: array
           items:
             $ref: '#/components/schemas/RescueRecipeProposal'
+
 
