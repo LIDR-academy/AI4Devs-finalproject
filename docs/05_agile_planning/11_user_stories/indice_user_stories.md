@@ -46,6 +46,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
     *   *Descripción:* Permite a un Administrador dar de alta insumos y recetas en el catálogo maestro vía API, sin depender del script de seed. ✅ Backend (`TK-057`) y Frontend (`TK-057-FE`) implementados.
 *   **[US-036: Edición de un Insumo del Catálogo Maestro](catalog/US-036_edicion_insumo.md)**
     *   *Descripción:* `PUT /api/v1/stock/insumos/:id` — un ADMIN corrige `name` / `unitCost` / `barcode` de un insumo existente (`unitOfMeasure` inmutable). Cierra la deuda de `US-012` §[N] y `AUDIT-DEV-012` C-1 (un insumo sin `unitCost` mostraba "valor no disponible" para siempre en el rescate tras `TK-128`). ✅ Backend (`TK-130`) implementado.
+*   **[US-037: Edición y Baja de una Receta del Recetario](catalog/US-037_edicion_baja_receta.md)**
+    *   *Descripción:* `PUT` / `DELETE /api/v1/recipes/:id` — un ADMIN edita (`name`/`category`/`description`/`ingredients`) o da de baja (soft-delete `Recipe.isActive`) una receta. La composición se congela (409) si la receta tiene una `RecipePreparation` `CLOSED` (trazabilidad `US-029`). Las inactivas salen del recetario, del rescate CATALOG (`US-035`) y de la disponibilidad (`US-007`). Cierra `US-012` §[N] y `AUDIT-DEV-012` C-2. ✅ Backend (`TK-131`) implementado.
 
 ### 🍳 Cocina (`/kitchen/`)
 *   **[US-003: Consulta Táctil de Remanentes Activos en Orden FEFO](kitchen/US-003.md)**

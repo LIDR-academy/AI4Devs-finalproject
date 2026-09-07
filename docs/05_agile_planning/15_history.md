@@ -565,3 +565,17 @@ inputs:
 ### 2026-09-07 (cont.) - TK-130-FE: modal de edición de insumo en el catálogo de bodega (US-036)
 - **Acciones:** `StockService.updateInsumo` + `UpdateInsumoDTO`; `EditInsumoModal` (precarga, `buildPatch` que envía solo lo cambiado, `''` → `null` para limpiar opcionales); `InsumoManageActions` compartido entre `InsumoTableRow` y `InsumoCard` (elimina un clon); `InsumoCatalogPanel`/`InsumoCatalogGrid` propagan `onEdit`; `useInsumoCatalog` extraído.
 - **Estado:** frontend 231→**237** tests (+6 RTL de `EditInsumoModal`), build/lint verdes. Gates ticket-scoped verdes; duplicación 19 → 18. **US-036 completa (backend + frontend).** Sin push.
+
+### 2026-09-07 (cont.) - US-037 + TK-131: edición y baja de recetas (PUT / DELETE /api/v1/recipes/:id) — AUDIT-DEV-012 C-2
+- **Hito:** cierra la última brecha de CRUD del recetario (`AUDIT-DEV-012` C-2): hoy una receta mal cargada es permanente. Decisión Guard 28 (2026-09-07): **soft-delete** (`Recipe.isActive`, porque `RecipePreparation.recipe` es `onDelete: Restrict`); `PUT` edita libremente salvo que la receta tenga una `RecipePreparation` `CLOSED` — entonces solo `name`/`category`/`description`, **no** ingredientes (editarlos distorsiona el consumo teórico vs. real de `US-029`).
+- **Acciones (TK-131 backend, `related_story: US-037`):**
+  - ✅ `US-037` (catalog/, 5 escenarios BDD), `openapi.yaml` (`PUT` + `DELETE /recipes/{id}` + `UpdateRecipeRequest`, aditivo en forma — `oasdiff` sin breaking). `GET /recipes` cambia de **comportamiento** (oculta inactivas) — anotado en trazabilidad (REQ-051).
+  - ✅ `Recipe` + `isActive` (6º param `= true`); `withDetails(patch)` y `deactivated()` inmutables (copia exhaustiva). `RecipeCompositionLockedException extends DomainError` (409).
+  - ✅ `UpdateRecipeUseCase` — 404 → validación de insumos en batch → `assertCompositionEditable` (`prepRepo.findByStatus('CLOSED').some(p => p.recipeId === id)`) → `withDetails` + `save`. `DeactivateRecipeUseCase` — 404 → `save(recipe.deactivated())`.
+  - ✅ `InMemory`/`PrismaRecipeRepository` filtran `isActive: true` en `findById`/`findAll`/`findByInsumoIds`; `save` persiste `isActive`. Migración `20260907140000_add_recipe_is_active` (`ADD COLUMN ... DEFAULT true`) — verificada contra Postgres real (`check_migration_schema_parity` + `check_seed_idempotency`).
+  - ✅ `recipes.controller.ts` — `updateRecipeSchema` (`.strict()`, todo opcional); `rejectDuplicateInsumoId` + `ingredientSchema`/`ingredientsArraySchema` extraídos y compartidos con `createRecipeSchema`; los 3 handlers de body unificados en `handleZodOrNext` (resolvió 2 clones nuevos de jscpd). `recipes.routes.ts` recibe `preparationRepository?` (patrón `kitchen.routes.ts`).
+- **Estado:**
+  - Backend → **565** tests (nuevos del ticket: `Recipe.test.ts` ×4, `UpdateRecipeUseCase.test.ts` ×11, `ManageRecipes` +5 integración, `InMemoryRecipeRepository` +1), frontend 237, build/lint verdes. Gates duplicación (18→17)/complejidad/código-muerto verdes. `check_contract_drift` sin breaking.
+  - Mutation scoped: `Recipe` (`withDetails`+`deactivated`) **100%**, `DeactivateRecipeUseCase` **83.33%**, `UpdateRecipeUseCase` **92.86%** (agregado 93.22%) — todos ≥ 70. Se simplificó un ternario redundante (`description`) para matar 3 mutantes y borrar una rama muerta.
+  - Auditoría adversarial [`AUDIT-DEV-015`](../audits/AUDIT-DEV-015-TK-131-quality-report.md) → **APROBADO**.
+  - **Pendiente:** `TK-131-FE` (acciones editar/baja en el recetario). Sin push.

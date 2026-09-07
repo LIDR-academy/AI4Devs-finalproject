@@ -4,12 +4,14 @@ import { IRecipeRepository } from '../../../domain/recipes/repositories/IRecipeR
 export class InMemoryRecipeRepository implements IRecipeRepository {
   private recipes: Map<string, Recipe> = new Map();
 
+  // US-037: los métodos de lectura devuelven solo recetas activas (isActive === true).
   async findById(id: string): Promise<Recipe | null> {
-    return this.recipes.get(id) || null;
+    const recipe = this.recipes.get(id);
+    return recipe && recipe.isActive ? recipe : null;
   }
 
   async findAll(): Promise<Recipe[]> {
-    return Array.from(this.recipes.values());
+    return Array.from(this.recipes.values()).filter((r) => r.isActive);
   }
 
   async findByInsumoIds(insumoIds: string[]): Promise<Recipe[]> {
@@ -17,8 +19,8 @@ export class InMemoryRecipeRepository implements IRecipeRepository {
       return [];
     }
     const wanted = new Set(insumoIds);
-    return Array.from(this.recipes.values()).filter((recipe) =>
-      recipe.ingredients.some((ingredient) => wanted.has(ingredient.insumoId))
+    return Array.from(this.recipes.values()).filter(
+      (recipe) => recipe.isActive && recipe.ingredients.some((ingredient) => wanted.has(ingredient.insumoId))
     );
   }
 

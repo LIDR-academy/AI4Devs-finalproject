@@ -9,16 +9,17 @@ type RecipeWithIngredients = Prisma.RecipeGetPayload<{ include: { ingredients: t
 export class PrismaRecipeRepository implements IRecipeRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
+  // US-037: los métodos de lectura devuelven solo recetas activas.
   public async findById(id: string): Promise<Recipe | null> {
-    const raw = await this.prisma.recipe.findUnique({
-      where: { id },
+    const raw = await this.prisma.recipe.findFirst({
+      where: { id, isActive: true },
       include: { ingredients: true },
     });
     return raw ? this.toDomain(raw) : null;
   }
 
   public async findAll(): Promise<Recipe[]> {
-    const list = await this.prisma.recipe.findMany({ include: { ingredients: true } });
+    const list = await this.prisma.recipe.findMany({ where: { isActive: true }, include: { ingredients: true } });
     return list.map((raw) => this.toDomain(raw));
   }
 
@@ -27,7 +28,7 @@ export class PrismaRecipeRepository implements IRecipeRepository {
       return [];
     }
     const list = await this.prisma.recipe.findMany({
-      where: { ingredients: { some: { insumoId: { in: insumoIds } } } },
+      where: { isActive: true, ingredients: { some: { insumoId: { in: insumoIds } } } },
       include: { ingredients: true },
     });
     return list.map((raw) => this.toDomain(raw));
@@ -46,6 +47,7 @@ export class PrismaRecipeRepository implements IRecipeRepository {
         name: recipe.name,
         category: recipe.category,
         description: recipe.description,
+        isActive: recipe.isActive,
         // AUDIT-DEV-007 F-5: la rama update también reemplaza la composición
         // (antes solo tocaba name/category/description).
         ingredients: { deleteMany: {}, create: ingredientCreate },
@@ -55,6 +57,7 @@ export class PrismaRecipeRepository implements IRecipeRepository {
         name: recipe.name,
         category: recipe.category,
         description: recipe.description,
+        isActive: recipe.isActive,
         ingredients: { create: ingredientCreate },
       },
     });
@@ -74,7 +77,8 @@ export class PrismaRecipeRepository implements IRecipeRepository {
             new DecimalQuantity(ingredient.quantity.toString())
           )
       ),
-      raw.description ?? undefined
+      raw.description ?? undefined,
+      raw.isActive
     );
   }
 }

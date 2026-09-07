@@ -269,6 +269,9 @@ model Recipe {
   name         String
   category     String
   description  String?
+  // US-037: baja lógica. Una receta inactiva no aparece en el recetario, el rescate ni
+  // la disponibilidad, pero se conserva por la trazabilidad de sus RecipePreparation.
+  isActive     Boolean             @default(true)
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
   ingredients  RecipeIngredient[]

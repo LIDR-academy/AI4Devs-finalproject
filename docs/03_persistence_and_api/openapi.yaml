@@ -1218,6 +1218,108 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/recipes/{id}:
+    put:
+      summary: Edit an existing recipe (ADMIN only, US-037/TK-131)
+      description: >
+        Partial update of name / category / description / ingredients. Absent fields are
+        kept; `description: null` clears it; `ingredients` replaces the whole composition.
+        Any unknown key -> 400. The composition cannot be edited once the recipe has a
+        CLOSED RecipePreparation (409) -- that would retroactively change preparation-waste
+        reports (US-029).
+      operationId: updateRecipe
+      tags:
+        - Recipes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRecipeRequest'
+      responses:
+        '200':
+          description: Recipe updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateRecipeResponse'
+        '400':
+          description: Invalid field, unknown key, or malformed quantity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Recipe not found, already deactivated, or an ingredient insumoId is unknown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: The recipe has a CLOSED preparation — its ingredient list is frozen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Soft-delete a recipe (ADMIN only, US-037/TK-131)
+      description: >
+        Marks the recipe isActive = false. It disappears from GET /recipes, the CATALOG
+        rescue ranking and per-recipe availability; historical RecipePreparation rows are
+        untouched (Recipe.preparations is onDelete Restrict — no physical delete).
+      operationId: deactivateRecipe
+      tags:
+        - Recipes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Recipe deactivated
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Recipe not found or already deactivated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/kitchen/shift-reconciliation:
     post:
       summary: Process shift closing — compares physical counts vs theoretical stock, auto-discards variances
@@ -2319,6 +2421,30 @@ components:
           type: string
         quantity:
           $ref: '#/components/schemas/DecimalString'
+
+    UpdateRecipeRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        category:
+          type: string
+          minLength: 1
+          maxLength: 60
+        description:
+          type: string
+          nullable: true
+          maxLength: 500
+        ingredients:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/CreateRecipeIngredient'
 
     CreateRecipeRequest:
       type: object

@@ -171,4 +171,79 @@ describe('TK-069: Modulo Recipe independiente (alta y listado de recetas)', () =
       expect(response.status).toBe(401);
     });
   });
+
+  describe('PUT / DELETE /api/v1/recipes/:id (US-037/TK-131)', () => {
+    async function createRecipe(app: ReturnType<typeof buildApp>, name = 'Salsa Base') {
+      const res = await request(app)
+        .post('/api/v1/recipes')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name,
+          category: 'SALSAS',
+          ingredients: [
+            { insumoId: 'ins-harina-1', quantity: '0.100' },
+            { insumoId: 'ins-salsa-1', quantity: '0.200' },
+          ],
+        });
+      return res.body.recipeId as string;
+    }
+
+    it('Escenario 1: ADMIN edita nombre e ingredientes de una receta sin preparaciones (200)', async () => {
+      const app = buildApp();
+      const id = await createRecipe(app);
+
+      const res = await request(app)
+        .put(`/api/v1/recipes/${id}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: 'Salsa Pomodoro', ingredients: [{ insumoId: 'ins-salsa-1', quantity: '0.500' }] });
+
+      expect(res.status).toBe(200);
+      const list = await request(app).get('/api/v1/recipes').set('Authorization', `Bearer ${adminToken}`);
+      const listed = list.body.find((r: { id: string }) => r.id === id);
+      expect(listed.name).toBe('Salsa Pomodoro');
+      expect(listed.ingredients).toHaveLength(1);
+    });
+
+    it('rechaza con 400 una clave no editable (ej. isActive) y con 404 un id inexistente', async () => {
+      const app = buildApp();
+      const id = await createRecipe(app);
+
+      const bad = await request(app)
+        .put(`/api/v1/recipes/${id}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ isActive: false });
+      expect(bad.status).toBe(400);
+
+      const missing = await request(app)
+        .put('/api/v1/recipes/rec-fantasma')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: 'X' });
+      expect(missing.status).toBe(404);
+    });
+
+    it('Escenario 4: DELETE hace soft-delete (204) y la receta sale del listado', async () => {
+      const app = buildApp();
+      const id = await createRecipe(app);
+
+      const del = await request(app).delete(`/api/v1/recipes/${id}`).set('Authorization', `Bearer ${adminToken}`);
+      expect(del.status).toBe(204);
+
+      const list = await request(app).get('/api/v1/recipes').set('Authorization', `Bearer ${adminToken}`);
+      expect(list.body.find((r: { id: string }) => r.id === id)).toBeUndefined();
+
+      // Escenario 5: editar / borrar de nuevo una receta ya dada de baja → 404
+      const reDelete = await request(app).delete(`/api/v1/recipes/${id}`).set('Authorization', `Bearer ${adminToken}`);
+      expect(reDelete.status).toBe(404);
+    });
+
+    it('Escenario 5: KITCHEN_STAFF no puede editar ni dar de baja (403)', async () => {
+      const app = buildApp();
+      const id = await createRecipe(app);
+
+      const put = await request(app).put(`/api/v1/recipes/${id}`).set('Authorization', `Bearer ${staffToken}`).send({ name: 'Y' });
+      expect(put.status).toBe(403);
+      const del = await request(app).delete(`/api/v1/recipes/${id}`).set('Authorization', `Bearer ${staffToken}`);
+      expect(del.status).toBe(403);
+    });
+  });
 });

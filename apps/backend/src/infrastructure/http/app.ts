@@ -290,7 +290,7 @@ function mountApiRoutes(
     rescueOptionsResolver,
     rescueGenerationGateway
   );
-  app.use('/api/v1/recipes', ...guard, createRecipesRouter(recipeRepo, stockRepo, suggestRescueRecipesUseCase));
+  app.use('/api/v1/recipes', ...guard, createRecipesRouter(recipeRepo, stockRepo, suggestRescueRecipesUseCase, recipePreparationRepo));
   app.use('/api/v1/roles', ...guard, createRolesController(roleRepo, isAuthRequired));
   app.use('/api/v1/locations', ...guard, createLocationsController(locationRepo, isAuthRequired, stockRepo));
   app.use('/api/v1/settings/ai', ...guard, createAiSettingsController(aiConfigRepo, encryptionService, isAuthRequired));

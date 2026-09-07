@@ -47,4 +47,13 @@ describe('TK-127: InMemoryRecipeRepository.findByInsumoIds (F-7)', () => {
     expect(updated?.ingredients.map((i) => i.insumoId)).toEqual(['ins-9']);
     expect(await repo.findByInsumoIds(['ins-1'])).toEqual([]);
   });
+
+  it('TK-131: una receta inactiva desaparece de findById, findAll y findByInsumoIds', async () => {
+    const dead = (await repo.findById('rec-b'))!.deactivated();
+    await repo.save(dead);
+
+    expect(await repo.findById('rec-b')).toBeNull();
+    expect((await repo.findAll()).map((r) => r.id).sort()).toEqual(['rec-a', 'rec-c']);
+    expect((await repo.findByInsumoIds(['ins-3'])).map((r) => r.id)).toEqual([]);
+  });
 });
