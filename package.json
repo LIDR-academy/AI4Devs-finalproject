@@ -8,7 +8,9 @@
     "node": ">=20.0.0 <21.0.0",
     "pnpm": ">=10.0.0"
   },
-  "scripts": {},
+  "scripts": {
+    "verify:boundaries": "node tools/boundary-probes/verify.mjs"
+  },
   "devDependencies": {
     "@nx/eslint": "21.6.11",
     "@nx/eslint-plugin": "21.6.11",

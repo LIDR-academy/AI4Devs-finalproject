@@ -984,4 +984,12 @@ Per PRD §14.3, out of the MVP: Problem, Change, Release and CMDB management; em
 
 ### 12.3 Current verification status
 
-**None of the checks in §12.1 have been executed, because no Nx workspace, no `package.json` and no project code exist in this repository.** This document is the specification those checks will be run against once scaffolding begins. The first scaffolding task is to create the workspace, `libs/shared/*` and the `incident` hexagon per §5.5, then run `pnpm nx lint` and `pnpm nx graph` and report the result truthfully.
+The Nx workspace, the pinned toolchain and the lint/format layer now exist (tickets `T-C10-01` and `T-C10-02`), and `@nx/enforce-module-boundaries` encodes the §5.3 matrix, scope rule and platform rule (`T-C10-03`). **No project code exists yet, however: there is no `apps/` and no `libs/`, and `pnpm nx graph` reports zero projects.**
+
+What that means for each check:
+
+- **Module boundaries.** Configured and *proven to bite*. Because a green lint over legal code would not demonstrate that an illegal import is caught, the rule is verified by `pnpm verify:boundaries` (`tools/boundary-probes/`), which scaffolds throwaway projects carrying one deliberate violation each — type matrix, scope rule, platform rule, the two-tag case, the ban on depending on a `type:app`, and the `type:e2e` restriction — asserts every one is rejected, checks that three legal control edges are *not* rejected, and removes the scaffolding. Re-run it after any change to the tag vocabulary, the type matrix or `depConstraints`.
+- **Dependency graph inspection.** Operational, but vacuous: zero projects, zero edges.
+- **Changed-only gate, unit tests, acceptance.** Not executed and not yet executable — they need project code. `pnpm nx run-many -t lint` currently exits 0 having run no task at all, which is not evidence of anything.
+
+The next scaffolding tasks create the applications and then `libs/shared/*` and the `incident` hexagon per §5.5; from that point `pnpm nx lint` and `pnpm nx graph` run against real code and the result is reported truthfully.

@@ -699,7 +699,8 @@ ESLint 9 uses a **flat config** at `eslint.config.mjs` (there is no `.eslintrc` 
 | `pnpm nx show projects` | Lists every Nx project in the workspace. Empty output means no app or library has been generated yet. | Now |
 | `pnpm nx graph` | Opens the interactive dependency graph in a browser. The visual check that a context depends only on itself and `scope:shared`. | Now |
 | `pnpm nx graph --file=tmp/graph.json` | Writes the same graph as JSON without opening a browser — the CI-friendly and scriptable form. | Now |
-| `pnpm nx lint <project>` | Runs ESLint on one project. Once `T-C10-03` adds the `depConstraints` matrix this is also the command that turns the three-axis tag scheme of §2.3.4 into a build failure. | ESLint now; boundary enforcement after `T-C10-03` |
+| `pnpm nx lint <project>` | Runs ESLint on one project, **including `@nx/enforce-module-boundaries`**. This is the command that turns the three-axis tag scheme of §2.3.4 into a build failure. | Now |
+| `pnpm verify:boundaries` | Proves the boundary rule still bites, by scaffolding deliberate violations and asserting each is caught. See the boundary verification below. | Now |
 | `pnpm nx affected -t lint test build` | Runs lint, test and build only for the projects affected by the current change, against `defaultBase` (`main`). The CI gate. | Once projects exist |
 
 **Serve, build and test**
@@ -833,7 +834,34 @@ Prettier owns the workspace configuration files; the 296 parseable files under `
 
 `@nx/enforce-module-boundaries` is deliberately **absent** from the resolved config: `T-C10-02` declares the vocabulary, `T-C10-03` adds the rule that consumes it.
 
-> **Status:** the workspace **bootstrap** (`T-C10-01`) and the **lint/format toolchain and tag vocabulary** (`T-C10-02`) are done: `package.json`, `nx.json`, `tsconfig.base.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `.nvmrc`, `.gitignore`, `eslint.config.mjs`, `.prettierrc`, `.prettierignore` and `.nxignore` exist at the root, and every check above passes. Everything else on this page remains **target structure**: there is no `apps/`, no `libs/` and no `openspec/` directory, and the `depConstraints` matrix that enforces the tag scheme is still pending (`T-C10-03`). Consequently no boundary rule of §2.3.4 has been enforced yet, no lint task has ever run against project code, and every path under `apps/` and `libs/` is still prescriptive design intent that scaffolding must produce.
+##### Boundary verification
+
+**A green `pnpm nx lint` over legal code does not prove the boundary rule works.** It proves the current graph is legal — a different claim. Only a deliberate violation shows that an illegal import is actually caught, and that is the claim every one of the nineteen epics is sized against.
+
+That evidence is produced by a committed harness rather than by prose:
+
+```bash
+pnpm verify:boundaries          # node tools/boundary-probes/verify.mjs
+```
+
+The script scaffolds throwaway projects under `libs/__boundary-probe/`, each carrying **exactly one** illegal edge — the other two axes are legal, so a failure can only come from the rule under test — runs `nx lint` on each, compares the outcome with what §5.3 requires, and removes every trace of the scaffolding (including its `tsconfig.base.json` path entries, restored byte-for-byte) in a `finally` block. It exits non-zero on any surprise.
+
+| Probe | Edge | Must |
+| --- | --- | --- |
+| `ok` | `type:domain` → `scope:shared` `type:util` | pass — domain may use the shared kernel |
+| `appsrc` | `type:app` (`scope:shared`) → `scope:incident` `type:infrastructure` | pass — the composition root is the one type that crosses contexts (ADR-003) |
+| `feat2` | `scope:incident` `type:feature` → `scope:shared` `platform:frontend` `type:ui` | pass — a context feature may use the design system (ADR-010) |
+| `p1` | `type:domain` → `type:infrastructure` | fail — type matrix |
+| `p2` | `platform:frontend` → `platform:backend` | fail — platform rule |
+| `p3` | `scope:incident` → `scope:sla` | fail — scope rule |
+| `p4` | a project with two tags instead of three | fail — §5.2, "no exceptions" |
+| `p5` | `type:infrastructure` → `type:app` | fail — nothing may depend on the composition root |
+| `p6` | `type:e2e` → `type:infrastructure` | fail — `e2e` may use only `contracts` and `util` |
+
+The three `pass` rows matter as much as the six `fail` rows: a configuration that forbade everything would satisfy the failures and silently block `apps/api` and `libs/shared/ui`.
+
+Run it after **any** change to the tag vocabulary, the type matrix or the `depConstraints` block — adding a context, widening a row, introducing an ADR-driven exception. Real project code cannot replace it: legal code never exercises the prohibition.
+> **Status:** the workspace **bootstrap** (`T-C10-01`) and the **lint/format toolchain and tag vocabulary** (`T-C10-02`) are done: `package.json`, `nx.json`, `tsconfig.base.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `.nvmrc`, `.gitignore`, `eslint.config.mjs`, `.prettierrc`, `.prettierignore` and `.nxignore` exist at the root, and every check above passes. Everything else on this page remains **target structure**: there is no `apps/`, no `libs/` and no `openspec/` directory, and the `depConstraints` matrix that enforces the tag scheme (`T-C10-03`) is configured and proven by the harness above. No lint task has ever run against real project code, however, and every path under `apps/` and `libs/` is still prescriptive design intent that scaffolding must produce.
 
 ### **2.4. Infraestructura y despliegue**
 

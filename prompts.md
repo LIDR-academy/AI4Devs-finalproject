@@ -827,3 +827,115 @@ Implementado ticket T-C10-02
 </br>
 
 **Prompt 3:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Actúa como sport-itsm-architect e implementa UN SOLO ticket:
+docs/backlog/C10/tickets/T-C10-03.md · Encode the type constraint matrix and the scope/platform rules
+Raíz del repositorio: d:\repositories\ai4devs\proyecto_final\AI4Devs-finalproject
+
+#### Precondición
+
+T-C10-01 y T-C10-02 deben estar hechos. Compruébalo antes de tocar nada:
+
+    ls package.json nx.json eslint.config.mjs && pnpm nx report
+
+`eslint.config.mjs` debe existir ya, en flat config, con el vocabulario de tags de tres ejes
+declarado en un solo sitio. Si no está, PARA y dilo: este ticket lo consume, no lo crea.
+
+#### Por qué este ticket importa más que los demás
+
+Su propio Context lo dice citando ARCHITECTURE.md §5.4: es "the single most important
+structural rule in this document". Las diecinueve épicas están dimensionadas asumiendo que un
+import ilegal **rompe la build**, no que lo caza alguien en revisión. Si esta configuración
+queda mal, el error no se manifiesta aquí: se manifiesta dentro de seis meses como un grafo de
+dependencias corrupto que ya nadie puede desenredar.
+
+#### El ticket es el contrato
+
+Lee docs/backlog/C10/tickets/T-C10-03.md entero, y con él:
+
+- docs/product/ARCHITECTURE.md §5.3 — la matriz de diez filas, la regla de `scope:` y la de
+  `platform:`. Es la fuente literal de lo que hay que codificar; transcríbela, no la deduzcas.
+- docs/product/ARCHITECTURE.md §5.2 — "exactamente tres tags, sin excepciones".
+- docs/product/ARCHITECTURE.md §5.4 — el grafo permitido, para contrastar.
+- CLAUDE.md §3, "What NOT to do" — la prohibición de relajar la regla para que compile un
+  import ilegal.
+
+Consume el vocabulario de tags que T-C10-02 dejó declarado en un único punto de
+`eslint.config.mjs`. **No lo redeclares ni lo dupliques**: si acabas con dos listas de tags en
+el fichero, has roto el cuarto criterio de aceptación de T-C10-02.
+
+Tres detalles de la matriz que se fallan con frecuencia:
+
+- `type:app` puede depender de todos los tipos de su plataforma más `shared`, y es el ÚNICO
+  que cruza contextos, porque es la raíz de composición y su scope es `scope:shared`.
+- `type:e2e` solo puede depender de `type:contracts` y `type:util`. Nada más.
+- **Ninguna** librería puede depender de un `type:app`. Esa fila no existe en la matriz: es una
+  prohibición explícita que hay que codificar.
+
+#### El problema de verificación — resuélvelo así, no lo ignores
+
+Cinco de los seis criterios de aceptación exigen sondas sobre proyectos: import de `type:domain`
+a `type:infrastructure`, de `platform:frontend` a `platform:backend`, de un `scope:` a otro, y
+un proyecto declarado con dos tags. **En este punto el workspace tiene cero proyectos**: las
+aplicaciones son T-C10-04→06 y las librerías de `identity-access` son T-C10-18.
+
+No puedes verificarlos sin proyectos, y no puedes crear los proyectos de verdad. La salida es
+**andamiaje desechable**:
+
+1. Genera librerías temporales mínimas, con nombres inequívocamente de sonda
+   (`libs/__probe/a`, `libs/__probe/b`, …) y los tags que cada criterio necesita. NO uses los
+   nombres reales de contextos ni de aplicaciones: `scope:identity-access` es de T-C10-18 y no
+   debe aparecer aquí ni siquiera de forma temporal.
+2. Introduce el import ilegal correspondiente.
+3. Ejecuta `pnpm nx lint <proyecto>` y comprueba que **falla**, y que el mensaje nombra la regla
+   y los dos tags implicados. Pega la salida del error: un criterio de este ticket se demuestra
+   con el fallo, no con el éxito.
+4. Repite para los cinco casos, incluido el proyecto con dos tags en vez de tres.
+5. **Borra todo el andamiaje** y demuestra con `git status` y `pnpm nx show projects` que el
+   workspace vuelve a tener cero proyectos y ningún residuo.
+
+Si crees que hay una forma mejor de verificarlo, dila antes de ejecutarla. Lo que NO es
+aceptable es declarar pasado un criterio que no has ejecutado.
+
+#### Lo que NO debes hacer
+
+- **No crees ningún proyecto real.** `apps/api`, `apps/web`, `apps/api-e2e`, `apps/web-e2e` y
+  cualquier `libs/shared/*` o `libs/<contexto>/*` pertenecen a tickets posteriores. El único
+  andamiaje permitido es el desechable de la sección anterior, y se borra antes de cerrar.
+- **No relajes ninguna regla para que algo pase.** Si una sonda no falla cuando debería, el fallo
+  está en tu configuración, no en la regla: arréglala. Añadir una excepción, un `allow` o un
+  `ignoredCircularDependencies` para salir del paso es exactamente lo que CLAUDE.md §3 prohíbe.
+- No toques el vocabulario de tags de T-C10-02 salvo que esté objetivamente mal; si lo está,
+  dilo en el informe en lugar de corregirlo en silencio.
+
+#### Verificación final
+
+Además de las cinco sondas, con el andamiaje ya borrado:
+
+- `pnpm nx run-many -t lint` pasa sobre el workspace vacío.
+- `pnpm nx graph --file=tmp/graph.json` se genera sin aristas prohibidas (trivial con cero
+  proyectos: dilo así, no lo presentes como prueba de nada).
+- `git status` limpio de sondas y de proyectos temporales.
+
+#### Restricciones
+
+- No modifiques nada bajo docs/ ni bajo .claude/. El ticket no se edita ni se marca como hecho.
+- No instales dependencias que el Scope no pida.
+- No hagas commit ni push salvo que te lo pida explícitamente.
+
+#### Informa al terminar
+
+La configuración `depConstraints` resultante, la salida de las cinco sondas (con el mensaje de
+error de cada una), la confirmación de que el andamiaje quedó borrado, y cualquier fila de la
+matriz de §5.3 que no hayas podido expresar en `@nx/enforce-module-boundaries` — si la hay, es
+un hallazgo de arquitectura, no un detalle de implementación: dilo claramente.
+
+### Response:
+
+Implementado ticket T-C10-03
+
+</br>
