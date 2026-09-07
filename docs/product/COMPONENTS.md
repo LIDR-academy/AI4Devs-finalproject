@@ -157,4 +157,4 @@ Every integration is a **port with an adapter**, so none of them is a hard runti
 | **SCMS Identity Provider / SSO** | Authentication and profile/entitlement attributes | `IdentityProviderPort` in `identity-access/domain`; local-credential adapter first, SSO adapter later (FR-IAM-04) |
 | **Email gateway** | Outbound notification delivery | Adapter behind the `notification` context's outbound port (SMTP/HTTPS) |
 
-> **Status:** as in the readme, these components describe the **target architecture**. No Nx workspace, `apps/` or `libs/` exists in the repository yet, so no component listed above has been scaffolded or verified with `pnpm nx lint` / `pnpm nx graph`.
+> **Status:** as in the readme, these components describe the **target architecture**. Two of them now exist as scaffolding: the **API** (`apps/api`, NestJS 11) and the **Web Client** (`apps/web`, Angular 20 shell), both linting and building green. Neither holds any of the responsibilities described above yet — there is no `libs/` directory, so no bounded-context library, no PostgreSQL database and no external gateway has been scaffolded or verified.

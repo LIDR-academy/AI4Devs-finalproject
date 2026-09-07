@@ -254,7 +254,7 @@ Honest accounting of what this architecture costs:
 - **Eventual consistency in the cross-cutting path.** Audit and notification writes sit outside the ticket transaction. Mitigated with an in-process dispatcher with retry and audit-completeness assertions in acceptance tests, but it is a real trade-off against strict transactional auditing.
 - **Learning curve.** DDD + hexagonal + Nx tags is a steep onboarding cost, and the discipline degrades quickly if boundary violations are silenced instead of fixed.
 
-> **Status:** this is the **target architecture**. The Nx workspace has been bootstrapped (`T-C10-01`: `package.json`, `nx.json`, `tsconfig.base.json`, `pnpm-lock.yaml`), but it is still **empty** — no `apps/` and no `libs/` has been generated, and while the three-axis tag **vocabulary** is now declared in `eslint.config.mjs` (`T-C10-02`), the `@nx/enforce-module-boundaries` rule that enforces it is not configured yet (`T-C10-03`). The boundary rules above have therefore not been verified with `pnpm nx lint`, and `pnpm nx graph` currently reports zero projects.
+> **Status:** this is the **target architecture**, now partly materialized. The Nx workspace, the pinned toolchain, the ESLint 9 / Prettier 3 layer and the three-axis tag scheme all exist (`T-C10-01` … `T-C10-03`), and `@nx/enforce-module-boundaries` enforces the type matrix, the scope rule and the platform rule — proven to bite by `pnpm verify:boundaries` (9/9). Two applications are scaffolded: `apps/api` (`T-C10-04`) and `apps/web` (`T-C10-05`), so `pnpm nx show projects` reports exactly `api` and `web` and `pnpm nx lint` passes for both. What is still absent is everything the boundary rules are actually *for*: there is **no `libs/` directory**, so no bounded context, no hexagon layer and not a single cross-project dependency edge exists. `pnpm nx graph` shows two nodes and zero edges.
 
 ### **2.2. Descripción de componentes principales:**
 
@@ -415,7 +415,7 @@ Every integration is a **port with an adapter**, so none of them is a hard runti
 | **SCMS Identity Provider / SSO** | Authentication and profile/entitlement attributes | `IdentityProviderPort` in `identity-access/domain`; local-credential adapter first, SSO adapter later (FR-IAM-04) |
 | **Email gateway** | Outbound notification delivery | Adapter behind the `notification` context's outbound port (SMTP/HTTPS) |
 
-> **Status:** as in §2.1, these components describe the **target architecture**. The Nx workspace itself exists (`T-C10-01`), but no `apps/` and no `libs/` has been generated, so **not one component listed above has been scaffolded**: `pnpm nx show projects` returns nothing and `pnpm nx graph` reports zero projects. ESLint and Prettier are configured (`T-C10-02`), but with no project to lint, `pnpm nx run-many -t lint` runs no task at all — and the boundary rule that would check these components against each other arrives with `T-C10-03`.
+> **Status:** as in §2.1, these components describe the **target architecture**. Two of them now exist as scaffolding — the **API** (`apps/api`, NestJS 11, `T-C10-04`) and the **Web Client** (`apps/web`, Angular 20 standalone shell, `T-C10-05`), both building and linting green. Neither carries any of the responsibilities described above yet, and **no other component listed here has been scaffolded**: there is no `libs/` directory, no PostgreSQL database and no external gateway. The boundary rule that checks these components against each other is configured and proven (`T-C10-03`), but with no library to import it has nothing real to police.
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
@@ -594,10 +594,6 @@ AI4Devs-finalproject/
 │  ├─ PROJECT-STRUCTURE.md           # companion to this section
 │  └─ adr/                           # ADRs promoted to individual files when scaffolding starts
 │
-├─ openspec/                         # canonical product behavior - propose -> implement -> archive
-│  ├─ specs/<capability>/spec.md     # e.g. incident-management, sla-management, service-catalog
-│  └─ changes/<change-id>/{proposal.md,tasks.md,design.md,specs/<capability>/spec.md}
-│
 ├─ .claude/
 │  ├─ agents/{sport-itsm-architect.md,sport-itsm-product-owner.md}
 │  └─ skills/{sport-itsm-architecture,sport-itsm-backend,sport-itsm-frontend,
@@ -628,7 +624,6 @@ AI4Devs-finalproject/
 | `libs/shared/ui` | The in-house **design system**: domain-agnostic presentational components reusable by any context (button, form field, dialog/overlay, menu, table, tabs, toast, badge, chip), the SCSS design-token layer and the hand-written accessibility primitives (focus-trap/restore directive, `aria-live` announcer). Angular code with a shared scope, therefore tagged `platform:frontend scope:shared type:ui`, not `platform:shared` (ADR-010). It injects no service and performs no I/O. |
 | `libs/shared/util` | Pure, dependency-free helpers. |
 | `docs/` | Engineering documentation: PRD, architecture, components, project structure, and `docs/adr/` for Architecture Decision Records. |
-| `openspec/` | The canonical source of **product behavior** — capability specs and in-flight change proposals with their spec deltas. Never architecture, never stack. |
 | `.claude/` | The AI operating model: **agents** (Product Owner, Software Architect) and **skills** (architecture, backend, frontend, engineering principles, ITSM domain, documentation standard). |
 
 #### 2.3.3 Naming and file conventions
@@ -661,15 +656,15 @@ The consequence worth stating plainly: **in this repository the folder structure
 
 #### 2.3.5 Documentation, specification and agent folders
 
-- **`openspec/`** is the canonical source of **product behavior**. `openspec/specs/<capability>/spec.md` holds the current agreed behavior per ITSM capability; `openspec/changes/<change-id>/` holds in-flight proposals with `proposal.md`, `tasks.md`, an optional `design.md` (the only place where stack detail is allowed) and spec deltas marked `## ADDED / MODIFIED / REMOVED Requirements`. Specs are technology-agnostic; the workflow is `propose → implement → archive`.
-- **`docs/`** is the engineering counterpart: the PRD, the architecture document, the component reference, the project-structure document, and `docs/adr/` where the structural decisions currently embedded in `ARCHITECTURE.md` §10 are promoted to individual ADR files once scaffolding starts.
+- **`docs/product/PRD.md`** is the single canonical source of **product behavior**, for the life of the project. There is no `openspec/` directory and no spec-delta workflow: a behavior change is made in the PRD by the Product Owner, and the derived backlog under `docs/backlog/` is regenerated from it.
+- **`docs/`** also holds the engineering counterpart: the architecture document, the component reference, the project-structure document, and `docs/adr/` where the structural decisions currently embedded in `ARCHITECTURE.md` §10 are promoted to individual ADR files once scaffolding starts.
 - **`.claude/`** holds the AI operating model: **agents** (`sport-itsm-product-owner`, `sport-itsm-architect`) are roles, and **skills** are the layered, reusable guardrails they consume — business (`service-desk-expert`), system (`sport-itsm-architecture`), craft (`sport-itsm-engineering-principles`), stack (`sport-itsm-backend`, `sport-itsm-frontend`) and documentation (`feature-docs`). `CLAUDE.md` at the root is the entry point that ties them together.
 
 #### 2.3.6 Useful commands
 
 Every command runs from the **repository root**, through **pnpm + Nx**. **Node 22 LTS** is required (pinned in `.nvmrc` and in `package.json` → `engines`) and **pnpm is the only supported package manager** — running `npm install` or `yarn` here would produce a second lockfile and is forbidden.
 
-The **Availability** column distinguishes what runs *today*, on the bootstrapped-but-empty workspace, from what only becomes meaningful once `apps/` and `libs/` are generated.
+The **Availability** column distinguishes what runs *today* — on a workspace holding `apps/api` and `apps/web` and nothing else — from what only becomes meaningful once the acceptance suites and `libs/` are generated.
 
 **Workspace and toolchain**
 
@@ -685,8 +680,8 @@ ESLint 9 uses a **flat config** at `eslint.config.mjs` (there is no `.eslintrc` 
 
 | Command | What it does | Availability |
 | --- | --- | --- |
-| `pnpm nx run-many -t lint` | Runs the `lint` target of every project. With zero projects it exits `0` having run nothing — that is not evidence the config works, see the verification below. | Now |
-| `pnpm eslint <path>` | Lints files directly, bypassing Nx and its project graph. The way to exercise the config while the workspace is still empty. | Now |
+| `pnpm nx run-many -t lint` | Runs the `lint` target of every project — today `api` and `web`, both green. It no longer exits `0` vacuously, but a green lint over legal code still does not prove the boundary rule bites; see the boundary verification below. | Now |
+| `pnpm eslint <path>` | Lints files directly, bypassing Nx and its project graph. Useful for exercising the config on a path that belongs to no project. | Now |
 | `pnpm eslint --print-config <path>` | Prints the fully resolved config for one file path. Use it to check *which* rules apply where — Angular rules must appear on `apps/web/**` and the frontend library types, and must be absent on `apps/api/**`. | Now |
 | `pnpm prettier --check .` | Fails if any non-ignored file deviates from `.prettierrc` (`singleQuote`, `semi`). The CI formatting gate. | Now |
 | `pnpm prettier --write .` | Rewrites those files in place. | Now |
@@ -696,20 +691,20 @@ ESLint 9 uses a **flat config** at `eslint.config.mjs` (there is no `.eslintrc` 
 
 | Command | What it does | Availability |
 | --- | --- | --- |
-| `pnpm nx show projects` | Lists every Nx project in the workspace. Empty output means no app or library has been generated yet. | Now |
+| `pnpm nx show projects` | Lists every Nx project in the workspace. Currently returns exactly `api` and `web`; anything else means a project was generated outside its ticket. | Now |
 | `pnpm nx graph` | Opens the interactive dependency graph in a browser. The visual check that a context depends only on itself and `scope:shared`. | Now |
 | `pnpm nx graph --file=tmp/graph.json` | Writes the same graph as JSON without opening a browser — the CI-friendly and scriptable form. | Now |
 | `pnpm nx lint <project>` | Runs ESLint on one project, **including `@nx/enforce-module-boundaries`**. This is the command that turns the three-axis tag scheme of §2.3.4 into a build failure. | Now |
 | `pnpm verify:boundaries` | Proves the boundary rule still bites, by scaffolding deliberate violations and asserting each is caught. See the boundary verification below. | Now |
-| `pnpm nx affected -t lint test build` | Runs lint, test and build only for the projects affected by the current change, against `defaultBase` (`main`). The CI gate. | Once projects exist |
+| `pnpm nx affected -t lint test build` | Runs lint, test and build only for the projects affected by the current change, against `defaultBase` (`main`). The CI gate. | Now |
 
 **Serve, build and test**
 
 | Command | What it does | Availability |
 | --- | --- | --- |
-| `pnpm nx serve api` / `pnpm nx serve web` | Runs the NestJS API / the Angular web client in development mode with watch. | Once `apps/` exist |
-| `pnpm nx build api` / `pnpm nx build web` | Produces the production bundle of each application under `dist/`. | Once `apps/` exist |
-| `pnpm nx test <project>` | Runs the Jest unit/component suite of one project (`incident-domain`, `api`, `web`…). | Once projects exist |
+| `pnpm nx serve api` / `pnpm nx serve web` | Runs the NestJS API / the Angular web client in development mode with watch. | Now |
+| `pnpm nx build api` / `pnpm nx build web` | Produces the production bundle of each application under `dist/`. | Now |
+| `pnpm nx test <project>` | Runs the Jest unit/component suite of one project (`incident-domain`, `api`, `web`…). Runs today for `api` and `web`, but **both suites are empty** and pass via `passWithNoTests` — a green result proves the runner works, nothing more. | Now |
 | `pnpm nx e2e api-e2e` / `pnpm nx e2e web-e2e` | Runs the Cypress + Cucumber acceptance suites (Gherkin `*.feature` + `*.steps.ts`). | Once `*-e2e` apps exist |
 
 **Schema evolution (TypeORM)**
@@ -718,9 +713,9 @@ The data source lives at `apps/api/src/data-source.ts`. `synchronize` is always 
 
 | Command | What it does | Availability |
 | --- | --- | --- |
-| `pnpm typeorm migration:generate -d apps/api/src/data-source.ts <path/Name>` | Diffs the entity model against the database and writes a new timestamped migration. | Once `apps/api` exists |
-| `pnpm typeorm migration:run -d apps/api/src/data-source.ts` | Applies every pending migration. | Once `apps/api` exists |
-| `pnpm typeorm migration:revert -d apps/api/src/data-source.ts` | Rolls back the last applied migration. | Once `apps/api` exists |
+| `pnpm typeorm migration:generate -d apps/api/src/data-source.ts <path/Name>` | Diffs the entity model against the database and writes a new timestamped migration. | Once `apps/api/src/data-source.ts` exists |
+| `pnpm typeorm migration:run -d apps/api/src/data-source.ts` | Applies every pending migration. | Once `apps/api/src/data-source.ts` exists |
+| `pnpm typeorm migration:revert -d apps/api/src/data-source.ts` | Rolls back the last applied migration. | Once `apps/api/src/data-source.ts` exists |
 
 ##### Bootstrap verification
 
@@ -788,17 +783,19 @@ pnpm nx show projects
 
 Expected: the command exits `0`, writes `tmp/graph.json` (a gitignored path), prints `projects: 0`, and `pnpm nx show projects` returns nothing.
 
+> This criterion was satisfied **at `T-C10-01`**, when the workspace was empty, and is recorded here as that ticket's evidence. **Re-running it today gives `projects: 2`** — `api` (`T-C10-04`) and `web` (`T-C10-05`). The re-runnable form of the check is now "exactly the projects the tickets created, and nothing else": `pnpm nx show projects` must return `api` and `web`.
+
 ##### Lint and format verification
 
 These are the acceptance criteria of ticket **`T-C10-02` · ESLint 9 flat config, Prettier 3 and the three-axis tag scheme**.
 
-**AC1 — `pnpm nx run-many -t lint` exits `0`.** It does, but read the output before believing it:
+**AC1 — `pnpm nx run-many -t lint` exits `0`.** At `T-C10-02` it did so vacuously — read the output before believing it:
 
 ```
  NX   No tasks were run
 ```
 
-**Zero projects means zero lint tasks, so the exit code proves nothing about the configuration.** Until `apps/` and `libs/` exist, exercise ESLint directly instead:
+**Zero projects meant zero lint tasks, so that exit code proved nothing about the configuration.** Today the same command runs real tasks for `api` and `web` and passes — but a green lint over *legal* code still proves only that the config loads, never that an illegal import is caught; that is what `pnpm verify:boundaries` below is for. To exercise the config on a path belonging to no project, drive ESLint directly:
 
 ```bash
 pnpm eslint --print-config eslint.config.mjs   # resolves 456 rules, 69 enabled
@@ -861,7 +858,7 @@ The script scaffolds throwaway projects under `libs/__boundary-probe/`, each car
 The three `pass` rows matter as much as the six `fail` rows: a configuration that forbade everything would satisfy the failures and silently block `apps/api` and `libs/shared/ui`.
 
 Run it after **any** change to the tag vocabulary, the type matrix or the `depConstraints` block — adding a context, widening a row, introducing an ADR-driven exception. Real project code cannot replace it: legal code never exercises the prohibition.
-> **Status:** the workspace **bootstrap** (`T-C10-01`) and the **lint/format toolchain and tag vocabulary** (`T-C10-02`) are done: `package.json`, `nx.json`, `tsconfig.base.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `.nvmrc`, `.gitignore`, `eslint.config.mjs`, `.prettierrc`, `.prettierignore` and `.nxignore` exist at the root, and every check above passes. Everything else on this page remains **target structure**: there is no `apps/`, no `libs/` and no `openspec/` directory, and the `depConstraints` matrix that enforces the tag scheme (`T-C10-03`) is configured and proven by the harness above. No lint task has ever run against real project code, however, and every path under `apps/` and `libs/` is still prescriptive design intent that scaffolding must produce.
+> **Status:** the workspace **bootstrap** (`T-C10-01`), the **lint/format toolchain and tag vocabulary** (`T-C10-02`) and the **enforced `depConstraints` matrix** (`T-C10-03`) are done, and every check above passes. Two applications are scaffolded on top of them — `apps/api` (`T-C10-04`) and `apps/web` (`T-C10-05`) — so `pnpm nx lint` now runs against real project code and passes for both, and `pnpm verify:boundaries` still reports 9/9 with a frontend project in the graph. That green lint is **not** evidence the boundary rule bites: neither application imports another project, so no dependency edge has ever been judged. Everything under `libs/` on this page remains **target structure** — there is no `libs/` directory and neither acceptance suite (`apps/api-e2e`, `apps/web-e2e`) exists yet.
 
 ### **2.4. Infraestructura y despliegue**
 
@@ -2534,7 +2531,7 @@ These hold for every table above and are stated once rather than repeated per en
 | **Enums vs versioned lookup tables** | A native PG enum when the value set is closed and the domain branches on it (`priority`, `impact`, `origin_channel`, `sla_instance_state`, `actor_type`). A lookup table (`id`, `code` UK, `active`, `*_translation`) when an administrator may change it without a release (NFR-CFG-01) or it must be translatable without changing its identifier (NFR-I18N-05). Records store the lookup **id**, never the label, so a rename changes one row and zero historical facts. Configuration is **versioned, never edited in place**: a ticket keeps the matrix, workflow and policy version it was created under (NFR-CFG-02). |
 | **Hard FK only inside a context** | A real `FOREIGN KEY` exists only within one schema / one bounded context, with `ON DELETE CASCADE` only from an aggregate root to a part it exclusively owns and `RESTRICT` everywhere else. Every cross-context or polymorphic reference is an **indexed `uuid` with no constraint** (ADR-003) — the database expression of the module-boundary rule of §2.1. |
 
-> **Status:** as in §3.1, this is the **target entity model**, derived from the PRD and the OpenSpec capability specs. **No TypeORM entity class exists, no migration exists, and no database has ever been created.** None of the primary keys, unique constraints, `CHECK` constraints, partial indexes, partitions or `GRANT`/`REVOKE` statements described above has been executed, and no cardinality or constraint here has been validated against a live PostgreSQL instance. The first migration is the moment any of it becomes fact; until then the correct reading is "designed and reviewed", not "implemented".
+> **Status:** as in §3.1, this is the **target entity model**, derived from the PRD. **No TypeORM entity class exists, no migration exists, and no database has ever been created.** None of the primary keys, unique constraints, `CHECK` constraints, partial indexes, partitions or `GRANT`/`REVOKE` statements described above has been executed, and no cardinality or constraint here has been validated against a live PostgreSQL instance. The first migration is the moment any of it becomes fact; until then the correct reading is "designed and reviewed", not "implemented".
 
 ---
 

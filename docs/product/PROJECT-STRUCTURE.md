@@ -177,10 +177,6 @@ AI4Devs-finalproject/
 │  ├─ PROJECT-STRUCTURE.md           # this document (companion to readme §2.3)
 │  └─ adr/                           # ADRs promoted to individual files when scaffolding starts
 │
-├─ openspec/                         # canonical product behavior - propose -> implement -> archive
-│  ├─ specs/<capability>/spec.md     # e.g. incident-management, sla-management, service-catalog
-│  └─ changes/<change-id>/{proposal.md,tasks.md,design.md,specs/<capability>/spec.md}
-│
 ├─ .claude/
 │  ├─ agents/{sport-itsm-architect.md,sport-itsm-product-owner.md}
 │  └─ skills/{sport-itsm-architecture,sport-itsm-backend,sport-itsm-frontend,
@@ -211,7 +207,6 @@ AI4Devs-finalproject/
 | `libs/shared/ui` | The in-house **design system**: domain-agnostic presentational components reusable by any context (button, form field, dialog/overlay, menu, table, tabs, toast, badge, chip), the SCSS design-token layer and the hand-written accessibility primitives (focus-trap/restore directive, `aria-live` announcer). Angular code with a shared scope, therefore tagged `platform:frontend scope:shared type:ui`, not `platform:shared` (ADR-010). It injects no service and performs no I/O. |
 | `libs/shared/util` | Pure, dependency-free helpers. |
 | `docs/` | Engineering documentation: PRD, architecture, components, this structure document, and `docs/adr/` for Architecture Decision Records. |
-| `openspec/` | The canonical source of **product behavior** — capability specs and in-flight change proposals with their spec deltas. Never architecture, never stack. |
 | `.claude/` | The AI operating model: **agents** (Product Owner, Software Architect) and **skills** (architecture, backend, frontend, engineering principles, ITSM domain, documentation standard). |
 
 ## 4. Naming and file conventions
@@ -244,8 +239,8 @@ The consequence worth stating plainly: **in this repository the folder structure
 
 ## 6. Documentation, specification and agent folders
 
-- **`openspec/`** is the canonical source of **product behavior**. `openspec/specs/<capability>/spec.md` holds the current agreed behavior per ITSM capability; `openspec/changes/<change-id>/` holds in-flight proposals with `proposal.md`, `tasks.md`, an optional `design.md` (the only place where stack detail is allowed) and spec deltas marked `## ADDED / MODIFIED / REMOVED Requirements`. Specs are technology-agnostic; the workflow is `propose → implement → archive`.
-- **`docs/`** is the engineering counterpart: the PRD, the architecture document, the component reference, this structure document, and `docs/adr/` where the structural decisions currently embedded in `ARCHITECTURE.md` §10 are promoted to individual ADR files once scaffolding starts.
+- **`docs/product/PRD.md`** is the single canonical source of **product behavior**, for the life of the project. There is no `openspec/` directory and no spec-delta workflow: a behavior change is made in the PRD by the Product Owner, and the derived backlog under `docs/backlog/` is regenerated from it.
+- **`docs/`** also holds the engineering counterpart: the architecture document, the component reference, this structure document, and `docs/adr/` where the structural decisions currently embedded in `ARCHITECTURE.md` §10 are promoted to individual ADR files once scaffolding starts.
 - **`.claude/`** holds the AI operating model: **agents** (`sport-itsm-product-owner`, `sport-itsm-architect`) are roles, and **skills** are the layered, reusable guardrails they consume — business (`service-desk-expert`), system (`sport-itsm-architecture`), craft (`sport-itsm-engineering-principles`), stack (`sport-itsm-backend`, `sport-itsm-frontend`) and documentation (`feature-docs`). `CLAUDE.md` at the root is the entry point that ties them together.
 
 ## 7. Governance commands
@@ -261,4 +256,4 @@ The consequence worth stating plainly: **in this repository the folder structure
 | Inspect the dependency graph    | `pnpm nx graph`                                                               |
 | Schema evolution                | `pnpm typeorm migration:generate\|run\|revert -d apps/api/src/data-source.ts` |
 
-> **Status:** as in readme §2.1 and §2.2, this is the **target structure**. The repository currently contains only `docs/`, `.claude/`, `CLAUDE.md`, `readme.md` and `prompts.md`; there is no Nx workspace, no `package.json`, no `apps/`, no `libs/` and no `openspec/` directory yet. Every path above is prescriptive design intent that scaffolding must produce, and none of the boundary rules has been verified with `pnpm nx lint` / `pnpm nx graph`.
+> **Status:** as in readme §2.1 and §2.2, this is the **target structure**, now partly materialized. The Nx workspace, the toolchain and the enforced boundary matrix exist (`T-C10-01` … `T-C10-03`), and `apps/api` (`T-C10-04`) and `apps/web` (`T-C10-05`) are scaffolded — `pnpm nx show projects` reports exactly `api` and `web`, and `pnpm nx lint` passes for both. There is still **no `libs/` directory** and neither acceptance suite (`apps/api-e2e`, `apps/web-e2e`) exists, so every path under `libs/` above remains prescriptive design intent. The boundary rules themselves are verified by `pnpm verify:boundaries` (9/9), not by the two applications, which import no library yet.

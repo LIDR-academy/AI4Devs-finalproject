@@ -4,7 +4,7 @@
 
 > ## Reading notice — target model, nothing is built yet
 >
-> **No Nx workspace, no `apps/`, no `libs/`, no `package.json` and no migration file exists in this repository.** This document is the **prescriptive relational schema** that the first TypeORM migrations must produce, not documentation of a database that exists. Statements are written in the present tense for readability; read them as "shall be". No `pnpm typeorm migration:generate` has ever been run, and none of the indexes, constraints or partitions described here has been validated against a live PostgreSQL 16 instance.
+> **`apps/api` exists as a NestJS scaffold, but nothing below it does: no `libs/`, no TypeORM entity, no data source, no migration file and no database.**
 
 ---
 

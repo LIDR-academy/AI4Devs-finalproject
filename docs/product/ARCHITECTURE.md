@@ -13,11 +13,11 @@
 
 > ## Reading notice — this document describes a target, not an implementation
 >
-> **No application code exists in this repository yet.** There is no `apps/` directory, no `libs/` directory, no `package.json` and no Nx workspace. Every project name, path, tag, port, adapter and dependency edge in this document is **prescriptive design intent** that scaffolding must produce, not documentation of code that has been written. Statements are written in the present tense for readability; read them as "shall be".
+> **This document is still ahead of the code.** The Nx workspace exists and `apps/api` + `apps/web` are scaffolded (`T-C10-01` … `T-C10-05`), but there is no `libs/` directory yet: no shared kernel, no bounded-context library, no domain model, no adapter. Every context, port, adapter and dependency edge below is therefore **prescriptive design intent** that scaffolding must still produce, not documentation of code that has been written — the two applications are composition roots wired to nothing. See §12.3 for the check-by-check status. Statements are written in the present tense for readability; read them as "shall be" wherever §12.3 does not say otherwise.
 >
 > **Behavioral authority is the PRD.** Where `readme.md` §1.2 still mentions *live windows*, *event-aware SLA policies*, *deployment freeze windows*, *change calendars around competition windows* or a *public/spectator surface*, those concepts are **superseded and out of scope** (PRD §3.3, §11 K5, FR-CHG-07 retired). This architecture therefore contains **no competition-calendar model, no time-based SLA modulation, no freeze-window engine and no anonymous surface**. Competition impact is a single agent-set boolean with mandatory justification that raises assessed Impact inside the configurable **Impact x Urgency** matrix (FR-INC-05, FR-SLA-04).
 >
-> **No business rules are invented here.** Every capability, lifecycle and constraint referenced traces to a PRD functional requirement ID. Structure is owned by this document; behavior is owned by `openspec/`.
+> **No business rules are invented here.** Every capability, lifecycle and constraint referenced traces to a PRD functional requirement ID. Structure is owned by this document; behavior is owned by `docs/product/PRD.md`.
 
 ---
 
@@ -984,12 +984,16 @@ Per PRD §14.3, out of the MVP: Problem, Change, Release and CMDB management; em
 
 ### 12.3 Current verification status
 
-The Nx workspace, the pinned toolchain and the lint/format layer now exist (tickets `T-C10-01` and `T-C10-02`), and `@nx/enforce-module-boundaries` encodes the §5.3 matrix, scope rule and platform rule (`T-C10-03`). **No project code exists yet, however: there is no `apps/` and no `libs/`, and `pnpm nx graph` reports zero projects.**
+The Nx workspace, the pinned toolchain, the lint/format layer and the enforced boundary matrix exist (`T-C10-01` … `T-C10-03`), and **two of the four applications are scaffolded**: `apps/api` (NestJS 11, `T-C10-04`) and `apps/web` (Angular 20 standalone shell, `T-C10-05`). `pnpm nx show projects` reports exactly `api` and `web`.
+
+What does **not** exist yet: no `libs/` directory — no shared kernel, no bounded-context library, no domain model — and neither acceptance suite (`apps/api-e2e`, `apps/web-e2e`). Both applications are composition roots wired to nothing: no use case, no TypeORM entity, no migration, no endpoint beyond bootstrap.
 
 What that means for each check:
 
 - **Module boundaries.** Configured and *proven to bite*. Because a green lint over legal code would not demonstrate that an illegal import is caught, the rule is verified by `pnpm verify:boundaries` (`tools/boundary-probes/`), which scaffolds throwaway projects carrying one deliberate violation each — type matrix, scope rule, platform rule, the two-tag case, the ban on depending on a `type:app`, and the `type:e2e` restriction — asserts every one is rejected, checks that three legal control edges are *not* rejected, and removes the scaffolding. Re-run it after any change to the tag vocabulary, the type matrix or `depConstraints`.
-- **Dependency graph inspection.** Operational, but vacuous: zero projects, zero edges.
-- **Changed-only gate, unit tests, acceptance.** Not executed and not yet executable — they need project code. `pnpm nx run-many -t lint` currently exits 0 having run no task at all, which is not evidence of anything.
+- **Dependency graph inspection.** Operational, and no longer empty: `pnpm nx graph` reports two projects. It remains **uninformative**, because both are `type:app` composition roots with no library to depend on — the graph has two nodes and zero edges. It becomes a real check with the first `libs/` ticket.
+- **Changed-only gate and lint over real code.** Live. `pnpm nx run-many -t lint test build` now runs real tasks for `api` and `web` and passes, and `pnpm nx affected` has projects to select. The Angular rule set is confirmed active on `apps/web/**` and absent on `apps/api/**` (`pnpm eslint --print-config`).
+- **Unit tests.** Configured (Jest 29 on both projects) but **empty**: both `test` targets run with `passWithNoTests`, so a green result proves the runner works, not that anything is tested. The first real suite arrives with the first domain library.
+- **Acceptance.** Not executable: neither `apps/api-e2e` nor `apps/web-e2e` exists yet.
 
-The next scaffolding tasks create the applications and then `libs/shared/*` and the `incident` hexagon per §5.5; from that point `pnpm nx lint` and `pnpm nx graph` run against real code and the result is reported truthfully.
+The next scaffolding tasks create the two acceptance suites and then `libs/shared/*` and the `incident` hexagon per §5.5;

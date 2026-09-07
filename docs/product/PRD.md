@@ -10,7 +10,7 @@
 | Source of truth   | `readme.md` §0.3, §1.1, §1.2 — this PRD elaborates, never contradicts, those sections |
 | Language standard | Technical English, standard Service Desk / ITSM terminology                           |
 
-> **Scope of this document.** This PRD defines _what_ the product must do and _why_. It contains no stack, architecture, or implementation detail; those are owned by engineering and live in the architecture skills and in each change's `design.md`. Once approved, requirements here are translated into OpenSpec capability specs and change proposals.
+> **Scope of this document.** This PRD defines _what_ the product must do and _why_. It contains no stack, architecture, or implementation detail; those are owned by engineering and live in `docs/product/ARCHITECTURE.md` and the architecture skills. This document is the single canonical source of product behavior: a behavior change is made here, then the derived backlog under `docs/backlog/` is regenerated.
 
 ---
 
@@ -184,9 +184,9 @@ When a request models an in-application sport decision as a ticket, the Service 
 
 ## 5. Capability Breakdown
 
-Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future OpenSpec capability folders.
+Capabilities map 1:1 to the capability list in `readme.md` §1.2. Each carries a stable slug used to name and group it across every downstream artifact.
 
-| # | Capability | OpenSpec capability (target) | Purpose |
+| # | Capability | Capability slug | Purpose |
 | --- | --- | --- | --- |
 | C1 | **Incident Management** | `incident-management` | Restore normal service operation as quickly as possible after a platform failure, minimizing impact on competitions. |
 | C2 | **Service Request Management** | `service-request-management` | Fulfill standard, entitled platform services predictably and with approval where required. |
@@ -650,7 +650,7 @@ Capabilities map 1:1 to the capability list in `readme.md` §1.2 and to future O
 | --- | --- |
 | K1 | **Scope constraint:** Sport ITSM must not implement or replicate SCMS competition functionality; the sporting operation stays inside SCMS (§3). |
 | K2 | **Terminology constraint:** all artifacts and user-facing agent surfaces use standard ITSM terminology; requester-facing surfaces simplify without contradicting it. |
-| K3 | **Specification constraint:** product behavior is specified in OpenSpec capability specs; behavior is never defined in operational or engineering documents. |
+| K3 | **Specification constraint:** product behavior is specified in this PRD (§7, §8) and nowhere else; behavior is never defined in operational or engineering documents. |
 | K4 | **Auditability constraint:** no capability may be designed in a way that allows history to be altered or deleted. |
 | K5 | **Authorization constraint:** no Change or Release may be implemented without a recorded authorization decision and a rollback plan. Sport ITSM defines no time-based deployment prohibition (no freeze windows). |
 | K6 | **Entitlement constraint:** Service Requests exist only for offerings published in the Service Catalog with defined eligibility; there is no free-form "request anything" path. |
@@ -796,7 +796,7 @@ Proactive Problem Management (FR-PRB-09), configuration drift detection (FR-CMD-
 ### 15.2 Definition of Done (a story is accepted when…)
 
 1. All acceptance criteria pass, verified by automated tests where the criteria are automatable.
-2. Behavior matches the approved OpenSpec spec delta; the delta is behavior-only and validates.
+2. Behavior matches the approved PRD requirement (`FR-`/`NFR-` ID) the story traces to; no behavior is delivered that the PRD does not state.
 3. Access control is enforced and verified for every role touched by the story.
 4. All state transitions and field changes produced by the story are recorded in the audit trail.
 5. No user-facing string is hardcoded; all strings are localizable and translated into the launch languages.

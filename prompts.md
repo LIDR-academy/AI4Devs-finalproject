@@ -1048,3 +1048,142 @@ como no ejecutado, nunca como pasado.
 Implementado ticket T-C10-04
 
 </br>
+
+**Prompt 5:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Actúa como frontend-engineer e implementa UN SOLO ticket: docs/backlog/C10/tickets/T-C10-05.md · Scaffold `apps/web` — Angular 20 standalone shell
+Raíz del repositorio: d:\repositories\ai4devs\proyecto_final\AI4Devs-finalproject
+
+#### Precondición
+T-C10-01, T-C10-02, T-C10-03 y T-C10-04 deben estar hechos. Compruébalo antes de tocar nada:
+
+    ls package.json nx.json eslint.config.mjs tools/boundary-probes/verify.mjs apps/api/project.json
+    node -v                    # debe ser v22.x
+    pnpm nx show projects      # debe devolver EXACTAMENTE: api
+    pnpm verify:boundaries     # 9 sondas en verde, exit 0
+    pnpm nx build api          # exit 0
+
+`verify:boundaries` debe salir 0. Si falla, PARA: la regla de fronteras está rota y este ticket
+crea el primer proyecto frontend, que es justo el que la va a poner a prueba en el eje `platform:`.
+
+#### El ticket es el contrato
+Lee docs/backlog/C10/tickets/T-C10-05.md entero. Su `## Scope` es exhaustivo y su lista de
+"Out of scope" es vinculante — remite a cuatro tickets distintos, no los invadas. Lee además:
+
+- CLAUDE.md §2 (Angular 20.3 pinneado, Jest, SCSS) y §3, apartados "Frontend idioms" y
+  "What NOT to do": de ahí salen la prohibición de `NgModule`, la de `*ngIf`/`*ngFor` legacy,
+  `OnPush` obligatorio, signals sobre RxJS, `inject()` sobre DI por constructor, interceptores
+  funcionales, y la prohibición TAJANTE de cualquier librería de componentes de terceros.
+- docs/product/ARCHITECTURE.md §5.1, §7.1, §7.2 y §7.3 — qué es el shell y qué NO le corresponde.
+- ADR-002 (`type:app`) y ADR-010 (`libs/shared/ui` es `platform:frontend`, no `platform:shared`).
+- docs/product/PROJECT-STRUCTURE.md, el árbol de `apps/web`: `main.ts`, `app.config.ts`,
+  `app.routes.ts`, `styles.scss`. Ese es el destino; genera solo la parte que este ticket pide.
+
+#### Trampas del generador ya verificadas en T-C10-04 — no las redescubras
+El generador de Nx quiere darte una aplicación "completa". No la aceptes tal cual:
+
+- **Argumento posicional.** `@nx/nest:app api` falló con "Schema does not support positional
+  arguments". Usa `--name=web --directory=apps/web`, no `@nx/angular:app web`.
+- **`--e2eTestRunner=none`.** El generador crea `apps/web-e2e` por defecto; es T-C10-06, y ese
+  ticket lo quiere con Cypress + Cucumber, no con lo que ponga el generador. Verifica después
+  que `pnpm nx show projects` devuelve exactamente `api` y `web`.
+- **`--useProjectJson=true`.** Sin esto Nx 21 puede inlinear la config en un `package.json` por
+  proyecto, y `eslint.config.mjs` tiene `banTransitiveDependencies: true`, que se activa
+  precisamente cuando un proyecto gana su propio `package.json`. Queremos `apps/web/project.json`.
+- **`--unitTestRunner=jest`.** Nx 21 puede ofrecerte Vitest; CLAUDE.md §2 pinea **Jest**.
+- **El generador instaló Jest 30 en T-C10-04 y CLAUDE.md §2 pinea Jest 29.** Si vuelve a hacerlo,
+  devuélvelo a 29 — es restaurar el pin, no un cambio.
+- **El generador escribe rangos `^`.** Todo el `package.json` usa versiones exactas: convierte a
+  pin exacto lo que añadas.
+- **Comprueba que ha entrado Angular 20.3 y no 21.** Si entra 21, PARA y dilo: es un bump de major
+  sin aprobar.
+- **Sin SSR** (`--ssr=false`). `PROJECT-STRUCTURE.md` no contempla `main.server.ts` ni `server.ts`;
+  `main.ts` es `bootstrapApplication(AppComponent, appConfig)` y nada más.
+- **`.vscode/`.** En T-C10-04 el generador escribió un `launch.json` fuera de Scope. Si aparece, quítalo.
+- **No toques `eslint.config.mjs`.** Ya enruta `angular-eslint` a `apps/web/**/*.ts` y
+  `apps/web/**/*.html`; las reglas de Angular deben activarse solas. Si el generador intenta
+  escribir un `.eslintrc` o modificar la config raíz, deshazlo: la flat config es la única fuente.
+- **pnpm es el único gestor.** Si algún generador invoca npm y aparece un `package-lock.json`,
+  párate y dilo.
+
+#### Lo que NO debes hacer
+- **Ni el componente `NxWelcome`.** El generador mete una plantilla de marketing enorme. Fuera.
+  Pero ojo: a diferencia de `apps/api`, aquí el AC2 exige que el shell **renderice** y que la ruta
+  por defecto resuelva, así que sí necesitas un componente raíz real y mínimo, con `OnPush`.
+- **Ni un solo interceptor.** `provideHttpClient(withInterceptors([]))` con el array VACÍO. Las
+  implementaciones son T-C10-30.
+- **Ni tokens de diseño ni tema.** Crea solo el punto de entrada SCSS global que más adelante
+  importará la capa de tokens; la capa en sí es T-C10-12. Nada de colores ni espaciados hardcodeados.
+- **Ni Transloco** (slice de i18n del épico NFR). Declara la dependencia si procede, no la montes.
+- **Ni una librería bajo `libs/`** (T-C10-07 en adelante), **ni `apps/web-e2e`** (T-C10-06).
+- **Ni Angular Material, CDK, PrimeNG, Nebular, Bootstrap o Tailwind.** Prohibición expresa de
+  CLAUDE.md §3. Todo componente es de fabricación propia.
+- **Ojo con las rutas lazy:** el ticket pide slots `loadChildren` pero **no existe ninguna feature
+  lib todavía**, así que un `loadChildren` apuntando a la nada no compila. Resuélvelo de forma que
+  el fichero compile Y la ruta por defecto resuelva de verdad, y explica en el informe qué criterio
+  has seguido. No inventes una feature lib para rellenar el hueco.
+
+Adelantarte convierte tickets greenfield en tickets de gap. Haz exactamente el Scope.
+
+#### Verificación — ejecútala, no la afirmes
+Los cinco criterios son mecánicos. Ejecuta cada uno de verdad y pega su salida:
+
+1. `pnpm nx build web` termina con éxito.
+2. `pnpm nx serve web` arranca y **el shell renderiza con la ruta por defecto resuelta**. No basta
+   con el log de arranque: levanta el proceso en segundo plano, haz una petición HTTP real, pega la
+   respuesta (que el HTML servido contenga el marcado del shell, no solo un 200) y mata el proceso.
+   Comprueba además que el puerto queda liberado: en T-C10-04, matar el wrapper de `nx` dejó vivo
+   el proceso hijo de node. Si lo dejas colgado, dilo.
+3. `grep -rn "NgModule" apps/web/src` no devuelve ninguna coincidencia. Pega la salida completa.
+4. Los tags son exactamente `platform:frontend`, `scope:shared`, `type:app` — ni uno más ni uno
+   menos — y `pnpm nx lint web` pasa. Como `web` todavía no importa ningún otro proyecto, un lint
+   verde no prueba por sí solo que la regla de fronteras esté activa: confírmalo también con
+   `pnpm eslint --print-config apps/web/src/main.ts` y comprueba que
+   `@nx/enforce-module-boundaries` aparece en severidad `error` y que las reglas de `angular-eslint`
+   SÍ están presentes aquí (en `apps/api` deben seguir ausentes).
+5. La sonda del AC5: introduce un import en `apps/web` desde un proyecto `platform:backend`,
+   comprueba que `pnpm nx lint web` falla, y **revierte la sonda antes de cerrar**.
+
+   **Matiz importante que el ticket no puede prever:** hoy el único proyecto backend es `apps/api`,
+   que es `type:app`. Un import desde él viola DOS reglas a la vez — la de plataforma
+   (`frontend` no puede depender de `backend`) y la del matriz de tipos (nada puede depender de un
+   `type:app`; la raíz de composición es un sumidero). Así que el fallo es seguro pero **no aísla
+   la regla de plataforma**. Pega el mensaje literal de ESLint y di con honestidad qué restricción
+   ha disparado. Si quieres el aislamiento limpio, la sonda `p2` de `pnpm verify:boundaries` ya
+   prueba `frontend → backend` por separado: cítala, no dupliques su trabajo.
+
+Y tres comprobaciones más, porque este ticket cambia el estado del workspace:
+
+6. `pnpm verify:boundaries` sigue en verde (9/9) ahora que existe un proyecto frontend.
+7. `pnpm nx show projects` devuelve exactamente `api` y `web`, y nada más (ningún `web-e2e`).
+8. `pnpm prettier --check .` pasa, y `pnpm install` NO emite `WARN Unsupported engine`
+   (el workspace está en Node 22 desde hace poco; si reaparece, algo ha tocado `engines`).
+
+Si algún criterio falla, dilo con su salida completa. Un criterio que no has ejecutado se reporta
+como no ejecutado, nunca como pasado.
+
+#### Restricciones
+- No modifiques nada bajo `docs/` ni bajo `.claude/`. El ticket no se edita ni se marca como hecho.
+- No toques `apps/api` ni nada de T-C10-04.
+- No instales dependencias que el Scope no pida.
+- No hagas commit ni push salvo que te lo pida explícitamente.
+- Si necesitas red y no la tienes, para y dilo.
+
+#### Informa al terminar
+- Qué ficheros has creado o modificado, y qué dependencias has añadido con su versión exacta.
+- La versión de Angular que ha quedado instalada, confirmando que es 20.3.
+- La salida de las ocho verificaciones.
+- Qué criterio has seguido para las rutas lazy sin feature libs.
+- Qué te ha generado Nx que hayas tenido que quitar o recortar por estar fuera de Scope.
+- Cualquier nota de estado que este ticket deje obsoleta en `readme.md` §2.3.6 o en
+  `docs/product/ARCHITECTURE.md` §12.3: **repórtala, no la corrijas** — yo decido si se actualiza.
+
+### Response:
+
+Implementado ticket T-C10-05
+
+</br>

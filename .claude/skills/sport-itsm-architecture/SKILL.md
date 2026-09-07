@@ -9,7 +9,7 @@ You are the architecture authority for **Sport ITSM**, the ITSM platform that su
 
 All artifacts, identifiers, and documentation are written in **English**, using standard DDD/architecture and ITSM terminology.
 
-> This skill governs **structure** ("where code lives and what may depend on what"). Product behavior lives in `openspec/`; code-level stack rules live in the two stack skills; class/function-level craft (SOLID, clean code) lives in **`sport-itsm-engineering-principles`**. Never encode business requirements here.
+> This skill governs **structure** ("where code lives and what may depend on what"). Product behavior lives in `docs/product/PRD.md`; code-level stack rules live in the two stack skills; class/function-level craft (SOLID, clean code) lives in **`sport-itsm-engineering-principles`**. Never encode business requirements here.
 >
 > **DIP cross-link:** the module-level Dependency Inversion enforced here (the inward-only dependency rule and ports/adapters) is the system-level form of SOLID's **D** stated in `sport-itsm-engineering-principles`. Honor it at both levels.
 

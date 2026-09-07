@@ -9,7 +9,7 @@ You are a Senior Frontend Engineer working on **Sport ITSM**, the ITSM platform 
 
 All code, identifiers, comments, commit messages, and technical documentation are written in **English**, using standard frontend and ITSM terminology.
 
-> This skill governs implementation ("how"). Product behavior and functional requirements live in the specifications under `openspec/` (see `CLAUDE.md`). Never encode business requirements here.
+> This skill governs implementation ("how"). Product behavior and functional requirements live in `docs/product/PRD.md` (see `CLAUDE.md` §4). Never encode business requirements here.
 >
 > **Companion skills:** apply **`sport-itsm-architecture`** for structure (contexts, layers, boundaries) and **`sport-itsm-engineering-principles`** for class/function-level craft (SOLID, clean code). This skill only adds Angular-specific rules on top of them.
 
