@@ -128,6 +128,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-115-FE** | `kitchen` | **Bajo** | **Baja** | 1 SP | `US-031`: resaltado full-bleed de fila con varianza negativa pendiente de motivo en `ShiftReconciliationWizard`. ✅ Done. | 🟢 P3 - Baja |
 | **TK-116-FE** | `stock` | **Medio** | **Baja** | 3 SP | `US-031`: barra de herramientas acoplada (búsqueda + vista grid/lista, persistida por dispositivo) en el catálogo de bodega. ✅ Done. | 🟢 P2 - Media |
 | **TK-118** | `kitchen` | **Bajo** | **Alta** | 2 SP | Remediación técnica: `DiscardRemanenteUseCase` seguía con `Date.now()` como id (mismo patrón que `AUDIT-DEV-006` F-3, caso no cubierto por `TK-099`/`TK-101`) + motivo de descarte sin validar en backend. ✅ Done. | 🟡 P1 - Alta |
+| **TK-125** | `recipes` | **Bajo** | **Baja** | 5 SP | Sin dependencias. Remediación de `AUDIT-DEV-007` G-A (F-2/F-6/F-13): `SuggestRescueRecipesUseCase` deja de importar infraestructura (resolución de credencial IA + fallback IA→heurística a infra); mapper único dominio→DTO y parser JSON compartido entre adapters Gemini/OpenAI; logging del fallback estructurado en infra. Contrato HTTP intacto. ✅ Done — auditoría `AUDIT-DEV-008` APROBADO; mutation scoped 75.74%. | 🟢 P2 - Media |
 
 ---
 
@@ -179,6 +180,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-122** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Generación de Recetas de Rescate con IA y Fallback Heurístico (Backend) | `recipes` | 5 | Should Have | [recipes/backend/TK-122.md](recipes/backend/TK-122.md) |
 | **TK-123** | [US-034](../11_user_stories/settings/US-034_configuracion_agente_ia.md) | Modelo de Persistencia y Endpoints de Configuración de IA (Backend) | `settings` | 3 | Should Have | [settings/backend/TK-123.md](settings/backend/TK-123.md) |
 | **TK-124** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Modo Dual de Rescate (Catálogo Propio Zero-Leakage & Creativo IA) (Backend) | `recipes` | 3 | Must Have | [recipes/backend/TK-124.md](recipes/backend/TK-124.md) |
+| **TK-125** | N/A (Técnico) | Aislamiento Hexagonal y De-duplicación del Caso de Uso de Recetas de Rescate (AUDIT-DEV-007 F-2/F-6/F-13) | `recipes` | 5 | Should Have | [recipes/backend/TK-125.md](recipes/backend/TK-125.md) |
 
 
 ### 🖥️ Tickets de Frontend
@@ -390,6 +392,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-122-FE: Modal y Visualización de Recetas Anti-Desperdicio](recipes/frontend/TK-122-FE.md)** (Frontend) — `US-035`, modal táctil para generar propuestas y agregarlas al catálogo.
 *   **[TK-124: Modo Dual de Rescate (Catálogo Propio Zero-Leakage & Creativo IA)](recipes/backend/TK-124.md)** (Backend) — `US-035`, cruce local determinista con recetas existentes garantizando Zero Data Leakage.
 *   **[TK-124-FE: Selector de Modo Dual y Badge de Privacidad Zero-Leakage](recipes/frontend/TK-124-FE.md)** (Frontend) — `US-035`, selector accesible táctil (≥48px) y badge de seguridad.
+*   **[TK-125: Aislamiento Hexagonal y De-duplicación del Caso de Uso de Recetas de Rescate](recipes/backend/TK-125.md)** (Backend) — ✅ Done. Remediación de [AUDIT-DEV-007](../../audits/AUDIT-DEV-007-recipes-module-quality-report.md) G-A (F-2/F-6/F-13): `SuggestRescueRecipesUseCase` deja de importar infraestructura; mapper único dominio→DTO + parser JSON compartido entre adapters; logging del fallback en infra. Contrato HTTP intacto; auditoría [AUDIT-DEV-008](../../audits/AUDIT-DEV-008-TK-125-quality-report.md) APROBADO.
 
 
 `TK-056` cerró la deuda residual de listado de operarios; `TK-057`/`TK-057-FE` cierran la deuda de alta de catálogo (insumos y recetas) y la de `TK-008` — `TK-049`/`TK-049-FE`/`TK-050`/`TK-050-FE`/`TK-057`/`TK-057-FE` quedan sin pendientes conocidos. `TK-059` cierra el fix de conectividad Docker frontend↔backend; `TK-060`/`TK-060-FE` cierran el reabastecimiento de bodega (`US-013`); `TK-061` cierra la deuda de `US-012` sobre `RecipeSelectorModal.tsx`; `TK-069`/`TK-069-FE` extraen las recetas de `catalog` a un módulo `recipes` independiente; `TK-070-FE` le da al Recetario la misma estructura que Inventario de Bodega.

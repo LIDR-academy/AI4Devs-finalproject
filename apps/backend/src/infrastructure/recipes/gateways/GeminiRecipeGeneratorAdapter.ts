@@ -1,26 +1,11 @@
-import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
-import { RescueRecipeProposal, RescueIngredientItem } from '../../../domain/recipes/entities/RescueRecipeProposal.js';
+import { RescueRecipeProposal } from '../../../domain/recipes/entities/RescueRecipeProposal.js';
 import {
   IAiRecipeGeneratorGateway,
   AtRiskRemanenteContext,
   AvailableInsumoContext,
   RecipeGenerationOptions,
 } from '../../../domain/recipes/gateways/IAiRecipeGeneratorGateway.js';
-
-interface RawProposalJson {
-  name: string;
-  description: string;
-  category: string;
-  estimatedPortions: number;
-  ingredients: Array<{
-    insumoId: string;
-    insumoName: string;
-    quantity: string | number;
-    unit: string;
-    isAtRisk: boolean;
-  }>;
-  preventedWasteEstimate: string | number;
-}
+import { parseRescueProposalsJson } from './rescueProposalJsonParser.js';
 
 export class GeminiRecipeGeneratorAdapter implements IAiRecipeGeneratorGateway {
   async generateProposals(
@@ -65,7 +50,7 @@ export class GeminiRecipeGeneratorAdapter implements IAiRecipeGeneratorGateway {
       throw new Error('Respuesta vacía recibida desde Gemini.');
     }
 
-    return this.parseProposals(rawText);
+    return parseRescueProposalsJson(rawText);
   }
 
   private buildPrompt(remanentes: AtRiskRemanenteContext[], insumos: AvailableInsumoContext[]): string {
@@ -102,33 +87,5 @@ REGLAS ESTRICTAS:
     "preventedWasteEstimate": 0.5
   }
 ]`;
-  }
-
-  private parseProposals(rawText: string): RescueRecipeProposal[] {
-    const cleaned = rawText.replace(/```json\n?|\n?```/g, '').trim();
-    const parsed = JSON.parse(cleaned) as RawProposalJson[];
-
-    if (!Array.isArray(parsed)) {
-      throw new Error('La respuesta de Gemini no es un array JSON.');
-    }
-
-    return parsed.map((p) => {
-      const ingredients: RescueIngredientItem[] = (p.ingredients || []).map((ing) => ({
-        insumoId: ing.insumoId,
-        insumoName: ing.insumoName,
-        quantity: new DecimalQuantity(ing.quantity),
-        unit: ing.unit,
-        isAtRisk: Boolean(ing.isAtRisk),
-      }));
-
-      return new RescueRecipeProposal(
-        p.name,
-        p.description,
-        p.category || 'PLATO_PRINCIPAL',
-        p.estimatedPortions || 4,
-        ingredients,
-        new DecimalQuantity(p.preventedWasteEstimate || 0)
-      );
-    });
   }
 }

@@ -66,6 +66,7 @@ import { createAiSettingsController } from '../settings/http/controllers/aiSetti
 import { CredentialEncryptionService } from '../security/CredentialEncryptionService.js';
 import { SuggestRescueRecipesUseCase } from '../../application/recipes/use-cases/SuggestRescueRecipesUseCase.js';
 import { CompositeAiRecipeGeneratorAdapter } from '../recipes/gateways/CompositeAiRecipeGeneratorAdapter.js';
+import { AiRecipeGenerationOptionsResolver } from '../recipes/gateways/AiRecipeGenerationOptionsResolver.js';
 
 export interface AppOptions {
   userRepository?: IUserRepository;
@@ -280,13 +281,14 @@ function mountApiRoutes(
   app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo, isAuthRequired, locationRepo, recipePreparationRepo, roleRepo));
   app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo, isAuthRequired, recipePreparationRepo, stockRepo, locationRepo, consumptionReasonRepo, settingsRepo, roleRepo));
   app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo, roleRepo, settingsRepo, isAuthRequired));
-  const aiRecipeGeneratorGateway = new CompositeAiRecipeGeneratorAdapter();
+  const rescueGenerationGateway = new CompositeAiRecipeGeneratorAdapter();
+  const rescueOptionsResolver = new AiRecipeGenerationOptionsResolver(aiConfigRepo, encryptionService);
   const suggestRescueRecipesUseCase = new SuggestRescueRecipesUseCase(
     remanenteQueryRepo,
     stockRepo,
-    aiConfigRepo,
-    aiRecipeGeneratorGateway,
-    recipeRepo
+    recipeRepo,
+    rescueOptionsResolver,
+    rescueGenerationGateway
   );
   app.use('/api/v1/recipes', ...guard, createRecipesRouter(recipeRepo, stockRepo, suggestRescueRecipesUseCase));
   app.use('/api/v1/roles', ...guard, createRolesController(roleRepo, isAuthRequired));

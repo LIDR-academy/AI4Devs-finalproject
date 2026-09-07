@@ -474,3 +474,18 @@ inputs:
 - **Estado:**
   - Backend 369→371 tests, build/lint verdes. Mutation score en `DiscardRemanenteUseCase.ts`: 72.73% (ya sobre el umbral de 70%) reforzado a **100%** antes de cerrar.
   - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).
+
+### 2026-09-06 (cont.) - AUDIT-DEV-007 + TK-125: análisis del módulo de recetas y remediación de arquitectura (G-A)
+- **Hito:** a petición del humano ("analicemos el módulo de recetas… ¿cómo se podría mejorar?" → "usa `.agents` y `docs` para que trabajes en las mejoras" → "adelante"). Se formalizó el análisis como [`AUDIT-DEV-007`](../audits/AUDIT-DEV-007-recipes-module-quality-report.md) (16 hallazgos F-1…F-16, 0 críticos; el pilar Zero Data Leakage está correcto). Guard 28: 4 decisiones de negocio consultadas vía `AskUserQuestion` (F-1 valorización en dinero, F-4 descartar ingrediente alucinado, F-9 `Recipe.yieldPortions` vía cascada, alcance = solo G-A). Las respuestas quedan registradas en el addendum del informe para los grupos futuros.
+- **Acciones Realizadas (TK-125 — remediación técnica, `N/A (Técnico) · AUDIT-DEV-007 F-2/F-6/F-13`, carve-out C-DEV-006-4):**
+  - ✅ **F-2:** `SuggestRescueRecipesUseCase` deja de importar `infrastructure/**`. Dos puertos de dominio nuevos: `IAiRecipeGenerationOptionsResolver` (descifrado de API key + fallback a env, impl en `infrastructure/recipes/gateways/AiRecipeGenerationOptionsResolver.ts`) e `IRescueRecipeGenerationGateway` (`{source, proposals}`; el `try/catch` IA-remota→heurística se mueve del use case al `CompositeAiRecipeGeneratorAdapter`). El constructor del use case pasa de 2 default-params que instanciaban infra a 5 puertos sin defaults.
+  - ✅ **F-6:** `application/recipes/mappers/rescueSuggestionsMapper.ts` (`toRescueSuggestionsDto`) unifica el shaping dominio→DTO antes triplicado; `infrastructure/recipes/gateways/rescueProposalJsonParser.ts` unifica el bloque `RawProposalJson → RescueRecipeProposal` idéntico entre Gemini y OpenAI. `check_ticket_duplication.sh`: clones 21 → 19.
+  - ✅ **F-13:** el logging del fallback (descifrado fallido, IA remota fallida) sale de la capa de aplicación a infra, con forma estructurada `[recipes:rescue] {event,provider,reason}`, sin dependencia de logger nueva (Guard 24).
+  - `InMemoryAiRecipeGeneratorFake` → `InMemoryRescueRecipeGenerationFake` (implementa el puerto nuevo). `app.ts` re-wireado.
+  - **Cambio de conducta intencional (más correcto):** con provider remoto configurado sin credencial resoluble, `source` reporta `HEURISTIC` (motor efectivo) en vez del proveedor preferido. Sin test previo; ningún test existente cambia de aserción.
+  - **Hallazgo colateral F-16:** el desempate por `preventedWaste` en `rankCatalogRecipes` está invertido (ordena ascendente) — registrado en `AUDIT-DEV-007`, **preservado** aquí (refactor puro), a corregir en G-D con F-1.
+- **Estado:**
+  - Backend 449→**454** tests, frontend 231, build/lint verdes (13 warnings preexistentes de frontend, §5.1). `check_ticket_duplication` / `check_ticket_code_quality` / `check_dead_code` / `check_contract_drift` — todos verdes. Mutation scoped **75.74%** agregado ≥ 70 (mapper 100%, parser 85%, resolver 79%, composite 74%, use case 71%).
+  - Auditoría adversarial [`AUDIT-DEV-008`](../audits/AUDIT-DEV-008-TK-125-quality-report.md) → **APROBADO PARA COMMIT**.
+  - Grupos G-B/G-C/G-D y la cascada de `Recipe.yieldPortions` quedan **no iniciados**, con las decisiones del humano ya registradas.
+  - **Sin push / sin PR** — el push = PR está programado para el 10 de septiembre (instrucción del humano).

@@ -293,6 +293,7 @@ graph TD
 | **⚙️ Configuración (`settings`)** | [US-034: Panel de Configuración de Agentes IA](11_user_stories/settings/US-034_configuracion_agente_ia.md) | [TK-123: Persistencia y API de Configuración IA](12_tickets/settings/backend/TK-123.md) | [TK-123-FE: Panel /ajustes/ia (Frontend)](12_tickets/settings/frontend/TK-123-FE.md) | ✅ Done |
 | **📊 Reportes / Recetas (`reports`)** | [US-035: Recetas de Aprovechamiento Anti-Desperdicio](11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | [TK-122: Inferencia IA y Use Case de Rescate](12_tickets/recipes/backend/TK-122.md) | [TK-122-FE: Modal y Conversión a Receta](12_tickets/recipes/frontend/TK-122-FE.md) | ✅ Done |
 | | | [TK-124: Modo Dual de Rescate (Catálogo Propio Zero-Leakage & Creativo IA)](12_tickets/recipes/backend/TK-124.md) | [TK-124-FE: Selector de Modo Dual y Badge de Privacidad Zero-Leakage](12_tickets/recipes/frontend/TK-124-FE.md) | ✅ Done |
+| | remediación [AUDIT-DEV-007](../audits/AUDIT-DEV-007-recipes-module-quality-report.md) G-A | [TK-125: Aislamiento Hexagonal y De-duplicación del Use Case de Rescate (F-2/F-6/F-13)](12_tickets/recipes/backend/TK-125.md) | N/A *(backend-only)* | ✅ Done |
 
 
 

@@ -2,32 +2,34 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { SuggestRescueRecipesUseCase } from './SuggestRescueRecipesUseCase.js';
 import { InMemoryRemanenteQueryRepository } from '../../../infrastructure/kitchen/repositories/InMemoryRemanenteQueryRepository.js';
 import { InMemoryStockRepository } from '../../../infrastructure/stock/repositories/InMemoryStockRepository.js';
-import { InMemoryAiConfigurationRepository } from '../../../infrastructure/settings/repositories/InMemoryAiConfigurationRepository.js';
-import { InMemoryAiRecipeGeneratorFake } from '../../../infrastructure/recipes/gateways/InMemoryAiRecipeGeneratorFake.js';
+import { InMemoryRescueRecipeGenerationFake } from '../../../infrastructure/recipes/gateways/InMemoryRescueRecipeGenerationFake.js';
 import { InMemoryRecipeRepository } from '../../../infrastructure/recipes/repositories/InMemoryRecipeRepository.js';
-import { HeuristicRecipeGeneratorAdapter } from '../../../infrastructure/recipes/gateways/HeuristicRecipeGeneratorAdapter.js';
+import { IAiRecipeGenerationOptionsResolver } from '../../../domain/recipes/gateways/IAiRecipeGenerationOptionsResolver.js';
 import { Insumo } from '../../../domain/stock/entities/Insumo.js';
 import { DecimalQuantity } from '../../../domain/stock/value-objects/DecimalQuantity.js';
-import { AiConfiguration } from '../../../domain/settings/entities/AiConfiguration.js';
 import { Recipe } from '../../../domain/recipes/entities/Recipe.js';
 import { RecipeIngredient } from '../../../domain/recipes/entities/RecipeIngredient.js';
 
-describe('TK-122 & TK-124: SuggestRescueRecipesUseCase Application Suite', () => {
+// Resolver mínimo: el caso de uso solo lo consulta en modo CREATIVE. La resolución
+// real (descifrado, fallback a env, regla HEURISTIC) se prueba en
+// AiRecipeGenerationOptionsResolver.test.ts, y el routing/fallback en
+// CompositeAiRecipeGeneratorAdapter.test.ts.
+const stubOptionsResolver: IAiRecipeGenerationOptionsResolver = {
+  resolve: async () => ({ modelName: 'stub-model', temperature: 0, apiKey: null, endpointUrl: null }),
+};
+
+describe('TK-122 / TK-124 / TK-125: SuggestRescueRecipesUseCase Application Suite', () => {
   let remanenteQueryRepo: InMemoryRemanenteQueryRepository;
   let stockRepo: InMemoryStockRepository;
-  let aiConfigRepo: InMemoryAiConfigurationRepository;
-  let fakeAiGateway: InMemoryAiRecipeGeneratorFake;
+  let generationFake: InMemoryRescueRecipeGenerationFake;
   let recipeRepo: InMemoryRecipeRepository;
-  let heuristicAdapter: HeuristicRecipeGeneratorAdapter;
   let useCase: SuggestRescueRecipesUseCase;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     remanenteQueryRepo = new InMemoryRemanenteQueryRepository();
     stockRepo = new InMemoryStockRepository();
-    aiConfigRepo = new InMemoryAiConfigurationRepository();
-    fakeAiGateway = new InMemoryAiRecipeGeneratorFake();
+    generationFake = new InMemoryRescueRecipeGenerationFake();
     recipeRepo = new InMemoryRecipeRepository();
-    heuristicAdapter = new HeuristicRecipeGeneratorAdapter();
 
     stockRepo.seedInsumo(
       new Insumo({
@@ -37,7 +39,6 @@ describe('TK-122 & TK-124: SuggestRescueRecipesUseCase Application Suite', () =>
         warehouseStock: new DecimalQuantity('10.000'),
       })
     );
-
     stockRepo.seedInsumo(
       new Insumo({
         id: 'ins-crema',
@@ -55,7 +56,7 @@ describe('TK-122 & TK-124: SuggestRescueRecipesUseCase Application Suite', () =>
       currentQuantity: '2.500',
       initialQuantity: '5.000',
       location: 'Cocina Fría',
-      expirationDate: new Date(Date.now() + 24 * 3600 * 1000), // expira en 24h
+      expirationDate: new Date(Date.now() + 24 * 3600 * 1000),
       status: 'ACTIVE',
       createdAt: new Date(),
       hoursRemaining: 24,
@@ -65,23 +66,20 @@ describe('TK-122 & TK-124: SuggestRescueRecipesUseCase Application Suite', () =>
     useCase = new SuggestRescueRecipesUseCase(
       remanenteQueryRepo,
       stockRepo,
-      aiConfigRepo,
-      fakeAiGateway,
       recipeRepo,
-      heuristicAdapter
+      stubOptionsResolver,
+      generationFake
     );
   });
 
   describe('TK-124: Modo Catálogo Propio (Zero Data Leakage - Guard 9)', () => {
-    it('genera sugerencias exclusivamente a partir de las recetas del restaurante sin invocar a la IA externa', async () => {
+    it('genera sugerencias exclusivamente a partir de las recetas del restaurante sin invocar al gateway de generación', async () => {
       await recipeRepo.save(
         new Recipe(
           'rec-salsa-pomodoro',
           'Salsa Pomodoro Clásica',
           'SALSAS',
-          [
-            new RecipeIngredient('ri-1', 'rec-salsa-pomodoro', 'ins-tomate', new DecimalQuantity('1.500')),
-          ],
+          [new RecipeIngredient('ri-1', 'rec-salsa-pomodoro', 'ins-tomate', new DecimalQuantity('1.500'))],
           'Salsa casera con tomates maduros'
         )
       );
@@ -94,8 +92,8 @@ describe('TK-122 & TK-124: SuggestRescueRecipesUseCase Application Suite', () =>
       expect(result.proposals[0].ingredients[0].insumoName).toBe('Tomate Perita');
       expect(result.proposals[0].ingredients[0].isAtRisk).toBe(true);
       expect(result.proposals[0].preventedWasteEstimate).toBe('1.500');
-      // ZERO DATA LEAKAGE: La IA externa JAMÁS es invocada
-      expect(fakeAiGateway.callCount).toBe(0);
+      // ZERO DATA LEAKAGE: el gateway de generación JAMÁS es invocado
+      expect(generationFake.callCount).toBe(0);
     });
 
     it('devuelve lista vacía con origen CATALOG si ninguna receta del catálogo coincide con los insumos en riesgo', async () => {
@@ -104,91 +102,180 @@ describe('TK-122 & TK-124: SuggestRescueRecipesUseCase Application Suite', () =>
           'rec-postre-crema',
           'Flan con Crema',
           'POSTRES',
-          [
-            new RecipeIngredient('ri-2', 'rec-postre-crema', 'ins-crema', new DecimalQuantity('0.500')),
-          ]
+          [new RecipeIngredient('ri-2', 'rec-postre-crema', 'ins-crema', new DecimalQuantity('0.500'))]
         )
       );
 
-      // Solo ins-tomate está en riesgo
       const result = await useCase.execute('CATALOG');
 
       expect(result.source).toBe('CATALOG');
       expect(result.proposals).toHaveLength(0);
-      expect(fakeAiGateway.callCount).toBe(0);
+      expect(generationFake.callCount).toBe(0);
+    });
+
+    it('usa el catálogo por defecto cuando no se pasa modo explícito', async () => {
+      const result = await useCase.execute();
+      expect(result.source).toBe('CATALOG');
+      expect(generationFake.callCount).toBe(0);
     });
   });
 
-  describe('Modo Creativo Libre con IA (TK-122)', () => {
-    it('genera sugerencias exitosamente desde el gateway de IA configurado en modo CREATIVE', async () => {
-      await aiConfigRepo.saveConfig(
-        new AiConfiguration({
-          id: 'ai-config-1',
-          provider: 'GEMINI',
-          modelName: 'gemini-1.5-flash',
-          endpointUrl: null,
-          encryptedApiKey: null,
-          temperature: 0.1,
-          replenishmentOn: false,
-          rescueRecipesOn: true,
-          anomalyAuditOn: false,
-        })
-      );
+  describe('TK-125: Modo Creativo delega en el gateway de generación', () => {
+    it('mapea las propuestas del gateway y reporta el origen efectivo (GEMINI)', async () => {
+      generationFake.source = 'GEMINI';
 
       const result = await useCase.execute('CREATIVE');
 
       expect(result.source).toBe('GEMINI');
       expect(result.proposals).toHaveLength(1);
       expect(result.proposals[0].name).toBe('Guiso de Rescate Fake');
-      expect(fakeAiGateway.callCount).toBe(1);
+      expect(result.proposals[0].ingredients[0].insumoName).toBe('Tomate Perita');
+      expect(generationFake.callCount).toBe(1);
     });
 
-    it('conmuta automáticamente a HEURISTIC sin lanzar error si el proveedor de IA falla (Guard 28 Fallback Transparente)', async () => {
-      await aiConfigRepo.saveConfig(
-        new AiConfiguration({
-          id: 'ai-config-1',
-          provider: 'GEMINI',
-          modelName: 'gemini-1.5-flash',
-          endpointUrl: null,
-          encryptedApiKey: null,
-          temperature: 0.1,
-          replenishmentOn: false,
-          rescueRecipesOn: true,
-          anomalyAuditOn: false,
-        })
-      );
-
-      fakeAiGateway.shouldFail = true;
-      fakeAiGateway.failureMessage = 'Gateway timeout 5000ms';
+    it('reporta HEURISTIC cuando el gateway resolvió con el motor local', async () => {
+      generationFake.source = 'HEURISTIC';
 
       const result = await useCase.execute('CREATIVE');
 
       expect(result.source).toBe('HEURISTIC');
       expect(result.proposals.length).toBeGreaterThanOrEqual(1);
-      expect(result.proposals[0].name).toContain('Tomate Perita');
+      expect(generationFake.callCount).toBe(1);
     });
 
-    it('utiliza directamente el motor heurístico local si provider está configurado en HEURISTIC', async () => {
-      await aiConfigRepo.saveConfig(
-        new AiConfiguration({
-          id: 'ai-config-1',
-          provider: 'HEURISTIC',
-          modelName: 'heuristic-rules-engine',
-          endpointUrl: null,
-          encryptedApiKey: null,
-          temperature: 0.0,
-          replenishmentOn: false,
-          rescueRecipesOn: true,
-          anomalyAuditOn: false,
-        })
+    it('no consulta el catálogo local para construir la respuesta creativa', async () => {
+      await recipeRepo.save(
+        new Recipe('rec-x', 'Receta Catálogo', 'SALSAS', [
+          new RecipeIngredient('ri-x', 'rec-x', 'ins-tomate', new DecimalQuantity('1.000')),
+        ])
       );
 
       const result = await useCase.execute('CREATIVE');
 
-      expect(result.source).toBe('HEURISTIC');
-      expect(result.proposals.length).toBeGreaterThanOrEqual(1);
-      expect(fakeAiGateway.callCount).toBe(0);
+      expect(result.proposals[0].name).toBe('Guiso de Rescate Fake');
+    });
+  });
+
+  describe('TK-124/TK-125: ranking del catálogo local', () => {
+    beforeEach(() => {
+      stockRepo.seedInsumo(
+        new Insumo({ id: 'ins-cebolla', name: 'Cebolla', unitOfMeasure: 'KG', warehouseStock: new DecimalQuantity('8.000') })
+      );
+      // Segundo remanente en riesgo → dos insumos en riesgo: ins-tomate, ins-cebolla.
+      remanenteQueryRepo.seedRemanente({
+        id: 'rem-2',
+        insumoId: 'ins-cebolla',
+        insumoName: 'Cebolla',
+        unitOfMeasure: 'KG',
+        currentQuantity: '1.000',
+        initialQuantity: '4.000',
+        location: 'Cocina Fría',
+        expirationDate: new Date(Date.now() + 12 * 3600 * 1000),
+        status: 'ACTIVE',
+        createdAt: new Date(),
+        hoursRemaining: 12,
+        isCriticalAlert: true,
+      });
+    });
+
+    it('ordena primero por número de insumos en riesgo cubiertos', async () => {
+      await recipeRepo.save(
+        new Recipe('rec-uno', 'Cubre Uno', 'SALSAS', [
+          new RecipeIngredient('r1', 'rec-uno', 'ins-tomate', new DecimalQuantity('5.000')),
+        ])
+      );
+      await recipeRepo.save(
+        new Recipe('rec-dos', 'Cubre Dos', 'SALSAS', [
+          new RecipeIngredient('r2', 'rec-dos', 'ins-tomate', new DecimalQuantity('0.100')),
+          new RecipeIngredient('r3', 'rec-dos', 'ins-cebolla', new DecimalQuantity('0.100')),
+        ])
+      );
+
+      const result = await useCase.execute('CATALOG');
+
+      expect(result.proposals.map((p) => p.name)).toEqual(['Cubre Dos', 'Cubre Uno']);
+    });
+
+    it('a igual merma evitada, desempata por nombre (orden alfabético estable)', async () => {
+      await recipeRepo.save(
+        new Recipe('rec-c', 'Gamma', 'SALSAS', [
+          new RecipeIngredient('rc', 'rec-c', 'ins-tomate', new DecimalQuantity('1.000')),
+        ])
+      );
+      await recipeRepo.save(
+        new Recipe('rec-b', 'Beta', 'SALSAS', [
+          new RecipeIngredient('rb', 'rec-b', 'ins-tomate', new DecimalQuantity('1.000')),
+        ])
+      );
+
+      const result = await useCase.execute('CATALOG');
+
+      expect(result.proposals.map((p) => p.name)).toEqual(['Beta', 'Gamma']);
+    });
+
+    it('limita a 3 propuestas aunque haya más recetas coincidentes', async () => {
+      for (const n of ['R1', 'R2', 'R3', 'R4', 'R5']) {
+        await recipeRepo.save(
+          new Recipe(`rec-${n}`, n, 'SALSAS', [
+            new RecipeIngredient(`ri-${n}`, `rec-${n}`, 'ins-tomate', new DecimalQuantity('1.000')),
+          ])
+        );
+      }
+
+      const result = await useCase.execute('CATALOG');
+
+      expect(result.proposals).toHaveLength(3);
+    });
+
+    it('usa la descripción de la receta y, si falta, un texto por defecto; marca isAtRisk por ingrediente', async () => {
+      await recipeRepo.save(
+        new Recipe('rec-mix', 'Mixta', 'GUARNICION', [
+          new RecipeIngredient('m1', 'rec-mix', 'ins-tomate', new DecimalQuantity('1.000')), // en riesgo
+          new RecipeIngredient('m2', 'rec-mix', 'ins-crema', new DecimalQuantity('0.200')), // NO en riesgo
+        ])
+      );
+
+      const result = await useCase.execute('CATALOG');
+
+      const mixta = result.proposals.find((p) => p.name === 'Mixta');
+      expect(mixta?.description).toContain('catálogo propio');
+      expect(mixta?.category).toBe('GUARNICION');
+      const byId = Object.fromEntries(mixta!.ingredients.map((i) => [i.insumoId, i.isAtRisk]));
+      expect(byId['ins-tomate']).toBe(true);
+      expect(byId['ins-crema']).toBe(false);
+    });
+  });
+
+  describe('TK-125: selección de remanentes cuando ninguno está en riesgo', () => {
+    it('cae a una muestra de los remanentes activos para el modo creativo', async () => {
+      // Repo sin remanentes en riesgo: uno activo, sin alerta crítica ni horas bajas.
+      const freshRemanenteRepo = new InMemoryRemanenteQueryRepository();
+      freshRemanenteRepo.seedRemanente({
+        id: 'rem-ok',
+        insumoId: 'ins-tomate',
+        insumoName: 'Tomate Perita',
+        unitOfMeasure: 'KG',
+        currentQuantity: '4.000',
+        initialQuantity: '4.000',
+        location: 'Bodega',
+        expirationDate: new Date(Date.now() + 240 * 3600 * 1000),
+        status: 'ACTIVE',
+        createdAt: new Date(),
+        hoursRemaining: 240,
+        isCriticalAlert: false,
+      });
+      const localUseCase = new SuggestRescueRecipesUseCase(
+        freshRemanenteRepo,
+        stockRepo,
+        recipeRepo,
+        stubOptionsResolver,
+        generationFake
+      );
+
+      const result = await localUseCase.execute('CREATIVE');
+
+      expect(generationFake.callCount).toBe(1);
+      expect(result.proposals[0].ingredients[0].insumoName).toBe('Tomate Perita');
     });
   });
 });
-
