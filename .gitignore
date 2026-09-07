@@ -1,0 +1,59 @@
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# compiled output
+dist
+tmp
+out-tsc
+
+# dependencies
+node_modules
+
+# Nx
+.nx/cache
+.nx/workspace-data
+
+# testing
+/coverage
+
+# Cypress artifacts
+**/cypress/videos
+**/cypress/screenshots
+**/cypress/downloads
+.cypress-cache
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Local environment. The API reads its configuration from the process
+# environment; `.env.example` is the committed template, `.env` never is.
+.env
+.env.*
+!.env.example
+
+.angular

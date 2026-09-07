@@ -1,0 +1,51 @@
+# ===================================
+# Docker Compose — E2E / ACCEPTANCE DATABASE
+# ===================================
+# Starts an ephemeral PostgreSQL 18 (no persistent volume) so every acceptance
+# run starts from a clean database. There is no separate SMTP sink here — the
+# email/notification feature this product's Mailpit service supported does not
+# exist in Sport ITSM.
+#
+# `apps/api-e2e` and `apps/web-e2e` do not exist yet (T-C10-06); until they do,
+# this file has nothing to be exercised against — it exists ahead of that
+# ticket only as the ephemeral-database shape it will need, per
+# `.claude/skills/ci-cd/references/database.md`.
+#
+# Usage:
+#   Up:   docker compose -f docker/docker-compose.e2e.yml up -d
+#   Down: docker compose -f docker/docker-compose.e2e.yml down
+#
+# Port 5499 is deliberately offset from the dev stack's 5432 so both can run
+# at the same time.
+#
+# `name`: see the equivalent note in docker-compose.dev.yml — without an
+# explicit project name this file would share one with the dev stack (both
+# live in `docker/`), and tearing this stack down would take the dev
+# database's volume with it.
+# ===================================
+name: sport-itsm-e2e
+
+services:
+  postgres-e2e:
+    image: postgres:18.6
+    container_name: sport-itsm-postgres-e2e
+    ports:
+      - '5499:5432'
+    environment:
+      POSTGRES_DB: sport_itsm_e2e
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    # No volume: the database is ephemeral and is destroyed on `down`.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d sport_itsm_e2e']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: 'no'
+    networks:
+      - e2e-network
+
+networks:
+  e2e-network:
+    driver: bridge

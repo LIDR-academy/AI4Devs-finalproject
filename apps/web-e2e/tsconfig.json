@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "outDir": "../../dist/out-tsc",
+    "sourceMap": false,
+    "types": ["cypress", "node"]
+  },
+  "include": ["cypress.config.ts", "src/**/*.ts"]
+}

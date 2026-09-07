@@ -1,0 +1,1 @@
+- [Cypress/Nx e2e local verification limits](feedback_cypress_local_verification.md) — this sandbox cannot run `cypress run` at all; say what you verified, and never dismiss an `nx e2e` failure as environmental without checking.
