@@ -9,11 +9,17 @@
     "pnpm": ">=10.0.0"
   },
   "scripts": {},
-  "dependencies": {},
   "devDependencies": {
+    "@nx/eslint": "21.6.11",
+    "@nx/eslint-plugin": "21.6.11",
     "@nx/js": "21.6.11",
     "@nx/workspace": "21.6.11",
+    "angular-eslint": "20.7.0",
+    "eslint": "9.39.5",
+    "eslint-config-prettier": "10.1.8",
     "nx": "21.6.11",
-    "typescript": "5.9.3"
+    "prettier": "3.9.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.69.0"
   }
 }

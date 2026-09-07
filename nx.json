@@ -34,12 +34,28 @@
     },
     "lint": {
       "cache": true,
-      "inputs": ["default"]
+      "inputs": ["default", "{workspaceRoot}/eslint.config.mjs"]
     },
     "e2e": {
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["default", "^production"]
+    },
+    "format:check": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.prettierrc",
+        "{workspaceRoot}/.prettierignore"
+      ]
     }
-  }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    }
+  ]
 }

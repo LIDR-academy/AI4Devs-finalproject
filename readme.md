@@ -254,7 +254,7 @@ Honest accounting of what this architecture costs:
 - **Eventual consistency in the cross-cutting path.** Audit and notification writes sit outside the ticket transaction. Mitigated with an in-process dispatcher with retry and audit-completeness assertions in acceptance tests, but it is a real trade-off against strict transactional auditing.
 - **Learning curve.** DDD + hexagonal + Nx tags is a steep onboarding cost, and the discipline degrades quickly if boundary violations are silenced instead of fixed.
 
-> **Status:** this is the **target architecture**. The Nx workspace has been bootstrapped (`T-C10-01`: `package.json`, `nx.json`, `tsconfig.base.json`, `pnpm-lock.yaml`), but it is still **empty** — no `apps/` and no `libs/` has been generated, and neither the three-axis tag scheme nor the `@nx/enforce-module-boundaries` configuration is in place yet (`T-C10-02`, `T-C10-03`). The boundary rules above have therefore not been verified with `pnpm nx lint`, and `pnpm nx graph` currently reports zero projects.
+> **Status:** this is the **target architecture**. The Nx workspace has been bootstrapped (`T-C10-01`: `package.json`, `nx.json`, `tsconfig.base.json`, `pnpm-lock.yaml`), but it is still **empty** — no `apps/` and no `libs/` has been generated, and while the three-axis tag **vocabulary** is now declared in `eslint.config.mjs` (`T-C10-02`), the `@nx/enforce-module-boundaries` rule that enforces it is not configured yet (`T-C10-03`). The boundary rules above have therefore not been verified with `pnpm nx lint`, and `pnpm nx graph` currently reports zero projects.
 
 ### **2.2. Descripción de componentes principales:**
 
@@ -415,7 +415,7 @@ Every integration is a **port with an adapter**, so none of them is a hard runti
 | **SCMS Identity Provider / SSO** | Authentication and profile/entitlement attributes | `IdentityProviderPort` in `identity-access/domain`; local-credential adapter first, SSO adapter later (FR-IAM-04) |
 | **Email gateway** | Outbound notification delivery | Adapter behind the `notification` context's outbound port (SMTP/HTTPS) |
 
-> **Status:** as in §2.1, these components describe the **target architecture**. The Nx workspace itself exists (`T-C10-01`), but no `apps/` and no `libs/` has been generated, so **not one component listed above has been scaffolded**: `pnpm nx show projects` returns nothing and `pnpm nx graph` reports zero projects. Nothing has been verified with `pnpm nx lint` either, which is not configured yet (`T-C10-02`).
+> **Status:** as in §2.1, these components describe the **target architecture**. The Nx workspace itself exists (`T-C10-01`), but no `apps/` and no `libs/` has been generated, so **not one component listed above has been scaffolded**: `pnpm nx show projects` returns nothing and `pnpm nx graph` reports zero projects. ESLint and Prettier are configured (`T-C10-02`), but with no project to lint, `pnpm nx run-many -t lint` runs no task at all — and the boundary rule that would check these components against each other arrives with `T-C10-03`.
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
@@ -679,6 +679,19 @@ The **Availability** column distinguishes what runs *today*, on the bootstrapped
 | `pnpm nx report` | Prints the resolved Node, pnpm, Nx and TypeScript versions plus every installed Nx plugin. Fastest way to confirm the pinned toolchain of §2 of `CLAUDE.md`. | Now |
 | `pnpm nx reset` | Clears the local Nx cache (`.nx/cache`) and stops the Nx daemon. Use when the cache or the project graph looks stale. | Now |
 
+**Lint and format**
+
+ESLint 9 uses a **flat config** at `eslint.config.mjs` (there is no `.eslintrc` and no fallback to one), and Prettier 3 owns all formatting — `eslint-config-prettier` switches off every ESLint rule that would compete with it. Neither tool treats `docs/` or `.claude/` as workspace source: `.nxignore`, `.prettierignore` and the ESLint `ignores` block exclude them, so the documentation corpus and the vendored skill assets are never linted, reformatted or inferred as Nx projects.
+
+| Command | What it does | Availability |
+| --- | --- | --- |
+| `pnpm nx run-many -t lint` | Runs the `lint` target of every project. With zero projects it exits `0` having run nothing — that is not evidence the config works, see the verification below. | Now |
+| `pnpm eslint <path>` | Lints files directly, bypassing Nx and its project graph. The way to exercise the config while the workspace is still empty. | Now |
+| `pnpm eslint --print-config <path>` | Prints the fully resolved config for one file path. Use it to check *which* rules apply where — Angular rules must appear on `apps/web/**` and the frontend library types, and must be absent on `apps/api/**`. | Now |
+| `pnpm prettier --check .` | Fails if any non-ignored file deviates from `.prettierrc` (`singleQuote`, `semi`). The CI formatting gate. | Now |
+| `pnpm prettier --write .` | Rewrites those files in place. | Now |
+| `pnpm nx format:check` / `pnpm nx format:write` | Nx's own wrapper over Prettier, restricted to files changed against `defaultBase`. Cheaper than scanning the whole tree. | Now |
+
 **Structure, boundaries and the dependency graph**
 
 | Command | What it does | Availability |
@@ -686,7 +699,7 @@ The **Availability** column distinguishes what runs *today*, on the bootstrapped
 | `pnpm nx show projects` | Lists every Nx project in the workspace. Empty output means no app or library has been generated yet. | Now |
 | `pnpm nx graph` | Opens the interactive dependency graph in a browser. The visual check that a context depends only on itself and `scope:shared`. | Now |
 | `pnpm nx graph --file=tmp/graph.json` | Writes the same graph as JSON without opening a browser — the CI-friendly and scriptable form. | Now |
-| `pnpm nx lint <project>` | Runs ESLint **including `@nx/enforce-module-boundaries`**. This is the command that turns the three-axis tag scheme of §2.3.4 into a build failure. | After `T-C10-02` / `T-C10-03` |
+| `pnpm nx lint <project>` | Runs ESLint on one project. Once `T-C10-03` adds the `depConstraints` matrix this is also the command that turns the three-axis tag scheme of §2.3.4 into a build failure. | ESLint now; boundary enforcement after `T-C10-03` |
 | `pnpm nx affected -t lint test build` | Runs lint, test and build only for the projects affected by the current change, against `defaultBase` (`main`). The CI gate. | Once projects exist |
 
 **Serve, build and test**
@@ -774,7 +787,53 @@ pnpm nx show projects
 
 Expected: the command exits `0`, writes `tmp/graph.json` (a gitignored path), prints `projects: 0`, and `pnpm nx show projects` returns nothing.
 
-> **Status:** the workspace **bootstrap is done** (`T-C10-01`): `package.json`, `nx.json`, `tsconfig.base.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `.nvmrc` and `.gitignore` exist at the root, and the four checks above pass. Everything else on this page remains **target structure**: there is no `apps/`, no `libs/`, no `openspec/` directory, and no ESLint/Prettier configuration or three-axis tag scheme yet (`T-C10-02`, `T-C10-03`). Consequently none of the boundary rules of §2.3.4 has been verified with `pnpm nx lint`, and every path under `apps/` and `libs/` is still prescriptive design intent that scaffolding must produce.
+##### Lint and format verification
+
+These are the acceptance criteria of ticket **`T-C10-02` · ESLint 9 flat config, Prettier 3 and the three-axis tag scheme**.
+
+**AC1 — `pnpm nx run-many -t lint` exits `0`.** It does, but read the output before believing it:
+
+```
+ NX   No tasks were run
+```
+
+**Zero projects means zero lint tasks, so the exit code proves nothing about the configuration.** Until `apps/` and `libs/` exist, exercise ESLint directly instead:
+
+```bash
+pnpm eslint --print-config eslint.config.mjs   # resolves 456 rules, 69 enabled
+pnpm eslint eslint.config.mjs                  # exits 0 on a real, clean file
+```
+
+The path scoping is worth checking the same way, because backend and frontend share the `.ts` extension and Angular rules must not leak onto NestJS code:
+
+| `--print-config` on | Angular rules on | typescript-eslint rules on | Parser |
+| --- | --- | --- | --- |
+| `apps/api/src/main.ts` | 0 | 25 | `typescript-eslint/parser` |
+| `libs/incident/ui/x.component.ts` | 12 | 25 | `typescript-eslint/parser` |
+| `apps/web/src/app/a.component.html` | 14 | 0 | `angular-eslint/template-parser` |
+
+**AC2 — `pnpm prettier --check .` reports no difference.**
+
+```
+Checking formatting...
+All matched files use Prettier code style!
+```
+
+Prettier owns the workspace configuration files; the 296 parseable files under `docs/` and `.claude/` are excluded by `.prettierignore` because they are hand-authored artifacts under separate ownership (§2.3.5).
+
+**AC3 — `eslint.config.mjs` is flat config.** Its default export is an array, there is no `.eslintrc` anywhere in the tree and no fallback to one, and the three tag axes are enumerated in exactly one block of the file.
+
+**AC4 — the tag vocabulary is single-sourced.** `eslint.config.mjs` exports `TAG_VOCABULARY` (and the derived `ALLOWED_TAGS`), the frozen declaration that `T-C10-03`'s `depConstraints` matrix will validate against:
+
+| Axis | Values | Source |
+| --- | --- | --- |
+| `platform:` | 3 — `backend`, `frontend`, `shared` | §5.2 |
+| `scope:` | 15 — the 14 contexts of §4.1 plus `shared` | §4.1 / ADR-001 |
+| `type:` | 10 — the eight library types plus `app` and `e2e` | §5.2 / ADR-002 |
+
+`@nx/enforce-module-boundaries` is deliberately **absent** from the resolved config: `T-C10-02` declares the vocabulary, `T-C10-03` adds the rule that consumes it.
+
+> **Status:** the workspace **bootstrap** (`T-C10-01`) and the **lint/format toolchain and tag vocabulary** (`T-C10-02`) are done: `package.json`, `nx.json`, `tsconfig.base.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `.nvmrc`, `.gitignore`, `eslint.config.mjs`, `.prettierrc`, `.prettierignore` and `.nxignore` exist at the root, and every check above passes. Everything else on this page remains **target structure**: there is no `apps/`, no `libs/` and no `openspec/` directory, and the `depConstraints` matrix that enforces the tag scheme is still pending (`T-C10-03`). Consequently no boundary rule of §2.3.4 has been enforced yet, no lint task has ever run against project code, and every path under `apps/` and `libs/` is still prescriptive design intent that scaffolding must produce.
 
 ### **2.4. Infraestructura y despliegue**
 

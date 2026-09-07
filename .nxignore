@@ -1,0 +1,10 @@
+# Not part of the Nx workspace.
+#
+# `.claude/` is the AI operating model (agents and skills, CLAUDE.md §5). Some
+# vendored skills ship their own `package.json` and helper scripts, which Nx
+# would otherwise infer as workspace projects — putting third-party assets this
+# repository does not own into `nx run-many` and `nx affected`.
+.claude
+
+# Documentation corpus (CLAUDE.md §4). Prose, not buildable source.
+docs

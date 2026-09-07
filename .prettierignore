@@ -1,0 +1,20 @@
+# Build outputs and caches
+dist
+coverage
+out-tsc
+tmp
+node_modules
+.nx
+
+# Lockfile — owned by pnpm, never reformatted
+pnpm-lock.yaml
+
+# Documentation corpus and AI operating model: hand-authored artifacts under
+# separate ownership (CLAUDE.md §4, §5). Prettier owns workspace source code,
+# not the PRD, the architecture document, the backlog or the agent/skill assets.
+/docs
+/.claude
+/CLAUDE.md
+/readme.md
+/prompts.md
+/skills-lock.json

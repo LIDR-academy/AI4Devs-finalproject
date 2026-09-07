@@ -748,10 +748,82 @@ Qué ficheros has creado, la salida de las cuatro verificaciones, y cualquier de
 
 ### Response:
 
-Añdadido tickets en la carpeta docs/backlog/C1/tickets/
+Implementado ticket T-C10-01
 
 </br>
 
 **Prompt 2:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Actúa como sport-itsm-architect e implementa UN SOLO ticket: docs/backlog/C10/tickets/T-C10-02.md · ESLint 9 flat config, Prettier 3 y el esquema de tags Raíz del repositorio: d:\repositories\ai4devs\proyecto_final\AI4Devs-finalproject
+
+#### Precondición
+
+T-C10-01 debe estar hecho. Compruébalo antes de tocar nada:
+
+    ls package.json nx.json tsconfig.base.json && pnpm nx report
+
+Si no existe el workspace, PARA y dilo: este ticket no lo crea.
+
+#### El ticket es el contrato
+
+Lee docs/backlog/C10/tickets/T-C10-02.md entero. Su `## Scope` es exhaustivo y su "Out of scope" es vinculante. Lee además:
+
+- CLAUDE.md §3, apartados "Style rules" y "What NOT to do" — de ahí salen las reglas de Prettier (comillas simples, punto y coma) y la prohibición de reglas ESLint estilísticas que entren en conflicto con Prettier.
+- docs/product/ARCHITECTURE.md §5.2 — el esquema de tags que este ticket declara.
+- docs/product/ARCHITECTURE.md §4.1 — la tabla de bounded contexts, fuente autoritativa de los valores de `scope:`.
+
+#### El vocabulario de tags — los tres ejes, completos
+
+`scope:` son **15** valores: los 14 contextos de ARCHITECTURE.md §4.1 más `shared`.
+
+    incident, service-request, sla, service-catalog, knowledge, identity-access,
+    approval, notification, audit, reporting, problem, change, release, asset-config, shared
+
+Los cuatro genéricos de soporte —`approval`, `notification`, `audit`, `reporting`— vienen de ADR-001 y son tan obligatorios como los demás: si faltan, las épicas C15, C16, C17 y C18 no podrán taggear sus librerías y el fallo aparecerá meses después.
+
+`platform:` ∈ {backend, frontend, shared}.
+
+`type:` ∈ {domain, application, infrastructure, feature, ui, data-access, contracts, util, app, e2e} — `app` y `e2e` incluidos, por ADR-002.
+
+#### Lo que NO debes hacer — el riesgo real de este ticket
+
+**La matriz `depConstraints` es T-C10-03, no este ticket.** Es la trampa evidente: cualquiera que configure `@nx/enforce-module-boundaries` escribe la matriz a continuación por inercia. Aquí solo se declara el VOCABULARIO de tags —qué valores existen en cada eje— y se deja la regla que los consume para el siguiente ticket, que tiene su propia verificación.
+
+Tampoco crees ningún proyecto: sigue sin haber aplicaciones ni librerías, y este ticket no las añade.
+
+#### Verificación
+
+Tres de los cuatro criterios son ejecutables. Córrelos de verdad y pega la salida:
+
+1. `pnpm nx run-many -t lint` termina con código de salida 0.
+2. `pnpm prettier --check .` no reporta ninguna diferencia de formato.
+3. `eslint.config.mjs` es flat config (exporta un array), no queda ningún `.eslintrc` ni fallback a él, y los tres ejes de tags con sus valores permitidos están enumerados **en un solo sitio** del fichero.
+
+El cuarto criterio ("el vocabulario declarado aquí es el conjunto que validará la regla de T-C10-03") no es ejecutable hoy: es estructural. Confírmalo señalando la constante o bloque exacto que T-C10-03 va a consumir, y comprueba que no está duplicado en otro punto del fichero.
+
+Ojo con el criterio 1: con cero proyectos en el workspace, `run-many -t lint` puede salir 0 sin haber ejecutado nada. Dilo si es el caso —"0 proyectos, nada que lintar"— en vez de presentarlo como prueba de que la config funciona. Para demostrar que carga de verdad, ejecuta también `pnpm eslint --print-config eslint.config.mjs` o equivalente y pega la salida.
+
+Si algún criterio falla, dilo con su salida completa. Un criterio no ejecutado se reporta como no ejecutado, nunca como pasado.
+
+#### Restricciones
+
+- No modifiques nada bajo docs/ ni bajo .claude/. El ticket no se edita ni se marca como hecho.
+- No instales dependencias que el Scope no pida.
+- No introduzcas un segundo gestor de paquetes: pnpm es el único soportado.
+- No hagas commit ni push salvo que te lo pida explícitamente.
+
+#### Informa al terminar
+
+Qué ficheros has creado o modificado, la salida de las verificaciones, cuántos valores has declarado en cada eje de tags, y cualquier decisión que el ticket no cubriera — en particular si has tenido que elegir entre configurar `angular-eslint` ahora o dejarlo para cuando exista `apps/web` (T-C10-05).
+
+### Response:
+
+Implementado ticket T-C10-02
+
+</br>
 
 **Prompt 3:**
