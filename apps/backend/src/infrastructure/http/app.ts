@@ -285,7 +285,8 @@ function mountApiRoutes(
     remanenteQueryRepo,
     stockRepo,
     aiConfigRepo,
-    aiRecipeGeneratorGateway
+    aiRecipeGeneratorGateway,
+    recipeRepo
   );
   app.use('/api/v1/recipes', ...guard, createRecipesRouter(recipeRepo, stockRepo, suggestRescueRecipesUseCase));
   app.use('/api/v1/roles', ...guard, createRolesController(roleRepo, isAuthRequired));

@@ -12,6 +12,9 @@ import { Pin } from '../../src/domain/auth/value-objects/Pin.js';
 import { Insumo } from '../../src/domain/stock/entities/Insumo.js';
 import { DecimalQuantity } from '../../src/domain/stock/value-objects/DecimalQuantity.js';
 import { AiConfiguration } from '../../src/domain/settings/entities/AiConfiguration.js';
+import { Recipe } from '../../src/domain/recipes/entities/Recipe.js';
+import { RecipeIngredient } from '../../src/domain/recipes/entities/RecipeIngredient.js';
+
 
 describe('TK-122: Endpoint de Recetas de Rescate Inteligentes (POST /api/v1/recipes/rescue-suggestions)', () => {
   const secret = 'test-secret-rescue-recipes-122';
@@ -46,6 +49,18 @@ describe('TK-122: Endpoint de Recetas de Rescate Inteligentes (POST /api/v1/reci
     );
 
     recipeRepo = new InMemoryRecipeRepository();
+    await recipeRepo.save(
+      new Recipe(
+        'rec-crema-espinaca',
+        'Crema de Espinaca al Horno',
+        'SOPAS',
+        [
+          new RecipeIngredient('ri-esp-1', 'rec-crema-espinaca', 'ins-espinaca-1', new DecimalQuantity('1.000')),
+        ],
+        'Deliciosa crema de espinacas aprovechando insumos frescos'
+      )
+    );
+
     remanenteQueryRepo = new InMemoryRemanenteQueryRepository();
     remanenteQueryRepo.seedRemanente({
       id: 'rem-espinaca-1',
@@ -100,23 +115,39 @@ describe('TK-122: Endpoint de Recetas de Rescate Inteligentes (POST /api/v1/reci
     expect(res.status).toBe(401);
   });
 
-  it('devuelve 200 OK con propuestas estructuradas de rescate', async () => {
+  it('devuelve 200 OK con propuestas de recetas del catálogo por defecto (Modo CATALOG / Zero Data Leakage)', async () => {
     const app = buildApp();
     const res = await request(app)
       .post('/api/v1/recipes/rescue-suggestions')
       .set('Authorization', `Bearer ${staffToken}`);
 
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('source');
+    expect(res.body).toHaveProperty('source', 'CATALOG');
     expect(res.body).toHaveProperty('proposals');
     expect(Array.isArray(res.body.proposals)).toBe(true);
     expect(res.body.proposals.length).toBeGreaterThanOrEqual(1);
 
     const first = res.body.proposals[0];
-    expect(first).toHaveProperty('name');
+    expect(first.name).toBe('Crema de Espinaca al Horno');
     expect(first).toHaveProperty('description');
     expect(first).toHaveProperty('ingredients');
-    expect(first.ingredients.length).toBeGreaterThanOrEqual(1);
+    expect(first.ingredients[0].insumoName).toBe('Espinaca Fresca');
+    expect(first.ingredients[0].isAtRisk).toBe(true);
     expect(first).toHaveProperty('preventedWasteEstimate');
   });
+
+  it('devuelve 200 OK con propuestas generadas en Modo CREATIVE', async () => {
+    const app = buildApp();
+    const res = await request(app)
+      .post('/api/v1/recipes/rescue-suggestions')
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ mode: 'CREATIVE' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('source', 'HEURISTIC');
+    expect(res.body).toHaveProperty('proposals');
+    expect(Array.isArray(res.body.proposals)).toBe(true);
+    expect(res.body.proposals.length).toBeGreaterThanOrEqual(1);
+  });
 });
+

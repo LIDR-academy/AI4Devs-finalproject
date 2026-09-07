@@ -19,6 +19,10 @@ const createRecipeSchema = z.object({
     .min(1, 'La receta debe tener al menos un ingrediente.'),
 });
 
+const rescueSuggestionsSchema = z.object({
+  mode: z.enum(['CATALOG', 'CREATIVE']).optional().default('CATALOG'),
+}).optional();
+
 export class RecipesController {
   constructor(
     private readonly createRecipeUseCase: CreateRecipeUseCase,
@@ -49,15 +53,22 @@ export class RecipesController {
     }
   };
 
-  public suggestRescueRecipes = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public suggestRescueRecipes = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!this.suggestRescueRecipesUseCase) {
         throw new Error('Servicio de sugerencias de rescate culinario no inicializado.');
       }
-      const result = await this.suggestRescueRecipesUseCase.execute();
+      const parsedBody = rescueSuggestionsSchema.parse(req.body ?? {});
+      const mode = parsedBody?.mode ?? 'CATALOG';
+      const result = await this.suggestRescueRecipesUseCase.execute(mode);
       res.status(200).json(result);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
+        return;
+      }
       next(error);
     }
   };
 }
+
