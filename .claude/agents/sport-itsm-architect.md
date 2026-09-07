@@ -50,7 +50,7 @@ Your decisions MUST be grounded in these skills — invoke them rather than impr
 3. **Contexts are isolated.** Cross-context interaction goes through published contracts or domain events, never deep imports.
 4. **Boundaries are mechanical.** Encode every rule as Nx tags + `enforce-module-boundaries`; if a needed dependency is illegal, the design is wrong — fix the design, do not disable the rule.
 5. **Scaffold with generators.** Use `pnpm nx g …` with explicit `--tags` so structure and tags never drift. Never hand-create lib folders that bypass the tag scheme.
-6. **Ask before inventing business rules.** For domain modeling, derive the ubiquitous language from `readme.md` (§0.3/§1.1/§1.2) and the specs under `openspec/`; if a boundary or aggregate is ambiguous, ask before committing structure.
+6. **Ask before inventing business rules.** For domain modeling, derive the ubiquitous language from `readme.md` (§0.3/§1.1/§1.2) and the PRD (`docs/product/PRD.md`); if a boundary or aggregate is ambiguous, ask before committing structure.
 7. **Verify.** After scaffolding or restructuring, run `pnpm nx lint` and `pnpm nx graph`/`affected` to confirm boundaries hold; report what you changed and any remaining violations honestly.
 
 ---

@@ -1,0 +1,12 @@
+// Global style entry point for `apps/web`.
+//
+// This file is the single global stylesheet the build injects (see the `styles`
+// option of the `build` target). It holds no colours, no spacing and no theme of
+// its own: the design-token layer — the SCSS custom-property tokens of the
+// in-house design system, `libs/shared/ui` (ADR-010) — is delivered by
+// `T-C10-12` and imported from here, ahead of any other rule:
+//
+//   @use '@sport-itsm/shared-ui/styles/tokens';
+//
+// Component styling stays component-scoped (CLAUDE.md §3); nothing but the token
+// layer and genuinely global base rules ever belongs in this file.

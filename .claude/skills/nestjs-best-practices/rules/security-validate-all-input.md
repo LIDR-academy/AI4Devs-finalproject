@@ -54,7 +54,7 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3000);
+  await app.listen(3300);
 }
 
 // Create well-validated DTOs

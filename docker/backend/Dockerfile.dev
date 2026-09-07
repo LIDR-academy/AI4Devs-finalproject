@@ -1,0 +1,40 @@
+# Development image — hot reload, for apps/api.
+FROM node:22-alpine
+
+# Build-time only: the port the dev server listens on inside the container.
+ARG PORT
+ENV PORT=$PORT
+
+# Pinned to match package.json's `packageManager` field (the SSOT for the
+# exact pnpm version — CLAUDE.md §2 pins the major, package.json owns the
+# patch). A base image tag does not pin its own Node version by itself; Node
+# here comes from `node:22-alpine`, verified explicitly rather than assumed.
+RUN corepack enable && corepack prepare pnpm@10.18.3 --activate
+
+WORKDIR /usr/local/app
+
+# Workspace manifests first so `pnpm install` layer-caches independently of
+# source changes.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.base.json ./
+
+# Source. There is no libs/ directory in this repository yet — add a `COPY
+# libs ./libs` line here once the first library is scaffolded (and prefer
+# copying it wholesale over per-library COPY lines, which break silently in
+# the image the first time a library imports one that isn't listed; see
+# .claude/skills/ci-cd/references/gotchas.md).
+COPY apps ./apps
+
+RUN pnpm install --frozen-lockfile
+
+EXPOSE $PORT
+
+# TCP-only check: `/health/live` is reserved (apps/api/src/main.ts) but not
+# implemented — the API registers no controller yet, so every HTTP route,
+# including any health path, returns 404 today. An HTTP probe expecting 200
+# would never pass. Confirming the port accepts connections is the honest
+# signal available until the observability slice (T-C10-28) lands.
+HEALTHCHECK --interval=30s --timeout=10s --retries=5 --start-period=60s \
+  CMD node -e "require('net').createConnection({port:process.env.PORT||3300},()=>process.exit(0)).on('error',()=>process.exit(1))"
+
+# The concrete command (nx serve api --host 0.0.0.0) is set in docker-compose.
+CMD ["pnpm", "exec", "nx", "serve", "api"]

@@ -9,7 +9,7 @@ You are a Senior Backend Engineer working on **Sport ITSM**, the ITSM platform t
 
 All code, identifiers, comments, commit messages, and technical documentation are written in **English**, using standard backend and ITSM terminology.
 
-> This skill governs implementation ("how"). Product behavior and functional requirements live in the specifications under `openspec/` (see `CLAUDE.md`). Never encode business requirements here.
+> This skill governs implementation ("how"). Product behavior and functional requirements live in `docs/product/PRD.md` (see `CLAUDE.md` §4). Never encode business requirements here.
 >
 > **Companion skills:** apply **`sport-itsm-architecture`** for structure (contexts, layers, boundaries) and **`sport-itsm-engineering-principles`** for class/function-level craft (SOLID, clean code). This skill only adds NestJS/TypeORM-specific rules on top of them.
 
@@ -18,18 +18,18 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 # Technology Stack (source of truth)
 
 ## Core
-- **Node.js 20 LTS** — runtime.
+- **Node.js 22 LTS** — runtime.
 - **TypeScript 5.9** — **strict mode** (`strict: true`); no implicit `any`, no unchecked non-null assertions without justification.
 - **NestJS 11** — modular framework; use dependency injection and decorators idiomatically.
-- **Express 4** — HTTP adapter under NestJS. (NestJS 11 also supports Express 5; the Express 4 pin is intentional — do not upgrade without an approved change.)
+- **Express 5** — HTTP adapter under NestJS. `@nestjs/platform-express@11` has bundled Express 5 since `11.0.0`, so NestJS 11 never shipped on Express 4; there is no Express 4 pin to preserve and no pnpm override may be added to force one. Never declare `express` directly in `package.json` — the adapter pins it. Note that Express 5 routes through `path-to-regexp@8`, where the Express 4 wildcard forms (`*`, `:param*`) are rejected: route patterns must be literal or use the v8 grammar.
 - **Nx 21.6** — monorepo orchestration.
 
 ## Package manager
 - **pnpm** — the only supported package manager. Use `pnpm` for installs and `pnpm nx …` for Nx targets. Do not introduce `npm`/`yarn` lockfiles.
 
 ## Database & ORM
-- **PostgreSQL 16** — Docker container in dev; managed instance in staging/prod.
-- **TypeORM 0.3** — entities, repositories, migrations.
+- **PostgreSQL 18** — Docker container in dev; managed instance in staging/prod.
+- **TypeORM 1.1** — entities, repositories, migrations.
 - **`pg`** driver.
 - **`synchronize` is ALWAYS `false`** in every environment. Schema changes happen **only** through migrations — never via schema auto-sync.
 - **Migrations execution policy:**
@@ -58,9 +58,9 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 - **Structured logging (baseline — mandatory)**: **`nestjs-pino`** (pino) for structured, JSON logs with request correlation. Do not use `console.log` in application code.
 
 ## Testing
-- **Jest 29** with **`ts-jest`** — unit and integration tests.
-- **Cypress 15** — API E2E tests in **`apps/api-e2e/`** using Cypress' request runner.
-- **Cucumber / Gherkin** — acceptance tests via **`@badeball/cypress-cucumber-preprocessor`**.
+- **Jest 29.7** with **`ts-jest`** — unit and integration tests.
+- **Cypress 15.20** — API E2E tests in **`apps/api-e2e/`** using Cypress' request runner. Cypress is invoked through the built-in **`nx:run-commands`** executor, **not** through `@nx/cypress`: that plugin cannot host Cypress 15 at the pinned Nx 21.6, and its generators throw outright on any Cypress major above 14 (**ADR-011**). `apps/api-e2e` owns its `cypress.config.ts` and sequences the API under test with an explicit `dependsOn`.
+- **Cucumber / Gherkin** — acceptance tests via **`@badeball/cypress-cucumber-preprocessor` 28.0**, bundled by **`@bahmutov/cypress-esbuild-preprocessor` 2.2** over a direct **`esbuild` 0.28** dev dependency. `.feature` files are the spec entry point; step definitions resolve per feature. The preprocessor sets the Cypress floor: **below 15.18.0 is unsupported**.
 - **Coverage target: 80%** lines/branches/functions/statements for changed libraries. It is **enforced wherever a `coverageThreshold` is configured** (project/jest config); treat 80% as the minimum bar for new/changed code even where not yet enforced.
 
 ## Development Tools
@@ -106,7 +106,7 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 - Build the API: `pnpm nx build api`
 - Unit/integration tests for a project: `pnpm nx test <project>`
 - Lint a project: `pnpm nx lint <project>`
-- API E2E (Cypress): `pnpm nx e2e api-e2e`
+- API E2E (Cypress + Cucumber): `pnpm nx e2e api-e2e` — an `nx:run-commands` target over `cypress run`, not an `@nx/cypress` executor (ADR-011)
 - Affected checks: `pnpm nx affected -t lint test build`
 - TypeORM migrations (via `ts-node` + `tsconfig-paths`, data source at `apps/api/src/data-source.ts`):
   - Generate: `pnpm typeorm migration:generate -d apps/api/src/data-source.ts <path/Name>`
@@ -127,4 +127,4 @@ All code, identifiers, comments, commit messages, and technical documentation ar
 - **Do NOT** prefix the health endpoints with `/api`, and do NOT expose Swagger outside dev.
 - **Do NOT** hand-format code against Prettier, or add stylistic ESLint rules that conflict with it.
 - **Do NOT** introduce `npm`/`yarn` lockfiles or a second package manager.
-- **Do NOT** downgrade or bump pinned major versions (Node 20, NestJS 11, Express 4, TypeORM 0.3, etc.) without an approved change.
+- **Do NOT** downgrade or bump pinned major versions (Node 22, NestJS 11, Express 5, TypeORM 1.1, etc.) without an approved change.
