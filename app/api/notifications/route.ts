@@ -8,11 +8,15 @@ export async function GET(request: Request) {
     const { user } = await requireSession();
     const unreadOnly = new URL(request.url).searchParams.get("unread") === "1";
 
-    const notifications = await prismaNotificationRepository.listForUser(user.id, { unreadOnly });
-    return Response.json({
-      notifications,
-      unread: notifications.filter((n) => n.readAt === null).length,
-    });
+    const [notifications, unread] = await Promise.all([
+      prismaNotificationRepository.listForUser(user.id, { unreadOnly }),
+      // Se cuenta en la base, no sobre la lista: `listForUser` viene recortada, así que
+      // contar lo devuelto daba de menos a quien tuviera más pendientes que el tope —y
+      // con `?unread=1` la cifra habría sido, además, el tamaño de la página.
+      prismaNotificationRepository.countUnread(user.id),
+    ]);
+
+    return Response.json({ notifications, unread });
   } catch (error) {
     return toProblemResponse(error, "/api/notifications");
   }

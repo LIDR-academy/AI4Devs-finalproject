@@ -1733,6 +1733,11 @@ Bruno (24 marcados, 0 en la segunda llamada, 401 sin sesión) y **se revirtió d
 el lote comparte instante exacto de marcado, así que devolver esas 24 filas a "sin
 leer" fue exacto.
 
-**Hueco anotado, no tapado:** la spec `notifications` no dice nada del buzón —ni del
-marcado individual, que es anterior a este cambio—; solo describe qué avisos se
-generan. Queda pendiente de decidir si se formaliza.
+**El hueco se cerró a continuación** (change `buzon-de-avisos`, 2026-09-07): la spec
+`notifications` describía qué avisos se generan y nada del buzón donde se leen, ni
+siquiera del marcado individual, que es anterior. El requisito nuevo recoge las reglas
+que ya se cumplían —dueño resuelto por la sesión, rechazos indistinguibles, "todos" son
+todos, y vaciar un buzón vacío no es un error—. **Y escribirlo destapó un defecto que
+nadie había visto:** `GET /api/notifications` contaba los "sin leer" sobre la lista
+devuelta, recortada a 50, así que daba de menos a quien tuviera más pendientes y con
+`?unread=1` devolvía directamente el tamaño de la página.

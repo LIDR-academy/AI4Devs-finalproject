@@ -1389,9 +1389,17 @@ project. Read it at the start of every session.
   y un buzón ya vacío cumple lo pedido.
   Probado como componente y no en E2E: vaciar un buzón es un cambio sobre la base
   compartida y las únicas cuentas con avisos son las del historial sembrado.
-  **La spec `notifications` no dice nada del buzón** —ni del marcado individual, que es
-  anterior—: solo describe qué avisos se generan. Queda como hueco conocido, pendiente
-  de decidir si se formaliza.
+  **Hueco cerrado el 2026-09-07** (change `buzon-de-avisos`, archivado): la spec
+  `notifications` describía qué avisos se generan y **nada del buzón** —ni del marcado
+  individual, que es anterior—. Ahora tiene el requisito "Buzón de avisos del usuario",
+  con las reglas que ya se cumplían: el dueño sale de la sesión y **no se puede
+  expresar** el buzón de otro; los tres rechazos del marcado individual son
+  indistinguibles; "todos" son todos y no la página visible; y vaciar un buzón ya vacío
+  **no es un error** —se pidió un estado final, no una fila—.
+  **Escribirlo destapó un defecto real:** `GET /api/notifications` contaba los "sin
+  leer" sobre la lista devuelta, que viene recortada, así que daba de menos con muchos
+  pendientes y con `?unread=1` devolvía el tamaño de la página. Ahora se cuenta en la
+  base, como ya hacía `/portal/avisos`.
 
 _(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
 Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → **Vercel +
