@@ -128,6 +128,7 @@ return [
             'replace' => 'Cambiar imagen',
             'revert_to_inherited' => 'Usar la imagen del producto',
             'confirm_label' => 'Usar esta imagen',
+            'clear' => 'Quitar',
         ],
 
         'delete' => [

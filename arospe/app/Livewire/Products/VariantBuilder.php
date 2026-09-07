@@ -15,6 +15,7 @@ use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
@@ -375,6 +376,67 @@ class VariantBuilder extends Component
         $id = $media[0]['id'] ?? null;
 
         $this->featuredMediaId = is_string($id) ? $id : null;
+    }
+
+    /**
+     * Clears the staged image before save -- mirrors Editor::clearFeaturedImage()'s shape (D-8's
+     * "the image is still just a form field until saveVariant() persists it"). Only reachable while
+     * the form is open; the row-level revertToInheritedImage() above is the equivalent action
+     * against an already-saved variant.
+     */
+    public function clearVariantImage(): void
+    {
+        Gate::authorize('update', $this->product());
+
+        $this->featuredMediaId = null;
+    }
+
+    /**
+     * The staged image's own preview -- {id, title, url, webpUrl, avifUrl}, or null while nothing is
+     * chosen. A #[Computed] METHOD, matching skuPreview()'s shape immediately below: it is derived
+     * from $featuredMediaId (itself #[Locked] and re-fetched from the database, never trusted from
+     * a client payload) rather than a second property this component would have to keep in sync by
+     * hand across openCreateForm()/openEditForm()/setVariantImage()/clearVariantImage()/closeForm().
+     * Without this, the form gave no visual confirmation that an image had been chosen until the
+     * variant was saved and the table row re-rendered -- easy to read as "the image wasn't added".
+     *
+     * @return array{id: string, title: string, url: string, webpUrl: string, avifUrl: string}|null
+     */
+    #[Computed]
+    public function featuredMediaPreview(): ?array
+    {
+        if ($this->featuredMediaId === null) {
+            return null;
+        }
+
+        $media = Media::query()->find($this->featuredMediaId);
+
+        if ($media === null) {
+            return null;
+        }
+
+        return $this->toPreview($media);
+    }
+
+    /**
+     * Builds the {id, title, url, webpUrl, avifUrl} preview shape from 0019's real
+     * `path`/`webp_path`/`avif_path` columns -- mirroring App\Livewire\Products\Editor::toPreview()
+     * (itself mirroring Gallery::toPayloadItem()/WysiwygEditor::insertImage(), D-17 there): there is
+     * no url()-style accessor on App\Models\Media to reach for.
+     *
+     * @return array{id: string, title: string, url: string, webpUrl: string, avifUrl: string}
+     */
+    private function toPreview(Media $media): array
+    {
+        $disk = Storage::disk('public');
+
+        return [
+            'id' => $media->id,
+            'title' => (string) $media->title,
+            'url' => $disk->url($media->path),
+            'webpUrl' => $disk->url($media->webp_path),
+            'avifUrl' => $disk->url($media->avif_path),
+        ];
     }
 
     /**

@@ -138,6 +138,7 @@ return [
             'replace' => 'Change image',
             'revert_to_inherited' => "Use the product's image",
             'confirm_label' => 'Use this image',
+            'clear' => 'Clear',
         ],
 
         'delete' => [

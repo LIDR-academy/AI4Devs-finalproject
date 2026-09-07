@@ -207,6 +207,30 @@
                 <div>
                     <flux:label>{{ __('products.variants.image.choose') }}</flux:label>
 
+                    <div class="mt-2 flex items-center gap-3">
+                        @if ($this->featuredMediaPreview !== null)
+                            <div data-test="variant-image-preview" class="flex items-center gap-2">
+                                <img
+                                    src="{{ $this->featuredMediaPreview['url'] }}"
+                                    alt="{{ $this->featuredMediaPreview['title'] }}"
+                                    class="h-16 w-16 rounded object-cover"
+                                >
+                                <span class="text-sm">{{ $this->featuredMediaPreview['title'] }}</span>
+                                <flux:button
+                                    size="sm"
+                                    variant="ghost"
+                                    data-test="clear-variant-image"
+                                    wire:click="clearVariantImage"
+                                    class="cursor-pointer!"
+                                >
+                                    {{ __('products.variants.image.clear') }}
+                                </flux:button>
+                            </div>
+                        @else
+                            <div data-test="variant-image-preview"></div>
+                        @endif
+                    </div>
+
                     @can('viewAny', \App\Models\Media::class)
                         <div class="mt-2">
                             <flux:button
