@@ -14,7 +14,7 @@ persistence, the SKU derivation, the duplicate-combination rule, read-time image
 [0028](../done/0028-product-attribute-types-and-values-backend.md) (the attribute taxonomy). Building every
 combination at once, against
 **[0029b](../done/0029b-product-variant-combination-generator-backend.md)**'s cartesian generator, ships as
-the follow-on story **[0031a](../0031a-product-variant-generator-ui.md)** — see the 2026-09-06 amendment
+the follow-on story **[0031a](0031a-product-variant-generator-ui.md)** — see the 2026-09-06 amendment
 below.
 
 > 🟠 **Amendment — 2026-09-04: this story's backend dependency is now three stories, and two of its
@@ -73,7 +73,7 @@ below.
 > | **0031** *(this file)* | the single-variant builder: the nested child component, the composed
 > attribute-value repeater, the live server-computed SKU preview, refusal rendering, image inheritance,
 > authorization, and the variants list (now paginated — see **D-17** below, kept here) |
-> | **[0031a](../0031a-product-variant-generator-ui.md)** | the cartesian generator UI — the old **D-17**,
+> | **[0031a](0031a-product-variant-generator-ui.md)** | the cartesian generator UI — the old **D-17**,
 > **D-17.1**–**D-17.4** in full and the generator-specific tail of **D-17.5**, moved verbatim, sequenced
 > immediately after this story ships |
 >
@@ -141,7 +141,7 @@ the sibling screens.
 > — every database-shaped piece of it (the batch transaction and its savepoints, the `MAX_COMBINATIONS`
 > cap, the one-query duplicate pre-read, the lock-hold window) landed in **0029**/0029b, never in a
 > Livewire component. Now that the generator's **UI** has also moved out, to
-> **[0031a](../0031a-product-variant-generator-ui.md)**, this section has nothing left to argue: this story
+> **[0031a](0031a-product-variant-generator-ui.md)**, this section has nothing left to argue: this story
 > calls three already-specified single-variant actions and renders their results. **No new table,
 > column, index, migration, seeder or query shape is introduced here.**
 >
@@ -160,7 +160,7 @@ pairs, and 0028/0030 supply the taxonomy this screen reads.
 **[0029a](../done/0029a-attribute-in-use-delete-guards-backend.md)** blocks nothing here directly; it is in
 the chain because it edits 0028's shipped code that this screen's sibling (0030) renders.
 🔴 **`0029b` is no longer in this chain at all** — the 2026-09-06 split moved its only consumer
-(the generator UI) to **[0031a](../0031a-product-variant-generator-ui.md)**, which names 0029b as its own
+(the generator UI) to **[0031a](0031a-product-variant-generator-ui.md)**, which names 0029b as its own
 hard blocker instead. This is the **last** story of Epic 2's products arc that ships the single-variant
 builder; 0031a, sequenced immediately after it, is the true last link.
 
@@ -194,7 +194,7 @@ prototype)"* Gherkin block and [§2.3](../../../docs/PRD/PRD.md#23-shared-media-
 | §2.3 / Products AC 6 (*"product and variant images come from the shared media gallery"*) — **rendered** | the fourth `media.gallery` embed on the editor page. |
 
 > 🔴 **The cartesian generator's own "not PRD-derived" discussion moved to
-> [0031a](../0031a-product-variant-generator-ui.md#prd-coverage) in the 2026-09-06 split** — it is a PO
+> [0031a](0031a-product-variant-generator-ui.md#prd-coverage) in the 2026-09-06 split** — it is a PO
 > decision taken on 2026-08-19, above the PRD rather than out of it, and its story is the one that now
 > ships the twelve *"Generating every combination at once"* scenarios. §2.2's only creation scenario
 > remains singular, which is why 0031a's own PRD coverage section states the generator is scope the PO
@@ -203,7 +203,7 @@ prototype)"* Gherkin block and [§2.3](../../../docs/PRD/PRD.md#23-shared-media-
 **Not covered here** (each names its owner): the derivation formula, the combination hash, the
 collision matrix, the referential-integrity FKs and the two attribute in-use guards (**0029**); the
 cartesian generator's UI, and its own outcome semantics/transaction shape/batch cap
-(**[0031a](../0031a-product-variant-generator-ui.md)** / **0029b**); the
+(**[0031a](0031a-product-variant-generator-ui.md)** / **0029b**); the
 attribute taxonomy screen (**0030**); the product's own fields, list and delete (**0027**); the gallery's
 own mechanics (**0019**/**0020**).
 
@@ -409,7 +409,7 @@ Feature: Permission to manage a product's variants
 > | What changed | Where it landed here |
 > | --- | --- |
 > | **[OQ-3](#open-questions) — the four contract gaps — is RESOLVED**, all four answered exactly as this story recommended: the error-bag keys ([0029 **D-15**](../done/0029-product-variants-backend.md#d-15--error-bag-keys-the-exact-key-every-refusal-throws-on)), the missing `variantFeaturedMediaIdRules()` and the trait written out in full ([0029 **D-16**](../done/0029-product-variants-backend.md#d-16--productvariantvalidationrules-written-out-in-full)), the four action signatures ([0029 **D-17.1**](../done/0029-product-variants-backend.md#d-171--the-action-signatures--three-since-the-generators-moved-to-0029b)), and every relation named including `ProductAttributeValue::type()` ([0029 **D-17.2**](../done/0029-product-variants-backend.md#d-172--every-relation-named-with-its-return-type)) | **[D-8](#d-8--where-every-refusal-renders-and-why-none-of-them-renders-on-its-own)** now carries 0029's complete **six**-key table (and the three keys this story had not noticed were also unbound), **[D-6](#d-6--inheritance-is-rendered-and-labelled-null-is-the-flag-and-it-stays-null)** cites the confirmed relation names, **[D-13](#d-13--price-and-stock-strings-pre-filled-and-identical-in-shape-to-0027s)** the confirmed trait, and **[D-13a](#d-13a--the-confirmed-action-surface-this-component-calls-single-variant-actions)** the confirmed signatures |
-> | **[OQ-2](#open-questions) — the cartesian generator — is RESOLVED: IN SCOPE**, by the PO's explicit 2026-08-19 decision. 0029 ships [**D-18**](../done/0029b-product-variant-combination-generator-backend.md)'s `GenerateProductVariantCombinations`, and 0031 owns its UI | **[D-3](#d-3--single-variant-creation-only-the-cartesian-generator-is-a-named-scope-fence-with-a-named-backend-cost)** was **superseded**, then restored 2026-09-06 and superseded a second time — its UI is now [**0031a's D-17**](../0031a-product-variant-generator-ui.md#d-17--the-cartesian-generator-ui) |
+> | **[OQ-2](#open-questions) — the cartesian generator — is RESOLVED: IN SCOPE**, by the PO's explicit 2026-08-19 decision. 0029 ships [**D-18**](../done/0029b-product-variant-combination-generator-backend.md)'s `GenerateProductVariantCombinations`, and 0031 owns its UI | **[D-3](#d-3--single-variant-creation-only-the-cartesian-generator-is-a-named-scope-fence-with-a-named-backend-cost)** was **superseded**, then restored 2026-09-06 and superseded a second time — its UI is now [**0031a's D-17**](0031a-product-variant-generator-ui.md#d-17--the-cartesian-generator-ui) |
 > | **[OQ-6](#open-questions) — `position` not writable — is RESOLVED**, in two halves: variant **images** are single-image-only so there is no image order to express at all, and variant **row order** is now written by 0029 in a deliberately useful order with **no manual reorder control in v1** | **[D-16a](#d-16a--oq-6-resolved-variant-row-order-and-images-need-no-reorder-control-in-v1)** |
 > | **The story's own classification is unaffected.** 0029 is `includes database-expert: yes`; 0031 stays **no** | stated point by point in **[Type](#type)** |
 >
@@ -426,7 +426,7 @@ Feature: Permission to manage a product's variants
 > **[D-3](#d-3--single-variant-creation-only-the-cartesian-generator-is-a-named-scope-fence-with-a-named-backend-cost)**
 > is restored (superseded a second time, its original fence live again) rather than staying superseded by
 > a section that no longer lives here; the generator UI itself is
-> **[0031a](../0031a-product-variant-generator-ui.md)**'s own **D-17**. OQ-6's row is answered in this file
+> **[0031a](0031a-product-variant-generator-ui.md)**'s own **D-17**. OQ-6's row is answered in this file
 > now by **[D-16a](#d-16a--oq-6-resolved-variant-row-order-and-images-need-no-reorder-control-in-v1)**.
 > The table's own text is left as it stood, per this project's audit-authored-page convention.
 
@@ -565,7 +565,7 @@ that **is** the axis picker for a generator, and without one it produces an ambi
 > the generator's own modal/axis-picker/summary/pagination UI — the same shape that made **0029** itself
 > fail "Small" and split into 0029/0029a/0029b, and 0029b is exactly the generator half of that split.
 > The fix is the same shape: the generator's UI is split out to
-> **[0031a](../0031a-product-variant-generator-ui.md)**, sequenced immediately after this story. **Nothing
+> **[0031a](0031a-product-variant-generator-ui.md)**, sequenced immediately after this story. **Nothing
 > about the generator's *existence* was reversed a second time** — the PO's 2026-08-19 decision that a
 > generator should exist stands, and 0029b's backend still ships it; only *which story renders it* moved.
 > This fence's original text is restored below because it is once again this story's own boundary: no
@@ -585,7 +585,7 @@ that **is** the axis picker for a generator, and without one it produces an ambi
 > explicitly specified per-row outcome contract"*), and 0029 built the second of those two and says so.
 > Read it as the analysis that produced 0029b's D-G1–D-G8, not as this story's current scope — the
 > generator's own UI decisions built on this analysis now live in
-> **[0031a](../0031a-product-variant-generator-ui.md)**, not in a `D-17` in this file.
+> **[0031a](0031a-product-variant-generator-ui.md)**, not in a `D-17` in this file.
 >
 > What each of its four points became:
 >
@@ -598,7 +598,7 @@ that **is** the axis picker for a generator, and without one it produces an ambi
 >
 > **The one mitigation D-3 recommended at the bottom of this section survives and is now doubly
 > useful**: defaulting from the types this product's existing variants already use is exactly how
-> [0031a's D-17.1](../0031a-product-variant-generator-ui.md#d-171--the-axis-picker-a-checkbox-list-of-attribute-types-pre-selected-from-the-products-own)
+> [0031a's D-17.1](0031a-product-variant-generator-ui.md#d-171--the-axis-picker-a-checkbox-list-of-attribute-types-pre-selected-from-the-products-own)
 > pre-selects the generator's checkboxes.
 
 **No "generate all combinations" bulk builder in this story.** Both specialists reached this
@@ -653,7 +653,7 @@ common case ("another size") one click, needs no declaration table, and is purel
 
 > 🔴 **Status as of 2026-09-06: this fence is live again.** The generator ships — the two blockquotes
 > above are the unedited history of why and how — but it ships as
-> **[0031a](../0031a-product-variant-generator-ui.md)**, not as part of this story. Everything this
+> **[0031a](0031a-product-variant-generator-ui.md)**, not as part of this story. Everything this
 > section's four numbered points and its "what would have to be added" list argue is what 0029b actually
 > built, and 0031a's own D-17 renders it; this story once again ships **no** cartesian generator UI of
 > any kind, which is this decision's original verdict, restored.
@@ -893,7 +893,7 @@ Definition of Done now repeats the obligation *"so the hand-off is recorded on b
 > 🔴 **Note appended 2026-09-06, and a correction along with it.** A seventh row, `attributeTypeIds`,
 > briefly lived here while the generator shipped as part of this story (2026-08-19 to 2026-09-06) — the
 > **only** one of the seven that auto-rendered, because the generator's axis-picker property was
-> deliberately named after it. It moved to **[0031a](../0031a-product-variant-generator-ui.md)**'s own copy
+> deliberately named after it. It moved to **[0031a](0031a-product-variant-generator-ui.md)**'s own copy
 > of this table along with the rest of the generator UI, which is what makes the count above **six of
 > six**, not "five of seven" as the pre-split text read (a pre-existing off-by-one in that count, closed
 > in the same pass rather than propagated: with only one auto-rendering row in the seven and that row now
@@ -1142,13 +1142,13 @@ public string $stock = '0';
 > design rather than a gap. This component **composes the whole trait** (it is flat and single-concern
 > per [naming.md](../../../docs/conventions/naming.md#traits-and-their-methods) — there is no narrower
 > import), but only exercises five of its seven methods; the last two back
-> **[0031a](../0031a-product-variant-generator-ui.md)**'s axis picker.
+> **[0031a](0031a-product-variant-generator-ui.md)**'s axis picker.
 
 ### D-13a — The confirmed action surface this component calls (single-variant actions)
 
 > 🔴 **Relocated here 2026-09-06 from the old D-17.2, which also carried
 > `GenerateProductVariantCombinations`'s signature — moved to
-> [0031a](../0031a-product-variant-generator-ui.md#d-172--the-confirmed-action-surface-this-component-calls)
+> [0031a](0031a-product-variant-generator-ui.md#d-172--the-confirmed-action-surface-this-component-calls)
 > with the rest of the generator UI.** The three signatures below are not generator-specific — they are
 > what `saveVariant()`, `openEditForm()` and `deleteVariant()` call — and stay this story's own contract.
 > [0029 **D-17.1**](../done/0029-product-variants-backend.md#d-171--the-action-signatures--three-since-the-generators-moved-to-0029b)
@@ -1232,7 +1232,7 @@ missing from `lang/es` renders as its own raw key with no error.
 **Already owned by 0029 — do not duplicate:** `products.variants.duplicate_combination`,
 `.derived_sku_taken`, `.derived_sku_empty_segment`, `.derived_sku_too_long`,
 `.parent_sku_change_collides`, `.value_in_use`, `.type_in_use`, and (for 0029b's generator, rendered by
-**[0031a](../0031a-product-variant-generator-ui.md)**, not here) `products.variants.generate.empty_type`
+**[0031a](0031a-product-variant-generator-ui.md)**, not here) `products.variants.generate.empty_type`
 (naming the type), `products.variants.generate.too_many` (interpolating `:limit` and `:attempted`) and
 `products.variants.generate.summary` — a `trans_choice` over the created count interpolating `:skipped`
 and `:refused`. These live in 0029's key space *"because the **action** owns the outcome vocabulary"*,
@@ -1271,7 +1271,7 @@ products.variants.delete.title | .confirm (:label, :sku) | .irreversible
 
 > 🔴 **The eleven `products.variants.generate.*` CONTROL keys (trigger, modal, axis-picker legend, live
 > count, over-limit warning, confirm/cancel, result panel, dismiss, no-types-selected) moved to
-> [0031a](../0031a-product-variant-generator-ui.md#d-15--translation-keys) in the 2026-09-06 split**, along
+> [0031a](0031a-product-variant-generator-ui.md#d-15--translation-keys) in the 2026-09-06 split**, along
 > with the rest of the generator UI. **The split rule they were written under is unchanged and still
 > binds both files**: 0029(b) owns every leaf that describes an **outcome** the action produced
 > (`.empty_type`, `.too_many`, `.summary`); whichever story renders the axis picker and result panel owns
@@ -1419,7 +1419,7 @@ otherwise — and the fix is **not** this story's to invent:
 > path (0027 **D-4**'s own argument for paginating from day one) — and that cost is real **the moment a
 > product accumulates more than ~25 variants**, whether or not a batch generator exists. The old point 4
 > (*"a freshly generated batch lands where expected"*) **was** generator-specific and moved to
-> [0031a](../0031a-product-variant-generator-ui.md#d-174--the-pagination-consequence); the three points kept
+> [0031a](0031a-product-variant-generator-ui.md#d-174--the-pagination-consequence); the three points kept
 > below are this story's own.
 
 **Decision: the variants list paginates from the start**, `->paginate(25)` matching
@@ -1456,7 +1456,7 @@ the top of this file and D-3's own restored history. -->
   the 2026-09-06 Phase 2 INVEST split (D-3, restored): a brief 2026-08-19 reversal put the generator's UI
   in this story against 0029b's `GenerateProductVariantCombinations`, but Phase 2 failed the bundled
   story on INVEST "Small" and the generator UI moved wholesale to
-  **[0031a](../0031a-product-variant-generator-ui.md)**, sequenced immediately after this one. Nothing about
+  **[0031a](0031a-product-variant-generator-ui.md)**, sequenced immediately after this one. Nothing about
   the generator **existing** is reversed — see 0031a for its own scope fences (no dry-run/preview seam,
   no all-or-nothing batch semantics, no "regenerate and overwrite" affordance, no delete-missing sync
   mode, no `product_product_attribute_type` declaration table) — this story simply does not build it.
@@ -1497,7 +1497,7 @@ the top of this file and D-3's own restored history. -->
 
 > 🔴 **Note appended 2026-09-06.** `tests/Feature/Products/VariantBuilderGeneratorTest.php` — the
 > generator UI's own fifteen-case test file, dated 2026-08-19 — moved to
-> **[0031a](../0031a-product-variant-generator-ui.md)** with the rest of the generator UI. It is not part
+> **[0031a](0031a-product-variant-generator-ui.md)** with the rest of the generator UI. It is not part
 > of this file's own Files table any more.
 
 ### Modifies
@@ -1619,7 +1619,7 @@ All four distinct, so the test can only pass for the right reason. The value-lev
       renders.
 
 > 🔴 **`tests/Feature/Products/VariantBuilderGeneratorTest.php` moved to
-> [0031a](../0031a-product-variant-generator-ui.md#testsfeatureproductsvariantbuildergeneratortestphp) in
+> [0031a](0031a-product-variant-generator-ui.md#testsfeatureproductsvariantbuildergeneratortestphp) in
 > the 2026-09-06 split**, along with its fifteen cases (the axis picker's pre-selection and live count,
 > the summary panel's three outcome groups, the refused-row rendering, the "whole call refused" branch,
 > the `attributeTypeIds` auto-render, and the `generateCombinations()` authorization pair). It is not
@@ -1673,7 +1673,7 @@ All four distinct, so the test can only pass for the right reason. The value-lev
       `saveVariant`, `confirmDelete`, `deleteVariant` and `setVariantImage` — driven through
       `Livewire::test()` as the acting user. A route-level 403 never reaches these: `/livewire/update`
       re-runs only the `PersistentMiddleware` allow-list. 🔴 `generateCombinations()`'s own
-      allow/deny pair moved to [0031a](../0031a-product-variant-generator-ui.md)'s own copy of this file.
+      allow/deny pair moved to [0031a](0031a-product-variant-generator-ui.md)'s own copy of this file.
 - [ ] **Every deny paired with its absent side effect** (0029 **FP5**: an `AuthorizationException` raised
       *after* the write still throws).
 - [ ] 🔴 **The cross-product target test**: as an actor allowed on product X, call `deleteVariant()` with a
@@ -1724,7 +1724,7 @@ Deliberately few, per [coverage-policy.md](../../../docs/testing/frontend/covera
       form, change each select, add a variant, open the gallery, confirm, open the delete modal, cancel,
       confirm.
 
-> 🔴 **B9 and B10 moved to [0031a](../0031a-product-variant-generator-ui.md)** with the rest of the
+> 🔴 **B9 and B10 moved to [0031a](0031a-product-variant-generator-ui.md)** with the rest of the
 > generator UI — the generate modal's `<dialog>` safety (B9) and the live combination count updating on
 > genuine checkbox clicks (B10). B8's journey no longer extends into the generator; 0031a's own browser
 > file extends its own journey instead.
@@ -1796,7 +1796,7 @@ are arranged by choosing the **fixture**; name the intended case (a/b/c per 0029
 name, or the next reader cannot tell which one a fixture constructs.
 
 > 🔴 **FP-V19–FP-V22 — the four generator-specific false passes added on 2026-08-19 — moved to
-> [0031a](../0031a-product-variant-generator-ui.md#assertions-that-would-be-false-passes-if-written-naively)
+> [0031a](0031a-product-variant-generator-ui.md#assertions-that-would-be-false-passes-if-written-naively)
 > in the 2026-09-06 split**: asserting the generator by counting created variants alone, a partial batch
 > asserted by summary counts alone, the "skipped is untouched" test arranged on a default-priced
 > variant, and the summary panel asserted with a page-wide `assertSee`. None of them applies to this
@@ -1851,7 +1851,7 @@ boundary, so a product large enough to need it is never a performance surprise.
 
 🔴 **Building them one at a time is the whole of this story.** Building a whole cartesian product at once
 — a "Generar combinaciones" control, its axis picker and its outcome summary — is
-**[0031a](../0031a-product-variant-generator-ui.md)**'s screen, sequenced immediately after this one; that
+**[0031a](0031a-product-variant-generator-ui.md)**'s screen, sequenced immediately after this one; that
 story's own Expected Outcome describes it.
 
 Every one of this story's operations authorizes against the **parent product** before it does anything,
@@ -1904,7 +1904,7 @@ site in 0031a instead. Epic 2's product arc closes once both stories ship.
 - [ ] **Every one of the six methods that mutate or disclose calls `Gate::authorize()` against the
       parent product as its first statement**, each with an allow and a deny test, each deny paired with
       its absent side effect — including the cross-product target test. (A seventh, `generateCombinations`,
-      is [0031a](../0031a-product-variant-generator-ui.md)'s own.)
+      is [0031a](0031a-product-variant-generator-ui.md)'s own.)
 - [ ] The disabled-action hint comes from the **same** policy method the mutating path authorizes
       against, computed once rather than per row.
 - [ ] The variants query eager-loads `featuredImage` **and `values.type`**, with no N+1 as either the
@@ -1953,7 +1953,7 @@ site in 0031a instead. Epic 2's product arc closes once both stories ship.
       **closed rather than re-debated** (done — see the [amendment note](#documented-functional-decisions));
       **(b)** every bag key relevant to this screen rendered explicitly (**D-8**'s six-row table);
       **(c)**/**(d)** the generator's own action-name and summary-rendering hand-offs are
-      **[0031a](../0031a-product-variant-generator-ui.md)**'s to discharge, not this story's.
+      **[0031a](0031a-product-variant-generator-ui.md)**'s to discharge, not this story's.
 - [ ] **Amendments raised on other stories, not silently performed here**: **OQ-7** and **OQ-12** on
       **0027**; **OQ-10** on **0030**; ~~**OQ-3**~~ (**discharged** — 0029 **D-15**–**D-17.2**),
       **OQ-5** and ~~**OQ-6**~~ (**discharged** — resolved in **D-16a**; the only thing left on
@@ -2041,7 +2041,7 @@ and the wired-up browser suite (0006b).
   order is wanted, and then it starts with a `ReorderProductVariants` amendment on 0029 — described in
   **D-16a**, deliberately **not** designed here.
 - 🔴 **R-11 and R-12 — the generator's own risks (table-scale DOM weight, and its happiest path being its
-  least-tested one) moved to [0031a](../0031a-product-variant-generator-ui.md)** with the rest of the
+  least-tested one) moved to [0031a](0031a-product-variant-generator-ui.md)** with the rest of the
   generator UI in the 2026-09-06 split. Neither is a risk to this story's own screen.
 - **R-7 — Seven writers on `lang/*/products.php`** (FE-V8). 0027's **R-7** at more than double the scale;
   a key missing from `lang/es` renders as its own raw key with no error.
@@ -2082,7 +2082,7 @@ calls and its whole authorization fixture. **Recommended: confirm as-is.** If it
 [D-3](#d-3--single-variant-creation-only-the-cartesian-generator-is-a-named-scope-fence-with-a-named-backend-cost),
 superseded at the time and restored 2026-09-06;
 the UI was specified there until the 2026-09-06 split moved it to
-[0031a](../0031a-product-variant-generator-ui.md#d-17--the-cartesian-generator-ui))*
+[0031a](0031a-product-variant-generator-ui.md#d-17--the-cartesian-generator-ui))*
 
 > **Resolution.** The PO decided **(b) — yes, properly**, on 2026-08-19, and 0029 executed the
 > precondition that option named: it added the batch action **first**, as
@@ -2398,7 +2398,7 @@ them enters Phase 3."* — and it named the outcome almost exactly. Phase 2 ran 
 
 | Item this section flagged | Phase 2 verdict |
 | --- | --- |
-| **Size, and the *generator* cut line named here as "cleaner cut technically... but can only be a follow-on, never a parallel split"** | **FAIL on INVEST "Small".** `code-reviewer` bundled two conceptually separable units — the single-variant builder (D-1–D-16, ~28 scenarios, 6 test files) and the generator UI (the old D-17 and its five subsections, its own test file, 2 browser cases, 4 false passes, a 12-scenario Gherkin feature) — the same shape that made **0029 itself** fail "Small" and split into 0029/0029a/0029b, whose generator half (0029b) is the exact feature the old D-17 rendered a UI for. Resolved exactly the way this paragraph already predicted it would have to be: the generator half split out, as a **follow-on** story sequenced immediately after this one — **[0031a](../0031a-product-variant-generator-ui.md)** — never a parallel split |
+| **Size, and the *generator* cut line named here as "cleaner cut technically... but can only be a follow-on, never a parallel split"** | **FAIL on INVEST "Small".** `code-reviewer` bundled two conceptually separable units — the single-variant builder (D-1–D-16, ~28 scenarios, 6 test files) and the generator UI (the old D-17 and its five subsections, its own test file, 2 browser cases, 4 false passes, a 12-scenario Gherkin feature) — the same shape that made **0029 itself** fail "Small" and split into 0029/0029a/0029b, whose generator half (0029b) is the exact feature the old D-17 rendered a UI for. Resolved exactly the way this paragraph already predicted it would have to be: the generator half split out, as a **follow-on** story sequenced immediately after this one — **[0031a](0031a-product-variant-generator-ui.md)** — never a parallel split |
 | **OQ-2 not changing the classification** | **Confirmed, unaffected by the split.** [Type](#type) never depended on the generator being in this file; it says so explicitly both before and after |
 | **R-1's argued-not-rendered IA, doubled for the generator** | **Unaffected by the split as a finding** — it was never a blocker, only a note that Phase 2 should treat every IA choice here as a decision to confirm. The generator's own version of this note is now 0031a's |
 | **The amendment load (six amendments raised on three other stories)** | **Unaffected by the split** — none of OQ-5/OQ-7/OQ-10/OQ-12 was about the generator, so none needed re-routing; they remain this story's own open hand-offs, carried in the [Definition of Done](#definition-of-done) unchanged |

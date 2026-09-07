@@ -639,3 +639,39 @@ re-derive, never the full prose of a finalized story.
   [docs/api/routes.md#product-attribute-typesindex--the-fifth-permission-gated-route](../../../docs/api/routes.md#product-attribute-typesindex--the-fifth-permission-gated-route)
   and
   [docs/database/schema.md#product_attribute_values](../../../docs/database/schema.md#product_attribute_values).
+
+## Story 0031a — Product variant generator: the cartesian combination builder UI (composes onto 0031's `VariantBuilder`; `GenerateProductVariantCombinations`'s first and only UI call site; Epic 2's product arc closes)
+
+- **`GenerateProductVariantCombinations` (story 0029b) acquires its first and only UI call site,
+  `App\Livewire\Products\VariantBuilder::generateCombinations()`.** No second Livewire component and
+  no new route — the generator's trigger, axis-picker modal and result summary all land on 0031's
+  already-shipped class and view. `VariantBuilder`'s gated-method count moves from nine-of-ten to
+  **eleven of its twelve** public methods authorizing `update` on the parent product (`mount()`, the
+  twelfth, still asks the coarser `viewAny`) — story 0031a.
+- **The axis picker's bound property is named `attributeTypeIds`, exactly matching
+  `GenerateProductVariantCombinations`'s own validation bag key**, so the Flux field auto-renders its
+  error with no explicit `flux:error` in the template. Do not rename it for readability — the name
+  **is** the wiring — story 0031a.
+- ⚠️ **A Flux field's auto-rendered error slot (`flux:with-field`) renders only when the field itself
+  carries a `:label`/`:description`/`:description:trailing` — never when it is wrapped by a separate
+  `flux:fieldset` with its own `:legend` instead.** `:label`/`:description` must go directly on the
+  bound component (here, `flux:checkbox.group`), matching `roles.blade.php`'s own precedent
+  (`<flux:checkbox.group wire:model="..." :label="...">`) — see
+  [docs/errors-log.md#a-fluxfieldset-wrapping-a-flux-field-silently-swallows-its-auto-rendered-validation-error--2026-09-07](../../../docs/errors-log.md#a-fluxfieldset-wrapping-a-flux-field-silently-swallows-its-auto-rendered-validation-error--2026-09-07)
+  for the full mechanism, vendor source citation and fix — story 0031a.
+- **A client-writable array reached from a `#[Computed]` render-path property (not only from a
+  `validate()` call) still needs a mutation-point cap, matching
+  [docs/security/array-validation-bounds.md](../../../docs/security/array-validation-bounds.md)'s
+  existing rule.** `generateCombinationCount()` reads `$attributeTypeIds` on every `.live` round trip
+  while the modal is open, so a forged, client-sized array would cost an unbounded
+  `Collection::whereIn()` scan with no `validate()`/save ever attempted. Capped at the mutation point,
+  `updatedAttributeTypeIds()`, via `array_slice($this->attributeTypeIds, 0, self::MAX_GENERATE_AXES)`
+  (`MAX_GENERATE_AXES = 5`) — the same `array_slice()`-at-the-mutation-point shape
+  `SearchableMultiSelect::resolveIdsAllowingPartialFailure()` already ships — security-audit finding
+  L-1, story 0031a.
+- **This story ships NO migration, NO model, NO action, NO policy, NO validation rule, NO permission-
+  catalog change, NO reorder control, and NO "regenerate and overwrite" affordance** — every one of
+  those is 0029b's or 0031's, unchanged and reused as-is. Full mechanism at
+  [docs/api/routes.md#productsindex-productscreate-and-productsedit--the-fifth-permission-gated-route-family](../../../docs/api/routes.md#productsindex-productscreate-and-productsedit--the-fifth-permission-gated-route-family)
+  and
+  [docs/database/schema.md#product_variants](../../../docs/database/schema.md#product_variants).

@@ -6,8 +6,10 @@
 // docs/testing/frontend/coverage-policy.md and 0027 R-6: each one proves something no
 // Livewire::test()-based Feature test structurally can.
 //
-// B9/B10 (the generator modal's <dialog> safety and its live checkbox count) moved to 0031a with
-// the rest of the generator UI -- no generator-related case appears in this file.
+// B9/B10 (the generator modal's <dialog> safety and its live checkbox count) are story 0031a's
+// own cases, APPENDED to this same file per 0031a's own Files-to-modify table -- 0031a composes
+// its generator UI onto this component and view rather than creating a second one, so its two
+// browser cases land here too, at the end of this file, rather than in a new one.
 //
 // ASSUMED data-test HOOKS this file's selectors rely on, per D-8/D-14's instruction that a
 // consumer story supplies real, stable data-test hooks for a screen it builds -- CONFIRMED hooks are
@@ -457,5 +459,102 @@ test('a full journey through the builder raises no javascript errors at any step
         $page->click('@confirm-delete-variant')->assertNoJavaScriptErrors()->wait(1);
 
         $page->assertNoJavaScriptErrors();
+    });
+});
+
+// =====================================================================
+// Story 0031a -- the cartesian generator UI, appended to this same file/component (D-17.1).
+//
+// B9 -- the generate modal is a <dialog> that opens over the page and closes cleanly (D-17.1's
+// whole safety argument: unlike the single-variant create form, this modal opens no nested media
+// gallery, so the native <dialog>-nesting concern this app has elsewhere never applies here), with
+// the summary panel readable AFTER it closes and the variants table visible behind it (D-17.3's
+// "readable while looking at the table it changed"). Both are DOM-layer claims a component test
+// cannot see.
+// =====================================================================
+
+test('the generate modal opens as a dialog over the page and closes cleanly, leaving the summary readable above the table it changed', function () {
+    $actor = variantBuilderJourneyActor();
+    $this->actingAs($actor);
+
+    $product = Product::factory()->create(['sku' => '0001']);
+    [$talla] = variantBuilderBrowserAttribute('Talla', 'M');
+
+    retry(3, function () use ($product, $talla): void {
+        $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
+
+        // Nothing generated yet -- no summary panel on the page at all.
+        $page->assertNotPresent('@generate-summary');
+
+        $page->click('@open-generate-combinations')->assertNoJavaScriptErrors();
+
+        // The picker is a genuine open <dialog>, not merely a hidden block in the DOM.
+        $page->assertPresent('dialog[open] [data-test="generate-type-'.$talla->id.'"]');
+
+        $page->click('@generate-type-'.$talla->id)->assertNoJavaScriptErrors();
+        $page->click('@confirm-generate-combinations')->assertNoJavaScriptErrors()->wait(1);
+
+        // The dialog is gone -- not merely covered -- and the summary is readable above the
+        // table it just changed, with the created variant visible in that same table.
+        $page->assertNotPresent('dialog[open]');
+        $page->assertPresent('@generate-summary');
+        $page->assertSee(__('products.variants.generate.result_title'));
+
+        $variant = DB::table('product_variants')->where('product_id', $product->id)->firstOrFail();
+        $page->assertPresent('@variant-row-'.$variant->id);
+    });
+});
+
+// =====================================================================
+// B10 -- the live combination count updates as checkboxes are toggled, driven by genuine clicks.
+// Same failure mode as 0031's own B2/B3: a missing `.live` on the checkbox group is invisible to
+// Livewire::test()->set() (0031's FP-V4) and would leave the count frozen in a real browser while
+// every Feature test stays green.
+// =====================================================================
+
+test('the live combination count updates as checkboxes are toggled by genuine clicks', function () {
+    $actor = variantBuilderJourneyActor();
+    $this->actingAs($actor);
+
+    $product = Product::factory()->create(['sku' => '0001']);
+    [$talla] = variantBuilderBrowserAttribute('Talla', '38', 0);
+    ProductAttributeValue::factory()->create([
+        'product_attribute_type_id' => $talla->id,
+        'value' => '39',
+        'position' => 1,
+    ]);
+    ProductAttributeValue::factory()->create([
+        'product_attribute_type_id' => $talla->id,
+        'value' => '40',
+        'position' => 2,
+    ]);
+    [$color] = variantBuilderBrowserAttribute('Color', 'Black', 1);
+    ProductAttributeValue::factory()->create([
+        'product_attribute_type_id' => $color->id,
+        'value' => 'White',
+        'position' => 1,
+    ]);
+
+    retry(3, function () use ($product, $talla, $color): void {
+        $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
+
+        $page->click('@open-generate-combinations')->assertNoJavaScriptErrors();
+
+        // Nothing selected yet.
+        $page->assertSee(trans_choice('products.variants.generate.count', 0, ['count' => 0]));
+
+        // Talla alone: 3 values -> 3 combinations.
+        $page->click('@generate-type-'.$talla->id)->assertNoJavaScriptErrors()->wait(1);
+        $page->assertSee(trans_choice('products.variants.generate.count', 3, ['count' => 3]));
+
+        // Talla (3) x Color (2) = 6, never 4 or 5 -- the same squared-fixture trap the Feature
+        // test for this multiplication already guards against, here proven through a real click.
+        $page->click('@generate-type-'.$color->id)->assertNoJavaScriptErrors()->wait(1);
+        $page->assertSee(trans_choice('products.variants.generate.count', 6, ['count' => 6]));
+
+        // Unchecking one drops the count back down -- proves the binding is genuinely live in
+        // both directions, not merely appending on click.
+        $page->click('@generate-type-'.$color->id)->assertNoJavaScriptErrors()->wait(1);
+        $page->assertSee(trans_choice('products.variants.generate.count', 3, ['count' => 3]));
     });
 });

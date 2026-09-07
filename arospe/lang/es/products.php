@@ -67,6 +67,22 @@ return [
             'empty_type' => 'El tipo de atributo ":type" no tiene valores, por lo que no se puede usar para generar combinaciones.',
             'too_many' => 'Generar estos tipos crearía :attempted combinaciones, por encima del límite de :limit. Selecciona menos tipos o valores.',
             'summary' => ':count variante creada.|:count variantes creadas.',
+
+            // Historia 0031a -- clave por clave idéntico a lang/en/products.php.
+            'trigger' => 'Generar combinaciones',
+            'modal_title' => 'Generar combinaciones',
+            'intro' => 'Elige los tipos de atributo a combinar. Cada valor de cada tipo seleccionado se combina con cada valor de los demás.',
+            'types_legend' => 'Tipos de atributo',
+            'types_help' => 'Se ofrece cada tipo del catálogo, lo use o no todavía este producto.',
+            'count' => ':count combinación.|:count combinaciones.',
+            'over_limit' => 'Esta selección crearía :count combinaciones, por encima del límite de :limit. Selecciona menos tipos.',
+            'confirm' => 'Generar',
+            'cancel' => 'Cancelar',
+            'result_title' => 'Resultado de la generación',
+            'result_skipped' => ':count combinación ya existía.|:count combinaciones ya existían.',
+            'result_refused' => ':count combinación no se pudo crear.|:count combinaciones no se pudieron crear.',
+            'result_dismiss' => 'Descartar',
+            'no_types_selected' => 'Selecciona al menos un tipo de atributo.',
         ],
 
         // Historia 0031 -- el compositor de variantes anidado en el editor de producto. Clave por
