@@ -77,6 +77,27 @@ export class Insumo {
     });
   }
 
+  /**
+   * US-036: reconstruye el agregado editando `name` / `unitCost` / `barcode` y
+   * **preservando** `id`, `unitOfMeasure` y las líneas de stock. En el patch,
+   * `undefined` conserva el valor actual; `null` (solo `unitCost` / `barcode`)
+   * lo limpia. Mismo criterio de copia exhaustiva que `withStockLines`.
+   */
+  public withDetails(patch: {
+    name?: string;
+    unitCost?: DecimalQuantity | null;
+    barcode?: string | null;
+  }): Insumo {
+    return new Insumo({
+      id: this._id,
+      name: patch.name ?? this._name,
+      unitOfMeasure: this._unitOfMeasure,
+      unitCost: patch.unitCost === undefined ? this._unitCost : (patch.unitCost ?? undefined),
+      barcode: patch.barcode === undefined ? this._barcode : (patch.barcode ?? undefined),
+      stockLines: this.stockLines,
+    });
+  }
+
   public get id(): string {
     return this._id;
   }

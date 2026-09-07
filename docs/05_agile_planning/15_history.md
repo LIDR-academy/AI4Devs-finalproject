@@ -546,3 +546,18 @@ inputs:
   - Mutation scoped: `resolveProviderApiKey` 100%, `GetAiConfigUseCase` 100%, `AiConfiguration` 87.5%, `TestAiConnectionUseCase` 86.6%, `UpdateAiConfigUseCase` 76.2% — todos ≥ 70.
   - Auditoría adversarial [`AUDIT-DEV-013`](../audits/AUDIT-DEV-013-TK-129-quality-report.md) → **APROBADO** (ambos tickets).
   - **Pendiente de AUDIT-DEV-012:** US-036/TK-130 (editar insumo — C-1, urgente por TK-128), US-037/TK-131 (editar/baja receta — C-2). Sin push.
+
+### 2026-09-07 (cont.) - US-036 + TK-130: edición de insumo (PUT /stock/insumos/:id) — AUDIT-DEV-012 C-1
+- **Hito:** cascada completa por la brecha de CRUD de mayor impacto de `AUDIT-DEV-012` (C-1): hoy `unitCost` solo se fija al crear el insumo, y `TK-128` acaba de hacer que ese costo sea visible ("valor no disponible" perpetuo en el rescate). Decisión Guard 28: editar `name`/`unitCost`/`barcode`; `unitOfMeasure` inmutable (cambiarla con stock reinterpreta las cantidades físicas).
+- **Acciones (TK-130 backend, `related_story: US-036`):**
+  - ✅ `US-036` (catalog/, 6 escenarios BDD), `openapi.yaml` (`PUT /stock/insumos/{id}` + `UpdateInsumoRequest`, aditivo — `oasdiff` sin breaking).
+  - ✅ `Insumo.withDetails(patch)` — inmutable, copia exhaustiva (patrón `withStockLines`), preserva `id`/`unitOfMeasure`/`stockLines`. `null` limpia, `undefined` conserva.
+  - ✅ `UpdateInsumoUseCase` — check-then-write de unicidad de `name` y `barcode` (excluyendo el propio id) + `P2002` como red de seguridad. `execute` dividida en `assertNameFree`/`assertBarcodeFree` (complejidad).
+  - ✅ `updateInsumoSchema` con `.strict()` → `unitOfMeasure` u otra clave desconocida responde `400` (US-036 Esc. 2). Regex de `unitCost` alineado a `Decimal(12,2)` (`backend_rules.md §3`).
+  - ✅ `PrismaStockRepository.save` ya hacía el `upsert` con `update: { name, unitCost, barcode }` — el repo no necesitó cambios.
+  - **Barrel** `application/stock/use-cases/index.ts` — el 7º import de use case empujó el bloque de imports `controller ⇄ routes` sobre el umbral de jscpd; ambos archivos importan ahora de un solo `from`.
+- **Estado:**
+  - Backend 529→**545** tests (+16), frontend 231, build/lint verdes. Gates de duplicación (19→19)/complejidad/código-muerto verdes. `check_contract_drift` sin breaking.
+  - Mutation scoped: `UpdateInsumoUseCase` **77.59%** ≥ 70; `Insumo.withDetails` cubierto por 2 tests dedicados.
+  - Auditoría adversarial [`AUDIT-DEV-014`](../audits/AUDIT-DEV-014-TK-130-quality-report.md) → **APROBADO**.
+  - **Pendiente:** `TK-130-FE` (modal de edición en el catálogo de bodega); `US-037`/`TK-131` (editar/baja de recetas — C-2). Sin push.

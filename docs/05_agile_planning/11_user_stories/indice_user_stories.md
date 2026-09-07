@@ -44,6 +44,8 @@ Este documento contiene las especificaciones detalladas de las historias de usua
 ### 📖 Catálogo (`/catalog/`)
 *   **[US-012: Gestión de Catálogo Maestro (Alta de Insumos y Recetas)](catalog/US-012.md)**
     *   *Descripción:* Permite a un Administrador dar de alta insumos y recetas en el catálogo maestro vía API, sin depender del script de seed. ✅ Backend (`TK-057`) y Frontend (`TK-057-FE`) implementados.
+*   **[US-036: Edición de un Insumo del Catálogo Maestro](catalog/US-036_edicion_insumo.md)**
+    *   *Descripción:* `PUT /api/v1/stock/insumos/:id` — un ADMIN corrige `name` / `unitCost` / `barcode` de un insumo existente (`unitOfMeasure` inmutable). Cierra la deuda de `US-012` §[N] y `AUDIT-DEV-012` C-1 (un insumo sin `unitCost` mostraba "valor no disponible" para siempre en el rescate tras `TK-128`). ✅ Backend (`TK-130`) implementado.
 
 ### 🍳 Cocina (`/kitchen/`)
 *   **[US-003: Consulta Táctil de Remanentes Activos en Orden FEFO](kitchen/US-003.md)**

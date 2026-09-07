@@ -456,6 +456,69 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/stock/insumos/{id}:
+    put:
+      summary: Edit an existing insumo's name / unitCost / barcode (ADMIN only, US-036/TK-130)
+      description: >
+        Partial update — only the fields present in the body change; absent fields are kept,
+        an explicit `null` clears `unitCost` / `barcode`. `unitOfMeasure` is immutable via
+        this route (any unknown key → 400). Changing `unitCost` affects only future
+        valorizations; historical StockMovement snapshots are unchanged.
+      operationId: updateInsumo
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInsumoRequest'
+      responses:
+        '200':
+          description: Insumo updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInsumoResponse'
+        '400':
+          description: Empty name, malformed unitCost/barcode, or an unknown / non-editable field
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Insumo not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Another insumo already uses that name or barcode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/locations:
     get:
       summary: List physical storage locations (US-016)
@@ -1952,6 +2015,29 @@ components:
           type: string
           nullable: true
           description: Nullable — absent when the insumo has no barcode captured yet (US-032/TK-119).
+          example: "7791234567890"
+
+    UpdateInsumoRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+          example: "Harina 000"
+        unitCost:
+          type: string
+          nullable: true
+          pattern: '^\d{1,10}(\.\d{1,2})?$'
+          description: Monto en la moneda del sistema, 2 decimales. `null` clears it.
+          example: "820.00"
+        barcode:
+          type: string
+          nullable: true
+          maxLength: 64
+          description: UPC/EAN. `null` clears it.
           example: "7791234567890"
 
     RestockInsumoRequest:

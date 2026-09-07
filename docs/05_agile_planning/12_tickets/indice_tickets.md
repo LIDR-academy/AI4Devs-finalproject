@@ -135,6 +135,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-128-FE** | `recipes` | **Bajo** | **Baja** | 2 SP | Depende de `TK-128`. Muestra `preventedWasteCost` como valor monetario (`{símbolo}{monto} de merma evitada`) o "Valor de merma no disponible" cuando es `null`, con `currencySymbol` de `SettingsService`. `RescueRecipesModal` refactorizado (`useCurrencySymbol`/`useCatalogSaver`/`ModeSelector`/`SourceBar`) para bajar de los límites de longitud. ✅ Done. | 🟢 P2 - Media |
 | **TK-129** | `settings` | **Medio** | **Baja** | 5 SP | Sin dependencias. `AUDIT-DEV-012` L-3/L-4/L-5: elimina los toggles `replenishmentOn`/`anomalyAuditOn` (inertes, ningún use case los leía — migración `DROP COLUMN` ×2); `Update`/`Test` use cases dejan de importar infra (puerto `ICredentialCipher`); env var unificada (`resolveProviderApiKey`); API key de la sonda de Gemini al header `x-goog-api-key`. Contrato `openapi.yaml` `7.0.0` (breaking deliberado). ✅ Done — auditoría `AUDIT-DEV-013` APROBADO. | 🟡 P1 - Alta |
 | **TK-129-FE** | `settings` | **Bajo** | **Baja** | 2 SP | Depende de `TK-129`. Quita el toggle de reabastecimiento inerte de `AiSettingsSection`; `useAiSettings` refactorizado en sub-hooks y el componente en sub-componentes para respetar los límites de longitud. ✅ Done. | 🟢 P2 - Media |
+| **TK-130** | `stock` | **Alto** | **Media** | 5 SP | Depende de `TK-096`, `TK-119`. `US-036` / `AUDIT-DEV-012` C-1: `PUT /api/v1/stock/insumos/:id` — un ADMIN corrige `name` / `unitCost` / `barcode` de un insumo (`unitOfMeasure` inmutable vía `.strict()` → 400). `Insumo.withDetails`; check-then-write de unicidad + `P2002`. Contrato aditivo. ✅ Done — auditoría `AUDIT-DEV-014` APROBADO. | 🔴 P0 - Crítica |
 
 ---
 
@@ -186,6 +187,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 | **TK-122** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Generación de Recetas de Rescate con IA y Fallback Heurístico (Backend) | `recipes` | 5 | Should Have | [recipes/backend/TK-122.md](recipes/backend/TK-122.md) |
 | **TK-123** | [US-034](../11_user_stories/settings/US-034_configuracion_agente_ia.md) | Modelo de Persistencia y Endpoints de Configuración de IA (Backend) | `settings` | 3 | Should Have | [settings/backend/TK-123.md](settings/backend/TK-123.md) |
 | **TK-129** | N/A (Técnico) | Saneamiento del Módulo de Configuración de IA (AUDIT-DEV-012 L-3/L-4/L-5) | `settings` | 5 | Should Have | [settings/backend/TK-129.md](settings/backend/TK-129.md) |
+| **TK-130** | [US-036](../11_user_stories/catalog/US-036_edicion_insumo.md) | Endpoint de Edición de Insumo (PUT /stock/insumos/:id) | `stock` | 5 | Must Have | [stock/backend/TK-130.md](stock/backend/TK-130.md) |
 | **TK-124** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Modo Dual de Rescate (Catálogo Propio Zero-Leakage & Creativo IA) (Backend) | `recipes` | 3 | Must Have | [recipes/backend/TK-124.md](recipes/backend/TK-124.md) |
 | **TK-125** | N/A (Técnico) | Aislamiento Hexagonal y De-duplicación del Caso de Uso de Recetas de Rescate (AUDIT-DEV-007 F-2/F-6/F-13) | `recipes` | 5 | Should Have | [recipes/backend/TK-125.md](recipes/backend/TK-125.md) |
 | **TK-126** | N/A (Técnico) | Frontera de Confianza y Endurecimiento de los Adapters de IA de Recetas (AUDIT-DEV-007 F-3/F-4/F-11/F-14) | `recipes` | 5 | Should Have | [recipes/backend/TK-126.md](recipes/backend/TK-126.md) |
@@ -383,6 +385,7 @@ Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el 
 *   **[TK-056: Listado de Operarios](auth/backend/TK-056.md)** (Backend) — cierra la deuda de `TK-049`.
 
 ### 📦 Bodega y Stock (`stock/`) — Post-MVP
+*   **[TK-130: Endpoint de Edición de Insumo (PUT /stock/insumos/:id)](stock/backend/TK-130.md)** (Backend) — ✅ Done. `US-036` / `AUDIT-DEV-012` C-1: un ADMIN corrige `name`/`unitCost`/`barcode` de un insumo (`unitOfMeasure` inmutable). Cierra deuda de `US-012` §[N]; desbloquea la valorización de `TK-128`. Auditoría [AUDIT-DEV-014](../../audits/AUDIT-DEV-014-TK-130-quality-report.md) APROBADO.
 *   **[TK-050: Trazabilidad de Movimientos de Stock](stock/backend/TK-050.md)** (Backend)
 *   **[TK-050-FE: Panel de Auditoría de Movimientos](stock/frontend/TK-050-FE.md)** (Frontend)
 *   **[TK-060: Reabastecimiento de Bodega](stock/backend/TK-060.md)** (Backend) — sin esto, un insumo agotado en bodega quedaba inutilizable para siempre.

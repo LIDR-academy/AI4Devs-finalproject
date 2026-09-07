@@ -102,3 +102,36 @@ describe('Insumo Domain Entity — Stock Multi-Sub-Sector (US-025)', () => {
     expect(insumo.warehouseStock.toString()).toBe('23.000');
   });
 });
+
+describe('TK-130: Insumo.withDetails (US-036)', () => {
+  const base = () =>
+    new Insumo({
+      id: 'ins-1',
+      name: 'Harina 00',
+      unitOfMeasure: 'KG',
+      unitCost: new DecimalQuantity('800.00'),
+      barcode: '779000',
+      stockLines: [{ storageLocationId: 'loc-a', quantity: new DecimalQuantity('9.000') }],
+    });
+
+  it('edita solo los campos del patch y preserva id, unitOfMeasure y stockLines', () => {
+    const next = base().withDetails({ name: 'Harina 000', unitCost: new DecimalQuantity('820.00') });
+    expect(next.id).toBe('ins-1');
+    expect(next.name).toBe('Harina 000');
+    expect(next.unitOfMeasure).toBe('KG');
+    expect(next.unitCost?.toDecimal().toFixed(2)).toBe('820.00');
+    expect(next.barcode).toBe('779000');
+    expect(next.stockLines[0]).toMatchObject({ storageLocationId: 'loc-a' });
+    expect(next.warehouseStock.toString()).toBe('9.000');
+  });
+
+  it('undefined conserva el valor actual; null limpia unitCost y barcode', () => {
+    const kept = base().withDetails({});
+    expect(kept.unitCost?.toDecimal().toFixed(2)).toBe('800.00');
+    expect(kept.barcode).toBe('779000');
+
+    const cleared = base().withDetails({ unitCost: null, barcode: null });
+    expect(cleared.unitCost).toBeUndefined();
+    expect(cleared.barcode).toBeUndefined();
+  });
+});

@@ -1,11 +1,14 @@
 import { Router } from 'express';
 import { StockController } from '../controllers/stock.controller.js';
-import { RecordExtractionUseCase } from '../../../../application/stock/use-cases/RecordExtractionUseCase.js';
-import { GetStockMovementHistoryUseCase } from '../../../../application/stock/use-cases/GetStockMovementHistoryUseCase.js';
-import { CreateInsumoUseCase } from '../../../../application/stock/use-cases/CreateInsumoUseCase.js';
-import { ListInsumosUseCase } from '../../../../application/stock/use-cases/ListInsumosUseCase.js';
-import { RestockInsumoUseCase } from '../../../../application/stock/use-cases/RestockInsumoUseCase.js';
-import { FindInsumoByBarcodeUseCase } from '../../../../application/stock/use-cases/FindInsumoByBarcodeUseCase.js';
+import {
+  RecordExtractionUseCase,
+  GetStockMovementHistoryUseCase,
+  CreateInsumoUseCase,
+  ListInsumosUseCase,
+  RestockInsumoUseCase,
+  FindInsumoByBarcodeUseCase,
+  UpdateInsumoUseCase,
+} from '../../../../application/stock/use-cases/index.js';
 import { IInsumoRepository } from '../../../../domain/stock/repositories/IInsumoRepository.js';
 import { IRemanenteRepository } from '../../../../domain/stock/repositories/IRemanenteRepository.js';
 import { IStockUnitOfWork } from '../../../../domain/stock/repositories/IStockUnitOfWork.js';
@@ -66,13 +69,15 @@ export function createStockRouter(
   const listInsumosUseCase = new ListInsumosUseCase(stockRepository, locationRepository);
   const restockInsumoUseCase = new RestockInsumoUseCase(stockRepository, stockRepository, cryptoIdGenerator, locationRepository);
   const findInsumoByBarcodeUseCase = new FindInsumoByBarcodeUseCase(stockRepository, locationRepository);
+  const updateInsumoUseCase = new UpdateInsumoUseCase(stockRepository, locationRepository);
   const controller = new StockController(
     useCase,
     getMovementHistoryUseCase,
     createInsumoUseCase,
     listInsumosUseCase,
     restockInsumoUseCase,
-    findInsumoByBarcodeUseCase
+    findInsumoByBarcodeUseCase,
+    updateInsumoUseCase
   );
 
   // Extracción de bodega (US-014/TK-072): la ejecutan operarios de cocina y admins.
@@ -86,6 +91,8 @@ export function createStockRouter(
   router.get('/insumos/by-barcode/:barcode', controller.findInsumoByBarcode);
   // Reabastecimiento de bodega (US-013/TK-060): incrementa warehouseStock, solo ADMIN.
   router.patch('/insumos/:id/restock', ...role('ADMIN'), controller.restockInsumo);
+  // Edición de insumo (US-036/TK-130): name / unitCost / barcode — solo ADMIN.
+  router.put('/insumos/:id', ...role('ADMIN'), controller.updateInsumo);
 
   return router;
 }

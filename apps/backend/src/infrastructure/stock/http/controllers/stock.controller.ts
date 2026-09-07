@@ -1,11 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { RecordExtractionUseCase } from '../../../../application/stock/use-cases/RecordExtractionUseCase.js';
-import { GetStockMovementHistoryUseCase } from '../../../../application/stock/use-cases/GetStockMovementHistoryUseCase.js';
-import { CreateInsumoUseCase } from '../../../../application/stock/use-cases/CreateInsumoUseCase.js';
-import { ListInsumosUseCase } from '../../../../application/stock/use-cases/ListInsumosUseCase.js';
-import { RestockInsumoUseCase } from '../../../../application/stock/use-cases/RestockInsumoUseCase.js';
-import { FindInsumoByBarcodeUseCase } from '../../../../application/stock/use-cases/FindInsumoByBarcodeUseCase.js';
+import {
+  RecordExtractionUseCase,
+  GetStockMovementHistoryUseCase,
+  CreateInsumoUseCase,
+  ListInsumosUseCase,
+  RestockInsumoUseCase,
+  FindInsumoByBarcodeUseCase,
+  UpdateInsumoUseCase,
+} from '../../../../application/stock/use-cases/index.js';
 import { respondValidationError, parseDateRangeQuery } from '../../../http/utils/responseUtils.js';
 
 const recordExtractionSchema = z
@@ -85,6 +88,27 @@ const restockInsumoSchema = z.object({
     .min(1, 'El sub-sector de bodega es obligatorio.'),
 });
 
+// US-036: edición parcial de un insumo. `.strict()` → una clave desconocida
+// (`unitOfMeasure`, que NO es editable) responde 400 en vez de ignorarse.
+// `null` limpia el campo opcional; ausente lo conserva.
+const updateInsumoSchema = z
+  .object({
+    name: z.string().min(1, 'El nombre del insumo no puede estar vacío.').max(120, 'El nombre no puede superar 120 caracteres.').optional(),
+    unitCost: z
+      .string()
+      .regex(/^\d{1,10}(\.\d{1,2})?$/, 'El costo unitario debe ser un numero decimal valido de hasta 2 decimales (ej. "1800.00").')
+      .nullable()
+      .optional(),
+    barcode: z
+      .string()
+      .trim()
+      .min(1, 'El código de barras no puede ser una cadena vacía.')
+      .max(64, 'El código de barras no puede superar 64 caracteres.')
+      .nullable()
+      .optional(),
+  })
+  .strict('Ese campo no se puede editar en un insumo existente.');
+
 const stockMovementHistoryQuerySchema = z.object({
   insumoId: z.string().optional(),
   startDate: z.string().optional(),
@@ -100,7 +124,8 @@ export class StockController {
     private readonly createInsumoUseCase?: CreateInsumoUseCase,
     private readonly listInsumosUseCase?: ListInsumosUseCase,
     private readonly restockInsumoUseCase?: RestockInsumoUseCase,
-    private readonly findInsumoByBarcodeUseCase?: FindInsumoByBarcodeUseCase
+    private readonly findInsumoByBarcodeUseCase?: FindInsumoByBarcodeUseCase,
+    private readonly updateInsumoUseCase?: UpdateInsumoUseCase
   ) {}
 
   public recordExtraction = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -157,6 +182,25 @@ export class StockController {
 
       const result = await this.createInsumoUseCase.execute(parsedBody);
       res.status(201).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
+        return;
+      }
+      next(error);
+    }
+  };
+
+  public updateInsumo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const parsedBody = updateInsumoSchema.parse(req.body);
+
+      if (!this.updateInsumoUseCase) {
+        throw new Error('UpdateInsumoUseCase no configurado.');
+      }
+
+      const result = await this.updateInsumoUseCase.execute({ id: req.params.id, ...parsedBody });
+      res.status(200).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) {
         respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
