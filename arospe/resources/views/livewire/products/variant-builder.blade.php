@@ -174,7 +174,12 @@
                     </div>
                 @endif
 
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {{-- items-start: Price's optional help text (create mode only) makes this column
+                taller than Stock's. Without it, CSS Grid's default align-items:stretch expands
+                Stock's <flux:input> to match that height, and Flux's own <ui-field> wrapper then
+                vertically CENTERS its label+input inside that taller box -- pushing Stock's input
+                visibly lower than Price's. items-start sizes each column to its own content instead. --}}
+                <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
                     <div>
                         <flux:input
                             wire:model="price"
