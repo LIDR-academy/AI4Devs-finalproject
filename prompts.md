@@ -261,6 +261,20 @@ crea un subagente DevOps engineer que usará el modelo Sonnet y que su misión e
 /prompt-improved Usa al agente devops-engineer para crear pipelines en github para que revise que los tests pasan y que cumple con las reglas lint, tanto para los push como los pull request
 ```
 
+**Prompt 4:**
+
+```
+Usa al agente docs-keeper para que agrege esto a la documentación para cuando quiera revisar los pipelines en github:
+  CI / GitHub Actions
+
+  Cuando te pida revisar el CI:
+  1. gh run list --branch $(git branch --show-current) --limit 5
+  2. Si hay un run fallido, gh run view <id> --log-failed para ver solo el error.
+  3. Reproduce el fallo en local antes de tocar código (ej. php artisan test --filter= <archivo>).
+  4. Arregla la causa real, no el test, salvo que el test esté mal.
+  5. No hagas push ni relances workflows sin pedírmelo.
+```
+
 ### **2.5. Seguridad**
 
 **Prompt 1:**

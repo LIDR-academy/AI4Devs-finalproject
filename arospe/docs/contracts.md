@@ -101,6 +101,39 @@ This does not lower the bar for what gets read when it matters — a genuine arc
 
 This directly reduces the largest token cost the [Token-Efficient Reading and Dispatch Rule](#token-efficient-reading-and-dispatch-rule) above already targets: a bloated doc is exactly the file a later agent is told to open at a precise anchor, and an accumulating footer or a re-narrated section makes that anchor's surrounding content larger and staler than it needs to be.
 
+### CI / GitHub Actions Review Protocol
+
+When asked to review this repository's CI, diagnose a failing pipeline, or explain "why did the build break," treat this as an investigation with a fixed order rather than an open-ended "go look at GitHub Actions" task. This project's actual CI configuration, coverage enforcement state, and known environment findings are documented in [testing/ci/pipeline-integration.md](testing/ci/pipeline-integration.md) and [testing/ci/commands.md](testing/ci/commands.md); this rule governs your *behavior* while reviewing CI, not the pipeline's own configuration — don't restate those pages' content here, follow them.
+
+Follow this protocol:
+
+1. **List the recent runs for the current branch first**, not the whole repository's run history:
+
+   ```bash
+   gh run list --branch $(git branch --show-current) --limit 5
+   ```
+
+2. **If a run failed, view only the failed step's log**, not the full log of every job and step — the failed-only view is what you need to diagnose, and the full log is mostly noise:
+
+   ```bash
+   gh run view <run-id> --log-failed
+   ```
+
+3. **Reproduce the failure locally before touching any code.** A CI failure is a claim about this repository's state, not yet a diagnosis — confirm it locally first, using this project's own commands rather than a generic equivalent (`npm test` means nothing here; this is a Pest/Laravel project):
+
+   ```bash
+   php artisan test --compact --filter=<TestName>   # a failing test — narrow first, then run the full suite unscoped per the Full Test Suite Gate Rule above
+   vendor/bin/pint --format agent                    # a formatting/style failure — unscoped, not --dirty, to match what CI actually checks
+   composer types:check                              # a Larastan/static-analysis failure
+   ```
+
+   See [testing/ci/commands.md](testing/ci/commands.md) for the full local command reference (single test, single file, coverage, parallel run) and [conventions/base-standards.md](conventions/base-standards.md#quality-gates) for which of the three quality gates a given failure belongs to.
+
+4. **Fix the real cause, not the test — unless the test itself is what's wrong.** Apply the same distinction [workflow.md](workflow.md) Phase 3 already draws between a "Test issue" and a "Code issue": a test asserting a genuinely wrong expectation is fixed as a test change; application code that violates a real, correctly-asserted contract is fixed as an application change. Don't default to loosening, skipping, or deleting an inconvenient assertion just because that's the faster way to turn CI green — this is the same bias the Full Test Suite Gate Rule above already states as "a failing test blocks closure regardless of whose it is."
+5. **Never push or re-trigger a workflow run without being asked first.** `git push`, `gh run rerun <run-id>`, and `gh workflow run <workflow>` are all treated the way the Commit Approval Rule above treats `git commit`: diagnosing and preparing a fix does not carry implicit authorization to make it visible on the remote or to consume CI minutes re-running it. Stop once the fix is staged and proposed, and wait for explicit approval before pushing or re-triggering anything — a direct, explicit-seeming instruction to "fix the pipeline" is authorization to diagnose and prepare the fix, not to push it.
+
+This protocol is diagnostic-first by design: steps 1–3 exist to establish, cheaply and locally, exactly what is broken before any code changes are made — the same "verify before acting" instinct behind the Destructive Database Command Rule and the Full Test Suite Gate Rule above, applied here to a CI run instead of to the database or to task closure.
+
 ### Commit Granularity Rule
 
 When preparing commits under the Commit Approval Rule above, split them **by layer** — production code, tests, and documentation each get their own commit — instead of bundling a change into one. This is not a new practice being introduced; it is what this project's own `git log` already shows for every story landed so far, made explicit so it keeps happening deliberately rather than by habit.
@@ -115,4 +148,4 @@ Follow this protocol:
 
 This composes with, and does not relax, the Commit Approval Rule: splitting by layer changes how many commits get proposed, not whether each one is staged, drafted, and explicitly approved by a human before `git commit` runs. The point is traceability — a reviewer (human or a later `code-reviewer`/`docs-keeper` pass) can inspect, discuss, or revert what changed in the app, in its test coverage, and in its documentation as three separate, independently reviewable units, instead of one commit conflating all three.
 
-_Last updated: 2026-09-05 — Added the Commit Granularity Rule (split commits by layer: code/tests/docs, per this repo's own established `git log` convention) and, earlier the same day, the Doc Growth Management Rule after `api/routes.md`, `database/schema.md`, `conventions/base-standards.md` and `database/migrations.md` were all found trending toward the same 150k-char hard limit `docs/README.md` and `docs/errors-log.md` had already hit once each — codifying the footer-collapse and no-inline-changelog fix applied to all six files as a standing checklist item rather than a reactive one-off. See the mirrored checklist item in `.claude/skills/docs-maintainer/SKILL.md`'s Definition of Done.
+_Last updated: 2026-09-07 — Added the CI / GitHub Actions Review Protocol: a new agent-behavior contract for CI triage (list recent runs for the current branch, view only the failed step's log, reproduce locally before touching code using this project's real Pest/Pint/Larastan commands, fix the real cause rather than the test unless the test is wrong, never push or re-trigger a workflow without being asked first). No prior story or task triggered this — this repository had no documented procedure at all for how an agent should behave when asked to review CI, unlike its already-documented pipeline *configuration* ([testing/ci/pipeline-integration.md](testing/ci/pipeline-integration.md)) and local test *commands* ([testing/ci/commands.md](testing/ci/commands.md)), neither of which governs agent behavior. Also carries the 2026-09-05 addition of the Commit Granularity Rule (split commits by layer: code/tests/docs, per this repo's own established `git log` convention) and the Doc Growth Management Rule (no accumulating footer changelogs — codifying the fix applied that day to six files found trending toward this project's 150k-char hard limit; see the mirrored checklist item in `.claude/skills/docs-maintainer/SKILL.md`'s Definition of Done).
