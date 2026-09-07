@@ -1376,6 +1376,12 @@ project. Read it at the start of every session.
   hora**. Si se toca cualquiera de las dos funciones, el barrido es lo que lo detecta.
   **Verificado en verde:** `tsc`, `eslint`, `vitest run` (474), `next build` y
   `npm run test:e2e` (56).
+  **Archivado el 2026-09-07** como `2026-09-07-sets-restringidos-a-la-vista`; los
+  deltas ya están en `openspec/specs/`: `catalog-inventory` reconoce por fin que la
+  restricción **es parte de la proyección pública** —el requisito decía lo contrario
+  desde D13—, y `subscriptions` exige que el rechazo diga **desde cuándo** y fija que
+  la fecha se cuenta sobre la suscripción **vigente** (pausar no la desplaza; cancelar
+  y volver a contratar la reinicia). `openspec validate --all --strict` en verde (6).
 
 - **Marcar todos los avisos como leídos (2026-09-07):** `POST /api/notifications/read`
   y botón en `/portal/avisos`, que solo aparece si hay algo que marcar y **dice
