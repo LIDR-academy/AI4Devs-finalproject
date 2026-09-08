@@ -15,3 +15,4 @@ require __DIR__.'/sales-regions.php';
 require __DIR__.'/product-categories.php';
 require __DIR__.'/product-attribute-types.php';
 require __DIR__.'/products.php';
+require __DIR__.'/shipping.php';

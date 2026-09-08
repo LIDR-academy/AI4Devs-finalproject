@@ -44,6 +44,16 @@ return [
             'expanded_when' => null,
             'class' => null,
         ],
+        // Story 0034 -- own top-level group, matching 'taxes' shape: one entry today
+        // (shipping.zones.index), non-expandable. Story 0035 (shipping carriers) is
+        // expected to add a second entry here once its own screen ships.
+        'shipping' => [
+            'heading' => 'navigation.groups.shipping',
+            'icon' => 'truck',
+            'expandable' => false,
+            'expanded_when' => null,
+            'class' => null,
+        ],
     ],
     'items' => [
         'dashboard' => [
@@ -108,6 +118,16 @@ return [
             'route' => 'product-attribute-types.index',
             'current_when' => 'product-attribute-types.*',
             'permissions' => ['products.view'],
+        ],
+        // Story 0034 -- 'permissions' is EXACTLY the ability routes/shipping.php's own
+        // `can:` middleware enforces -- never a broader set (see this file's header note).
+        'shipping_zones' => [
+            'group' => 'shipping',
+            'label' => 'navigation.items.shipping_zones',
+            'icon' => 'map',
+            'route' => 'shipping.zones.index',
+            'current_when' => 'shipping.zones.*',
+            'permissions' => ['shipping.view'],
         ],
     ],
 ];

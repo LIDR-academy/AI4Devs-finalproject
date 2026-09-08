@@ -11,15 +11,20 @@ namespace App\Enums;
  * carries no invariant guard enforcing this shape at write time -- the
  * seeder is the sole writer, and it is the shape it always produces.
  *
- * Deliberately no `label()` here, unlike `UserStatus`: this story ships no
- * screen and no rendering site at all, and per naming.md's rule a `label()`
- * is added when a second consumer appears -- here there is not yet a first
- * one. Add it (reading from a new lang/<locale>/geography.php) when story
- * 0033/0034's picker actually renders a level.
+ * `label()` added by story 0034 (the shipping zone geography picker, D-4):
+ * this is the first real rendering site, so naming.md's "add label() when a
+ * second consumer appears" deferral (recorded above when this enum shipped
+ * with no label() at all) is discharged here rather than reopened. Reads
+ * from lang/<locale>/geography.php, mirroring UserStatus::label().
  */
 enum GeographyLevel: string
 {
     case Country = 'country';
     case Community = 'community';
     case Municipality = 'municipality';
+
+    public function label(): string
+    {
+        return __('geography.levels.'.$this->value);
+    }
 }

@@ -18,6 +18,7 @@ return [
         'platform' => 'Plataforma',
         'settings' => 'Ajustes',
         'taxes' => 'Impuestos',
+        'shipping' => 'Envíos',
     ],
 
     'items' => [
@@ -28,6 +29,7 @@ return [
         'product_categories' => 'Categorías de productos',
         'products' => 'Productos',
         'product_attribute_types' => 'Tipos de atributos',
+        'shipping_zones' => 'Zonas de envío',
     ],
 
 ];
