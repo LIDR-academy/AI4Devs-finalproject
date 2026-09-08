@@ -67,8 +67,18 @@ It is also, incidentally, **the first Blog-area story to touch `routes/`, `confi
 `lang/` at all** — story [0058](0058-blog-categories-backend.md) fenced all three off explicitly, and
 nothing blog-related exists anywhere in `app/`, `config/`, `routes/` or `lang/` today (verified; the
 sole exception is the `blog` *permission label* leaf in `lang/{en,es}/roles.php`). So this story
-creates the `blog` sidebar group that stories **0062** (blog categories UI) and **0063** (blog
-posts list/editor UI) will later append to. See **D-4**.
+creates the `content` sidebar group and its `blog` cluster that stories **0062** (blog categories UI)
+and **0063** (blog posts list/editor UI) will later append items to. See **D-4**.
+
+> ⚠️ **Correction, 2026-09-08 — sourced from [story 0080](done/0080-sidebar-navigation-grouping-and-nesting.md)'s
+> Phase 5 code review (finding F-2), which resolved a contradiction this file's own R-2/DoD had left
+> for whoever picked this story up next.** 0080 (sidebar navigation grouping and nesting) shipped a
+> `clusters` layer in `config/modules.php`, and its own R-2 states explicitly that this story should
+> target `groups.content` plus a nested `blog` cluster — matching the `products`/`store_settings` shape
+> 0080 established for the Store group — rather than the flat top-level `groups.blog` this file
+> originally planned throughout. Every mention of a flat `blog` sidebar group below (**D-4**, the Files
+> table, the `data-test` hooks table, the Definition of Done) is corrected in place to target
+> `groups.content` + a nested `blog` cluster.
 
 Covers [PRD](../../docs/PRD/PRD.md#epic-4--blog) Epic 4's `Feature: Blog tags (extends the
 prototype)` scenarios *Create a tag on the management screen*, *Rename a tag on the management
@@ -235,8 +245,8 @@ Feature: Blog tag management screen
 | `resources/views/livewire/blog-tags.blade.php` | **New — the *flat* path.** | Per the [`Index`-in-a-subfolder exception](../../docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name), `App\Livewire\BlogTags\Index` drops `.index` and kebab-cases the folder on the way down, exactly as `SalesRegions\Index` → `sales-regions.blade.php`. **Do not create `livewire/blog-tags/index.blade.php`** — and check for one afterwards; task 0017's `artisan make:` scaffold deposited exactly that unused stub, which broke nothing and simply sat there. |
 | `routes/blog-tags.php` | **New.** | One route, its own `auth`+`verified` group — the one-file-per-area convention. Snippet below. |
 | `routes/web.php` | **Modify — one `require` line.** | `require __DIR__.'/blog-tags.php';`, matching the one-line diff every prior area file produced. |
-| `config/modules.php` | **Modify — a `groups.blog` group + an `items.blog_tags` entry.** | The sidebar half of the module gate (**D-4**). Two appended array literals; the reading component is **not** touched. |
-| `lang/en/navigation.php`, `lang/es/navigation.php` | **Modify — one `groups.blog` + one `items.blog_tags` leaf each.** | The registry-mirroring rule ([naming.md](../../docs/conventions/naming.md#translation-keys)). Key-for-key identical. |
+| `config/modules.php` | **Modify — a `groups.content` group, a nested `clusters.blog` cluster, and an `items.blog_tags` entry (`cluster: 'blog'`).** *(Corrected 2026-09-08 per story 0080's Phase 5 review — see D-4; originally a flat `groups.blog` group + `items.blog_tags` entry.)* | The sidebar half of the module gate (**D-4**). Three appended array literals; the reading component is **not** touched. |
+| `lang/en/navigation.php`, `lang/es/navigation.php` | **Modify — one `groups.content` + one `clusters.blog` + one `items.blog_tags` leaf each.** *(Corrected 2026-09-08 — originally `groups.blog` + `items.blog_tags`.)* | The registry-mirroring rule ([naming.md](../../docs/conventions/naming.md#translation-keys)). Key-for-key identical. |
 | `lang/en/blog-tags.php`, `lang/es/blog-tags.php` | **New.** | This screen's own copy (**D-8**). Key-for-key identical. |
 | `tests/Feature/Blog/BlogTagsIndexTest.php` | **New.** | Component + route authorization. Folder decided in **V-3**. |
 | `tests/Feature/Blog/BlogTagsIndexRenderingTest.php` | **New.** | View-level rendering, including the **negative** structural assertions in **R-2**. |
@@ -491,7 +501,7 @@ so a test selects the same control either way:
 | `delete-blog-tag-{id}` | the row's delete action, both branches |
 | `blog-tag-name-input` | the modal's one field |
 | `confirm-delete-blog-tag` | the delete modal's destructive button |
-| `sidebar-group-blog`, `sidebar-link-blog_tags` | rendered by `<x-sidebar-nav />` from the registry keys — nothing to author |
+| `sidebar-group-content`, `sidebar-cluster-blog`, `sidebar-link-blog_tags` | rendered by `<x-sidebar-nav />` from the registry keys — nothing to author. *(Corrected 2026-09-08 per story 0080's Phase 5 review, D-4 — originally `sidebar-group-blog`, `sidebar-link-blog_tags`; `blog` is now a cluster nested inside the `content` group, so its hook carries the `sidebar-cluster-{key}` prefix 0080 introduced, distinct from a top-level group's `sidebar-group-{key}`.)* |
 
 The hook names carry the **full** domain (`blog-tag`, not `tag`) — see **V-2**.
 
@@ -671,11 +681,17 @@ rather than the full matrix.
       can never fail.
 
 **Feature — `tests/Feature/Navigation/SidebarModuleGatingTest.php` (extend)**
-- [ ] A role holding exactly `blog.view` sees both `sidebar-group-blog` and `sidebar-link-blog_tags`.
-- [ ] A role holding the related-but-different `blog.edit` sees **neither** — the entry gates on the
-      exact ability its route does, not on any `blog.*`.
-- [ ] The Blog group vanishes entirely, heading included, for a role without the ability — the
-      filter-before-group property.
+*(Corrected 2026-09-08 per story 0080's Phase 5 review, D-4 — this subsection originally asserted a
+flat `sidebar-group-blog` hook and a "Blog group"; `blog` is a `clusters.blog` entry nested inside a
+new `groups.content`, so the assertions below target the `content` group and the `blog` cluster
+hooks 0080 introduced.)*
+- [ ] A role holding exactly `blog.view` sees `sidebar-group-content`, `sidebar-cluster-blog` and
+      `sidebar-link-blog_tags` — all three.
+- [ ] A role holding the related-but-different `blog.edit` sees **none of the three** — the entry gates
+      on the exact ability its route does, not on any `blog.*`.
+- [ ] The Content group vanishes entirely, heading included, for a role without the ability — the same
+      two-level vanish rule 0080's own Store group exercises (a group with zero visible clusters and
+      zero direct items renders nothing).
 - [ ] **Do not hand-write a registry↔route cross-check.** Task 0018 verified that both generic drift
       guards already in this file pick a new entry up **for free**; 0018's own plan assumed the
       opposite and would have shipped a redundant copy.
@@ -750,8 +766,10 @@ confirm-and-proceed control anywhere on the screen, because there is nothing to 
 the deliberate inverse of the product-categories screen, and it is what PRD Epic 4 asks for.
 
 An administrator without `blog.view` is refused at the route and again inside the component, sees no
-Blog group in the sidebar at all, and every refusal is recorded in the audit trail with
-`target_type: 'blog_tag'`. Nothing on the screen references blog posts, blog categories, or any
+Content group in the sidebar at all — corrected 2026-09-08 per story 0080's Phase 5 review, D-4;
+originally "Blog group", before `blog` became a cluster nested inside a new `content` group — and
+every refusal is recorded in the audit trail with `target_type: 'blog_tag'`. Nothing on the screen
+references blog posts, blog categories, or any
 product taxonomy.
 
 > ⚠️ **Correction, 2026-08-30 — one sentence above narrows.** *"sees every tag listed alphabetically"*
@@ -792,12 +810,15 @@ product taxonomy.
 - [ ] `/blog/tags` is registered as `blog-tags.index`, gated **`can:blog.view`** (never
       `permission:`), in its own `routes/blog-tags.php` inside that file's own `auth`+`verified`
       group, `require`d from `web.php` by a one-line diff.
-- [ ] `config/modules.php` gains a `groups.blog` group and an `items.blog_tags` entry whose
-      `permissions` is **exactly** `['blog.view']` — the same single ability the route's `can:`
-      enforces — with matching leaves in `lang/{en,es}/navigation.php`. The registry key is
-      `blog_tags`, **snake_case**, and is simultaneously the config key, the translation leaf and the
-      rendered `data-test="sidebar-link-blog_tags"` hook. `sidebar-nav.blade.php` and
-      `sidebar.blade.php` are **not** edited.
+- [ ] `config/modules.php` gains a `groups.content` group, a nested `clusters.blog` cluster (`group:
+      'content'`), and an `items.blog_tags` entry (`group: null, cluster: 'blog'`) whose `permissions`
+      is **exactly** `['blog.view']` — the same single ability the route's `can:` enforces — with
+      matching leaves in `lang/{en,es}/navigation.php`. The registry key is `blog_tags`, **snake_case**,
+      and is simultaneously the config key, the translation leaf and the rendered
+      `data-test="sidebar-link-blog_tags"` hook. `sidebar-nav.blade.php` and `sidebar.blade.php` are
+      **not** edited. *(Corrected 2026-09-08 per story 0080's Phase 5 review, D-4 — this criterion
+      originally named a flat `groups.blog` group with no cluster; see the Description-section
+      correction block above for why.)*
 - [ ] The list renders every tag ordered by name, with an empty state when the catalog is empty, and
       icon-only row actions carrying `aria-label` plus `data-test="edit-blog-tag-{id}"` /
       `data-test="delete-blog-tag-{id}"` hooks **present on both the enabled and the disabled
@@ -945,22 +966,37 @@ product taxonomy.
   make 0063's post list either `Blog\Index` (colliding conceptually with the area) or `Blog\Posts`
   (inconsistent with the other two).
 
-- **D-4 — This story creates the `blog` sidebar group, and it is the first Blog-area story to touch
-  `routes/`, `config/modules.php` or `lang/` at all.** 0058 fenced all three off explicitly, and
-  nothing blog-related exists in any of them today (verified). The precedent is unambiguous and now
-  twice-established: the story whose screen ships **first** creates the group its module needs —
-  `settings` was created by 0013 for `roles`, `taxes` by 0018 for `sales_regions`. The group ships
-  `expandable => false` with one entry today, exactly as `taxes` did, and 0062/0063 revisit that when
-  they append their entries.
+- **D-4 — This story creates the `content` sidebar group and, nested inside it, the `blog` cluster,
+  and it is the first Blog-area story to touch `routes/`, `config/modules.php` or `lang/` at all.**
+  0058 fenced all three off explicitly, and nothing blog-related exists in any of them today
+  (verified). ⚠️ **Corrected 2026-09-08, per [story 0080](done/0080-sidebar-navigation-grouping-and-nesting.md)'s
+  Phase 5 review (finding F-2) — this bullet originally read "This story creates the `blog` sidebar
+  group" (a flat top-level group), quoted below in full since the earlier reasoning it built on is
+  still correct and worth keeping:** *"The precedent is unambiguous and now twice-established: the
+  story whose screen ships first creates the group its module needs — `settings` was created by 0013
+  for `roles`, `taxes` by 0018 for `sales_regions`."* That precedent held, but 0080 shipped in the
+  meantime and changed what "the group its module needs" resolves to: `groups.taxes` — the very
+  precedent this bullet cited — was itself retired by 0080's own restructuring, replaced by a `store`
+  group holding two nested clusters (`products`, `store_settings`), and 0080's **R-2** names this story
+  explicitly as the one that should follow the same nested shape rather than the flat-group precedent
+  that predates it. **The corrected plan:** this story creates a new top-level `groups.content` entry
+  (Content is reserved for Blog and its sub-resources per 0080's own D-4/D-5 — nothing currently
+  references it) and, nested inside it via the item's `cluster` key, a `clusters.blog` entry (`group:
+  'content'`, `label: 'navigation.clusters.blog'`, an icon — no `route`/`permissions` of its own, per
+  0080's D-1: a cluster is purely presentational). `items.blog_tags` sets `group: null, cluster: 'blog'`
+  rather than `group: 'blog', cluster: null`. Both `groups.content` and `clusters.blog` ship with this
+  story rather than being deferred to 0062/0063, matching the "the story whose screen ships first
+  creates the shared registry entries its module needs" precedent — now applied one level deeper, to a
+  group *and* the cluster nested inside it, rather than to a flat group alone.
   *Rejected:* ship `blog-tags.index` with no registry entry, reachable only by URL, leaving the group
-  to 0063. That is the **linkless half-state** `roles.index` sat in between 0010 and 0013 and
-  `sales-regions.index` between 0017 and 0018 — recorded both times in
+  and cluster to 0063. That is the **linkless half-state** `roles.index` sat in between 0010 and 0013
+  and `sales-regions.index` between 0017 and 0018 — recorded both times in
   [api/routes.md](../../docs/api/routes.md) as a real, if temporary, gap. There is no reason to repeat
-  it a third time when the pattern that avoids it is this well-trodden.
+  it a third time when the pattern that avoids it is this well-trodden. *Also rejected:* the original,
+  now-superseded flat `groups.blog` plan — see the correction above.
   **Cross-story consequence, stated so 0062 and 0063 inherit it rather than re-deriving it:** both
-  append **one `items.*` entry** to the group this story creates and touch no component. If either
-  ever needs the group `expandable`, that is a one-key edit to a group they did not author — worth a
-  line in their own files.
+  append **one `items.*` entry** with `cluster: 'blog'` to the cluster this story creates, and touch no
+  component. Neither needs a new `groups.*` or `clusters.*` entry of its own.
 
 - **D-5 — No per-tag post-usage count column, this story.** `blog_posts` and `blog_post_tag` do not
   exist (0061 owns both) and 0059 ships **no** `posts()` relation on `BlogTag` and **no** stored
