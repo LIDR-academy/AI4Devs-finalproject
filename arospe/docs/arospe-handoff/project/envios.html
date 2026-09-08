@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Envíos · Panel Admin Arospe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/envios.css">
+</head>
+<body data-title="Configuración de Envíos" data-sub="Transportistas y tarifas por zona">
+
+  <main data-view>
+    <div class="page">
+
+      <div class="eyebrow">TRANSPORTISTAS INTEGRADOS</div>
+      <div class="carriers" data-carriers></div>
+
+      <div class="section-head" style="margin-top:28px">
+        <div class="eyebrow" style="margin-bottom:0">TARIFAS POR ZONA Y PESO</div>
+        <button class="btn btn-primary" data-add></button>
+      </div>
+      <div class="card">
+        <div class="table__head r-grid">
+          <div>NOMBRE</div><div>ZONA</div><div>PESO (KG)</div><div>PRECIO</div><div>ENTREGA</div><div class="cell-right">·</div>
+        </div>
+        <div data-rows></div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/envios.js"></script>
+</body>
+</html>

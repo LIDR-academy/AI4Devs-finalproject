@@ -1,0 +1,758 @@
+<?php
+
+// View-level rendering tests for App\Livewire\Products\AttributeTypes\Index /
+// resources/views/livewire/products/attribute-types.blade.php, per
+// ai-spec/tasks/0030-product-attribute-types-and-values-ui.md's "Tests to perform" section.
+//
+// Component logic, persistence, validation-rule enforcement and both authorization layers are
+// covered by tests/Feature/Products/AttributeTypesIndexTest.php (story 0028) -- nothing here
+// duplicates that. Every test below asserts against the RENDERED HTML or the component's own
+// $values array, which that file never does for markup.
+//
+// Mirrors tests/Feature/ProductCategories/IndexRenderingTest.php's shape. Helper function named
+// attributeTypesRenderingActor() (not attributeTypesFullActor(), already declared in
+// AttributeTypesIndexTest.php) to avoid a PHP "cannot redeclare function" fatal when the full
+// suite loads every Feature test file in one process.
+
+use App\Actions\Products\CreateProductAttributeType;
+use App\Livewire\Products\AttributeTypes\Index;
+use App\Models\Product;
+use App\Models\ProductAttributeType;
+use App\Models\ProductAttributeValue;
+use App\Models\ProductVariant;
+use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Support\Str;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
+use Livewire\Livewire;
+use Spatie\Permission\PermissionRegistrar;
+
+beforeEach(function () {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seed(RolePermissionSeeder::class);
+});
+
+/**
+ * @param  array<int, string>  $permissions
+ */
+function attributeTypesRenderingActor(array $permissions = ['products.view', 'products.create', 'products.edit', 'products.delete']): User
+{
+    $actor = User::factory()->create();
+    $actor->givePermissionTo($permissions);
+
+    return $actor;
+}
+
+/**
+ * @param  array<int, string>  $values
+ */
+function createAttributeTypeWithValues(string $name, array $values = []): ProductAttributeType
+{
+    return app(CreateProductAttributeType::class)(
+        $name,
+        array_map(fn (string $value): array => ['value' => $value], $values),
+    );
+}
+
+/**
+ * The exact HTML slice for one repeater row, from its own `wire:key="{key}"` up to (but not
+ * including) the next row's `wire:key`, or the end of the string for the last row -- this is
+ * what lets a test scope an assertion to "this row's own markup" rather than the whole modal,
+ * per FP-UI3 (a validation message asserted without checking which row it is attached to).
+ */
+function attributeTypeValueRowHtml(string $html, string $key): string
+{
+    $needle = 'wire:key="'.$key.'"';
+    $start = strpos($html, $needle);
+    expect($start)->not->toBeFalse();
+
+    $nextRow = strpos($html, 'wire:key="', $start + strlen($needle));
+    $end = $nextRow !== false ? $nextRow : strlen($html);
+
+    return substr($html, $start, $end - $start);
+}
+
+/**
+ * A window of HTML around a given data-test hook, wide enough to capture the whole
+ * <flux:button>/<flux:tooltip> markup around it without bleeding into an unrelated sibling row.
+ */
+function attributeTypeHookSnippet(string $html, string $dataTest): string
+{
+    $pos = strpos($html, 'data-test="'.$dataTest.'"');
+    expect($pos)->not->toBeFalse();
+
+    // Wide enough to reach back past a compiled <flux:button>'s own long utility-class attribute
+    // AND the enclosing <ui-tooltip ...> wrapper's own attributes on the disabled branch -- a
+    // narrower window here silently missed the wrapper (Phase 5 review follow-up).
+    return substr($html, max(0, $pos - 1000), 1600);
+}
+
+test('the list renders each types name, value count and value preview', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Size', ['38', '39', '40']);
+
+    $html = Livewire::test(Index::class)->assertSee('Size')->html();
+
+    // Scoped to the count badge's own hook and its actual rendered digit -- a bare assertSee('3')
+    // can never fail here, since '3' also appears in the header's live totals and inside the
+    // '38, 39, 40' preview string itself (Phase 5 review finding F-4).
+    $matched = preg_match('/data-test="value-count-'.preg_quote($type->id, '/').'"[^>]*>\s*(\d+)\s*</s', $html, $matches);
+    expect($matched)->toBe(1)
+        ->and($matches[1])->toBe('3');
+
+    expect($html)->toContain('38, 39, 40');
+});
+
+test('the header renders live totals for types and their combined values', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    createAttributeTypeWithValues('Size', ['38', '39', '40']);
+    createAttributeTypeWithValues('Color', ['Black', 'White']);
+    createAttributeTypeWithValues('Material');
+
+    $component = Livewire::test(Index::class);
+
+    expect($component->get('typesSummary'))->toBe(['total' => 3, 'values' => 5]);
+
+    $component->assertSee(__('products.attribute_types.summary', ['total' => 3, 'values' => 5]));
+});
+
+test('the empty state renders when no attribute types exist', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    expect(ProductAttributeType::count())->toBe(0);
+
+    $html = Livewire::test(Index::class)->html();
+
+    expect($html)->toContain('data-test="attribute-types-empty-state"');
+});
+
+test('a type holding no values renders a zero count and the em dash preview, not a broken cell', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Material');
+
+    $html = Livewire::test(Index::class)->html();
+
+    // The exact intended rendering (FP-UI8), not merely "no exception".
+    $snippet = attributeTypeHookSnippet($html, 'value-preview-'.$type->id);
+
+    expect($snippet)->toContain('&mdash;');
+});
+
+test('a type holding more than five values renders the first five plus a remaining count', function () {
+    // OQ-3's truncation is the only real logic in the view (Phase 5 review finding F-3) and had
+    // no test at all -- a type at the max:100 ceiling exercised nothing.
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $values = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7'];
+    $type = createAttributeTypeWithValues('Size', $values);
+
+    $html = Livewire::test(Index::class)->html();
+    $snippet = attributeTypeHookSnippet($html, 'value-preview-'.$type->id);
+
+    expect($snippet)
+        ->toContain('A1, A2, A3, A4, A5')
+        ->toContain(__('products.attribute_types.value_preview_more', ['count' => 2]))
+        ->not->toContain('A6')
+        ->not->toContain('A7');
+});
+
+test('row actions render disabled with a tooltip for an actor who may not edit or delete, and enabled for a full administrator', function () {
+    // FP-UI7: a second, deliberately under-permissioned actor is required -- an Administrator
+    // alone would say nothing about the disabled branch, since attribute types have no per-row
+    // distinction (0028 D6). The type is seeded first, as the full actor, since
+    // CreateProductAttributeType authorizes its own operation and needs a signed-in user.
+    $full = attributeTypesRenderingActor();
+    $this->actingAs($full);
+
+    $type = createAttributeTypeWithValues('Size', ['38']);
+
+    $fullHtml = Livewire::test(Index::class)->html();
+
+    $fullEditSnippet = attributeTypeHookSnippet($fullHtml, 'edit-type-'.$type->id);
+    $fullDeleteSnippet = attributeTypeHookSnippet($fullHtml, 'delete-type-'.$type->id);
+
+    expect($fullEditSnippet)->toContain('wire:click="openEditModal')
+        ->and($fullDeleteSnippet)->toContain('wire:click="confirmDelete');
+
+    $limited = attributeTypesRenderingActor(['products.view']);
+    $this->actingAs($limited);
+
+    $limitedHtml = Livewire::test(Index::class)->html();
+
+    $editSnippet = attributeTypeHookSnippet($limitedHtml, 'edit-type-'.$type->id);
+    $deleteSnippet = attributeTypeHookSnippet($limitedHtml, 'delete-type-'.$type->id);
+
+    // 'disabled' alone is not a safe substring here -- Flux's own disabled:opacity-75/
+    // disabled:cursor-default/disabled:pointer-events-none utility classes carry the literal word
+    // "disabled" on the ENABLED branch too (Phase 5 review finding F-2). The real marker is the
+    // rendered boolean attribute, and the tooltip wrapper this branch adds.
+    expect($editSnippet)->toContain('disabled="disabled"')->toContain('ui-tooltip')->not->toContain('wire:click="openEditModal')
+        ->and($deleteSnippet)->toContain('disabled="disabled"')->toContain('ui-tooltip')->not->toContain('wire:click="confirmDelete')
+        ->and($limitedHtml)->toContain(__('products.attribute_types.action_not_allowed'));
+});
+
+test('opening the create form shows an empty name field and zero value rows', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $component = Livewire::test(Index::class)->call('openCreateModal');
+
+    $component->assertSet('name', '')->assertSet('values', []);
+
+    $html = $component->html();
+
+    expect($html)
+        ->toContain('data-test="attribute-type-values-empty"')
+        ->not->toContain('data-test="attribute-type-values-list"');
+});
+
+test('opening the edit form shows the type name and its values in their saved order', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    // Submitted (and therefore stored) in a deliberately non-alphabetical order, so this test
+    // fails if the view or the component silently re-sorts by value text.
+    $type = createAttributeTypeWithValues('Size', ['40', '38', '39']);
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $type->id);
+
+    $component->assertSet('name', 'Size');
+
+    expect(array_column($component->get('values'), 'value'))->toBe(['40', '38', '39']);
+});
+
+test('a blank name and a duplicate type name each render a message next to the name field, with the modal open', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    createAttributeTypeWithValues('Size');
+
+    Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('name', '')
+        ->call('save')
+        ->assertSee(__('validation.required', ['attribute' => 'name']))
+        ->assertSet('showModal', true);
+
+    Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('name', 'Size')
+        ->call('save')
+        ->assertSee(__('validation.unique', ['attribute' => 'name']))
+        ->assertSet('showModal', true);
+});
+
+test('a duplicate value within one submission renders a message against that value row, and the type keeps a single value', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Size', ['38']);
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $type->id);
+    $component->call('addValue');
+    $newKey = $component->get('values')[1]['key'];
+
+    $component->set('values.1.value', '38')->call('save');
+
+    $component->assertHasErrors();
+
+    $html = $component->html();
+    $rowHtml = attributeTypeValueRowHtml($html, $newKey);
+
+    // flux:error renders 'text-red-500' unconditionally in its class list, toggled visible by
+    // the absence of a 'hidden' class when a message is present -- see vendor/livewire/flux/
+    // stubs/resources/views/flux/error.blade.php. Presence of the message text itself, scoped to
+    // this row's own slice, is what proves it landed against the offending row rather than
+    // floating at the top of the form (FP-UI3).
+    expect($rowHtml)->toContain(__('validation.distinct', ['attribute' => 'values.1.value']));
+
+    $type->refresh();
+    expect($type->values()->count())->toBe(1)
+        ->and($type->values()->first()->value)->toBe('38');
+});
+
+test('the same value text under two different types is accepted for both', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    createAttributeTypeWithValues('Color', ['Black']);
+    createAttributeTypeWithValues('Material', ['Black']);
+
+    Livewire::test(Index::class)
+        ->assertSee('Color')
+        ->assertSee('Material');
+
+    expect(ProductAttributeValue::where('value', 'Black')->count())->toBe(2);
+});
+
+test('confirmDelete renders a confirmation naming the type', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Material');
+
+    $component = Livewire::test(Index::class)->call('confirmDelete', $type->id);
+
+    $component
+        ->assertSet('deletingTypeName', 'Material')
+        ->assertSet('showDeleteModal', true)
+        ->assertSee('Material');
+});
+
+test('the delete confirmation renders no usage-count copy at all', function () {
+    // Decision 6: deletingTypeUsageCount is always 0 until story 0029, and rendering it would
+    // imply a check that does not exist -- a negative assertion, so the 0029 count cannot be
+    // added here by accident.
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Material');
+
+    $html = Livewire::test(Index::class)->call('confirmDelete', $type->id)->html();
+
+    expect($html)->not->toMatch('/used by|variant/i');
+});
+
+test('moveValue reorders the values array exactly, and the rendered rows follow', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Size', ['40', '38', '39']);
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $type->id);
+    $keys = array_column($component->get('values'), 'key');
+
+    // Move the first row (value 40) down one position -> 38, 40, 39.
+    $component->call('moveValue', $keys[0], 1);
+
+    // Exact ordered sequence (FP-UI1) -- never toContain, which passes in any order.
+    expect(array_column($component->get('values'), 'value'))->toBe(['38', '40', '39']);
+
+    $html = $component->html();
+    $posFirst = strpos($html, 'wire:key="'.$keys[1].'"');   // 38, now first
+    $posSecond = strpos($html, 'wire:key="'.$keys[0].'"');  // 40, now second
+    $posThird = strpos($html, 'wire:key="'.$keys[2].'"');   // 39, still third
+
+    expect($posFirst)->toBeLessThan($posSecond)
+        ->and($posSecond)->toBeLessThan($posThird);
+});
+
+test('saving a type with zero value rows succeeds and lists it holding zero values', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('name', 'Material')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $type = ProductAttributeType::where('name', 'Material')->firstOrFail();
+    expect($type->values()->count())->toBe(0);
+
+    $html = Livewire::test(Index::class)->html();
+
+    expect($html)
+        ->toContain('data-test="value-count-'.$type->id.'"')
+        ->toContain('data-test="value-preview-'.$type->id.'"');
+});
+
+// Phase 4 security audit finding F-1: $values (and $showModal) are the form's own
+// client-writable input, so a products.view-only actor can force this branch open with a forged
+// $set('values', ...) -- without ever passing the products.create gate -- before save()'s own
+// validation runs. The view's @continue guard must fail closed on every row shape it
+// dereferences (missing 'key', or a non-string 'value'), not only a bare scalar row -- the
+// narrower guard this test would have caught crashed the render with an unhandled ViewException.
+test('a forged malformed value row is skipped by the render guard rather than crashing the page', function () {
+    // Deliberately the weaker actor the finding names -- products.view alone, never having
+    // authorized create -- to prove the crash is reachable without the create gate too.
+    $actor = attributeTypesRenderingActor(['products.view']);
+    $this->actingAs($actor);
+
+    $html = Livewire::test(Index::class)
+        ->set('showModal', true)
+        ->set('values', [
+            ['value' => 'missing a key entirely'],
+            ['id' => null, 'key' => 'k', 'value' => ['not', 'a', 'string']],
+            'a bare scalar row',
+        ])
+        ->html();
+
+    expect($html)->toContain('data-test="attribute-type-values-list"');
+});
+
+// Found by the full, unscoped Definition-of-Done suite run (never by a scoped one) --
+// 0028's own AttributeTypesValidationHardeningTest forges an ARRAY id with an otherwise
+// well-shaped row (a legal client payload per attributeValueIdRules()'s own docblock: a
+// non-owned id of any shape is a legitimate "treat this as a new row" submission), and the
+// render's own $rowHook = $row['id'] ?? $row['key'] happily interpolated that array into a
+// data-test attribute -- htmlspecialchars() crashing on an array argument, not a validation
+// error. The guard above must reject a non-string, non-null id too.
+test('a forged array id with an otherwise well-shaped row is skipped rather than crashing on interpolation', function () {
+    $actor = attributeTypesRenderingActor(['products.view']);
+    $this->actingAs($actor);
+
+    $html = Livewire::test(Index::class)
+        ->set('showModal', true)
+        ->set('values', [
+            ['id' => ['forged', 'array'], 'key' => (string) Str::uuid(), 'value' => 'Black'],
+        ])
+        ->html();
+
+    expect($html)->toContain('data-test="attribute-type-values-list"');
+});
+
+// Discharges story 0029a's explicit hand-off ("the markup rendering the blocked-delete message
+// is 0030's"), found via this story's own backmerge of feature-entrega2-ARP.
+test('deleting a type still backing a variant renders the blocked message in the still-open delete modal', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Size', ['38']);
+    ProductVariant::factory()->withCombination([$type->values->first()->id])->create();
+
+    $component = Livewire::test(Index::class)
+        ->call('confirmDelete', $type->id)
+        ->call('deleteType');
+
+    $component->assertHasErrors('productAttributeTypeId')
+        ->assertSet('showDeleteModal', true);
+
+    $html = $component->html();
+
+    expect($html)
+        ->toContain('data-test="attribute-type-delete-blocked"')
+        ->toContain(trans_choice('products.variants.type_in_use', 1, ['count' => 1]));
+
+    expect(ProductAttributeType::find($type->id))->not->toBeNull();
+});
+
+// The reactive-only choice (decision 6's original reasoning, extended): the count is never shown
+// as a proactive line in the confirmation dialog, only inside the blocked message itself.
+test('the delete confirmation renders no proactive usage-count line, even for a type in use', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Size', ['38']);
+    ProductVariant::factory()->withCombination([$type->values->first()->id])->create();
+
+    $html = Livewire::test(Index::class)->call('confirmDelete', $type->id)->html();
+
+    // No blocked-message hook yet -- confirmDelete() only populates the count, it does not
+    // attempt the delete -- so this pins that the dialog itself stays silent about the count
+    // until Delete is actually clicked.
+    expect($html)->not->toContain('data-test="attribute-type-delete-blocked"');
+});
+
+test('closing the delete modal after a blocked delete clears the stale in-use message', function () {
+    // Mirrors tests/Feature/ProductCategories/IndexRenderingTest.php's identical staleness test
+    // for its own create/edit modal -- Livewire persists the error bag across round trips, so
+    // without closeDeleteModal()'s own resetValidation() (this story's fix), the blocked message
+    // for one type would leak into confirming delete on a second, unrelated, unblocked type.
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $blocked = createAttributeTypeWithValues('Size', ['38']);
+    ProductVariant::factory()->withCombination([$blocked->values->first()->id])->create();
+
+    $unblocked = createAttributeTypeWithValues('Material');
+
+    Livewire::test(Index::class)
+        ->call('confirmDelete', $blocked->id)
+        ->call('deleteType')
+        ->assertHasErrors('productAttributeTypeId')
+        ->call('closeDeleteModal')
+        ->call('confirmDelete', $unblocked->id)
+        ->assertHasNoErrors();
+});
+
+test('removing a value still backing a variant renders the blocked message, and the value survives', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Size', ['38', '39']);
+    $values = $type->values;
+    ProductVariant::factory()->withCombination([$values->firstWhere('value', '38')->id])->create();
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $type->id);
+    $keys = collect($component->get('values'))->keyBy('value')->map(fn (array $row): string => $row['key']);
+
+    $component->call('removeValue', $keys['38'])
+        ->call('save');
+
+    $component->assertHasErrors('values');
+
+    $html = $component->html();
+
+    expect($html)
+        ->toContain('data-test="attribute-type-value-in-use"')
+        ->toContain(trans_choice('products.variants.value_in_use', 1, ['count' => 1]));
+
+    $type->refresh();
+    expect($type->values->pluck('value')->all())->toBe(['38', '39']);
+});
+
+// =====================================================================
+// Story 0030a (Phase 3, TDD "red" step): $valueUsageCounts does not exist yet on
+// App\Livewire\Products\AttributeTypes\Index, the values repeater has no in-use notice markup,
+// and the view has no @error('sku') outlet -- every test below is expected to fail against the
+// pre-0030a component/view. See ai-spec/tasks/in-progress/0030a-attribute-value-rename-warning-
+// and-sku-collision-error.md's "Tests to perform" section.
+// =====================================================================
+
+test('openEditModal populates valueUsageCounts correctly, including zero and no double counting for a variant built on two values of the same type', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    // Talla holds three values: M is used by two variants, L is used by one (attached to the
+    // SAME variant as M -- a single variant built on two values of one type, per the task file's
+    // own "must not be conflated" bullet), and S is used by none.
+    $type = createAttributeTypeWithValues('Talla', ['M', 'L', 'S']);
+    $values = $type->values()->orderBy('position')->get()->keyBy('value');
+
+    ProductVariant::factory()->withCombination([$values['M']->id])->create();
+    ProductVariant::factory()->withCombination([$values['M']->id, $values['L']->id])->create();
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $type->id);
+
+    $counts = $component->get('valueUsageCounts');
+
+    // Read via `?? 0` rather than asserting the whole array shape -- the task file only commits
+    // to the RESULT ("zero for an unused value"), not to whether a zero-count id is present as an
+    // explicit key or simply absent from a GROUP BY result.
+    expect($counts[$values['M']->id] ?? 0)->toBe(2)
+        ->and($counts[$values['L']->id] ?? 0)->toBe(1)
+        ->and($counts[$values['S']->id] ?? 0)->toBe(0);
+});
+
+test('the values repeater renders the usage notice only for rows whose id has a positive count in valueUsageCounts', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Talla', ['M', 'S']);
+    $values = $type->values()->orderBy('position')->get()->keyBy('value');
+
+    ProductVariant::factory()->withCombination([$values['M']->id])->create();
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $type->id);
+
+    $html = $component->html();
+
+    // Phase 5 review (0030a, finding 1): the hook is keyed on $rowHook ($row['id'] when set,
+    // matching every other hook in this repeater), never the row's UI-only `key` -- so a test
+    // that already knows the persisted value's own id needs no round-trip through $component to
+    // discover it.
+    expect($html)
+        ->toContain('data-test="value-in-use-notice-'.$values['M']->id.'"')
+        ->not->toContain('data-test="value-in-use-notice-'.$values['S']->id.'"');
+});
+
+test('addValues freshly appended row (no id yet) never renders the usage notice', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Talla', ['M']);
+    $value = $type->values()->first();
+    ProductVariant::factory()->withCombination([$value->id])->create();
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $type->id)->call('addValue');
+    $newRow = collect($component->get('values'))->last();
+
+    expect($newRow['id'])->toBeNull();
+
+    $html = $component->html();
+
+    expect($html)->not->toContain('data-test="value-in-use-notice-'.$newRow['key'].'"');
+});
+
+test('saving a rename that produces a colliding derived SKU renders the sku callout, keeps the modal open, and leaves the value unchanged', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    // A product whose OWN typed sku is exactly what the rename below will collide with --
+    // mirrors ProductVariantSkuUniquenessTest's case (a) reverse fixture.
+    Product::factory()->create(['sku' => '0001-M']);
+
+    $product = Product::factory()->create(['sku' => '0001']);
+    $type = createAttributeTypeWithValues('Talla', ['S']);
+    $value = $type->values()->first();
+
+    ProductVariant::factory()->for($product)->withCombination([$value->id])->create();
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $type->id);
+
+    $component->set('values.0.value', 'M')->call('save');
+
+    $component->assertHasErrors('sku')->assertSet('showModal', true);
+
+    $html = $component->html();
+
+    expect($html)
+        ->toContain('data-test="attribute-type-rename-sku-collision"')
+        ->toContain(__('products.variants.derived_sku_taken', ['sku' => '0001-M']));
+
+    expect($value->fresh()->value)->toBe('S');
+});
+
+test('saving a rename that reduces entirely to an empty segment renders the sku callout with its own copy, and the modal stays open', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $product = Product::factory()->create(['sku' => '0010']);
+    $type = createAttributeTypeWithValues('Talla', ['M']);
+    $value = $type->values()->first();
+
+    ProductVariant::factory()->for($product)->withCombination([$value->id])->create();
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $type->id);
+
+    // '???' passes save()'s own required/string/max:100/distinct rules (it is the only submitted
+    // value) but reduces entirely to the empty string once DeriveVariantSku::segment() strips
+    // every character outside [A-Za-z0-9._/-] -- proving the sku outlet is generic, not
+    // hardcoded to the collision wording (F-2's fixture shape).
+    $component->set('values.0.value', '???')->call('save');
+
+    $component->assertHasErrors('sku')->assertSet('showModal', true);
+
+    $html = $component->html();
+
+    // Story 0030a implementation finding, fixed at Phase 5 review: unlike every other sku-keyed
+    // refusal, this message's OWN translation copy carries literal double quotes around :value
+    // (':value" cannot be used' -- lang/en/products.php's derived_sku_empty_segment). The shared
+    // @error('sku') callout was first written with the identical `heading="{{ $message }}"` shape
+    // as this file's two pre-existing precedents (@error('values') / @error('productAttributeTypeId')),
+    // which double-HTML-encodes an attribute bound that way under a Flux-folded component tag
+    // (verified by direct Blade::render() execution). Phase 5 review found the fix: `:heading="$message"`
+    // (colon-bound) renders correctly AND stays fully escaped -- re-verified with a <script> probe,
+    // which still comes back HTML-entity-escaped. Never switch this to `{!! !!}`: $value is the
+    // submitted attribute value's raw text, unrestricted by attributeValueRules() beyond
+    // max:100/distinct, so it is untrusted input that must never reach the page unescaped. The
+    // assertion below matches the correctly-rendered, single-escaped reality.
+    expect($html)
+        ->toContain('data-test="attribute-type-rename-sku-collision"')
+        ->toContain(e(__('products.variants.derived_sku_empty_segment', ['value' => '???'])));
+
+    expect($value->fresh()->value)->toBe('M');
+});
+
+test('saving a rename that does not collide succeeds: no sku callout renders, the modal closes, and the value and variant sku are both persisted', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $product = Product::factory()->create(['sku' => '0002']);
+    $type = createAttributeTypeWithValues('Talla', ['M']);
+    $value = $type->values()->first();
+
+    $variant = ProductVariant::factory()->for($product)->withCombination([$value->id])->create();
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $type->id);
+
+    $component->set('values.0.value', 'M2')->call('save');
+
+    $component->assertHasNoErrors()->assertSet('showModal', false);
+
+    $html = $component->html();
+
+    expect($html)->not->toContain('data-test="attribute-type-rename-sku-collision"');
+
+    expect($value->fresh()->value)->toBe('M2')
+        ->and($variant->fresh()->sku)->toBe('0002-M2');
+});
+
+test('valueUsageCounts never appears inside the values array save() builds for SyncProductAttributeValues', function () {
+    // A one-line regression guard now that the count is a separate, #[Locked] property --
+    // Provenance's amendment note 1 -- rather than the defence-in-depth test the first draft
+    // needed when the count lived inside $values itself.
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Talla', ['M']);
+    $value = $type->values()->first();
+    ProductVariant::factory()->withCombination([$value->id])->create();
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $type->id);
+
+    foreach ($component->get('values') as $row) {
+        expect($row)->toHaveKeys(['id', 'key', 'value'])
+            ->and($row)->not->toHaveKey('usageCount');
+    }
+
+    expect($component->get('valueUsageCounts'))->toBeArray();
+});
+
+// Phase 4 security audit finding L-1 (fix already applied to Index::openCreateModal()/
+// openEditModal() -- both now end with $this->resetValidation()): the modal's own $showModal is a
+// plain wire:model-bound property, so dismissing it via the X / click-outside control writes
+// $showModal = false directly WITHOUT ever calling closeModal() -- the only place the error bag was
+// previously reset. Livewire persists the error bag across round trips ONLY for keys that are real
+// component properties (Livewire\Features\SupportValidation\SupportValidation::dehydrate() filters
+// out any error key that isn't -- verified by execution: a 'sku'-keyed error, which is NOT a real
+// property on this component, is dropped by that framework filter on every round trip regardless of
+// resetValidation(), so it cannot be used to prove this fix). 'values' IS a real, client-writable
+// property here (see its own docblock), so a 'values'-keyed refusal genuinely survives into the next
+// request's hydrate() unless explicitly cleared -- reproduced independently against a reverted copy
+// of the fix (removeValue()'s in-use refusal below still rendered against a completely unrelated
+// type B after dismissing type A's modal via $showModal directly) before writing this as a permanent
+// regression test.
+test('dismissing the edit modal via showModal directly (bypassing closeModal) clears a stale values error before a different type is opened', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $typeA = createAttributeTypeWithValues('Talla', ['38', '39']);
+    $valueInUse = $typeA->values()->where('value', '38')->first();
+    ProductVariant::factory()->withCombination([$valueInUse->id])->create();
+
+    $typeB = createAttributeTypeWithValues('Color', ['Black']);
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $typeA->id);
+    $keys = collect($component->get('values'))->keyBy('value')->map(fn (array $row): string => $row['key']);
+
+    // Produce the exact in-use refusal the removeValue() test above already proves renders,
+    // keyed 'values' -- a real, hasProperty()-true component property.
+    $component->call('removeValue', $keys['38'])->call('save');
+
+    $component->assertHasErrors('values')->assertSet('showModal', true);
+
+    // Bypass closeModal() entirely -- the X / click-outside path this finding is about -- by
+    // writing the wire:model-bound property directly, exactly as the real control would.
+    $component->set('showModal', false);
+
+    $component->call('openEditModal', $typeB->id);
+
+    $component->assertHasNoErrors();
+
+    $html = $component->html();
+
+    expect($html)->not->toContain('data-test="attribute-type-value-in-use"');
+});
+
+// Phase 4 security audit finding L-4: the existing tests above prove $valueUsageCounts is
+// populated correctly, but none of them prove it is actually enforced as #[Locked] -- a client
+// forging it via a direct $set() must be refused the same way editingTypeId's own forgery guard
+// (AttributeTypesIndexTest.php, 'a forged set against the locked editingTypeId property...') is
+// pinned, per the audit's own suggestion to mirror that pattern.
+test('a forged set against the locked valueUsageCounts property is rejected', function () {
+    $actor = attributeTypesRenderingActor();
+    $this->actingAs($actor);
+
+    $type = createAttributeTypeWithValues('Talla', ['M']);
+    $value = $type->values()->first();
+    ProductVariant::factory()->withCombination([$value->id])->create();
+
+    $component = Livewire::test(Index::class)->call('openEditModal', $type->id);
+
+    $realCounts = $component->get('valueUsageCounts');
+
+    expect(fn () => $component->set('valueUsageCounts', [$value->id => 999]))
+        ->toThrow(CannotUpdateLockedPropertyException::class);
+
+    expect($component->get('valueUsageCounts'))->toBe($realCounts);
+});

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Productos · Panel Admin Arospe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/productos.css">
+</head>
+<body data-title="Productos" data-sub="Catálogo de la tienda">
+
+  <main data-view>
+
+    <!-- ===== LISTA ===== -->
+    <div class="page" data-screen="list">
+      <div class="section-head">
+        <div class="section-meta" data-meta></div>
+        <button class="btn btn-primary" data-new></button>
+      </div>
+      <div class="card">
+        <div class="table__head p-grid">
+          <div>PRODUCTO</div><div>PRECIO</div><div>STOCK</div><div>ESTADO</div><div class="cell-right">·</div>
+        </div>
+        <div data-rows></div>
+      </div>
+    </div>
+
+    <!-- ===== EDITOR ===== -->
+    <div class="page" data-screen="edit" hidden>
+      <button class="link-back" data-back></button>
+      <div class="editor-layout">
+        <div class="editor-main">
+          <div class="card card--pad">
+            <div class="field"><label class="label">Nombre del producto</label><input class="input" data-f="title" placeholder="Ej. Zapatillas Runner Pro"></div>
+            <div class="field-grid cols-2 field">
+              <div><label class="label">SKU</label><input class="input" data-f="sku" placeholder="RNR-001"></div>
+              <div><label class="label">Categoría</label><select class="input" data-f="cat"><option>Calzado</option><option>Ropa</option><option>Accesorios</option><option>Equipamiento</option></select></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="padding:18px 22px 0"><label class="label">Descripción</label></div>
+            <div class="wysiwyg__toolbar" data-toolbar style="margin-top:4px"></div>
+            <div class="editor" data-editor contenteditable="true" data-ph="Escribe la descripción del producto…"></div>
+          </div>
+
+          <div class="card card--pad">
+            <div class="gallery-head">
+              <div>
+                <label class="label" style="margin-bottom:2px">Galería de imágenes</label>
+                <div class="gallery-sub" data-gallery-count></div>
+              </div>
+              <button class="btn btn-ghost btn--sm" data-add-images></button>
+            </div>
+            <div data-carousel></div>
+          </div>
+        </div>
+
+        <div class="editor-side">
+          <div class="card card--pad-sm">
+            <label class="label">Estado</label>
+            <select class="input" data-f="status"><option>Activo</option><option>Borrador</option><option>Agotado</option></select>
+            <div class="field-grid cols-2 field">
+              <div><label class="label">Precio (€)</label><input class="input" data-f="price" placeholder="119,95"></div>
+              <div><label class="label">Stock</label><input class="input" data-f="stock" placeholder="42"></div>
+            </div>
+          </div>
+          <div class="card card--pad-sm">
+            <label class="label">Imagen destacada</label>
+            <div data-featured></div>
+          </div>
+          <button class="btn btn-primary btn--block" data-save>Guardar producto</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/productos.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+/* impuestos.css — específico del Panel de Impuestos */
+.t-grid{grid-template-columns:1.6fr 2fr 1fr 96px}
+.t-code{
+  width:34px;height:24px;border-radius:6px;background:#f0f0f4;border:1px solid #e7e7ec;
+  display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;
+  font-family:var(--mono);color:#55555f;flex-shrink:0;
+}
+.t-rate{font-size:15px;font-weight:700;font-family:var(--mono);color:#15803d}

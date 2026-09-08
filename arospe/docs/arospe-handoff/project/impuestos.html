@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Impuestos · Panel Admin Arospe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/impuestos.css">
+</head>
+<body data-title="Impuestos" data-sub="Tasas impositivas por país y región">
+
+  <main data-view>
+    <div class="page">
+      <div class="section-head section-head--top">
+        <div class="section-meta section-meta--wide">Define la tasa impositiva aplicable en cada país o región. Estas tasas se aplican automáticamente en el checkout según la dirección del cliente.</div>
+        <button class="btn btn-primary" data-add></button>
+      </div>
+      <div class="card">
+        <div class="table__head t-grid">
+          <div>PAÍS / REGIÓN</div><div>DESCRIPCIÓN</div><div>TASA</div><div class="cell-right">ACCIONES</div>
+        </div>
+        <div data-rows></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/impuestos.js"></script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<?php
+
+// Story 0015a -- the re-confirmation affordance in resources/views/livewire/users.blade.php.
+// Story 0006's shipped modals carry no password-confirmation notice of any kind (verified in the
+// task file); this story adds one to each, gated on the SAME predicate the guard itself uses
+// (App\Livewire\Users\Index::requiresPasswordConfirmation(), reading
+// App\Actions\Auth\EnsureRecentPasswordConfirmation::isRecentlyConfirmed()) so the hint and the
+// guard cannot drift.
+//
+// Selected by data-test hook, never by translated text (per docs/api/routes.md's established
+// convention for this screen, and because the copy is translated). Hook names are shared with
+// tests/Browser/UsersIndexTest.php's redirect/affordance coverage -- kept identical across both so
+// the two test suites pin the same two DOM elements rather than silently drifting apart:
+//
+//   - data-test="edit-modal-reconfirm-notice"   -- inside @if ($showModal), above the role/status selects
+//   - data-test="delete-modal-reconfirm-notice" -- inside @if ($showDeleteModal), above the destructive button
+//   - users.index.step_up_notice_edit / users.index.step_up_notice_delete -- lang/en/users.php and
+//     lang/es/users.php, key-for-key identical across both.
+//
+// The "notice does NOT appear" tests are expected to be GREEN already (nothing renders it today
+// either), which is correct TDD -- they still pin real, checkable behaviour and will catch a
+// future regression that renders the notice unconditionally.
+
+use App\Livewire\Users\Index;
+use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
+use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
+
+beforeEach(function () {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    // Isolate this file from an ambiently-set SUPER_ADMIN_EMAIL, matching
+    // tests/Feature/Users/IndexRenderingTest.php's own beforeEach -- see docs/errors-log.md.
+    config(['auth.super_admin.email' => null]);
+
+    $this->seed(RolePermissionSeeder::class);
+});
+
+function markAffordancePasswordConfirmationStale(): void
+{
+    session(['auth.password_confirmed_at' => now()->subSeconds(config('auth.password_timeout') + 60)->unix()]);
+}
+
+function markAffordancePasswordConfirmationFresh(): void
+{
+    session(['auth.password_confirmed_at' => now()->unix()]);
+}
+
+// =====================================================================
+// The edit modal.
+// =====================================================================
+
+test('the edit modal shows a re-confirmation notice when the confirmation is stale', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+    markAffordancePasswordConfirmationStale();
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $target = User::factory()->create();
+    $target->assignRole($editorRole);
+
+    $html = Livewire::test(Index::class)
+        ->call('openEditModal', $target->id)
+        ->html();
+
+    expect($html)->toContain('data-test="edit-modal-reconfirm-notice"');
+});
+
+test('the edit modal shows a re-confirmation notice when the confirmation was never set', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $target = User::factory()->create();
+    $target->assignRole($editorRole);
+
+    $html = Livewire::test(Index::class)
+        ->call('openEditModal', $target->id)
+        ->html();
+
+    expect($html)->toContain('data-test="edit-modal-reconfirm-notice"');
+});
+
+test('the edit modal shows no re-confirmation notice when the confirmation is fresh', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+    markAffordancePasswordConfirmationFresh();
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+    $target = User::factory()->create();
+    $target->assignRole($editorRole);
+
+    $html = Livewire::test(Index::class)
+        ->call('openEditModal', $target->id)
+        ->html();
+
+    expect($html)->not->toContain('data-test="edit-modal-reconfirm-notice"');
+});
+
+// Phase 4 re-audit finding N6: openEditModal() lets the actor edit their own row with no gate
+// and no step-up check at all (a self-edit never reaches authorizeRoleAndStatusChange()), so the
+// notice must not appear there regardless of confirmation freshness -- distinct from the
+// create-modal case below, which is $editingUserId === null rather than "editing self".
+test('the edit modal shows no re-confirmation notice on the actor\'s own row, even with a stale confirmation', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+    markAffordancePasswordConfirmationStale();
+
+    $html = Livewire::test(Index::class)
+        ->call('openEditModal', $administrator->id)
+        ->html();
+
+    expect($html)->not->toContain('data-test="edit-modal-reconfirm-notice"');
+});
+
+// Creating an ORDINARY-role user is never step-up-gated (Q2 / decision D1) -- narrowed by
+// decision D6 (F1) below, which gates the Administrator-tier branch specifically. This asserts
+// the EDIT notice's data-test hook is absent, which the create modal must never show regardless
+// of role or confirmation freshness -- the create-branch's own notice, when it does apply, is a
+// different hook (create-modal-reconfirm-notice), asserted separately below.
+test('the create modal shows no re-confirmation notice even when the confirmation is stale', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+    markAffordancePasswordConfirmationStale();
+
+    $html = Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->html();
+
+    expect($html)->not->toContain('data-test="edit-modal-reconfirm-notice"');
+});
+
+// =====================================================================
+// Phase 4 finding F1 (decision D6) -- the create-form Administrator-tier notice.
+// Phase 5 finding F-2: this branch could not render in a real browser until the role select
+// gained wire:model.live (resources/views/livewire/users.blade.php) -- without it, picking
+// "Administrator" produced no round-trip and $this->isAdministratorRoleSelected never updated
+// before Save. These two tests exercise that live round-trip explicitly, via ->set('roleId', ...)
+// rather than only asserting on the value openCreateModal() seeds.
+// =====================================================================
+
+test('the create modal shows the Administrator-tier re-confirmation notice once that role is selected, with a stale confirmation', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $administrator->givePermissionTo('roles.manage-administrators');
+    $this->actingAs($administrator);
+    markAffordancePasswordConfirmationStale();
+
+    $administratorRole = Role::where('name', 'Administrator')->where('guard_name', 'web')->firstOrFail();
+
+    $html = Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('roleId', (string) $administratorRole->id)
+        ->html();
+
+    expect($html)->toContain('data-test="create-modal-reconfirm-notice"');
+});
+
+test('the create modal shows no Administrator-tier notice once an ordinary role is selected, even with a stale confirmation', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+    markAffordancePasswordConfirmationStale();
+
+    $editorRole = Role::create(['name' => 'Editor', 'guard_name' => 'web']);
+
+    $html = Livewire::test(Index::class)
+        ->call('openCreateModal')
+        ->set('roleId', (string) $editorRole->id)
+        ->html();
+
+    expect($html)->not->toContain('data-test="create-modal-reconfirm-notice"');
+});
+
+// =====================================================================
+// The delete modal.
+// =====================================================================
+
+test('the delete modal shows a re-confirmation notice when the confirmation is stale', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+    markAffordancePasswordConfirmationStale();
+
+    $target = User::factory()->create();
+
+    $html = Livewire::test(Index::class)
+        ->call('confirmDelete', $target->id)
+        ->html();
+
+    expect($html)->toContain('data-test="delete-modal-reconfirm-notice"');
+});
+
+test('the delete modal shows a re-confirmation notice when the confirmation was never set', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+
+    $target = User::factory()->create();
+
+    $html = Livewire::test(Index::class)
+        ->call('confirmDelete', $target->id)
+        ->html();
+
+    expect($html)->toContain('data-test="delete-modal-reconfirm-notice"');
+});
+
+test('the delete modal shows no re-confirmation notice when the confirmation is fresh', function () {
+    $administrator = User::factory()->create();
+    $administrator->assignRole('Administrator');
+    $this->actingAs($administrator);
+    markAffordancePasswordConfirmationFresh();
+
+    $target = User::factory()->create();
+
+    $html = Livewire::test(Index::class)
+        ->call('confirmDelete', $target->id)
+        ->html();
+
+    expect($html)->not->toContain('data-test="delete-modal-reconfirm-notice"');
+});
+
+// Phase 4 re-audit finding N6, the real defect this batch of tests exists to catch:
+// deleteUser() silently no-ops on the actor's own row (story 0015's F11) rather than throwing
+// PasswordConfirmationRequiredException, so before this fix the delete modal promised a
+// re-confirmation prompt on a click that would never produce one. Deliberately NOT an
+// Administrator-role actor: UserPolicy::delete() additionally requires
+// roles.manage-administrators against an Administrator-tier target (including the actor's own
+// row), which an Administrator-role actor does not hold -- confirmDelete()'s Gate::authorize()
+// would refuse before the no-op or this notice were ever reached. Plain users.delete instead,
+// matching the "non-Administrator actor holding users.delete directly" case
+// deleteUser()'s own docblock names as where the no-op is observable.
+test('the delete modal shows no re-confirmation notice on the actor\'s own row, even with a stale confirmation', function () {
+    $actor = User::factory()->create();
+    // users.view is required too, since mount() gates on viewAny independently of
+    // users.delete -- see tests/Feature/Users/IndexTest.php's identical comment on the
+    // sibling self-delete-no-op test; without it Livewire::test() 403s at mount and the
+    // chained ->call() fails with a confusing "Invalid Livewire snapshot structure" error.
+    $actor->givePermissionTo(['users.view', 'users.delete']);
+    $this->actingAs($actor);
+    markAffordancePasswordConfirmationStale();
+
+    $html = Livewire::test(Index::class)
+        ->call('confirmDelete', $actor->id)
+        ->html();
+
+    expect($html)->not->toContain('data-test="delete-modal-reconfirm-notice"');
+});

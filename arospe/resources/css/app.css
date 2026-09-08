@@ -1,0 +1,199 @@
+@import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
+@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-zinc-50: #fafafa;
+    --color-zinc-100: #f5f5f5;
+    --color-zinc-200: #e5e5e5;
+    --color-zinc-300: #d4d4d4;
+    --color-zinc-400: #a3a3a3;
+    --color-zinc-500: #737373;
+    --color-zinc-600: #525252;
+    --color-zinc-700: #404040;
+    --color-zinc-800: #262626;
+    --color-zinc-900: #171717;
+    --color-zinc-950: #0a0a0a;
+
+    --color-accent: var(--color-neutral-800);
+    --color-accent-content: var(--color-neutral-800);
+    --color-accent-foreground: var(--color-white);
+}
+
+@layer theme {
+    .dark {
+        --color-accent: var(--color-white);
+        --color-accent-content: var(--color-white);
+        --color-accent-foreground: var(--color-neutral-800);
+    }
+}
+
+@layer base {
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+[data-flux-field]:not(ui-radio, ui-checkbox) {
+    @apply grid gap-2;
+}
+
+[data-flux-label] {
+    @apply  !mb-0 !leading-tight;
+}
+
+input:focus[data-flux-control],
+textarea:focus[data-flux-control],
+select:focus[data-flux-control] {
+    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+}
+
+/* \[:where(&)\]:size-4 {
+    @apply size-4;
+} */
+
+/* Story 0021 -- the shared WYSIWYG editor's empty-state placeholder. A
+   contenteditable region has no native `placeholder` attribute; the
+   `data-placeholder` value (resources/views/livewire/components/wysiwyg-editor.blade.php)
+   is rendered as pseudo-content only while the region is genuinely empty. */
+.wysiwyg-editor-region:empty:before {
+    content: attr(data-placeholder);
+    color: var(--color-zinc-400);
+    pointer-events: none;
+}
+
+/* D-16bis -- highlight.js token colours for the WYSIWYG editor's live-coloured code blocks and
+   its Preview pane (resources/js/app.js's highlightCodeElement()/highlightAllCodeBlocks(), and
+   togglePreview()'s snapshot of the same markup). Hand-written rather than one of highlight.js's
+   own bundled themes: every bundled theme hard-codes its own light AND dark palettes as two
+   separate stylesheets swapped by a media query, which does not compose with this project's own
+   `.dark` class-based toggle (`@custom-variant dark (&:where(.dark, .dark *));` above) -- these
+   rules instead follow that exact selector shape, like every other dark-mode rule in this file. */
+.wysiwyg-editor-region .hljs-comment,
+.wysiwyg-preview-region .hljs-comment,
+.wysiwyg-editor-region .hljs-quote,
+.wysiwyg-preview-region .hljs-quote {
+    color: var(--color-zinc-500);
+    font-style: italic;
+}
+
+.wysiwyg-editor-region .hljs-keyword,
+.wysiwyg-preview-region .hljs-keyword,
+.wysiwyg-editor-region .hljs-selector-tag,
+.wysiwyg-preview-region .hljs-selector-tag,
+.wysiwyg-editor-region .hljs-literal,
+.wysiwyg-preview-region .hljs-literal,
+.wysiwyg-editor-region .hljs-name,
+.wysiwyg-preview-region .hljs-name,
+.wysiwyg-editor-region .hljs-tag,
+.wysiwyg-preview-region .hljs-tag {
+    color: #7c3aed;
+}
+
+.wysiwyg-editor-region .hljs-string,
+.wysiwyg-preview-region .hljs-string,
+.wysiwyg-editor-region .hljs-attr,
+.wysiwyg-preview-region .hljs-attr,
+.wysiwyg-editor-region .hljs-symbol,
+.wysiwyg-preview-region .hljs-symbol,
+.wysiwyg-editor-region .hljs-bullet,
+.wysiwyg-preview-region .hljs-bullet {
+    color: #15803d;
+}
+
+.wysiwyg-editor-region .hljs-title,
+.wysiwyg-preview-region .hljs-title,
+.wysiwyg-editor-region .hljs-section,
+.wysiwyg-preview-region .hljs-section,
+.wysiwyg-editor-region .hljs-built_in,
+.wysiwyg-preview-region .hljs-built_in {
+    color: #1d4ed8;
+}
+
+.wysiwyg-editor-region .hljs-number,
+.wysiwyg-preview-region .hljs-number,
+.wysiwyg-editor-region .hljs-variable,
+.wysiwyg-preview-region .hljs-variable,
+.wysiwyg-editor-region .hljs-template-variable,
+.wysiwyg-preview-region .hljs-template-variable {
+    color: #b45309;
+}
+
+.wysiwyg-editor-region .hljs-meta,
+.wysiwyg-preview-region .hljs-meta {
+    color: var(--color-zinc-500);
+}
+
+.wysiwyg-editor-region .hljs-emphasis,
+.wysiwyg-preview-region .hljs-emphasis {
+    font-style: italic;
+}
+
+.wysiwyg-editor-region .hljs-strong,
+.wysiwyg-preview-region .hljs-strong {
+    font-weight: bold;
+}
+
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-comment,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-comment,
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-quote,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-quote,
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-meta,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-meta {
+    color: var(--color-zinc-400);
+}
+
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-keyword,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-keyword,
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-selector-tag,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-selector-tag,
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-literal,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-literal,
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-name,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-name,
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-tag,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-tag {
+    color: #c4b5fd;
+}
+
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-string,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-string,
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-attr,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-attr,
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-symbol,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-symbol,
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-bullet,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-bullet {
+    color: #86efac;
+}
+
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-title,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-title,
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-section,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-section,
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-built_in,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-built_in {
+    color: #93c5fd;
+}
+
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-number,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-number,
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-variable,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-variable,
+:where(.dark, .dark *) .wysiwyg-editor-region .hljs-template-variable,
+:where(.dark, .dark *) .wysiwyg-preview-region .hljs-template-variable {
+    color: #fbbf24;
+}

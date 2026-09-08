@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+if [ "$SUPERVISOR_PHP_USER" != "root" ] && [ "$SUPERVISOR_PHP_USER" != "sail" ]; then
+    echo "You should set SUPERVISOR_PHP_USER to either 'sail' or 'root'."
+    exit 1
+fi
+
+if [ ! -z "$WWWUSER" ]; then
+    usermod -u $WWWUSER sail
+fi
+
+if [ ! -d /.composer ]; then
+    mkdir /.composer
+fi
+
+chmod -R ugo+rw /.composer
+
+# Ensure Playwright's Chromium binary is installed for the project's own
+# node_modules/playwright-core (PLAYWRIGHT_BROWSERS_PATH=0, set in the
+# Dockerfile, ties browser storage to whichever node_modules resolves it
+# rather than a shared cache). This can't be baked into the image at build
+# time: the project directory -- and therefore node_modules -- is
+# bind-mounted (compose.yaml), not copied into the image, so it doesn't
+# exist yet when the Dockerfile builds. Runs on every container start
+# instead; `playwright install` is a fast no-op once the browser is already
+# present. See docs/testing/frontend/playwright-setup.md.
+if [ -f /var/www/html/node_modules/.bin/playwright ]; then
+    gosu sail /var/www/html/node_modules/.bin/playwright install chromium > /dev/null 2>&1 || true
+fi
+
+# The sail-views named volume (compose.yaml) mounts storage/framework/views
+# on the container's own filesystem instead of the bind-mounted project
+# directory -- concurrent writes there under `--parallel` were unreliable
+# through the bind mount (see docs/errors-log.md). Docker creates a fresh
+# named volume owned by root; `sail artisan` always runs as $WWWUSER, never
+# root, so without this the directory would be unwritable on first boot.
+if [ -d /var/www/html/storage/framework/views ]; then
+    chown -R sail:sail /var/www/html/storage/framework/views
+fi
+
+if [ $# -gt 0 ]; then
+    if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
+        exec "$@"
+    else
+        exec gosu $WWWUSER "$@"
+    fi
+else
+    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+fi

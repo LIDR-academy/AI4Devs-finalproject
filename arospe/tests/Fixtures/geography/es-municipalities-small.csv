@@ -1,0 +1,522 @@
+ine_code,name,province_name,community_ine_code,community_name
+01001,Alegría-Dulantzi,Araba/Álava,16,País Vasco
+02001,Abengibre,Albacete,08,Castilla-La Mancha
+03001,"Atzúbia, l'",Alicante/Alacant,10,Comunitat Valenciana
+04001,Abla,Almería,01,Andalucía
+05001,Adanero,Ávila,07,Castilla y León
+06001,Acedera,Badajoz,11,Extremadura
+07001,Alaró,"Balears, Illes",04,Illes Balears
+08001,Abrera,Barcelona,09,Catalunya
+15001,Abegondo,A Coruña,12,Galicia
+22001,Abiego,Huesca,02,Aragón
+26001,Ábalos,La Rioja,17,La Rioja
+28001,La Acebeda,Madrid,13,Comunidad de Madrid
+30001,Abanilla,Murcia,14,Región de Murcia
+31001,Abáigar,Navarra,15,Comunidad Foral de Navarra
+33001,Allande,Asturias,03,Asturias
+35001,Agaete,Las Palmas,05,Canarias
+39001,Alfoz de Lloredo,Cantabria,06,Cantabria
+01002,Amurrio,Araba/Álava,16,País Vasco
+01003,Aramaio,Araba/Álava,16,País Vasco
+01004,Artziniega,Araba/Álava,16,País Vasco
+01006,Armiñón,Araba/Álava,16,País Vasco
+01008,Arratzua-Ubarrundia,Araba/Álava,16,País Vasco
+01009,Asparrena,Araba/Álava,16,País Vasco
+01010,Ayala/Aiara,Araba/Álava,16,País Vasco
+01011,Baños de Ebro/Mañueta,Araba/Álava,16,País Vasco
+01013,Barrundia,Araba/Álava,16,País Vasco
+01014,Berantevilla,Araba/Álava,16,País Vasco
+01016,Bernedo,Araba/Álava,16,País Vasco
+01017,Campezo/Kanpezu,Araba/Álava,16,País Vasco
+01018,Zigoitia,Araba/Álava,16,País Vasco
+01019,Kripan,Araba/Álava,16,País Vasco
+01020,Kuartango,Araba/Álava,16,País Vasco
+01021,Elburgo/Burgelu,Araba/Álava,16,País Vasco
+01022,Elciego,Araba/Álava,16,País Vasco
+01023,Elvillar/Bilar,Araba/Álava,16,País Vasco
+01027,Iruraiz-Gauna,Araba/Álava,16,País Vasco
+01028,Labastida/Bastida,Araba/Álava,16,País Vasco
+01030,Lagrán,Araba/Álava,16,País Vasco
+01031,Laguardia,Araba/Álava,16,País Vasco
+01032,Lanciego/Lantziego,Araba/Álava,16,País Vasco
+01033,Lapuebla de Labarca,Araba/Álava,16,País Vasco
+01034,Leza,Araba/Álava,16,País Vasco
+01036,Laudio/Llodio,Araba/Álava,16,País Vasco
+01037,Arraia-Maeztu,Araba/Álava,16,País Vasco
+01039,Moreda de Álava/Moreda Araba,Araba/Álava,16,País Vasco
+01041,Navaridas,Araba/Álava,16,País Vasco
+01042,Okondo,Araba/Álava,16,País Vasco
+01043,Oyón-Oion,Araba/Álava,16,País Vasco
+01044,Peñacerrada-Urizaharra,Araba/Álava,16,País Vasco
+01046,Erriberagoitia/Ribera Alta,Araba/Álava,16,País Vasco
+01047,Ribera Baja/Erriberabeitia,Araba/Álava,16,País Vasco
+01049,Añana,Araba/Álava,16,País Vasco
+01051,Agurain/Salvatierra,Araba/Álava,16,País Vasco
+01052,Samaniego,Araba/Álava,16,País Vasco
+01053,San Millán/Donemiliaga,Araba/Álava,16,País Vasco
+01054,Urkabustaiz,Araba/Álava,16,País Vasco
+01055,Valdegovía/Gaubea,Araba/Álava,16,País Vasco
+01056,Harana/Valle de Arana,Araba/Álava,16,País Vasco
+01057,Villabuena de Álava/Eskuernaga,Araba/Álava,16,País Vasco
+01058,Legutio,Araba/Álava,16,País Vasco
+01059,Vitoria-Gasteiz,Araba/Álava,16,País Vasco
+01060,Yécora/Iekora,Araba/Álava,16,País Vasco
+01061,Zalduondo,Araba/Álava,16,País Vasco
+01062,Zambrana,Araba/Álava,16,País Vasco
+01063,Zuia,Araba/Álava,16,País Vasco
+01901,Iruña Oka/Iruña de Oca,Araba/Álava,16,País Vasco
+01902,Lantarón,Araba/Álava,16,País Vasco
+02002,Alatoz,Albacete,08,Castilla-La Mancha
+02003,Albacete,Albacete,08,Castilla-La Mancha
+02004,Albatana,Albacete,08,Castilla-La Mancha
+02005,Alborea,Albacete,08,Castilla-La Mancha
+02006,Alcadozo,Albacete,08,Castilla-La Mancha
+02007,Alcalá del Júcar,Albacete,08,Castilla-La Mancha
+02008,Alcaraz,Albacete,08,Castilla-La Mancha
+02009,Almansa,Albacete,08,Castilla-La Mancha
+02010,Alpera,Albacete,08,Castilla-La Mancha
+02011,Ayna,Albacete,08,Castilla-La Mancha
+02012,Balazote,Albacete,08,Castilla-La Mancha
+02013,Balsa de Ves,Albacete,08,Castilla-La Mancha
+02014,El Ballestero,Albacete,08,Castilla-La Mancha
+02015,Barrax,Albacete,08,Castilla-La Mancha
+02016,Bienservida,Albacete,08,Castilla-La Mancha
+02017,Bogarra,Albacete,08,Castilla-La Mancha
+02018,Bonete,Albacete,08,Castilla-La Mancha
+02019,El Bonillo,Albacete,08,Castilla-La Mancha
+02020,Carcelén,Albacete,08,Castilla-La Mancha
+02021,Casas de Juan Núñez,Albacete,08,Castilla-La Mancha
+02022,Casas de Lázaro,Albacete,08,Castilla-La Mancha
+02023,Casas de Ves,Albacete,08,Castilla-La Mancha
+02024,Casas-Ibáñez,Albacete,08,Castilla-La Mancha
+02025,Caudete,Albacete,08,Castilla-La Mancha
+02026,Cenizate,Albacete,08,Castilla-La Mancha
+02027,Corral-Rubio,Albacete,08,Castilla-La Mancha
+02028,Cotillas,Albacete,08,Castilla-La Mancha
+02029,Chinchilla de Monte-Aragón,Albacete,08,Castilla-La Mancha
+02030,Elche de la Sierra,Albacete,08,Castilla-La Mancha
+02031,Férez,Albacete,08,Castilla-La Mancha
+02032,Fuensanta,Albacete,08,Castilla-La Mancha
+02033,Fuente-Álamo,Albacete,08,Castilla-La Mancha
+02034,Fuentealbilla,Albacete,08,Castilla-La Mancha
+02035,La Gineta,Albacete,08,Castilla-La Mancha
+02036,Golosalvo,Albacete,08,Castilla-La Mancha
+02037,Hellín,Albacete,08,Castilla-La Mancha
+02038,La Herrera,Albacete,08,Castilla-La Mancha
+02039,Higueruela,Albacete,08,Castilla-La Mancha
+02040,Hoya-Gonzalo,Albacete,08,Castilla-La Mancha
+02041,Jorquera,Albacete,08,Castilla-La Mancha
+02042,Letur,Albacete,08,Castilla-La Mancha
+02043,Lezuza,Albacete,08,Castilla-La Mancha
+02044,Liétor,Albacete,08,Castilla-La Mancha
+02045,Madrigueras,Albacete,08,Castilla-La Mancha
+02046,Mahora,Albacete,08,Castilla-La Mancha
+02047,Masegoso,Albacete,08,Castilla-La Mancha
+02048,Minaya,Albacete,08,Castilla-La Mancha
+02049,Molinicos,Albacete,08,Castilla-La Mancha
+02050,Montalvos,Albacete,08,Castilla-La Mancha
+02051,Montealegre del Castillo,Albacete,08,Castilla-La Mancha
+02052,Motilleja,Albacete,08,Castilla-La Mancha
+02053,Munera,Albacete,08,Castilla-La Mancha
+02054,Navas de Jorquera,Albacete,08,Castilla-La Mancha
+02055,Nerpio,Albacete,08,Castilla-La Mancha
+02056,Ontur,Albacete,08,Castilla-La Mancha
+02057,Ossa de Montiel,Albacete,08,Castilla-La Mancha
+02058,Paterna del Madera,Albacete,08,Castilla-La Mancha
+02059,Peñascosa,Albacete,08,Castilla-La Mancha
+02060,Peñas de San Pedro,Albacete,08,Castilla-La Mancha
+02061,Pétrola,Albacete,08,Castilla-La Mancha
+02062,Povedilla,Albacete,08,Castilla-La Mancha
+02063,Pozohondo,Albacete,08,Castilla-La Mancha
+02064,Pozo-Lorente,Albacete,08,Castilla-La Mancha
+02065,Pozuelo,Albacete,08,Castilla-La Mancha
+02066,La Recueja,Albacete,08,Castilla-La Mancha
+02067,Riópar,Albacete,08,Castilla-La Mancha
+02068,Robledo,Albacete,08,Castilla-La Mancha
+02069,La Roda,Albacete,08,Castilla-La Mancha
+02070,Salobre,Albacete,08,Castilla-La Mancha
+02071,San Pedro,Albacete,08,Castilla-La Mancha
+02072,Socovos,Albacete,08,Castilla-La Mancha
+02073,Tarazona de la Mancha,Albacete,08,Castilla-La Mancha
+02074,Tobarra,Albacete,08,Castilla-La Mancha
+02075,Valdeganga,Albacete,08,Castilla-La Mancha
+02076,Vianos,Albacete,08,Castilla-La Mancha
+02077,Villa de Ves,Albacete,08,Castilla-La Mancha
+02078,Villalgordo del Júcar,Albacete,08,Castilla-La Mancha
+02079,Villamalea,Albacete,08,Castilla-La Mancha
+02080,Villapalacios,Albacete,08,Castilla-La Mancha
+02081,Villarrobledo,Albacete,08,Castilla-La Mancha
+02082,Villatoya,Albacete,08,Castilla-La Mancha
+02083,Villavaliente,Albacete,08,Castilla-La Mancha
+02084,Villaverde de Guadalimar,Albacete,08,Castilla-La Mancha
+02085,Viveros,Albacete,08,Castilla-La Mancha
+02086,Yeste,Albacete,08,Castilla-La Mancha
+02901,Pozo Cañada,Albacete,08,Castilla-La Mancha
+03002,Agost,Alicante/Alacant,10,Comunitat Valenciana
+03003,Agres,Alicante/Alacant,10,Comunitat Valenciana
+03004,Aigües,Alicante/Alacant,10,Comunitat Valenciana
+03005,Albatera,Alicante/Alacant,10,Comunitat Valenciana
+03006,Alcalalí,Alicante/Alacant,10,Comunitat Valenciana
+03007,Alcosser,Alicante/Alacant,10,Comunitat Valenciana
+03008,Alcoleja,Alicante/Alacant,10,Comunitat Valenciana
+03009,Alcoi/Alcoy,Alicante/Alacant,10,Comunitat Valenciana
+03010,Alfafara,Alicante/Alacant,10,Comunitat Valenciana
+03011,"Alfàs del Pi, l'",Alicante/Alacant,10,Comunitat Valenciana
+03012,Algorfa,Alicante/Alacant,10,Comunitat Valenciana
+03013,Algueña,Alicante/Alacant,10,Comunitat Valenciana
+03014,Alacant/Alicante,Alicante/Alacant,10,Comunitat Valenciana
+03015,Almoradí,Alicante/Alacant,10,Comunitat Valenciana
+03016,Almudaina,Alicante/Alacant,10,Comunitat Valenciana
+03017,"Alqueria d'Asnar, l'",Alicante/Alacant,10,Comunitat Valenciana
+03018,Altea,Alicante/Alacant,10,Comunitat Valenciana
+03019,Aspe,Alicante/Alacant,10,Comunitat Valenciana
+03020,Balones,Alicante/Alacant,10,Comunitat Valenciana
+03021,Banyeres de Mariola,Alicante/Alacant,10,Comunitat Valenciana
+03022,Benasau,Alicante/Alacant,10,Comunitat Valenciana
+03023,Beneixama,Alicante/Alacant,10,Comunitat Valenciana
+03024,Benejúzar,Alicante/Alacant,10,Comunitat Valenciana
+03025,Benferri,Alicante/Alacant,10,Comunitat Valenciana
+03026,Beniarbeig,Alicante/Alacant,10,Comunitat Valenciana
+03027,Beniardà,Alicante/Alacant,10,Comunitat Valenciana
+03028,Beniarrés,Alicante/Alacant,10,Comunitat Valenciana
+03029,Benigembla,Alicante/Alacant,10,Comunitat Valenciana
+03030,Benidoleig,Alicante/Alacant,10,Comunitat Valenciana
+03031,Benidorm,Alicante/Alacant,10,Comunitat Valenciana
+03032,Benifallim,Alicante/Alacant,10,Comunitat Valenciana
+03033,Benifato,Alicante/Alacant,10,Comunitat Valenciana
+03034,Benijófar,Alicante/Alacant,10,Comunitat Valenciana
+03035,Benilloba,Alicante/Alacant,10,Comunitat Valenciana
+03036,Benillup,Alicante/Alacant,10,Comunitat Valenciana
+03037,Benimantell,Alicante/Alacant,10,Comunitat Valenciana
+03038,Benimarfull,Alicante/Alacant,10,Comunitat Valenciana
+03039,Benimassot,Alicante/Alacant,10,Comunitat Valenciana
+03040,Benimeli,Alicante/Alacant,10,Comunitat Valenciana
+03041,Benissa,Alicante/Alacant,10,Comunitat Valenciana
+03042,"Poble Nou de Benitatxell, el/Benitachell",Alicante/Alacant,10,Comunitat Valenciana
+03043,Biar,Alicante/Alacant,10,Comunitat Valenciana
+03044,Bigastro,Alicante/Alacant,10,Comunitat Valenciana
+03045,Bolulla,Alicante/Alacant,10,Comunitat Valenciana
+03046,Busot,Alicante/Alacant,10,Comunitat Valenciana
+03047,Calp,Alicante/Alacant,10,Comunitat Valenciana
+03048,Callosa d'en Sarrià,Alicante/Alacant,10,Comunitat Valenciana
+03049,Callosa de Segura,Alicante/Alacant,10,Comunitat Valenciana
+03050,"Campello, el",Alicante/Alacant,10,Comunitat Valenciana
+03051,"Camp de Mirra, el/Campo de Mirra",Alicante/Alacant,10,Comunitat Valenciana
+03052,Cañada,Alicante/Alacant,10,Comunitat Valenciana
+03053,Castalla,Alicante/Alacant,10,Comunitat Valenciana
+03054,Castell de Castells,Alicante/Alacant,10,Comunitat Valenciana
+03055,Catral,Alicante/Alacant,10,Comunitat Valenciana
+03056,Cocentaina,Alicante/Alacant,10,Comunitat Valenciana
+03057,Confrides,Alicante/Alacant,10,Comunitat Valenciana
+03058,Cox,Alicante/Alacant,10,Comunitat Valenciana
+03059,Crevillent,Alicante/Alacant,10,Comunitat Valenciana
+03060,Quatretondeta,Alicante/Alacant,10,Comunitat Valenciana
+03061,Daya Nueva,Alicante/Alacant,10,Comunitat Valenciana
+03062,Daya Vieja,Alicante/Alacant,10,Comunitat Valenciana
+03063,Dénia,Alicante/Alacant,10,Comunitat Valenciana
+03064,Dolores,Alicante/Alacant,10,Comunitat Valenciana
+03065,Elx/Elche,Alicante/Alacant,10,Comunitat Valenciana
+03066,Elda,Alicante/Alacant,10,Comunitat Valenciana
+03067,Fageca,Alicante/Alacant,10,Comunitat Valenciana
+03068,Famorca,Alicante/Alacant,10,Comunitat Valenciana
+03069,Finestrat,Alicante/Alacant,10,Comunitat Valenciana
+03070,Formentera del Segura,Alicante/Alacant,10,Comunitat Valenciana
+03071,Gata de Gorgos,Alicante/Alacant,10,Comunitat Valenciana
+03072,Gaianes,Alicante/Alacant,10,Comunitat Valenciana
+03073,Gorga,Alicante/Alacant,10,Comunitat Valenciana
+03074,Granja de Rocamora,Alicante/Alacant,10,Comunitat Valenciana
+03075,"Castell de Guadalest, el",Alicante/Alacant,10,Comunitat Valenciana
+03076,Guardamar del Segura,Alicante/Alacant,10,Comunitat Valenciana
+03077,"Fondó de les Neus, el/Hondón de las Nieves",Alicante/Alacant,10,Comunitat Valenciana
+03078,Hondón de los Frailes,Alicante/Alacant,10,Comunitat Valenciana
+03079,Ibi,Alicante/Alacant,10,Comunitat Valenciana
+03080,Jacarilla,Alicante/Alacant,10,Comunitat Valenciana
+03081,Xaló,Alicante/Alacant,10,Comunitat Valenciana
+03082,Xàbia/Jávea,Alicante/Alacant,10,Comunitat Valenciana
+03083,Xixona/Jijona,Alicante/Alacant,10,Comunitat Valenciana
+03084,"Orxa, l'/Lorcha",Alicante/Alacant,10,Comunitat Valenciana
+03085,Llíber,Alicante/Alacant,10,Comunitat Valenciana
+03086,Millena,Alicante/Alacant,10,Comunitat Valenciana
+03088,Monforte del Cid,Alicante/Alacant,10,Comunitat Valenciana
+03089,Monòver/Monóvar,Alicante/Alacant,10,Comunitat Valenciana
+03090,Mutxamel,Alicante/Alacant,10,Comunitat Valenciana
+03091,Murla,Alicante/Alacant,10,Comunitat Valenciana
+03092,Muro de Alcoy,Alicante/Alacant,10,Comunitat Valenciana
+03093,Novelda,Alicante/Alacant,10,Comunitat Valenciana
+03094,"Nucia, la",Alicante/Alacant,10,Comunitat Valenciana
+03095,Ondara,Alicante/Alacant,10,Comunitat Valenciana
+03096,Onil,Alicante/Alacant,10,Comunitat Valenciana
+03097,Orba,Alicante/Alacant,10,Comunitat Valenciana
+03098,Orxeta,Alicante/Alacant,10,Comunitat Valenciana
+03099,Orihuela,Alicante/Alacant,10,Comunitat Valenciana
+03100,Parcent,Alicante/Alacant,10,Comunitat Valenciana
+03101,Pedreguer,Alicante/Alacant,10,Comunitat Valenciana
+03102,Pego,Alicante/Alacant,10,Comunitat Valenciana
+03103,Penàguila,Alicante/Alacant,10,Comunitat Valenciana
+03104,Petrer,Alicante/Alacant,10,Comunitat Valenciana
+03105,"Pinós, el/Pinoso",Alicante/Alacant,10,Comunitat Valenciana
+03106,Planes,Alicante/Alacant,10,Comunitat Valenciana
+03107,Polop,Alicante/Alacant,10,Comunitat Valenciana
+03109,Rafal,Alicante/Alacant,10,Comunitat Valenciana
+03110,"Ràfol d'Almúnia, el",Alicante/Alacant,10,Comunitat Valenciana
+03111,Redován,Alicante/Alacant,10,Comunitat Valenciana
+03112,Relleu,Alicante/Alacant,10,Comunitat Valenciana
+03113,Rojales,Alicante/Alacant,10,Comunitat Valenciana
+03114,"Romana, la",Alicante/Alacant,10,Comunitat Valenciana
+03115,Sagra,Alicante/Alacant,10,Comunitat Valenciana
+03116,Salinas,Alicante/Alacant,10,Comunitat Valenciana
+03117,Sanet y Negrals,Alicante/Alacant,10,Comunitat Valenciana
+03118,San Fulgencio,Alicante/Alacant,10,Comunitat Valenciana
+03119,Sant Joan d'Alacant,Alicante/Alacant,10,Comunitat Valenciana
+03120,San Miguel de Salinas,Alicante/Alacant,10,Comunitat Valenciana
+03121,Santa Pola,Alicante/Alacant,10,Comunitat Valenciana
+03122,Sant Vicent del Raspeig/San Vicente del Raspeig,Alicante/Alacant,10,Comunitat Valenciana
+03123,Sax,Alicante/Alacant,10,Comunitat Valenciana
+03124,Sella,Alicante/Alacant,10,Comunitat Valenciana
+03125,Senija,Alicante/Alacant,10,Comunitat Valenciana
+03127,Tàrbena,Alicante/Alacant,10,Comunitat Valenciana
+03128,Teulada,Alicante/Alacant,10,Comunitat Valenciana
+03129,Tibi,Alicante/Alacant,10,Comunitat Valenciana
+03130,Tollos,Alicante/Alacant,10,Comunitat Valenciana
+03131,Tormos,Alicante/Alacant,10,Comunitat Valenciana
+03132,"Torre de les Maçanes, la/Torremanzanas",Alicante/Alacant,10,Comunitat Valenciana
+03133,Torrevieja,Alicante/Alacant,10,Comunitat Valenciana
+03134,"Vall d'Alcalà, la",Alicante/Alacant,10,Comunitat Valenciana
+03135,"Vall d'Ebo, la",Alicante/Alacant,10,Comunitat Valenciana
+03136,"Vall de Gallinera, la",Alicante/Alacant,10,Comunitat Valenciana
+03137,"Vall de Laguar, la",Alicante/Alacant,10,Comunitat Valenciana
+03138,"Verger, el",Alicante/Alacant,10,Comunitat Valenciana
+03139,"Vila Joiosa, la/Villajoyosa",Alicante/Alacant,10,Comunitat Valenciana
+03140,Villena,Alicante/Alacant,10,Comunitat Valenciana
+03901,"Poblets, els",Alicante/Alacant,10,Comunitat Valenciana
+03902,Pilar de la Horadada,Alicante/Alacant,10,Comunitat Valenciana
+03903,Los Montesinos,Alicante/Alacant,10,Comunitat Valenciana
+03904,San Isidro,Alicante/Alacant,10,Comunitat Valenciana
+04002,Abrucena,Almería,01,Andalucía
+04003,Adra,Almería,01,Andalucía
+04004,Albanchez,Almería,01,Andalucía
+04005,Alboloduy,Almería,01,Andalucía
+04006,Albox,Almería,01,Andalucía
+04007,Alcolea,Almería,01,Andalucía
+04008,Alcóntar,Almería,01,Andalucía
+04009,Alcudia de Monteagud,Almería,01,Andalucía
+04010,Alhabia,Almería,01,Andalucía
+04011,Alhama de Almería,Almería,01,Andalucía
+04012,Alicún,Almería,01,Andalucía
+04013,Almería,Almería,01,Andalucía
+04014,Almócita,Almería,01,Andalucía
+04015,Alsodux,Almería,01,Andalucía
+04016,Antas,Almería,01,Andalucía
+04017,Arboleas,Almería,01,Andalucía
+04018,Armuña de Almanzora,Almería,01,Andalucía
+04019,Bacares,Almería,01,Andalucía
+04020,Bayárcal,Almería,01,Andalucía
+04021,Bayarque,Almería,01,Andalucía
+04022,Bédar,Almería,01,Andalucía
+04023,Beires,Almería,01,Andalucía
+04024,Benahadux,Almería,01,Andalucía
+04026,Benitagla,Almería,01,Andalucía
+04027,Benizalón,Almería,01,Andalucía
+04028,Bentarique,Almería,01,Andalucía
+04029,Berja,Almería,01,Andalucía
+04030,Canjáyar,Almería,01,Andalucía
+04031,Cantoria,Almería,01,Andalucía
+04032,Carboneras,Almería,01,Andalucía
+04033,Castro de Filabres,Almería,01,Andalucía
+04034,Cóbdar,Almería,01,Andalucía
+04035,Cuevas del Almanzora,Almería,01,Andalucía
+04036,Chercos,Almería,01,Andalucía
+04037,Chirivel,Almería,01,Andalucía
+04038,Dalías,Almería,01,Andalucía
+04041,Enix,Almería,01,Andalucía
+04043,Felix,Almería,01,Andalucía
+04044,Fines,Almería,01,Andalucía
+04045,Fiñana,Almería,01,Andalucía
+04046,Fondón,Almería,01,Andalucía
+04047,Gádor,Almería,01,Andalucía
+04048,Los Gallardos,Almería,01,Andalucía
+04049,Garrucha,Almería,01,Andalucía
+04050,Gérgal,Almería,01,Andalucía
+04051,Huécija,Almería,01,Andalucía
+04052,Huércal de Almería,Almería,01,Andalucía
+04053,Huércal-Overa,Almería,01,Andalucía
+04054,Íllar,Almería,01,Andalucía
+04055,Instinción,Almería,01,Andalucía
+04056,Laroya,Almería,01,Andalucía
+04057,Laujar de Andarax,Almería,01,Andalucía
+04058,Líjar,Almería,01,Andalucía
+04059,Lubrín,Almería,01,Andalucía
+04060,Lucainena de las Torres,Almería,01,Andalucía
+04061,Lúcar,Almería,01,Andalucía
+04062,Macael,Almería,01,Andalucía
+04063,María,Almería,01,Andalucía
+04064,Mojácar,Almería,01,Andalucía
+04065,Nacimiento,Almería,01,Andalucía
+04066,Níjar,Almería,01,Andalucía
+04067,Ohanes,Almería,01,Andalucía
+04068,Olula de Castro,Almería,01,Andalucía
+04069,Olula del Río,Almería,01,Andalucía
+04070,Oria,Almería,01,Andalucía
+04071,Padules,Almería,01,Andalucía
+04072,Partaloa,Almería,01,Andalucía
+04073,Paterna del Río,Almería,01,Andalucía
+04074,Pechina,Almería,01,Andalucía
+04075,Pulpí,Almería,01,Andalucía
+04076,Purchena,Almería,01,Andalucía
+04077,Rágol,Almería,01,Andalucía
+04078,Rioja,Almería,01,Andalucía
+04079,Roquetas de Mar,Almería,01,Andalucía
+04080,Santa Cruz de Marchena,Almería,01,Andalucía
+04081,Santa Fe de Mondújar,Almería,01,Andalucía
+04082,Senés,Almería,01,Andalucía
+04083,Serón,Almería,01,Andalucía
+04084,Sierro,Almería,01,Andalucía
+04085,Somontín,Almería,01,Andalucía
+04086,Sorbas,Almería,01,Andalucía
+04087,Suflí,Almería,01,Andalucía
+04088,Tabernas,Almería,01,Andalucía
+04089,Taberno,Almería,01,Andalucía
+04090,Tahal,Almería,01,Andalucía
+04091,Terque,Almería,01,Andalucía
+04092,Tíjola,Almería,01,Andalucía
+04093,Turre,Almería,01,Andalucía
+04094,Turrillas,Almería,01,Andalucía
+04095,Uleila del Campo,Almería,01,Andalucía
+04096,Urrácal,Almería,01,Andalucía
+04097,Velefique,Almería,01,Andalucía
+04098,Vélez-Blanco,Almería,01,Andalucía
+04099,Vélez-Rubio,Almería,01,Andalucía
+04100,Vera,Almería,01,Andalucía
+04101,Viator,Almería,01,Andalucía
+04102,Vícar,Almería,01,Andalucía
+04103,Zurgena,Almería,01,Andalucía
+04901,Las Tres Villas,Almería,01,Andalucía
+04902,El Ejido,Almería,01,Andalucía
+04903,La Mojonera,Almería,01,Andalucía
+04904,Balanegra,Almería,01,Andalucía
+05002,La Adrada,Ávila,07,Castilla y León
+05005,Albornos,Ávila,07,Castilla y León
+05007,Aldeanueva de Santa Cruz,Ávila,07,Castilla y León
+05008,Aldeaseca,Ávila,07,Castilla y León
+05010,La Aldehuela,Ávila,07,Castilla y León
+05012,Amavida,Ávila,07,Castilla y León
+05013,El Arenal,Ávila,07,Castilla y León
+05014,Arenas de San Pedro,Ávila,07,Castilla y León
+05015,Arevalillo,Ávila,07,Castilla y León
+05016,Arévalo,Ávila,07,Castilla y León
+05017,Aveinte,Ávila,07,Castilla y León
+05018,Avellaneda,Ávila,07,Castilla y León
+05019,Ávila,Ávila,07,Castilla y León
+05021,El Barco de Ávila,Ávila,07,Castilla y León
+05022,El Barraco,Ávila,07,Castilla y León
+05023,Barromán,Ávila,07,Castilla y León
+05024,Becedas,Ávila,07,Castilla y León
+05025,Becedillas,Ávila,07,Castilla y León
+05026,Bercial de Zapardiel,Ávila,07,Castilla y León
+05027,Las Berlanas,Ávila,07,Castilla y León
+05029,Bernuy-Zapardiel,Ávila,07,Castilla y León
+05030,Berrocalejo de Aragona,Ávila,07,Castilla y León
+05033,Blascomillán,Ávila,07,Castilla y León
+05034,Blasconuño de Matacabras,Ávila,07,Castilla y León
+05035,Blascosancho,Ávila,07,Castilla y León
+05036,El Bohodón,Ávila,07,Castilla y León
+05037,Bohoyo,Ávila,07,Castilla y León
+05038,Bonilla de la Sierra,Ávila,07,Castilla y León
+05039,Brabos,Ávila,07,Castilla y León
+05040,Bularros,Ávila,07,Castilla y León
+05041,Burgohondo,Ávila,07,Castilla y León
+05042,Cabezas de Alambre,Ávila,07,Castilla y León
+05043,Cabezas del Pozo,Ávila,07,Castilla y León
+05044,Cabezas del Villar,Ávila,07,Castilla y León
+05045,Cabizuela,Ávila,07,Castilla y León
+05046,Canales,Ávila,07,Castilla y León
+05047,Candeleda,Ávila,07,Castilla y León
+05048,Cantiveros,Ávila,07,Castilla y León
+05049,Cardeñosa,Ávila,07,Castilla y León
+05051,La Carrera,Ávila,07,Castilla y León
+05052,Casas del Puerto,Ávila,07,Castilla y León
+05053,Casasola,Ávila,07,Castilla y León
+05054,Casavieja,Ávila,07,Castilla y León
+05055,Casillas,Ávila,07,Castilla y León
+05056,Castellanos de Zapardiel,Ávila,07,Castilla y León
+05057,Cebreros,Ávila,07,Castilla y León
+05058,Cepeda la Mora,Ávila,07,Castilla y León
+05059,Cillán,Ávila,07,Castilla y León
+05060,Cisla,Ávila,07,Castilla y León
+05061,La Colilla,Ávila,07,Castilla y León
+05062,Collado de Contreras,Ávila,07,Castilla y León
+05063,Collado del Mirón,Ávila,07,Castilla y León
+05064,Constanzana,Ávila,07,Castilla y León
+05065,Crespos,Ávila,07,Castilla y León
+05066,Cuevas del Valle,Ávila,07,Castilla y León
+05067,Chamartín,Ávila,07,Castilla y León
+05069,Donjimeno,Ávila,07,Castilla y León
+05070,Donvidas,Ávila,07,Castilla y León
+05072,Espinosa de los Caballeros,Ávila,07,Castilla y León
+05073,Flores de Ávila,Ávila,07,Castilla y León
+05074,Fontiveros,Ávila,07,Castilla y León
+05075,Fresnedilla,Ávila,07,Castilla y León
+05076,El Fresno,Ávila,07,Castilla y León
+05077,Fuente el Saúz,Ávila,07,Castilla y León
+05078,Fuentes de Año,Ávila,07,Castilla y León
+05079,Gallegos de Altamiros,Ávila,07,Castilla y León
+05080,Gallegos de Sobrinos,Ávila,07,Castilla y León
+05081,Garganta del Villar,Ávila,07,Castilla y León
+05082,Gavilanes,Ávila,07,Castilla y León
+05083,Gemuño,Ávila,07,Castilla y León
+05084,Gilbuena,Ávila,07,Castilla y León
+05085,Gil García,Ávila,07,Castilla y León
+05086,Gimialcón,Ávila,07,Castilla y León
+05087,Gotarrendura,Ávila,07,Castilla y León
+05088,Grandes y San Martín,Ávila,07,Castilla y León
+05089,Guisando,Ávila,07,Castilla y León
+05090,Gutierre-Muñoz,Ávila,07,Castilla y León
+05092,Hernansancho,Ávila,07,Castilla y León
+05093,Herradón de Pinares,Ávila,07,Castilla y León
+05094,Herreros de Suso,Ávila,07,Castilla y León
+05095,Higuera de las Dueñas,Ávila,07,Castilla y León
+05096,La Hija de Dios,Ávila,07,Castilla y León
+05097,La Horcajada,Ávila,07,Castilla y León
+05099,Horcajo de las Torres,Ávila,07,Castilla y León
+05100,El Hornillo,Ávila,07,Castilla y León
+05101,Hoyocasero,Ávila,07,Castilla y León
+05102,El Hoyo de Pinares,Ávila,07,Castilla y León
+05103,Hoyorredondo,Ávila,07,Castilla y León
+05104,Hoyos del Collado,Ávila,07,Castilla y León
+05105,Hoyos del Espino,Ávila,07,Castilla y León
+05106,Hoyos de Miguel Muñoz,Ávila,07,Castilla y León
+05107,Hurtumpascual,Ávila,07,Castilla y León
+05108,Junciana,Ávila,07,Castilla y León
+05109,Langa,Ávila,07,Castilla y León
+05110,Lanzahíta,Ávila,07,Castilla y León
+05112,El Losar del Barco,Ávila,07,Castilla y León
+05113,Los Llanos de Tormes,Ávila,07,Castilla y León
+05114,Madrigal de las Altas Torres,Ávila,07,Castilla y León
+05115,Maello,Ávila,07,Castilla y León
+05116,Malpartida de Corneja,Ávila,07,Castilla y León
+05117,Mamblas,Ávila,07,Castilla y León
+05118,Mancera de Arriba,Ávila,07,Castilla y León
+05119,Manjabálago y Ortigosa de Rioalmar,Ávila,07,Castilla y León
+05120,Marlín,Ávila,07,Castilla y León
+05121,Martiherrero,Ávila,07,Castilla y León
+05122,Martínez,Ávila,07,Castilla y León
+05123,Mediana de Voltoya,Ávila,07,Castilla y León
+05124,Medinilla,Ávila,07,Castilla y León
+05125,Mengamuñoz,Ávila,07,Castilla y León
+05126,Mesegar de Corneja,Ávila,07,Castilla y León
+05127,Mijares,Ávila,07,Castilla y León
+05128,Mingorría,Ávila,07,Castilla y León
+05129,El Mirón,Ávila,07,Castilla y León
+05130,Mironcillo,Ávila,07,Castilla y León
+05131,Mirueña de los Infanzones,Ávila,07,Castilla y León
+05132,Mombeltrán,Ávila,07,Castilla y León
+05133,Monsalupe,Ávila,07,Castilla y León
+05134,Moraleja de Matacabras,Ávila,07,Castilla y León
+05135,Muñana,Ávila,07,Castilla y León
+05136,Muñico,Ávila,07,Castilla y León
+05138,Muñogalindo,Ávila,07,Castilla y León
+05139,Muñogrande,Ávila,07,Castilla y León
+05140,Muñomer del Peco,Ávila,07,Castilla y León
+05141,Muñopepe,Ávila,07,Castilla y León
+33024,Gijón,Asturias,03,Asturias
+15030,A Coruña,A Coruña,12,Galicia

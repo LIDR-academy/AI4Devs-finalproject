@@ -1,0 +1,333 @@
+<?php
+/**
+ * View for App\Livewire\Roles\Index (story 0011). Flat path, not
+ * roles/index.blade.php -- Livewire's Finder strips a trailing ".index"
+ * segment for an Index component in a subfolder, the same exception
+ * App\Livewire\Users\Index already relies on; see
+ * docs/conventions/naming.md#exception-a-component-named-index-resolves-to-its-parent-folders-name.
+ *
+ * This story owns markup and UI state only. Every query, mutation,
+ * validation rule and authorization decision belongs to sibling story 0010's
+ * component class -- the one deliberate exception is the per-row
+ * canEdit/canDelete UI hint story 0011 added to roles(), a narrow,
+ * precedented follow-up documented on that method itself.
+ *
+ * The permission catalog ($this->permissionOptions) is a flat, name-ordered
+ * collection of Permission rows ("<module>.<action>"). Grouping by module is
+ * a pure presentational transform over that already-fetched collection --
+ * open item 2's resolution -- so it adds no query and stays inside this
+ * story's split.
+ */
+?>
+<div class="w-full">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <flux:heading size="xl">{{ __('Roles & permissions') }}</flux:heading>
+            <flux:subheading>
+                {{ trans_choice('roles.index.summary', $this->roles->count(), ['count' => $this->roles->count()]) }}
+            </flux:subheading>
+        </div>
+
+        <flux:button variant="primary" icon="plus" wire:click="openCreateModal">
+            {{ __('New role') }}
+        </flux:button>
+    </div>
+
+    <div class="mt-6">
+        @if ($this->roles->count() > 0)
+            <flux:table>
+                <flux:table.columns>
+                    <flux:table.column>{{ __('Name') }}</flux:table.column>
+                    <flux:table.column>{{ __('Permissions') }}</flux:table.column>
+                    <flux:table.column>{{ __('Holders') }}</flux:table.column>
+                    <flux:table.column>{{ __('Actions') }}</flux:table.column>
+                </flux:table.columns>
+
+                <flux:table.rows>
+                    @foreach ($this->roles as $role)
+                        <flux:table.row :key="$role->id">
+                            <flux:table.cell>
+                                <div class="font-medium text-zinc-800 dark:text-white">{{ $role->name }}</div>
+                            </flux:table.cell>
+
+                            <flux:table.cell>
+                                {{ trans_choice('roles.index.permission_count', $role->permissions->count(), ['count' => $role->permissions->count()]) }}
+                            </flux:table.cell>
+
+                            <flux:table.cell>
+                                {{ $role->users_count }}
+                            </flux:table.cell>
+
+                            <flux:table.cell>
+                                <div class="flex items-center gap-2">
+                                    {{-- flux:button's own `tooltip` prop can't be bound conditionally: see
+                                    resources/views/livewire/users.blade.php's identical comment and
+                                    docs/errors-log.md (2026-08-16). Two separate branches instead. --}}
+                                    @if ($role->canEdit)
+                                        <flux:button
+                                            variant="ghost"
+                                            size="sm"
+                                            icon="pencil-square"
+                                            aria-label="{{ __('Edit :name', ['name' => $role->name]) }}"
+                                            data-test="edit-role-{{ $role->id }}"
+                                            wire:click="openEditModal(@js($role->id))"
+                                            class="cursor-pointer!"
+                                        />
+                                    @else
+                                        <flux:tooltip :content="__('roles.index.action_not_allowed')" class="cursor-not-allowed!">
+                                            <flux:button
+                                                variant="ghost"
+                                                size="sm"
+                                                icon="pencil-square"
+                                                aria-label="{{ __('Edit :name', ['name' => $role->name]) }}"
+                                                data-test="edit-role-{{ $role->id }}"
+                                                disabled
+                                            />
+                                        </flux:tooltip>
+                                    @endif
+
+                                    @if ($role->canDelete)
+                                        <flux:button
+                                            variant="ghost"
+                                            size="sm"
+                                            icon="trash"
+                                            aria-label="{{ __('Delete :name', ['name' => $role->name]) }}"
+                                            data-test="delete-role-{{ $role->id }}"
+                                            wire:click="confirmDeleteRole(@js($role->id))"
+                                            class="cursor-pointer! text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50"
+                                        />
+                                    @else
+                                        <flux:tooltip :content="__('roles.index.action_not_allowed')" class="cursor-not-allowed!">
+                                            <flux:button
+                                                variant="ghost"
+                                                size="sm"
+                                                icon="trash"
+                                                aria-label="{{ __('Delete :name', ['name' => $role->name]) }}"
+                                                data-test="delete-role-{{ $role->id }}"
+                                                disabled
+                                                class="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50"
+                                            />
+                                        </flux:tooltip>
+                                    @endif
+                                </div>
+                            </flux:table.cell>
+                        </flux:table.row>
+                    @endforeach
+                </flux:table.rows>
+            </flux:table>
+        @else
+            <div class="p-8 text-center border rounded-lg border-zinc-200 dark:border-zinc-700">
+                <flux:text>{{ __('roles.index.empty') }}</flux:text>
+            </div>
+        @endif
+    </div>
+
+    {{-- Create / edit modal --}}
+    <flux:modal name="role-modal" class="max-w-2xl md:min-w-2xl" @close="closeModal" wire:model="showModal">
+        {{-- Gated on $showModal so its "Cancel" text never collides with the delete modal's
+        own, matching resources/views/livewire/users.blade.php's identical pattern. --}}
+        @if ($showModal)
+            <div class="space-y-6">
+                <flux:heading size="lg">
+                    {{ $editingRoleId === null ? __('Create role') : __('Edit role') }}
+                </flux:heading>
+
+                <div class="space-y-4">
+                    <flux:input wire:model="name" :label="__('Name')" required autofocus />
+
+                    @php
+                        // Withheld BEFORE grouping (Phase 4 security audit, findings F2/F4) --
+                        // not a per-item @if inside the loop. Filtering first means the
+                        // administrator-level permission can never leave a module's row
+                        // rendered with an empty body (F4: a module whose only permission is
+                        // administrator-level would otherwise disclose the same fact
+                        // structurally), and it makes "the catalog is unfiltered except for
+                        // this one value" a single expression rather than something a second,
+                        // unrelated @if could accidentally duplicate or diverge from.
+                        $visiblePermissions = $this->canGrantAdministratorLevel
+                            ? $this->permissionOptions
+                            : $this->permissionOptions->reject(
+                                fn (\Spatie\Permission\Models\Permission $permission): bool => $permission->name === \App\Policies\RolePolicy::ADMINISTRATOR_LEVEL_PERMISSION
+                            );
+
+                        // Matrix rows: one per module, one column per CRUD action -- never a
+                        // hardcoded module list, only the four known action verbs
+                        // (RolePermissionSeeder::ACTIONS, the same set lang/*/roles.php's
+                        // 'actions' array names). A permission is placed in the grid purely by
+                        // whether its OWN action segment is one of the four; roles.manage and
+                        // roles.manage-administrators never are, so they fall out of the grid
+                        // by construction rather than by naming their module -- the matrix
+                        // would still correctly exclude a future non-CRUD permission under any
+                        // other module name.
+                        $crudActions = ['view', 'create', 'edit', 'delete'];
+
+                        $crudPermissionsByModule = [];
+                        $otherPermissions = collect();
+
+                        foreach ($visiblePermissions as $permission) {
+                            [$module, $action] = array_pad(explode('.', $permission->name, 2), 2, '');
+
+                            if (in_array($action, $crudActions, true)) {
+                                $crudPermissionsByModule[$module][$action] = $permission;
+                            } else {
+                                $otherPermissions->push($permission);
+                            }
+                        }
+
+                        ksort($crudPermissionsByModule);
+
+                        // docs/conventions/naming.md requires snake_case translation-key
+                        // leaves; a handful of catalog module/action segments are kebab-case
+                        // (sales-regions, payment-methods, store-languages,
+                        // manage-administrators), so the key is derived by mapping the
+                        // hyphen -- the permission name itself is never touched.
+                        $permissionLabel = function (string $module, string $action): string {
+                            $moduleKey = str_replace('-', '_', $module);
+                            $actionKey = str_replace('-', '_', $action);
+
+                            return __('roles.modules.'.$moduleKey).' — '.__('roles.actions.'.$actionKey);
+                        };
+                    @endphp
+
+                    {{-- The permission catalog is rendered in FULL for every actor, with exactly
+                    one deliberate exception -- see
+                    docs/security/authorization-patterns.md#two-guards-on-one-payload-must-agree-on-what-an-omission-means
+                    and #a-control-omitted-from-the-dom-is-safe-only-for-the-one-value-whose-guard-preserves-an-omission.
+                    Nothing else is ever filtered to what the acting user may themselves grant;
+                    the administrator-level permission is absent from the DOM entirely (not
+                    disabled) for anyone who is not the Super Admin, filtered above before the
+                    matrix is built so no module row can render with an empty body. --}}
+                    <flux:checkbox.group wire:model="selectedPermissionIds" :label="__('Permissions')">
+                        <div class="overflow-x-auto">
+                            <flux:table>
+                                <flux:table.columns>
+                                    <flux:table.column>{{ __('Module') }}</flux:table.column>
+                                    @foreach ($crudActions as $action)
+                                        <flux:table.column class="text-center">{{ __('roles.actions.'.$action) }}</flux:table.column>
+                                    @endforeach
+                                </flux:table.columns>
+
+                                <flux:table.rows>
+                                    @foreach ($crudPermissionsByModule as $module => $permissionsByAction)
+                                        <flux:table.row>
+                                            <flux:table.cell>{{ __('roles.modules.'.str_replace('-', '_', $module)) }}</flux:table.cell>
+
+                                            @foreach ($crudActions as $action)
+                                                <flux:table.cell class="text-center">
+                                                    {{-- A module is expected to carry all four CRUD actions
+                                                    (RolePermissionSeeder seeds every module x action
+                                                    combination), but the cell is guarded rather than assumed,
+                                                    so a catalog that ever seeds a partial module renders an
+                                                    empty cell instead of an undefined-index error. --}}
+                                                    @if (isset($permissionsByAction[$action]))
+                                                        <flux:checkbox
+                                                            value="{{ $permissionsByAction[$action]->id }}"
+                                                            aria-label="{{ $permissionLabel($module, $action) }}"
+                                                        />
+                                                    @endif
+                                                </flux:table.cell>
+                                            @endforeach
+                                        </flux:table.row>
+                                    @endforeach
+                                </flux:table.rows>
+                            </flux:table>
+                        </div>
+
+                        {{-- Permissions whose action segment isn't one of the four CRUD verbs
+                        don't fit the module x action grid at all (today: roles.manage and,
+                        for the Super Admin only, roles.manage-administrators) -- listed
+                        separately rather than forcing a fifth ragged column onto the table. --}}
+                        @if ($otherPermissions->isNotEmpty())
+                            <div class="mt-4 space-y-2">
+                                <flux:heading size="sm">{{ __('roles.modules.roles') }}</flux:heading>
+                                <flux:separator class="my-2" />
+
+                                @foreach ($otherPermissions as $permission)
+                                    @php
+                                        [$otherModule, $otherAction] = array_pad(explode('.', $permission->name, 2), 2, '');
+                                    @endphp
+
+                                    <flux:checkbox
+                                        value="{{ $permission->id }}"
+                                        :label="$permissionLabel($otherModule, $otherAction)"
+                                    />
+                                @endforeach
+                            </div>
+                        @endif
+                    </flux:checkbox.group>
+                </div>
+
+                <div class="flex gap-3 justify-end">
+                    <flux:button variant="outline" wire:click="closeModal">
+                        {{ __('Cancel') }}
+                    </flux:button>
+
+                    <flux:button
+                        variant="primary"
+                        wire:click="saveRole"
+                        wire:loading.attr="disabled"
+                        wire:target="saveRole"
+                    >
+                        {{ __('Save') }}
+                    </flux:button>
+                </div>
+            </div>
+        @endif
+    </flux:modal>
+
+    {{-- Delete confirmation modal --}}
+    <flux:modal name="delete-role-modal" class="max-w-md md:min-w-md" @close="closeDeleteModal" wire:model="showDeleteModal">
+        @if ($showDeleteModal)
+            @php
+                $deletingRole = $deletingRoleId ? $this->roles->firstWhere('id', $deletingRoleId) : null;
+                $deletingRoleHolderCount = $deletingRole->users_count ?? 0;
+            @endphp
+
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <flux:heading size="lg">{{ __('Delete role') }}</flux:heading>
+
+                    @if ($deletingRoleHolderCount > 0)
+                        {{-- The PRD's "no confirm-and-proceed path" expressed in markup: the
+                        destructive button below is not rendered at all in this branch. --}}
+                        <flux:text>
+                            {{ trans_choice('roles.index.delete_blocked', $deletingRoleHolderCount, ['count' => $deletingRoleHolderCount]) }}
+                        </flux:text>
+                    @else
+                        <flux:text>
+                            {{ __('Are you sure you want to delete ":name"? This cannot be undone.', ['name' => $deletingRoleName]) }}
+                        </flux:text>
+                    @endif
+
+                    {{-- Inline outlet for deleteRole()'s own re-check (deletingRoleId): the
+                    pre-emptive branch above already reflects the same holder count in the
+                    normal case, but a role deleted/re-assigned between page load and click
+                    would refuse here with no branch above to render it. --}}
+                    <flux:error name="deletingRoleId" />
+                </div>
+
+                <div class="flex gap-3 justify-end">
+                    <flux:button variant="outline" wire:click="closeDeleteModal">
+                        {{ __('Cancel') }}
+                    </flux:button>
+
+                    {{-- Phase 4 security audit finding F3: fail closed, not open, if the row
+                    can't be resolved (a genuine race -- the role was deleted or reassigned
+                    between page load and click). $deletingRole !== null is required in addition
+                    to the holder count, so a missing row never renders the destructive button
+                    just because ?? 0 read as "no holders". --}}
+                    @if ($deletingRole !== null && $deletingRoleHolderCount === 0)
+                        <flux:button
+                            variant="danger"
+                            wire:click="deleteRole"
+                            wire:loading.attr="disabled"
+                            wire:target="deleteRole"
+                        >
+                            {{ __('Delete :name', ['name' => $deletingRoleName]) }}
+                        </flux:button>
+                    @endif
+                </div>
+            </div>
+        @endif
+    </flux:modal>
+</div>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inicio · Panel Admin Arospe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/index.css">
+</head>
+<body data-title="Inicio" data-sub="Resumen de tu panel de administración">
+
+  <main data-view>
+    <div class="page">
+
+      <div class="hero">
+        <div class="hero__text">
+          <h2>Buenas tardes, Laura</h2>
+          <p>Gestiona usuarios, la configuración de la tienda y todo el contenido de Arospe desde un solo lugar.</p>
+        </div>
+        <div class="hero__stats">
+          <div class="stat"><div class="stat__num" data-stat="users">6</div><div class="stat__lbl">USUARIOS</div></div>
+          <div class="stat"><div class="stat__num" data-stat="products">6</div><div class="stat__lbl">PRODUCTOS</div></div>
+          <div class="stat"><div class="stat__num" data-stat="media">12</div><div class="stat__lbl">IMÁGENES</div></div>
+        </div>
+      </div>
+
+      <div class="quick">
+        <a class="quick__card" href="usuarios.html">
+          <div class="quick__ico quick__ico--indigo" data-ico="usuarios"></div>
+          <div><div class="quick__title">Gestión de Usuarios</div><div class="quick__desc">Administra cuentas, roles y permisos del equipo.</div></div>
+        </a>
+        <a class="quick__card" href="impuestos.html">
+          <div class="quick__ico quick__ico--green" data-ico="impuestos"></div>
+          <div><div class="quick__title">Impuestos &amp; Envíos</div><div class="quick__desc">Configura IVA por país y tarifas de envío por zona.</div></div>
+        </a>
+        <a class="quick__card" href="productos.html">
+          <div class="quick__ico quick__ico--amber" data-ico="productos"></div>
+          <div><div class="quick__title">Productos</div><div class="quick__desc">Editor enriquecido con galería de imágenes integrada.</div></div>
+        </a>
+        <a class="quick__card" href="blog.html">
+          <div class="quick__ico quick__ico--pink" data-ico="blog"></div>
+          <div><div class="quick__title">Blog</div><div class="quick__desc">Redacta artículos con el mismo gestor de medios.</div></div>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/index.js"></script>
+</body>
+</html>

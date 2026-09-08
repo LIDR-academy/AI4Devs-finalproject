@@ -1,0 +1,5 @@
+[
+  {"alpha2": "ES", "name_es": "España", "name_en": "Spain"},
+  {"alpha2": "FR", "name_es": "Francia", "name_en": "France"},
+  {"alpha2": "ES", "name_es": "España (duplicada)", "name_en": "Spain (duplicate)"}
+]

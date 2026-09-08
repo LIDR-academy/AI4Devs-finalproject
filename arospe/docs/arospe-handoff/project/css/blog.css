@@ -1,0 +1,3 @@
+/* blog.css — específico de Gestión del Blog */
+.b-grid{grid-template-columns:2.6fr 1fr 1fr 1fr 60px}
+.b-grid.table__row{padding-top:15px;padding-bottom:15px}

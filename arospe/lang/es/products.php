@@ -1,0 +1,190 @@
+<?php
+
+// Story 0024 -- created here; extended (never recreated) by 0024a, 0024b,
+// 0026, 0027 and 0028. Key-for-key identical to lang/en/products.php.
+return [
+    'types' => [
+        'physical' => 'Físico',
+        'virtual' => 'Virtual',
+    ],
+
+    'statuses' => [
+        'active' => 'Activo',
+        'draft' => 'Borrador',
+    ],
+
+    'display_statuses' => [
+        'out_of_stock' => 'Agotado',
+    ],
+
+    'categories' => [
+        // Phase 5 review finding N-10: leads with the refusal, matching lang/es/roles.php's
+        // house style (index.delete_blocked), rather than leading with the category.
+        'delete_blocked' => 'No se puede eliminar esta categoría porque la utiliza :count producto.'
+            .'|No se puede eliminar esta categoría porque la utilizan :count productos.',
+
+        // Story 0025 -- key-for-key identical to lang/en/products.php.
+        'index' => [
+            'action_not_allowed' => 'Acción no permitida',
+        ],
+    ],
+
+    // Story 0026 -- key-for-key identical to lang/en/products.php.
+    'sales_regions' => [
+        'not_in_catalog' => 'Una de las zonas de venta seleccionadas no está en el catálogo.',
+        'not_assignable' => 'Una de las zonas de venta seleccionadas no se puede asignar -- puede estar desactivada, o puede ser una cabecera sobre territorios fiscales en lugar de una entrada asignable.',
+        'unresolvable' => 'No se pudo verificar una de las zonas de venta seleccionadas. Revisa tu selección e inténtalo de nuevo.',
+    ],
+
+    // Historia 0027 -- clave por clave idéntico a lang/en/products.php.
+    'index' => [
+        'title' => 'Productos',
+        'new_product' => 'Nuevo producto',
+        'empty' => 'No se encontraron productos.',
+        'thumbnail_alt' => 'Miniatura del producto',
+        'action_not_allowed' => 'Acción no permitida',
+        'delete_confirm_title' => 'Eliminar producto',
+        'delete_confirm_text' => '¿Seguro que quieres eliminar ":name"? Esta acción no se puede deshacer.',
+    ],
+
+    // Historia 0029 -- clave por clave idéntico a lang/en/products.php.
+    'variants' => [
+        'duplicate_combination' => 'Esta combinación de valores de atributo ya existe en este producto.',
+        'derived_sku_taken' => 'El SKU derivado :sku ya está en uso por otro producto o variante.',
+        'derived_sku_empty_segment' => 'El valor de atributo ":value" no se puede usar para derivar un SKU -- por favor, renómbralo.',
+        'derived_sku_too_long' => 'El SKU derivado superaría los :max caracteres. Renombra un valor de atributo o el SKU del producto para acortarlo.',
+        'parent_sku_change_collides' => 'Cambiar el SKU del producto crearía un SKU duplicado para una de sus variantes. No se guardaron los cambios.',
+
+        // Historia 0029a -- clave por clave idéntico a lang/en/products.php.
+        'value_in_use' => 'Este valor no se puede eliminar: lo utiliza :count variante.|Este valor no se puede eliminar: lo utilizan :count variantes.',
+        'type_in_use' => 'Este tipo no se puede eliminar: lo utiliza :count variante.|Este tipo no se puede eliminar: lo utilizan :count variantes.',
+
+        // Historia 0030a -- clave por clave idéntico a lang/en/products.php.
+        'rename_notice' => 'Renombrar este valor actualizará el SKU de :count variante.|Renombrar este valor actualizará el SKU de :count variantes.',
+
+        // Historia 0029b -- clave por clave idéntico a lang/en/products.php.
+        'generate' => [
+            'empty_type' => 'El tipo de atributo ":type" no tiene valores, por lo que no se puede usar para generar combinaciones.',
+            'too_many' => 'Generar estos tipos crearía :attempted combinaciones, por encima del límite de :limit. Selecciona menos tipos o valores.',
+            'summary' => ':count variante creada.|:count variantes creadas.',
+
+            // Historia 0031a -- clave por clave idéntico a lang/en/products.php.
+            'trigger' => 'Generar combinaciones',
+            'modal_title' => 'Generar combinaciones',
+            'intro' => 'Elige los tipos de atributo a combinar. Cada valor de cada tipo seleccionado se combina con cada valor de los demás.',
+            'types_legend' => 'Tipos de atributo',
+            'types_help' => 'Se ofrece cada tipo del catálogo, lo use o no todavía este producto.',
+            'count' => ':count combinación.|:count combinaciones.',
+            'over_limit' => 'Esta selección crearía :count combinaciones, por encima del límite de :limit. Selecciona menos tipos.',
+            'confirm' => 'Generar',
+            'cancel' => 'Cancelar',
+            'result_title' => 'Resultado de la generación',
+            'result_skipped' => ':count combinación ya existía.|:count combinaciones ya existían.',
+            'result_refused' => ':count combinación no se pudo crear.|:count combinaciones no se pudieron crear.',
+            'result_dismiss' => 'Descartar',
+            'no_types_selected' => 'Selecciona al menos un tipo de atributo.',
+        ],
+
+        // Historia 0031 -- el compositor de variantes anidado en el editor de producto. Clave por
+        // clave idéntico a lang/en/products.php.
+        'builder' => [
+            'heading' => 'Variantes',
+            'summary' => ':count variantes',
+            'add' => 'Añadir variante',
+            'empty' => 'Este producto todavía no tiene variantes.',
+            'requires_saved_product' => 'Guarda primero el producto para empezar a añadir variantes.',
+            'no_attribute_types' => 'Todavía no hay tipos de atributo definidos. Define al menos uno antes de crear una variante.',
+            'action_not_allowed' => 'Acción no permitida',
+        ],
+
+        'columns' => [
+            'combination' => 'Combinación',
+            'sku' => 'SKU',
+            'price' => 'Precio',
+            'stock' => 'Stock',
+            'image' => 'Imagen',
+            'actions' => 'Acciones',
+        ],
+
+        'form' => [
+            'create_title' => 'Nueva variante',
+            'edit_title' => 'Editar variante',
+            'combination_legend' => 'Combinación',
+            'attribute_type_label' => 'Tipo de atributo',
+            'attribute_type_placeholder' => 'Selecciona un tipo de atributo',
+            'attribute_value_label' => 'Valor',
+            'attribute_value_placeholder' => 'Selecciona un valor',
+            'add_attribute_row' => 'Añadir atributo',
+            'remove_attribute_row' => 'Quitar atributo',
+            'price_label' => 'Precio',
+            'price_prefilled_help' => 'Rellenado con el precio del producto -- cámbialo si esta variante tiene un precio distinto.',
+            'stock_label' => 'Stock',
+            'save' => 'Guardar',
+            'cancel' => 'Cancelar',
+        ],
+
+        'sku' => [
+            'preview_label' => 'SKU derivado',
+            'preview_pending' => 'Elige valores de atributo para previsualizar el SKU.',
+            'preview_provisional' => 'Provisional -- puede cambiar todavía a medida que se eligen más valores de atributo.',
+            'derived_notice' => 'Este SKU se deriva del SKU del producto y de los valores de atributo elegidos. No se puede escribir directamente.',
+            'remedy_hint' => 'Cambia el SKU del producto o renombra el valor del atributo para resolver esto.',
+        ],
+
+        'combination' => [
+            'immutable_notice' => 'La combinación de una variante no se puede cambiar una vez creada. Elimina esta variante y crea una nueva en su lugar.',
+            'duplicate_of' => 'Ver :label',
+        ],
+
+        'image' => [
+            'own_badge' => 'Propia',
+            'inherited_badge' => 'Heredada',
+            'none' => 'Sin imagen',
+            'choose' => 'Elegir de la galería',
+            'replace' => 'Cambiar imagen',
+            'revert_to_inherited' => 'Usar la imagen del producto',
+            'confirm_label' => 'Usar esta imagen',
+            'clear' => 'Quitar',
+        ],
+
+        'delete' => [
+            'title' => 'Eliminar variante',
+            'confirm' => '¿Seguro que quieres eliminar ":label" (:sku)?',
+            'irreversible' => 'Esta acción es permanente y no se puede deshacer.',
+        ],
+    ],
+
+    // Historia 0027 -- clave por clave idéntico a lang/en/products.php.
+    'editor' => [
+        'title_create' => 'Nuevo producto',
+        'title_edit' => 'Editar producto',
+        'name_label' => 'Nombre',
+        'sku_label' => 'SKU',
+        'category_label' => 'Categoría',
+        'category_placeholder' => 'Selecciona una categoría',
+        'type_label' => 'Tipo',
+        'type_placeholder' => 'Selecciona un tipo',
+        'status_label' => 'Estado',
+        'price_label' => 'Precio',
+        'stock_label' => 'Stock',
+        'description_label' => 'Descripción',
+        'description_sanitization_notice' => 'El formato se limita a las opciones de la barra de herramientas; cualquier otro se elimina al guardar el producto.',
+        'featured_image_label' => 'Imagen destacada',
+        'featured_image_choose' => 'Elegir de la galería',
+        'featured_image_clear' => 'Quitar',
+        'gallery_label' => 'Galería',
+        'gallery_add' => 'Añadir imágenes',
+        'regions_label' => 'Zonas de venta',
+        'save' => 'Guardar',
+        'cancel' => 'Cancelar',
+    ],
+
+    // Historia 0030 -- clave por clave idéntico a lang/en/products.php.
+    'attribute_types' => [
+        'summary' => ':total tipos · :values valores',
+        'no_types' => 'No se encontraron tipos de atributos.',
+        'no_values' => 'Aún no hay valores.',
+        'action_not_allowed' => 'Acción no permitida',
+        'value_preview_more' => '+:count más',
+    ],
+];

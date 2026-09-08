@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Usuarios · Panel Admin Arospe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/usuarios.css">
+</head>
+<body data-title="Gestión de Usuarios" data-sub="Administra cuentas, roles y permisos">
+
+  <main data-view>
+    <div class="page">
+      <div class="section-head">
+        <div class="section-meta" data-meta></div>
+        <button class="btn btn-primary" data-add></button>
+      </div>
+      <div class="card">
+        <div class="table__head u-grid">
+          <div>USUARIO</div><div>ROL</div><div>ESTADO</div><div class="cell-right">ACCIONES</div>
+        </div>
+        <div data-rows></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/usuarios.js"></script>
+</body>
+</html>
