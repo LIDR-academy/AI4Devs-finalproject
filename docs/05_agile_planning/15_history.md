@@ -663,3 +663,13 @@ inputs:
 - **trivy frontend (9 HIGH, SO):** base `nginx:stable-alpine` (Alpine 3.24, limpio en Entrega 2) con disclosures nuevos en `libcrypto3` (OpenSSL DoS) + `util-linux` (7× TOCTOU/SUID en `mount`/`nsenter`, no explotables en nginx non-root pero trivy falla por severidad). **Fix:** `RUN apk --no-cache upgrade` en el stage `runner` de ambos Dockerfiles (determinista aunque la capa cacheada del base tag no tenga los parches).
 - **Tests flaky endurecidos:** `RecipeAvailabilityPreview.test.tsx` (×3) y `RecipeSelectorModal.test.tsx` (×1) — el texto de disponibilidad y el estado `disabled` del botón "Confirmar Preparación" se asientan en renders distintos; bajo carga de CPU (el `pnpm run test` de CI corre backend+frontend en paralelo) la aserción fallaba. Ambas aserciones movidas dentro del mismo `waitFor`. 2 corridas paralelas completas → 46+89 test files verdes.
 - **Verificado:** `docker build` + `trivy image --severity CRITICAL,HIGH --exit-code 1` sobre ambas imágenes reconstruidas → **0 HIGH/CRITICAL** (alpine 3.24.1, clean). `pnpm audit` → solo los 2 residuales dev-only (vite/vitest). `pnpm test`/`build`/`lint` verdes. Sin push.
+
+### 2026-09-08 - Design system v5.9.0: feedback de pulsación + botón secundario más sutil + aro semántico
+- **Petición de producto** (revisión de UI antes de la entrega): (1) el keypad PIN no daba respuesta visual al pulsar; (2) "Conciliar Turno"/"Sincronizar" (y todos los `.btn-secondary`) muy resaltantes; (3) el borde de los `ActionButton` circulares que sea el color del icono.
+- **Acciones (commit `[skip-tk]`, `styles/` + `05_ui_ux_design_system.md` §7):**
+  - `buttons.css`: `.btn-touch:active { transform: scale(.97) }` global (antes: ningún botón tenía `:active` — el keypad se sentía inerte en tablet). `PinPad.module.css`: `.pin-digit-btn:active` → flash del color primario, `.pin-delete-btn:active` → flash rojo. El recorrido lo suprime `prefers-reduced-motion: reduce` (v5.6.0), el cambio de color queda.
+  - `.btn-secondary` → "ghost": `background: transparent` + borde `1px` (antes: relleno `--bg-card` + borde `2px` brillante). `--rule` a 1px sigue dando >13:1 → afordancia intacta (WCAG 1.4.11). Hover rellena.
+  - `ActionButton` (turno día): el borde pasa de `--rule` genérico a `--color-X-text` semántico (turno noche ya usaba el color pleno).
+- **Verificado en vivo** (Playwright contra `pnpm dev`, turno noche). frontend 243 tests, build/lint verdes, `check_fefo_contrast.mjs` verde.
+- **Diferido a v6.0.0 (post-entrega):** degradados sutiles.
+- **Hallazgo de paso (no arreglado):** `.neutral-badge` usa `--border-card` (cremita brillante en noche) como fondo sin `color` propio → texto ilegible (columna "Unidad Medida" de `/bodega`). Candidato a ticket menor.

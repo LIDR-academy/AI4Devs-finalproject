@@ -1,6 +1,6 @@
 ---
 document: ui_ux_design_system
-version: 5.8.0
+version: 5.9.0
 status: approved
 inputs:
   - docs/00_stack_manifest.md
@@ -219,9 +219,9 @@ Superficie mínima **48×48px** con **8px** de margen (`.btn-touch`); teclado de
 
 | Componente/Variante | Default | Hover | Active | Focus-visible | Disabled | Loading | Error |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `.btn-primary` | ✅ | ✅ | ⚠️ solo transición genérica | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ✅ (`[aria-busy]` + spinner, v5.8.0) | N/A |
-| `.btn-secondary` | ✅ | ✅ | ⚠️ solo transición genérica | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ✅ (`[aria-busy]` + spinner, v5.8.0) | N/A |
-| `.btn-danger` | ✅ | ✅ (`filter: brightness`) | ⚠️ solo transición genérica | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ✅ (`[aria-busy]` + spinner, v5.8.0) | N/A |
+| `.btn-primary` | ✅ | ✅ | ✅ (`scale(.97)`, v5.9.0) | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ✅ (`[aria-busy]` + spinner, v5.8.0) | N/A |
+| `.btn-secondary` (ghost v5.9.0) | ✅ | ✅ | ✅ (`scale(.97)`, v5.9.0) | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ✅ (`[aria-busy]` + spinner, v5.8.0) | N/A |
+| `.btn-danger` | ✅ | ✅ (`filter: brightness`) | ✅ (`scale(.97)`, v5.9.0) | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ✅ (`[aria-busy]` + spinner, v5.8.0) | N/A |
 | `.input-touch` | ✅ | N/A | N/A | ✅ (`box-shadow` anillo propio) | ❌ gap | N/A | vía `ErrorBanner`, no estilo propio del input |
 
 > **Foco (v5.5.0):** regla global `:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px }` en `styles/base/reset.css` — cubre botones, enlaces, `RowButton` y toggles. `--color-primary` sobre `--bg-root` verificado ≥ 6.79:1 por `check_fefo_contrast.mjs`. Los inputs conservan su `:focus` propio (marcan foco también al puntero).
@@ -310,6 +310,7 @@ Transversal a todas las pantallas — obligatorios en cada una:
 
 | Versión | Ticket/US | Sección(es) afectada(s) | Qué cambió |
 | :--- | :--- | :--- | :--- |
+| 5.9.0 | — (petición de producto) | §7 | **Feedback de pulsación + secundario más sutil + aro semántico en botones de acción.** (1) `:active { transform: scale(.97) }` global para `.btn-touch` (antes: ningún botón tenía `:active` — el keypad PIN se sentía inerte en tablet); el keypad además hace flash del color primario. (2) `.btn-secondary` pasa a "ghost": `background: transparent` + borde `1px` (antes: relleno `--bg-card` + borde `2px` brillante que competía con las acciones primarias — caso "Conciliar Turno"/"Sincronizar"). (3) `ActionButton` (día) cambia el borde de `--rule` genérico al tono `--color-X-text` semántico. `check_fefo_contrast.mjs` verde. |
 | 5.8.0 | — (cierre de gap §7 Loading) | §7 | **Estado Loading de botones.** Un botón de submit en vuelo pone `aria-busy="true"` + `styles/components/buttons.css` renderiza un anillo giratorio `::before` (oculto bajo `prefers-reduced-motion: reduce`). Cableado en `ModalFooterActions` (9 modales) + ~11 botones inline de alta/auth/conciliación/ajustes/rescate. `frontend_rules.md` §3 lo exige para botones nuevos. `UserStatusForm` queda pendiente (deuda de complejidad preexistente). |
 | 5.7.0 | — (cierre de gap §3 Guard 7) | §3 | **Tokens de interlineado.** `--leading-tight` (1.15, headings) / `--leading-snug` (1.35) / `--leading-normal` (1.45, `body`). Antes `body` heredaba `normal` (~1.2) — cambio visible: todo texto corrido gana ~20% de alto de línea (bloques multi-línea un poco más altos; texto de una línea sin cambio). Headings en mayúsculas se mantienen apretados. Los 3 `line-height` ad-hoc previos migran a token. Valor 1.45 (no 1.5) como compromiso para una UI densa. |
 | 5.6.0 | — (cierre de gap §5) | §5 | **Reducción de movimiento, cobertura completa.** Regla global `@media (prefers-reduced-motion: reduce)` en `styles/base/reset.css` que vuelve instantánea toda transición/animación (`*`) — antes solo `body` y `ActionButton:hover` estaban condicionados (patrón opt-in), el `pulse` infinito de `AlertFeed` y el fade/scale de modales quedaban sin gatear. Se eliminan los 2 gates `no-preference` ad-hoc, ahora redundantes. Sin cambio para usuarios sin la preferencia activada. |

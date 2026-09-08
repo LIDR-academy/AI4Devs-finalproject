@@ -27,13 +27,25 @@
   transform: translateY(-1px);
 }
 
+/* Feedback táctil <50ms (SK-05 / design system §7, v5.9.0): antes ningún botón tenía
+   estado `:active` — en tablet no había respuesta visual al pulsar. El recorrido lo
+   suprime `prefers-reduced-motion: reduce` (v5.6.0), el hundimiento visual queda. */
+.btn-touch:active:not(:disabled):not([aria-disabled='true']) {
+  transform: scale(0.97);
+}
+
+/* Secundario = "ghost" (v5.9.0): se funde con el fondo (transparente, borde 1px) en vez
+   de un recuadro de relleno + borde 2px brillante que competía con las acciones primarias.
+   El borde `--rule` a 1px sigue dando > 3:1 → afordancia intacta (WCAG 1.4.11). */
 .btn-secondary {
-  background-color: var(--bg-card);
+  background-color: transparent;
+  border-width: 1px;
   border-color: var(--rule);
   color: var(--text-primary);
 }
 
 .btn-secondary:hover {
+  background-color: var(--bg-card);
   border-color: var(--color-primary);
   color: var(--color-primary);
 }

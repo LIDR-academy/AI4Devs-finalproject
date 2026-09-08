@@ -29,14 +29,16 @@
   place-items: center;
 }
 
-/* --- Turno Día: relleno sólido, capa "acción" --- */
-.circle--extract { background-color: var(--color-danger); color: var(--color-danger-on); }
-.circle--add { background-color: var(--color-primary); color: var(--color-primary-on); }
-.circle--recipe { background-color: var(--color-warning); color: var(--color-primary-on); }
+/* --- Turno Día: relleno sólido, capa "acción". El borde deja de ser `--rule` genérico
+   y pasa al tono semántico oscuro del propio color (v5.9.0) — un aro que "pertenece" a
+   la acción en vez de un contorno de tinta neutro. Noche ya usa el color pleno (abajo). --- */
+.circle--extract { background-color: var(--color-danger); color: var(--color-danger-on); border-color: var(--color-danger-text); }
+.circle--add { background-color: var(--color-primary); color: var(--color-primary-on); border-color: var(--color-primary-text); }
+.circle--recipe { background-color: var(--color-warning); color: var(--color-primary-on); border-color: var(--color-warning-text); }
 /* US-033/TK-120-FE: verde de control sanitario — el único de los 4 que no es una
    operación de stock; --color-info es alias intencional de --color-primary, así que
    habría quedado idéntico a `add`. */
-.circle--temperature { background-color: var(--color-success); color: var(--color-primary-on); }
+.circle--temperature { background-color: var(--color-success); color: var(--color-primary-on); border-color: var(--color-success-text); }
 
 /* --- Turno Noche: contorno de tiza (sin relleno, ícono/borde en el color) --- */
 :global(:root[data-theme='dark']) .circle--extract {
