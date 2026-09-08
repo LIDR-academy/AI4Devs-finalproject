@@ -373,46 +373,19 @@ test('an attribute value reducing to nothing shows the empty-segment message nam
 });
 
 // =====================================================================
-// B7 -- the disabled row action does not respond to a click, its data-test hook is present on both
-// branches, and the tooltip appears on hover of the ui-tooltip WRAPPER (the button itself is
-// pointer-events-none) -- while an ENABLED row renders no data-flux-tooltip-content at all.
+// B7 -- REMOVED 2026-09-08, at the repo owner's explicit request, after review determined the
+// skip could never be lifted: reaching products.edit at all already requires the SAME `update`
+// ability (products.edit) that VariantBuilder::canManageVariants checks (D-10 note 4, by design),
+// so no actor can load the real routed page while still seeing a disabled variant row action --
+// the scenario this test named is not a temporary gap, it is permanently unreachable through a
+// real browser visit. The identical fact is covered where it IS reachable: at the component
+// level, bypassing the route via Livewire::test() -- see VariantBuilderAuthorizationTest.php's
+// "canManageVariants reflects the same update ability every mutating method authorizes against"
+// and VariantBuilderRenderingTest.php's "every row action carries its data-test hook on both the
+// enabled and the disabled branch". See story 0034's own conversation record for the discussion;
+// no application or test-coverage change resulted beyond deleting this permanently-unreachable
+// browser scenario.
 // =====================================================================
-
-test('a disabled row action does not respond to a click and shows its tooltip on the wrapper', function () {
-    $creator = variantBuilderJourneyActor();
-    $this->actingAs($creator);
-    $product = Product::factory()->create(['sku' => '0001']);
-    [$talla, $m] = variantBuilderBrowserAttribute('Talla', 'M');
-    $variant = app(CreateProductVariant::class)($product, [$m->id], '19.99', 5);
-
-    $viewer = User::factory()->create();
-    $viewer->givePermissionTo(['products.view']);
-    $this->actingAs($viewer);
-
-    $page = visit(route('products.edit', $product))->assertNoJavaScriptErrors();
-
-    $page->assertPresent('@delete-variant-'.$variant->id);
-
-    $page->click('@delete-variant-'.$variant->id)->assertNoJavaScriptErrors();
-
-    // The click on a pointer-events-none control must not have opened the delete modal.
-    $page->assertDontSee(__('products.variants.delete.title'));
-})->skip(
-    'This scenario is unreachable through the real routed page, which is not a gap this story can '
-    .'close: App\Livewire\Products\Editor::mount() (story 0027, out of scope here) authorizes the '
-    .'STRONGER `update` ability -- requiring products.edit, not merely products.view -- as its own '
-    .'first statement for ANY existing-product visit, so a products.view-only actor is refused with a '
-    .'403 by the host PAGE itself, before App\Livewire\Products\VariantBuilder is ever mounted. '
-    .'VariantBuilder::canManageVariants is computed from that identical ability (D-10 note 4 -- by '
-    .'design, so the disabled-row hint can never drift from what a click would do), so by the time an '
-    .'actor has reached this page at all they already satisfy it too -- there is no permission level '
-    .'that reaches the page while still seeing a disabled variant action, given 0027\'s existing page '
-    .'gate. The identical scenario IS covered where it is actually reachable: at the component level, '
-    .'bypassing the route entirely via Livewire::test() -- see '
-    .'VariantBuilderAuthorizationTest.php\'s "canManageVariants reflects the same update ability every '
-    .'mutating method authorizes against" and VariantBuilderRenderingTest.php\'s "every row action '
-    .'carries its data-test hook on both the enabled and the disabled branch".',
-);
 
 // =====================================================================
 // B8 -- assertNoJavaScriptErrors() after every step of a full journey.
