@@ -169,6 +169,7 @@ export const CreateRecipeForm: React.FC<CreateRecipeFormProps> = ({ onCreated })
         type="submit"
         className="btn-touch btn-primary flex-center flex-gap-xs mt-1"
         disabled={form.isSubmitting}
+        aria-busy={form.isSubmitting}
       >
         <Utensils size={18} />
         {form.isSubmitting ? 'Creando...' : 'Crear Receta'}

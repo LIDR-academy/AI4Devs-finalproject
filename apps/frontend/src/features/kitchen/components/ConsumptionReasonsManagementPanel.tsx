@@ -47,7 +47,7 @@ const NewReasonForm: React.FC<NewReasonFormProps> = ({ onCreated, setError }) =>
           className="input-touch w-full"
         />
       </div>
-      <button type="submit" disabled={isSubmitting} className="btn-touch btn-primary">
+      <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className="btn-touch btn-primary">
         <Plus size={20} /> {isSubmitting ? 'Guardando...' : 'Crear'}
       </button>
     </form>

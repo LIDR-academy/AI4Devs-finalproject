@@ -305,6 +305,7 @@ export const AiSettingsSection: React.FC = () => {
           type="submit"
           className="btn-touch btn-primary flex-center flex-gap-xs"
           disabled={s.isSaving}
+          aria-busy={s.isSaving}
           id="btn-save-ai-settings"
         >
           <Save size={20} />

@@ -1,6 +1,6 @@
 ---
 document: ui_ux_design_system
-version: 5.7.0
+version: 5.8.0
 status: approved
 inputs:
   - docs/00_stack_manifest.md
@@ -219,14 +219,16 @@ Superficie mínima **48×48px** con **8px** de margen (`.btn-touch`); teclado de
 
 | Componente/Variante | Default | Hover | Active | Focus-visible | Disabled | Loading | Error |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `.btn-primary` | ✅ | ✅ | ⚠️ solo transición genérica | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ❌ gap | N/A |
-| `.btn-secondary` | ✅ | ✅ | ⚠️ solo transición genérica | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ❌ gap | N/A |
-| `.btn-danger` | ✅ | ✅ (`filter: brightness`) | ⚠️ solo transición genérica | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ❌ gap | N/A |
+| `.btn-primary` | ✅ | ✅ | ⚠️ solo transición genérica | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ✅ (`[aria-busy]` + spinner, v5.8.0) | N/A |
+| `.btn-secondary` | ✅ | ✅ | ⚠️ solo transición genérica | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ✅ (`[aria-busy]` + spinner, v5.8.0) | N/A |
+| `.btn-danger` | ✅ | ✅ (`filter: brightness`) | ⚠️ solo transición genérica | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ✅ (`[aria-busy]` + spinner, v5.8.0) | N/A |
 | `.input-touch` | ✅ | N/A | N/A | ✅ (`box-shadow` anillo propio) | ❌ gap | N/A | vía `ErrorBanner`, no estilo propio del input |
 
 > **Foco (v5.5.0):** regla global `:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px }` en `styles/base/reset.css` — cubre botones, enlaces, `RowButton` y toggles. `--color-primary` sobre `--bg-root` verificado ≥ 6.79:1 por `check_fefo_contrast.mjs`. Los inputs conservan su `:focus` propio (marcan foco también al puntero).
 >
-> **Gap real restante (Guard 7):** el estado `Loading` propio (spinner / `aria-busy`) sigue siendo por-componente y no todos lo tienen; `.input-touch:disabled` no tiene estilo dedicado. Candidatos a ticket de estados, menores.
+> **Loading (v5.8.0):** un botón de submit con acción en vuelo pone `aria-busy="true"` (junto al `disabled` que ya tenía); `styles/components/buttons.css` renderiza un anillo giratorio `::before` (suprimido bajo `prefers-reduced-motion: reduce`). Cableado en `ModalFooterActions` (cubre 9 modales) + ~11 botones de submit/save inline (formularios de alta, auth, conciliación, ajustes, rescate). La regla en `frontend_rules.md` §3 lo exige para todo botón nuevo.
+>
+> **Gap real restante (menor):** `.input-touch:disabled` no tiene estilo dedicado; `UserStatusForm` (2 funciones de deuda preexistente > 60 líneas) quedó sin `aria-busy` para no disparar el gate de complejidad — pendiente de su refactor.
 
 ### Atomic Design
 
@@ -308,6 +310,7 @@ Transversal a todas las pantallas — obligatorios en cada una:
 
 | Versión | Ticket/US | Sección(es) afectada(s) | Qué cambió |
 | :--- | :--- | :--- | :--- |
+| 5.8.0 | — (cierre de gap §7 Loading) | §7 | **Estado Loading de botones.** Un botón de submit en vuelo pone `aria-busy="true"` + `styles/components/buttons.css` renderiza un anillo giratorio `::before` (oculto bajo `prefers-reduced-motion: reduce`). Cableado en `ModalFooterActions` (9 modales) + ~11 botones inline de alta/auth/conciliación/ajustes/rescate. `frontend_rules.md` §3 lo exige para botones nuevos. `UserStatusForm` queda pendiente (deuda de complejidad preexistente). |
 | 5.7.0 | — (cierre de gap §3 Guard 7) | §3 | **Tokens de interlineado.** `--leading-tight` (1.15, headings) / `--leading-snug` (1.35) / `--leading-normal` (1.45, `body`). Antes `body` heredaba `normal` (~1.2) — cambio visible: todo texto corrido gana ~20% de alto de línea (bloques multi-línea un poco más altos; texto de una línea sin cambio). Headings en mayúsculas se mantienen apretados. Los 3 `line-height` ad-hoc previos migran a token. Valor 1.45 (no 1.5) como compromiso para una UI densa. |
 | 5.6.0 | — (cierre de gap §5) | §5 | **Reducción de movimiento, cobertura completa.** Regla global `@media (prefers-reduced-motion: reduce)` en `styles/base/reset.css` que vuelve instantánea toda transición/animación (`*`) — antes solo `body` y `ActionButton:hover` estaban condicionados (patrón opt-in), el `pulse` infinito de `AlertFeed` y el fade/scale de modales quedaban sin gatear. Se eliminan los 2 gates `no-preference` ad-hoc, ahora redundantes. Sin cambio para usuarios sin la preferencia activada. |
 | 5.5.0 | — (cierre de gap §7, enforce de `frontend_rules.md` §2) | §7 | **Foco visible y estado deshabilitado de botones.** Regla global `:focus-visible` (anillo `3px var(--color-primary)`, offset 2px) en `styles/base/reset.css` — cubre botones/enlaces/`RowButton`/toggles de una vez (antes: solo estilo nativo del navegador, violaba SC 2.4.7 y la regla §2 recién añadida). `.btn-touch:disabled`/`[aria-disabled]` gana `opacity: .5` + `cursor: not-allowed` + hover neutralizado. `check_fefo_contrast.mjs` verde (`--color-primary`/`--bg-root` ya a 6.79:1). Gap restante menor: estado `Loading` propio por-componente, `.input-touch:disabled`. |

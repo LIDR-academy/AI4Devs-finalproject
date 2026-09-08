@@ -101,7 +101,7 @@ const PinSubmitButton: React.FC<{ disabled: boolean; isLoading: boolean; onClick
   isLoading,
   onClick,
 }) => (
-  <button type="button" disabled={disabled} onClick={onClick} className="btn-touch btn-primary w-full mt-3">
+  <button type="button" disabled={disabled} aria-busy={isLoading} onClick={onClick} className="btn-touch btn-primary w-full mt-3">
     <UserCheck size={20} />
     {isLoading ? 'Verificando PIN...' : 'Ingresar a Cocina'}
   </button>

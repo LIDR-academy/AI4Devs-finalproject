@@ -247,6 +247,7 @@ const SourceBar: React.FC<{ source: RescueSuggestionsResponse['source']; isLoadi
       className="btn-touch btn-secondary flex-center flex-gap-xs"
       onClick={onRegenerate}
       disabled={isLoading}
+      aria-busy={isLoading}
       title="Volver a generar sugerencias"
     >
       <RefreshCw size={16} />

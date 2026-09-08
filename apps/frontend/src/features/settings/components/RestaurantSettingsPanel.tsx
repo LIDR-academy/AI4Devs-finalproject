@@ -116,7 +116,7 @@ export const RestaurantSettingsPanel: React.FC = () => {
 
         {message && <SuccessFeedbackBanner message={message} />}
 
-        <button type="submit" className="btn-touch btn-primary flex-center flex-gap-xs" disabled={isSaving} id="btn-save-settings">
+        <button type="submit" className="btn-touch btn-primary flex-center flex-gap-xs" disabled={isSaving} aria-busy={isSaving} id="btn-save-settings">
           <Save size={20} />
           {isSaving ? 'Guardando...' : 'Guardar Cambios'}
         </button>

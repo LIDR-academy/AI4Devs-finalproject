@@ -75,7 +75,7 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({ onCreated, setError }
         </label>
         <input id="location-desc" type="text" placeholder="Ej. Sector frío del fondo" value={f.description} onChange={(e) => f.setDescription(e.target.value)} className="input-touch w-full" />
       </div>
-      <button type="submit" disabled={f.isSubmitting} className="btn-touch btn-primary w-full mt-1">
+      <button type="submit" disabled={f.isSubmitting} aria-busy={f.isSubmitting} className="btn-touch btn-primary w-full mt-1">
         <Plus size={20} />
         {f.isSubmitting ? 'Guardando...' : 'Crear Sector'}
       </button>

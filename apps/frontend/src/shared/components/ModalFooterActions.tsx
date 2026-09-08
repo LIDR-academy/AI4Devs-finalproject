@@ -36,6 +36,7 @@ const ConfirmButton: React.FC<ConfirmButtonProps> = ({
     onClick={confirmType === 'button' ? onConfirm : undefined}
     className={`btn-touch btn-${confirmVariant} ${styles['flex-double']} flex-center flex-gap-xs`}
     disabled={isSubmitting || disabled}
+    aria-busy={isSubmitting}
   >
     {confirmIcon}
     {isSubmitting ? submittingLabel : confirmLabel}

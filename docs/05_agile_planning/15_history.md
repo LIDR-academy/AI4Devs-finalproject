@@ -624,4 +624,15 @@ inputs:
   - DS §3 tabla de tokens (reemplaza la nota de gap); DS **v5.6.0 → v5.7.0**. `frontend_rules.md` §2: prohibido `line-height` ad-hoc.
 - **Cambio visible:** todo texto corrido gana ~20% de alto de línea; bloques multi-línea (descripciones, ayudas, celdas que envuelven) un poco más altos, texto de una línea sin cambio, headings en mayúsculas se mantienen apretados. Valor 1.45 elegido (no 1.5) para una UI densa. Aprobado por el humano antes de aplicar.
 - **Estado:** frontend 243 tests, build/lint verdes; `check_fefo_contrast` / `check_inline_styles` / duplicación verdes. Sin push.
-- **Gaps de diseño: cerrados §3/§5/§7-foco+disabled.** Queda solo el estado `Loading` propio por-componente (§7) — decisión: los botones ya se deshabilitan durante el submit (señal suficiente para esta app), no se aborda salvo caso concreto de latencia larga.
+- **Gaps de diseño: cerrados §3/§5/§7-foco+disabled.**
+
+### 2026-09-08 - Design system v5.8.0: estado Loading de botones
+- **Cierre del gap §7 restante:** ningún botón tenía `aria-busy` ni spinner; el feedback de "en vuelo" era solo `disabled` + swap de texto ("Guardando...").
+- **Acciones (commit, `[skip-tk]`):**
+  - `styles/components/buttons.css`: `.btn-touch[aria-busy="true"]::before` = anillo giratorio CSS (`@keyframes btn-spin`); oculto bajo `prefers-reduced-motion: reduce`.
+  - `shared/components/ModalFooterActions.tsx`: el botón confirmar añade `aria-busy={isSubmitting}` → cubre 9 modales (Edit insumo/receta, Discard, WarehouseExtraction, RecipeSelector, ConfirmModal, TemperatureLog, ClosePreparation, ConsumeReason).
+  - **~11 botones de submit/save inline** ganan `aria-busy`: `CreateRecipeForm`, `CreateUserForm`, `LocationsManagementModal`, `ConsumptionReasonsManagementPanel`, `ShiftReconciliationWizard`, `RestaurantSettingsPanel`, `AiSettingsSection` (guardar), `RescueRecipesModal` (regenerar), `PinLoginModal`, `ForgotPinModal`, `ResetPinModal`, `ForceChangePinModal`.
+  - `UserStatusForm` **sin tocar** — sus 2 arrow functions ya rebasan las 60 líneas (deuda preexistente); añadir 1 línea disparaba el gate diff-scoped de complejidad. Queda pendiente de su refactor.
+  - DS §7 matriz de estados: columna Loading de los 3 botones → ✅; DS **v5.7.0 → v5.8.0**. `frontend_rules.md` §3: nueva regla (`disabled` en vuelo ⇒ `aria-busy`).
+- **Estado:** frontend 243 tests, build/lint verdes; `check_ticket_code_quality` / duplicación / código-muerto / `check_fefo_contrast` / `check_inline_styles` verdes. Sin push.
+- **Único gap de diseño que queda:** `.input-touch:disabled` sin estilo dedicado (menor) + `aria-busy` en `UserStatusForm` (atado a su refactor de complejidad).

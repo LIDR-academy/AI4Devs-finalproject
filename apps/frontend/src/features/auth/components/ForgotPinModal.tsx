@@ -78,7 +78,7 @@ const ForgotPinFormView: React.FC<{
       />
     </div>
     <div className="flex-column gap-3">
-      <button type="submit" disabled={isLoading || !email.trim()} className="btn-touch btn-primary w-full">
+      <button type="submit" disabled={isLoading || !email.trim()} aria-busy={isLoading} className="btn-touch btn-primary w-full">
         <Send size={18} /> {isLoading ? 'Enviando enlace...' : 'Enviar Enlace de Recuperación'}
       </button>
       <button type="button" disabled={isLoading} className="btn-touch btn-secondary w-full" onClick={onClose}>

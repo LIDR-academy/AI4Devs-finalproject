@@ -302,7 +302,7 @@ const ReconciliationFooter: React.FC<ReconciliationFooterProps> = ({ notes, setN
       <button type="button" className="btn-touch btn-secondary" onClick={onCancel} disabled={isSubmitting}>
         Cancelar
       </button>
-      <button type="submit" className="btn-touch btn-primary" disabled={!canSubmit || isSubmitting} id="btn-submit-reconciliation">
+      <button type="submit" className="btn-touch btn-primary" disabled={!canSubmit || isSubmitting} aria-busy={isSubmitting} id="btn-submit-reconciliation">
         <CheckSquare size={18} />
         {isSubmitting ? 'Guardando...' : 'Enviar Conciliación de Turno'}
       </button>

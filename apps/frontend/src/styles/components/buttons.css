@@ -65,6 +65,26 @@
   filter: none;
 }
 
+/* Estado Loading (v5.8.0): un botón de submit muestra `aria-busy="true"` mientras
+   su acción está en vuelo. El anillo giratorio precede a la etiqueta (que sigue
+   swapeando a su texto "-ando..."); ancho estable. El giro lo suprime la regla
+   global `prefers-reduced-motion: reduce` — y ahí se oculta del todo para no dejar
+   un arco congelado. `aria-busy` ya lo anuncian los lectores de pantalla. */
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+.btn-touch[aria-busy='true']::before {
+  content: '';
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-touch[aria-busy='true']::before { display: none; }
+}
+
 /* Modificador de boton solo-icono (ej. cerrar modal); combinar con .btn-touch .btn-secondary */
 .btn-icon {
   padding: 0;

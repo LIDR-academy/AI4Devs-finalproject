@@ -129,7 +129,7 @@ const ResetPinActionButtons: React.FC<{
         Continuar
       </button>
     ) : (
-      <button type="button" disabled={confirmPinLength < 4 || isLoading} className="btn-touch btn-primary w-full" onClick={onSubmit}>
+      <button type="button" disabled={confirmPinLength < 4 || isLoading} aria-busy={isLoading} className="btn-touch btn-primary w-full" onClick={onSubmit}>
         {isLoading ? 'Actualizando PIN...' : 'Confirmar y Guardar PIN'}
       </button>
     )}

@@ -174,6 +174,7 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({ onCreated }) => 
         type="submit"
         className="btn-touch btn-primary flex-center flex-gap-xs mt-1"
         disabled={form.isSubmitting}
+        aria-busy={form.isSubmitting}
       >
         <UserPlus size={18} />
         {form.isSubmitting ? 'Creando...' : 'Crear Operario'}

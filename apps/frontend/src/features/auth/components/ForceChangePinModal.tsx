@@ -100,6 +100,7 @@ export const ForceChangePinModal: React.FC<ForceChangePinModalProps> = ({ userId
           type="submit"
           className="btn-touch btn-primary w-full mt-3"
           disabled={form.isLoading || !form.currentPin || !form.newPin || !form.confirmPin}
+          aria-busy={form.isLoading}
         >
           <CheckCircle2 size={20} />
           {form.isLoading ? 'Actualizando PIN...' : 'Confirmar y Desbloquear Tablero'}
