@@ -1512,7 +1512,7 @@ needs a new group. No component change, no provider change, no new folder.
 ],
 ```
 
-Five rules come with it, each load-bearing:
+Six rules come with it, each load-bearing:
 
 - **`permissions` must be *exactly* the ability the route's own `can:` middleware enforces** — never a
   broader or related set. `users` is `['users.view']` because `routes/users.php` gates on exactly
@@ -1548,6 +1548,54 @@ Five rules come with it, each load-bearing:
   `data-test="sidebar-group-{key}"`,** keyed by the registry key. Absence assertions must target those
   hooks: `assertDontSee('Settings')` collides with the personal-account Settings item in the user-menu
   dropdown on the same page, and `assertDontSee('Users')` with the page title.
+- **A new entry is placed by the PRD's navigation design, never by what is cheapest to append.** Added
+  2026-09-07 as a forward-looking rule, ahead of [story 0080](../../ai-spec/tasks/done/0080-sidebar-navigation-grouping-and-nesting.md)'s
+  own implementation, so no module shipping in the meantime would repeat the mistake. **That
+  implementation has since landed and story 0080 has closed** (moved to `ai-spec/tasks/done/`), so this
+  rule now describes the shipped schema rather than a plan. Before adding a registry entry, check
+  [the PRD's dashboard mockup](../PRD/PRD.md#design-reference--the-dashboard-shell) and the real
+  `groups`/`clusters`/`items` shape in [`config/modules.php`](../../config/modules.php) itself for which
+  top-level group the new module belongs under — a flat top-level item is a decision to justify, never the
+  default reached for because it needs no new group. **And when the new entry is a sub-resource of an
+  already-shipped module** (a second screen belonging to the same conceptual module — e.g. a
+  type/category/attribute editor for an existing catalog) **it is nested under that module's own cluster,
+  via the item's `cluster` key, rather than added as a flat sibling.** The registry is now three flat
+  sibling arrays rather than two — `groups`, `clusters`, `items` — with `clusters` purely presentational
+  (no `route`, no `permissions` of its own; its expand/current state derives from its visible children's
+  `current_when` values, never a separately-maintained pattern):
+
+  ```php
+  // config/modules.php — the real, shipped shape (abbreviated)
+  'groups' => [
+      'store' => ['heading' => 'navigation.groups.store', 'icon' => 'building-storefront', 'expandable' => false, 'expanded_when' => null, 'class' => null],
+      'settings' => ['heading' => 'navigation.groups.settings', 'icon' => 'cog-6-tooth', 'expandable' => true, 'expanded_when' => 'roles.*', 'class' => null],
+      // no 'content' entry yet (that is story 0060's, or whichever Blog story ships first, to add)
+  ],
+  'clusters' => [
+      'products' => ['group' => 'store', 'label' => 'navigation.clusters.products', 'icon' => 'cube'],
+      'store_settings' => ['group' => 'store', 'label' => 'navigation.clusters.store_settings', 'icon' => 'adjustments-horizontal'],
+  ],
+  'items' => [
+      'dashboard' => ['group' => null, 'cluster' => null, /* ... */ 'permissions' => []],
+      'users' => ['group' => null, 'cluster' => null, /* ... */ 'permissions' => ['users.view']],
+      'roles' => ['group' => 'settings', 'cluster' => null, /* ... */ 'permissions' => ['roles.manage']],
+      'sales_regions' => ['group' => null, 'cluster' => 'store_settings', /* ... */ 'permissions' => ['sales-regions.view']],
+      'product_categories' => ['group' => null, 'cluster' => 'products', /* ... */ 'permissions' => ['products.view']],
+      'products' => ['group' => null, 'cluster' => 'products', /* ... */ 'permissions' => ['products.view']],
+      'product_attribute_types' => ['group' => null, 'cluster' => 'products', /* ... */ 'permissions' => ['products.view']],
+  ],
+  ```
+
+  Each item carries two mutually exclusive, independently-nullable keys: both `group` and `cluster` `null`
+  is a bare top-level item with no wrapping element (`dashboard`/`users`); `group` set and `cluster` `null`
+  is a direct child of that group, unchanged from the original 0013 shape (`roles`); `group` `null` and
+  `cluster` set nests the item inside that cluster, which itself renders inside the cluster's own `group`
+  (`sales_regions`, `product_categories`, `products`, `product_attribute_types` — all four moved into a
+  cluster by story 0080's own restructuring). **The flat `platform` and `taxes` groups this rule's original
+  2026-09-07 wording named, and the three ✅ notes above celebrating a "no template change" landing in
+  `platform`, no longer exist** — both were retired (not merely emptied) once every member moved into one
+  of `store`'s two clusters, per the story's own D-4. Read those three ✅ notes as a historical record of
+  what shipped at the time, not as the registry's current shape.
 
 > ⚠️ **Two hazards a later epic will meet first, both currently unexercised.** (1) **`Gate::any()` is
 > OR, and nothing in the registry says so.** Every entry today holds a single ability, so the combinator
@@ -1559,7 +1607,11 @@ Five rules come with it, each load-bearing:
 > that names no entry in `groups` drops the item silently.** `groupBy()` resolves the missing/typo'd key
 > through `data_get()` to `''`, and the render loop iterates `config('modules.groups')`, so the orphan
 > bucket is never visited. It fails **closed** — the link vanishes rather than leaking — but it produces
-> no warning, so a mistyped `group` reads as "my module never shipped".
+> no warning, so a mistyped `group` reads as "my module never shipped". Since story 0080 a `cluster` key
+> naming no entry in `clusters` (or a cluster whose own `group` names no entry in `groups`) fails the same
+> way — silently closed, no warning — which is why the story added a dedicated drift-guard test asserting
+> every item's non-null `cluster` exists in `config('modules.clusters')` and every cluster's `group` exists
+> in `config('modules.groups')`, rather than relying on the render loop's own fail-closed behaviour alone.
 
 ### In PHP and Blade
 
@@ -1613,4 +1665,8 @@ The one place `hasPermissionTo()` is correct is **inside a policy body**, which 
 | Tests | `tests/Feature/Seeders/`, `tests/Feature/Authorization/`, `tests/Feature/Policies/`, `tests/Feature/Users/`, `tests/Feature/Roles/`, `tests/Feature/SalesRegions/`, `tests/Feature/Models/RoleTest.php`, `tests/Feature/Actions/Auth/`, `tests/Unit/Actions/Auth/`, `tests/Unit/Exceptions/` |
 | Security rules derived from this foundation | [`docs/security/`](../security/README.md) |
 
-_Last updated: 2026-09-07 — Story 0033 (Shipping zones — backend). Added [`ShippingZonePolicy` — the eighth policy, and the one D-9 uses to reconcile the policy-vs-permission-check divergence with 0035](#shippingzonepolicy--the-eighth-policy-and-the-one-d-9-uses-to-reconcile-the-policy-vs-permission-check-divergence-with-0035): four abilities gating the already-seeded `shipping.*` permissions, no target-dependent branch, and the D-9 reconciling rule itself (a policy is created when a story ships no caller or an ability carries a per-target rule; a bare permission check suffices only when a component is the sole enforcement point with a uniform ability) recorded as the decision that explains 0004/0023/0033 shipping a policy and 0035 correctly not shipping one. Also records a real, shipped correction: this story's own Phase 1 plan claimed its four `app/Actions/Shipping/*` actions would "self-authorize nothing, matching `CreateUser`/`UpdateUser`" — that citation was false (both already self-authorize), and Phase 4's security audit (finding F-1) fixed all four actions to self-authorize against this policy as their own first statement, the same shape `App\Actions\ProductCategories\*` (story 0025) already uses. Corrected the page's own stale policy-count intro (had drifted to "four" while section headers already numbered seven) and the "sole outlier among **N** policies" bullets to eight. **Collapsed this footer's 26-block `_Previously:` chain into this single line**, per the doc-growth-management rule ([contracts.md](../contracts.md#doc-growth-management-rule)) that a prior pass (story 0031) had flagged as overdue and deferred — every fact those blocks recorded that still matters is already stated in the body's own per-section history (its "Corrected …" blockquotes and per-policy notes), so nothing durable was lost by dropping the changelog narrative itself.
+_Last updated: 2026-09-08 — Story 0080 (sidebar navigation grouping and nesting), Phase 6 docs sync. Rewrote the sidebar registry's sixth rule to describe the **real, shipped** `groups`/`clusters`/`items` schema rather than the forward-looking forecast it was written as on 2026-09-07: the registry is now three flat sibling arrays, `groups.platform`/`groups.taxes` are retired (not merely emptied), and `sales_regions`/`product_categories`/`products`/`product_attribute_types` all nest inside one of `store`'s two clusters (`products`, `store_settings`) rather than sitting as flat top-level items — quoted the abbreviated real `config/modules.php` shape and the item-key nesting rule (`group`/`cluster`, mutually exclusive and independently nullable). Qualified the three earlier ✅ notes celebrating a "no template change" landing in the flat `platform` group as a historical record of what shipped at the time, not the registry's current shape (per this project's audit-authored-page convention, they are left in place rather than rewritten). Extended the adjacent ⚠️ hazard note with the `cluster`/nested-`group` silent-fail-closed case and the drift-guard test that now covers it. Story 0080 has since closed (Phase 7) and moved to `ai-spec/tasks/done/`. No policy, permission or route changed by this story (a frontend-only registry restructuring, per the task file's own Type section).
+
+_Previously: 2026-09-07 — Added the sidebar registry's **sixth rule** — a new entry is placed under the top-level group the PRD's navigation design assigns it to, and a sub-resource of an already-shipped module is nested under that module's cluster rather than added as a flat sibling — prompted by [story 0080](../../ai-spec/tasks/done/0080-sidebar-navigation-grouping-and-nesting.md), written ahead of that story's own registry restructuring landing (see the 2026-09-08 entry above for the shipped shape). This was a documentation-only, forward-looking rule addition at the time — no code changed, no story closed. `config/modules.php`'s own header comment carries the same instruction (see the file itself).
+
+_Previously: 2026-09-07 — Story 0033 (Shipping zones — backend). Added [`ShippingZonePolicy` — the eighth policy, and the one D-9 uses to reconcile the policy-vs-permission-check divergence with 0035](#shippingzonepolicy--the-eighth-policy-and-the-one-d-9-uses-to-reconcile-the-policy-vs-permission-check-divergence-with-0035): four abilities gating the already-seeded `shipping.*` permissions, no target-dependent branch, and the D-9 reconciling rule itself (a policy is created when a story ships no caller or an ability carries a per-target rule; a bare permission check suffices only when a component is the sole enforcement point with a uniform ability) recorded as the decision that explains 0004/0023/0033 shipping a policy and 0035 correctly not shipping one. Also records a real, shipped correction: this story's own Phase 1 plan claimed its four `app/Actions/Shipping/*` actions would "self-authorize nothing, matching `CreateUser`/`UpdateUser`" — that citation was false (both already self-authorize), and Phase 4's security audit (finding F-1) fixed all four actions to self-authorize against this policy as their own first statement, the same shape `App\Actions\ProductCategories\*` (story 0025) already uses. Corrected the page's own stale policy-count intro (had drifted to "four" while section headers already numbered seven) and the "sole outlier among **N** policies" bullets to eight. **Collapsed this footer's 26-block `_Previously:` chain into this single line**, per the doc-growth-management rule ([contracts.md](../contracts.md#doc-growth-management-rule)) that a prior pass (story 0031) had flagged as overdue and deferred — every fact those blocks recorded that still matters is already stated in the body's own per-section history (its "Corrected …" blockquotes and per-policy notes), so nothing durable was lost by dropping the changelog narrative itself.
