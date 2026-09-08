@@ -1,7 +1,7 @@
 ---
 name: SK-05_design_ui_ux_system
-description: "Detecta la plataforma objetivo (Web/Mobile/Desktop) desde el stack real antes de nada, define la Arquitectura de Información (inventario, sitemap, user flows, wireframes) antes de cualquier decisión visual, facilita la ideación visual, ingesta de specs externa (.md), análisis multimodal de imágenes y cristaliza el Design System (retícula, escala tipográfica, tokens, matriz de estados por componente, mapa de ubicación en código), las reglas de Frontend y el estándar root DESIGN.md (Google Labs spec v1.0.0, cuando la plataforma es Web)."
-version: "3.12.0"
+description: "Detecta la plataforma objetivo (Web/Mobile/Desktop) desde el stack real antes de nada, define la Arquitectura de Información (inventario, sitemap, user flows, wireframes) antes de cualquier decisión visual, facilita la ideación visual, ingesta de specs externa (.md), análisis multimodal de imágenes y cristaliza el Design System (retícula, escala tipográfica y medida, tokens, matriz de estados por componente, mapa de ubicación en código), las reglas de Frontend y el estándar root DESIGN.md (Google Labs spec v1.0.0, cuando la plataforma es Web); en la FASE 4 audita heurísticamente pantallas y mockups contra leyes de Gestalt/UX, ergonomía y WCAG 2.2 con hallazgos fundamentados y falsables."
+version: "3.13.0"
 category: "specs/02_architecture_design"
 inputs:
   - "docs/00_stack_manifest.md"
@@ -15,7 +15,7 @@ outputs:
   - "DESIGN.md"
 ---
 
-# 🎨 SK-05: Sistema de Diseño UI/UX y Ergonomía Táctil (v3.12.0)
+# 🎨 SK-05: Sistema de Diseño UI/UX y Ergonomía Táctil (v3.13.0)
 
 Actúa como un **Lead UI/UX Designer & Frontend Architect** experto en interfaces táctiles, accesibilidad (WCAG 2.2), ergonomía industrial y sistemas de diseño modernos.
 
@@ -81,9 +81,10 @@ Antes de cualquier decisión visual, establece la estructura sobre la que luego 
 ### 📜 FASE 3: Cristalización del Design System, Reglas & DESIGN.md (Google Labs Spec)
 Una vez aprobada o normalizada la visión de UI/UX, genera o actualiza automáticamente. **El vocabulario CSS/Web de los puntos siguientes es la referencia por defecto; si la plataforma detectada en Fase 1 punto 1 es Mobile o Desktop no basado en tecnología web, tradúcelo al mecanismo real de esa plataforma (objeto de tema, `MaterialTheme`, `Environment`, StyleSheet, etc.) manteniendo el mismo propósito de cada sección — nunca fuerces sintaxis CSS sobre una plataforma que no la usa.**
 1. **`docs/02_architecture_design/05_ui_ux_design_system.md`:**
-   - Paleta cromática oficial (tokens HSL para modo oscuro y claro).
+   - **Cada valor no trivial lleva su porqué en una línea:** el ratio de la escala, la ley perceptual/cognitiva aplicada (ej. "chunk de 5–7, Ley de Miller"), o la procedencia (`auditado de index.css:L42`, Guard 7). Un token sin el porqué es indistinguible de uno inventado.
+   - Paleta cromática oficial (tokens HSL para modo oscuro y claro). **Nota de equilibrio (heurística, no gate):** el color de acento/CTA no debería superar ~10% de la superficie visible de un mockup (regla 60-30-10); si lo hace, la jerarquía hacia la acción primaria se diluye.
    - **Retícula y Espaciado:** cuadrícula base (auditada del código real si existe; si se define desde cero, base 8pt con subcuadrícula de 4pt) y columnas por breakpoint (ej. Mobile: 4 cols, Desktop: 12 cols) con márgenes y gutters explícitos.
-   - **Escala Tipográfica:** 1 o 2 familias con rol fijo (display/body/mono), escala modular con el ratio matemático explícito (ej. 1.25) y `line-height` de cada nivel sincronizado al ritmo vertical de la retícula.
+   - **Escala Tipográfica:** 1 o 2 familias con rol fijo (display/body/mono), escala modular con el ratio matemático explícito (ej. 1.25, 1.333, o φ ≈ 1.618 — una opción entre varias, nunca un mandato) y `line-height` de cada nivel sincronizado al ritmo vertical de la retícula. El nivel de cuerpo declara además su **medida óptima** (longitud de línea) de **45–75 caracteres** (ej. `max-width: 65ch`) — parámetro de legibilidad, no estético.
    - Ergonomía táctil ($48\text{px} \times 48\text{px}$ target mínimo) y feedback $<50\text{ms}$.
    - **Tokens de Animación & Micro-interacciones:** Transitions CSS (`--transition-fast`, `--scale-press`), con duración por categoría de acción (micro-feedback 50-100ms, transición de estado 150-250ms, entrada/salida de superficie grande 250-350ms) y curva de aceleración con propósito (`ease-out` al entrar, `ease-in` al salir), más el comportamiento exacto bajo `prefers-reduced-motion` (qué sustituye a la animación, no solo que se respeta la preferencia).
    - **Matriz de Breakpoints:** Puntos de quiebre responsivos (`sm: 640px`, `md: 768px`, `lg: 1024px`, `@container`).
@@ -93,6 +94,7 @@ Una vez aprobada o normalizada la visión de UI/UX, genera o actualiza automáti
    - **Mapa de Ubicación en Código:** tabla `Categoría (color/tipografía/espaciado/motion/componente) | Mecanismo real | Ruta en el repo` derivada de `docs/00_stack_manifest.md` y de la auditoría del Guard 7 — para que quien lea el documento sepa exactamente dónde modificar cada cosa después, no solo qué valor tiene. Sin esta tabla el documento queda incompleto.
 2. **`docs/04_governance_and_quality/rules/frontend_rules.md`:**
    - Reglas innegociables para desarrollo Frontend (tokens de estilo centralizados en el mecanismo real de la plataforma — `index.css` en Web, tema/theme provider en Mobile/Desktop —, zero ad-hoc utilities sin token, sanitización con la librería de validación declarada en `docs/00_stack_manifest.md`).
+   - **Medida de texto:** todo bloque de texto corrido declara una cota de ancho que mantenga la línea entre `45ch` y `75ch` (ej. `max-width: 65ch`). Verificable; fuera de rango = hallazgo de la FASE 4.
    - **Manifiesto de Partials, no archivo monolítico (traducción a código del Guard 9):** en plataforma Web, el fichero central de tokens (`index.css`) **no declara reglas propias** — es únicamente un manifiesto de `@import url(...)` en cascada hacia archivos separados por categoría, con la misma agrupación del Índice Fijo de Secciones: `variables/` (un archivo por grupo de tokens — color, tipografía, espaciado, motion), `base/` (reset, tipografía base), `layout/` (primitivos de layout compartidos) y `components/` o `blocks/` (estilos de componente reutilizable a nivel global — distintos de los `*.module.css` colocalizados de un solo componente que ya exige la Capa de Reutilización Cross-Cutting). Una categoría, un archivo, ubicación predecible — ninguna regla CSS suelta vive en el punto de entrada. En Mobile/Desktop el equivalente es fragmentar el tema en un módulo por categoría (ej. `theme/colors.ts`, `theme/typography.ts`) en vez de un único archivo de tema monolítico.
    - **Proyecto nuevo vs. legacy:** en un proyecto sin fichero central todavía, esta estructura se aplica desde el primer commit. **En un proyecto legacy con un fichero central ya monolítico, esta regla describe el estado objetivo, no una exigencia retroactiva inmediata:** `frontend_rules.md` la declara como convención vigente para todo token nuevo que se añada de aquí en adelante, y la migración del fichero existente a partials se registra como una **recomendación explícita de refactor incremental** (ticket dedicado, verificado con el build real tras la división) — nunca ejecutada en silencio como efecto colateral de un ticket de feature no relacionado.
    - **Capa de Reutilización Cross-Cutting (`shared/` o equivalente):** Declarar explícitamente el directorio raíz donde deben vivir los módulos usados por 2+ features (cliente HTTP, Value Objects de dominio compartidos, hooks transversales, primitivos de UI como shells de modal/overlay). Este directorio es el punto de consulta obligatorio que `SK-17` audita antes de que un ticket implemente algo nuevo — sin esta convención declarada explícitamente, cada ticket reinventa su propia versión y la duplicación se vuelve invisible hasta una auditoría manual.
@@ -105,8 +107,35 @@ Una vez aprobada o normalizada la visión de UI/UX, genera o actualiza automáti
 
 ---
 
-### 💡 FASE 4: Supervisión UI/UX en Tickets Frontend
-Durante la ejecución de tickets de pantalla (`TK-XXX`), actúa como supervisor UI/UX validando la fidelidad visual de los componentes contra el Design System y `DESIGN.md`.
+### 💡 FASE 4: Auditoría Heurística de Diseño y Supervisión en Tickets Frontend
+
+Durante la ejecución de tickets de pantalla (`TK-XXX`), o a petición explícita sobre un mockup o una pantalla ya construida, actúa como **Design Systems Auditor**: evalúas la interfaz contra principios **nombrados y falsables**, no contra criterio estético. NO rediseñas — señalas, fundamentas y especificas el fix.
+
+#### 🚫 Non-Goals locales de la FASE 4
+1. **No proponer una dirección estética nueva:** la personalidad visual se fijó en la FASE 2 con el humano. Un hallazgo que diga "usa esquinas redondeadas" cuando el sistema eligió rectas es un hallazgo inválido — el eje de la auditoría es el rigor estructural, no el gusto.
+2. **No inventar métricas de impacto:** toda predicción de mejora se enuncia como **hipótesis con su mecanismo de medición** (evento a instrumentar + métrica baseline), nunca como cifra afirmada (`.agents/rules/00_output_reporting_standard.md` §Anti-Gate-Hueco).
+3. **No auditar sin fuentes:** requiere haber leído `docs/00_stack_manifest.md` (plataforma), `docs/01_product_definition/02_prd.md` (personas, densidad informacional esperada) y `docs/02_architecture_design/05_ui_ux_design_system.md` (tokens reales). Sin las 3 → DETENTE y pídelas.
+
+#### Rúbrica de evaluación — cada hallazgo cita **exactamente una** fila
+
+| Familia | Principios verificables |
+| :--- | :--- |
+| **Gestalt** | Proximidad (espaciado intra-grupo < inter-grupo), Similitud (mismo patrón visual ⇒ misma acción), Continuidad (alineación en los ejes de lectura F/Z), Región Común (contenedor delimitado por superficie o borde, sin saturar), Cierre |
+| **Leyes UX** | Fitts (target ≥ token táctil del proyecto; elementos críticos en zona de alcance), Hick (nº de opciones en el flujo principal; menús progresivos), Miller (chunking 5–7), Jakob (patrón familiar vs. invención), Peak-End (calidad del último paso de un flujo) |
+| **Ergonomía** | Target ≥ `min_touch_size` (de `frontend_rules.md`, nunca hardcodeado en la skill); hit-margin ≥ 8px; medida de texto 45–75ch; ritmo vertical = múltiplo de la base de rejilla |
+| **WCAG 2.2 AA/AAA** | Delega el detalle procedimental en `SK-21` (contraste 4.5:1 / 3:1; foco visible y no obstruido 2.4.7/2.4.11; target 2.5.8; autenticación accesible 3.3.8). Un hallazgo de accesibilidad cita el SC exacto |
+| **Sistema** | 4 estados de pantalla presentes (Loading/Data Ready/Empty/Error); matriz de estados por componente completa; `prefers-reduced-motion` con sustituto definido; token real (no valor ad-hoc) verificado en el mecanismo de la plataforma |
+
+#### Salida — Tabla de Hallazgos (formato `.agents/rules/00_output_reporting_standard.md`)
+
+Por cada hallazgo:
+1. **Diagnóstico** — `H-N` · componente/pantalla · `archivo:línea` si es código real · severidad (🔴 bloquea / 🟡 debe / 🟢 sugerencia).
+2. **Fundamentación** — la **UNA** regla de la rúbrica que se viola, enunciada (ej. "Ley de Hick: el alta expone 11 campos sin agrupación → carga de decisión lineal en el nº de opciones").
+3. **Especificación del fix (tokens)** — valores exactos en la unidad de la plataforma detectada, referidos a tokens **ya existentes** de `05_ui_ux_design_system.md`; nunca un literal nuevo sin declararlo antes como token.
+4. **Hipótesis de impacto + medición** — ej. "reduce la carga cognitiva del alta; medible como Δ tiempo-a-completar del flujo `TK-XXX` instrumentado con el evento `form_submit`, baseline actual = [pendiente de captura]". Nunca un "+X%" pelado.
+
+#### Gate
+≥ 1 hallazgo 🔴 → veredicto `🔴 RECHAZADO CON DEFECTOS`, el ticket no se cierra. Hallazgos 🟡/🟢 → `🟡 REQUIERE CONFIRMACIÓN HUMANA` con el diff de fix propuesto, nunca aplicado en silencio.
 
 ---
 
