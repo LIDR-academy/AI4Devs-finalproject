@@ -15,7 +15,7 @@
 
 .modal-card {
   background-color: var(--bg-card);
-  border: 2px solid var(--rule);
+  border: 1px solid var(--border-hairline);
   border-top: 4px solid var(--color-primary);
   border-radius: 0;
   padding: 28px;

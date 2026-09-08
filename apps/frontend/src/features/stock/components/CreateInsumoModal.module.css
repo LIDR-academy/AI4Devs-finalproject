@@ -1,5 +1,5 @@
 .unit-toggle-btn {
-  border: 1px solid var(--border-card);
+  border: 1px solid var(--border-hairline);
   background-color: var(--bg-root);
   color: var(--text-primary);
   font-weight: var(--fw-regular);

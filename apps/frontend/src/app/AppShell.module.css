@@ -42,7 +42,7 @@
   height: 18px;
   border-radius: 50%;
   background-color: var(--bg-root);
-  border: 2px solid var(--rule);
+  border: 1px solid var(--border-hairline);
 }
 .punch-top { top: 56px; }
 .punch-bottom { bottom: 56px; }
@@ -94,7 +94,7 @@
 
 .user-badge {
   background-color: var(--bg-card);
-  border: 2px solid var(--rule);
+  border: 1px solid var(--border-hairline);
   padding: var(--space-2) var(--space-4);
   display: flex;
   align-items: center;
@@ -131,7 +131,7 @@
 /* ---------- Interruptor Dia / Noche (Sistema FEFO, US-022) ---------- */
 .theme-toggle {
   display: inline-flex;
-  border: 2px solid var(--rule);
+  border: 1px solid var(--rule);
 }
 .theme-toggle-btn {
   font-family: var(--font-family-body);
@@ -149,7 +149,7 @@
   touch-action: manipulation;
 }
 .theme-toggle-btn + .theme-toggle-btn {
-  border-left: 2px solid var(--rule);
+  border-left: 1px solid var(--rule);
 }
 .theme-toggle-btn[aria-pressed='true'] {
   background: var(--text-primary);

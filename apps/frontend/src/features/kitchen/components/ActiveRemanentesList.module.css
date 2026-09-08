@@ -20,7 +20,7 @@
   font-weight: var(--fw-bold);
   padding: 2px var(--space-2);
   border-radius: 0;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--border-hairline);
   color: var(--color-primary);
 }
 

@@ -1,7 +1,7 @@
 /* Estructura de Tarjetas (Sistema FEFO — bordes de sello, sin sombra) */
 .card-dashboard {
   background-color: var(--bg-card);
-  border: 2px solid var(--rule);
+  border: 1px solid var(--border-hairline);
   border-radius: 0;
   padding: 20px;
   box-shadow: none;
@@ -10,7 +10,7 @@
 /* Fila de conciliación reutilizable (ShiftReconciliationWizard, ClosePreparationModal —
    ambas listan un ítem con posible variante de alerta; TK-104-FE). */
 .reconciliation-item-row {
-  border: 2px solid var(--rule);
+  border: 1px solid var(--border-hairline);
   background-color: var(--bg-card);
   padding: var(--space-3) var(--space-4);
   border-radius: 0;
@@ -22,7 +22,7 @@
   gap: 12px;
   padding-bottom: 12px;
   margin-bottom: 16px;
-  border-bottom: 2px dashed var(--rule);
+  border-bottom: 1px dashed var(--border-hairline);
 }
 
 .card-badge-icon {

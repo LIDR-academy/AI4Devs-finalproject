@@ -21,7 +21,7 @@
   background-color: var(--bg-card);
   padding: var(--space-1);
   border-radius: 0;
-  border: 2px solid var(--rule);
+  border: 1px solid var(--border-hairline);
 }
 .filter-toggle-btn {
   padding: 6px var(--space-3);

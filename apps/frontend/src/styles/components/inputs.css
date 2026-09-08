@@ -3,7 +3,7 @@
   padding: 12px 16px;
   border-radius: 0;
   background-color: var(--bg-root);
-  border: 2px solid var(--rule);
+  border: 1px solid var(--rule);
   color: var(--text-primary);
   font-size: 1rem;
   width: 100%;

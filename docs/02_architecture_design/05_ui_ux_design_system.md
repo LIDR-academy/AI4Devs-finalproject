@@ -1,6 +1,6 @@
 ---
 document: ui_ux_design_system
-version: 5.2.0
+version: 5.3.0
 status: approved
 inputs:
   - docs/00_stack_manifest.md
@@ -88,7 +88,9 @@ Fuente real: `apps/frontend/src/styles/variables/colors.css`. Turno **Día** (co
 | Token | Día | Noche | Uso |
 | :--- | :--- | :--- | :--- |
 | `--bg-root` / `--bg-card` | `#efe8d8` / `#f7f2e6` | `#171c18` / `#1f251f` | Fondo base / superficie de tarjeta |
-| `--border-card` / `--rule` | `#18140f` | `#e9e4d0` | Bordes de sello, separadores |
+| `--rule` | `#18140f` | `#e9e4d0` | Rellenos sólidos (barra lateral, `RowButton`), borde inferior del topbar `3px`, contorno de controles interactivos (inputs, toggles, botones, keypad PIN — WCAG 1.4.11 ≥ 3:1) |
+| `--border-card` | `#18140f` | `#e9e4d0` | Relleno de `neutral-badge` y de los puntos del keypad PIN |
+| `--border-hairline` (v5.3.0) | `#d7cfb9` | `#3c433b` | Hairline **decorativo** `1px`: bordes de tarjetas/paneles/modales, tablas y divisores. No es indicador de un control interactivo, por eso puede ir por debajo de 3:1 |
 | `--color-primary` (+hover, +on, +text) | `#2e5f76` | `#6faac7` | Acciones principales, navegación activa |
 | `--color-secondary` | `#6e6555` | `#9aa394` | Acciones secundarias/no urgentes |
 | `--color-danger` (+on, +text) | `#b43a24` | `#e1573a` | Crítico / vencido / destructivo |
@@ -259,7 +261,7 @@ Insumos discretos (`UNITS`/`PZA`): enteros sin decimales (`12 Ud.`), decrementos
 
 Transversal a todas las pantallas — obligatorios en cada una:
 
-1. **Data Ready:** tarjetas/tablas con contraste alto, bordes `2px solid var(--rule)`.
+1. **Data Ready:** tarjetas/tablas sobre `--bg-card`, bordes hairline `1px solid var(--border-hairline)` (v5.3.0 — antes `2px solid var(--rule)`). Los controles interactivos conservan `1px solid var(--rule)`.
 2. **Loading State:** skeletons animados sobre `--bg-card`, respetando `prefers-reduced-motion`.
 3. **Empty State:** panel con ícono + texto en `--text-secondary` (ej. "¡No hay remanentes abiertos en cocina!").
 4. **Error State:** `ErrorBanner` inline con borde `--color-danger`, mapeo semántico vía `errorMessageMapper` (Guard 38 — prohibido `window.alert`/`confirm`).
@@ -294,6 +296,7 @@ Transversal a todas las pantallas — obligatorios en cada una:
 
 | Versión | Ticket/US | Sección(es) afectada(s) | Qué cambió |
 | :--- | :--- | :--- | :--- |
+| 5.3.0 | — (petición de producto) | §2, §8 | Bordes más tenues. Nuevo token `--border-hairline` (`#d7cfb9` día / `#3c433b` noche); ~40 bordes de contenedor/panel/modal/tabla/divisor pasan de `2px solid var(--rule)` a `1px solid var(--border-hairline)`. `--rule` se reserva para rellenos sólidos y **controles interactivos** (inputs, toggles, botones, keypad PIN), que además bajan a `1px` conservando el color de tinta para no romper WCAG 1.4.11 (≥ 3:1). El borde inferior `3px` del topbar y el contorno `3px` del `ActionButton` (noche) se mantienen. Gate `check_fefo_contrast.mjs` sigue verde (no toca ningún par documentado). |
 | 5.2.0 | — | §5 | Auditados los 39 `.module.css` del proyecto (no solo la capa compartida): 3 transiciones más migradas a los tokens de motion (mismo valor, cero cambio visual). Expuesta y documentada una inconsistencia real sin resolver: 2 barras de progreso con propósito casi idéntico usan duraciones distintas (`0.3s`/`0.4s`) sin token ni justificación — dejado como decisión de producto pendiente. |
 | 5.1.0 | — | §5, §9 | Motion deja de ser gap: 4 transiciones reales existentes extraídas a tokens (`variables/motion.css`), sin cambiar ningún valor. Cobertura de `prefers-reduced-motion` sigue incompleta (3 de 4), documentado como gap distinto. |
 | 5.0.0 | — (migración SK-05 v3.10.0+, Guard 9) | Todas | Migración de estructura cronológica-por-versión al Índice Fijo de 10 secciones. Sin cambios de tokens/comportamiento — solo reorganización. |

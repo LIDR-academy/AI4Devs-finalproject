@@ -27,7 +27,7 @@
   font-weight: var(--fw-bold);
   padding: var(--space-2);
   border-radius: 0;
-  border: 2px solid var(--rule);
+  border: 1px solid var(--border-hairline);
   background-color: var(--bg-root);
   color: var(--text-primary);
 }

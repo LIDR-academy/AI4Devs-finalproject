@@ -3,7 +3,7 @@
 .edit-user-action-btn { padding: 6px var(--space-3); }
 .user-row {
   padding: var(--space-3);
-  border-bottom: 1px solid var(--border-card);
+  border-bottom: 1px solid var(--border-hairline);
   background-color: var(--bg-root);
   border-radius: 6px;
   margin-bottom: var(--space-2);

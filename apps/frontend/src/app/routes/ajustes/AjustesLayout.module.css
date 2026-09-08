@@ -5,7 +5,7 @@
   flex-wrap: wrap;
   gap: var(--space-2);
   margin-bottom: var(--space-5);
-  border-bottom: 2px solid var(--rule);
+  border-bottom: 1px solid var(--border-hairline);
 }
 
 .sub-tab {

@@ -10,7 +10,7 @@
 .mode-selector {
   display: flex;
   background-color: var(--bg-surface);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--border-hairline);
   border-radius: var(--radius-md, 8px);
   padding: 4px;
   gap: var(--space-2);
@@ -54,7 +54,7 @@
   gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
   background-color: var(--bg-surface);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--border-hairline);
   border-radius: var(--radius-sm, 4px);
 }
 
@@ -106,7 +106,7 @@
 
 .proposal-card {
   background-color: var(--bg-surface);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--border-hairline);
   border-radius: var(--radius-md, 8px);
   padding: var(--space-4);
   display: flex;
@@ -147,7 +147,7 @@
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
   background-color: var(--bg-root);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--border-hairline);
   border-radius: var(--radius-sm, 4px);
   color: var(--text-secondary);
 }
@@ -179,7 +179,7 @@
   background-color: var(--bg-root);
   padding: var(--space-3);
   border-radius: var(--radius-sm, 4px);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--border-hairline);
 }
 
 .ingredients-title {

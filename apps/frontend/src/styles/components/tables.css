@@ -1,7 +1,7 @@
 .table-wrapper {
   overflow-x: auto;
   border-radius: 6px;
-  border: 1px solid var(--border-card);
+  border: 1px solid var(--border-hairline);
 }
 
 .data-table {
@@ -14,7 +14,7 @@
 .data-table th {
   padding: 14px 16px;
   background-color: var(--bg-root);
-  border-bottom: 1px solid var(--border-card);
+  border-bottom: 1px solid var(--border-hairline);
   color: var(--text-secondary);
   font-size: 0.85rem;
   font-weight: 600;
@@ -24,7 +24,7 @@
 
 .data-table td {
   padding: 14px 16px;
-  border-bottom: 1px solid var(--border-card);
+  border-bottom: 1px solid var(--border-hairline);
   color: var(--text-primary);
   font-size: 0.9rem;
 }

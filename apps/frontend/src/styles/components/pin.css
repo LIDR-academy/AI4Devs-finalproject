@@ -1,6 +1,6 @@
 .pin-dots-bar {
   background-color: var(--bg-root);
-  border: 2px solid var(--rule);
+  border: 1px solid var(--rule);
   border-radius: 0;
   padding: 14px;
   margin-bottom: 16px;

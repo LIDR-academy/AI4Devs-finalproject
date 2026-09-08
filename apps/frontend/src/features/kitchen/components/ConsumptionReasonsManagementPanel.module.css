@@ -4,7 +4,7 @@
 .reason-row {
   padding: var(--space-3);
   background-color: var(--bg-root);
-  border: 2px solid var(--rule);
+  border: 1px solid var(--border-hairline);
   border-radius: 0;
 }
 .reason-row--inactive {

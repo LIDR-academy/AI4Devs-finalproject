@@ -11,6 +11,9 @@
   --bg-card: #f7f2e6;
   --border-card: #18140f;
   --rule: #18140f;
+  /* Hairline decorativo (v5.3.0): bordes de contenedores/paneles/divisores — NO controles
+     interactivos (inputs, botones, toggles siguen en --rule por WCAG 1.4.11 ≥ 3:1). */
+  --border-hairline: #d7cfb9;
 
   --color-primary: #2e5f76;
   --color-primary-hover: #24495c;
@@ -44,6 +47,7 @@
     --bg-card: #1f251f;
     --border-card: #e9e4d0;
     --rule: #e9e4d0;
+    --border-hairline: #3c433b;
 
     --color-primary: #6faac7;
     --color-primary-hover: #8bc0d8;
@@ -74,6 +78,7 @@
   --bg-card: #1f251f;
   --border-card: #e9e4d0;
   --rule: #e9e4d0;
+  --border-hairline: #3c433b;
 
   --color-primary: #6faac7;
   --color-primary-hover: #8bc0d8;

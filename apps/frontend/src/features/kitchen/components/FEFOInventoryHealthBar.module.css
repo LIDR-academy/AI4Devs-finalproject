@@ -1,6 +1,6 @@
 .health-bar-card {
   background-color: var(--bg-card);
-  border: 2px solid var(--rule);
+  border: 1px solid var(--border-hairline);
   border-radius: 0;
   padding: 14px 20px;
   margin-bottom: 24px;
@@ -15,7 +15,7 @@
   height: 10px;
   width: 100%;
   background-color: var(--bg-root);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--border-hairline);
   border-radius: 0;
   overflow: hidden;
   display: flex;
