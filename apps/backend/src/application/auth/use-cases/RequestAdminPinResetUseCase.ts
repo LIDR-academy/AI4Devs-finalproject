@@ -14,8 +14,27 @@ export interface RequestAdminPinResetResponseDTO {
 export class RequestAdminPinResetUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
-    private readonly emailService: IEmailService
+    private readonly emailService: IEmailService,
+    /** Orígenes de frontend de confianza (el `CORS_ALLOWED_ORIGINS` resuelto). `['*']` = dev. */
+    private readonly allowedOrigins: string[] = ['*']
   ) {}
+
+  /**
+   * AUDIT-SEC-004: NUNCA se usa `clientOrigin` (header `Origin`, atacante-controlable) tal cual
+   * para construir el enlace del email — sería reset-poisoning. Prioridad: `CLIENT_ORIGIN` del
+   * servidor → `clientOrigin` sólo si está en el allowlist → fallback de desarrollo.
+   */
+  private resolveResetOrigin(clientOrigin?: string): string {
+    const configured = process.env.CLIENT_ORIGIN?.trim();
+    if (configured) {
+      return configured.replace(/\/+$/, '');
+    }
+    if (clientOrigin && (this.allowedOrigins.includes('*') || this.allowedOrigins.includes(clientOrigin))) {
+      return clientOrigin.replace(/\/+$/, '');
+    }
+    const firstConcrete = this.allowedOrigins.find((o) => o !== '*' && /^https?:\/\//.test(o));
+    return firstConcrete ?? 'http://localhost:8085';
+  }
 
   public async execute(dto: RequestAdminPinResetDTO): Promise<RequestAdminPinResetResponseDTO> {
     // No se normaliza aqui: IUserRepository.findByEmail ya normaliza (trim + lowercase)
@@ -33,8 +52,7 @@ export class RequestAdminPinResetUseCase {
       user.setResetToken(tokenHash, expiresAt);
       await this.userRepository.save(user);
 
-      const origin = dto.clientOrigin || process.env.CLIENT_ORIGIN || 'http://localhost:8085';
-      const resetUrl = `${origin}?resetToken=${rawToken}`;
+      const resetUrl = `${this.resolveResetOrigin(dto.clientOrigin)}?resetToken=${rawToken}`;
 
       await this.emailService.sendPasswordResetEmail({
         to: user.email ?? dto.email,

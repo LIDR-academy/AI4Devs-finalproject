@@ -1,11 +1,31 @@
 import crypto from 'node:crypto';
 import { ICredentialCipher } from '../../domain/settings/gateways/ICredentialCipher.js';
 
+// Constante SÓLO para desarrollo/test — es inalcanzable en producción: `getEnvironment()`
+// (Guard 14) aborta el arranque si `ENCRYPTION_KEY` no está definida cuando NODE_ENV=production.
+const DEV_ONLY_ENCRYPTION_KEY = 'DEV-ONLY-INSECURE-KEY — define ENCRYPTION_KEY en produccion';
+
+/**
+ * Resuelve el secreto maestro del cifrado de credenciales (AUDIT-SEC-004). Ya no cae a
+ * `JWT_SECRET` (reutilización de clave) ni a una constante silenciosa: exige `ENCRYPTION_KEY`,
+ * y en su ausencia sólo fuera de producción usa una constante explícitamente marcada.
+ */
+export function resolveEncryptionMasterSecret(): string {
+  const configured = process.env.ENCRYPTION_KEY?.trim();
+  if (configured) {
+    return configured;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('ENCRYPTION_KEY es obligatorio en producción (AUDIT-SEC-004).');
+  }
+  return DEV_ONLY_ENCRYPTION_KEY;
+}
+
 export class CredentialEncryptionService implements ICredentialCipher {
   private readonly key: Buffer;
 
   constructor(masterSecret?: string) {
-    const rawSecret = masterSecret ?? process.env.ENCRYPTION_KEY ?? process.env.JWT_SECRET ?? 'fallback-insecure-seed-key-32-chars!!';
+    const rawSecret = masterSecret ?? resolveEncryptionMasterSecret();
     // Deriva una clave de exactamente 32 bytes usando SHA-256
     this.key = crypto.createHash('sha256').update(rawSecret).digest();
   }

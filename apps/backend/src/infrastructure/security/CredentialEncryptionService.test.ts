@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { CredentialEncryptionService } from './CredentialEncryptionService.js';
+import { describe, it, expect, afterEach } from 'vitest';
+import { CredentialEncryptionService, resolveEncryptionMasterSecret } from './CredentialEncryptionService.js';
 
 describe('CredentialEncryptionService', () => {
   const masterKey = 'test-master-secret-key-at-least-32-chars-long!';
@@ -32,5 +32,34 @@ describe('CredentialEncryptionService', () => {
     const tampered = `${parts[0]}:${parts[1]}:deadbeef`;
 
     expect(() => service.decrypt(tampered)).toThrow();
+  });
+});
+
+describe('AUDIT-SEC-004: resolveEncryptionMasterSecret', () => {
+  const origKey = process.env.ENCRYPTION_KEY;
+  const origEnv = process.env.NODE_ENV;
+
+  afterEach(() => {
+    if (origKey === undefined) delete process.env.ENCRYPTION_KEY;
+    else process.env.ENCRYPTION_KEY = origKey;
+    process.env.NODE_ENV = origEnv;
+  });
+
+  it('usa ENCRYPTION_KEY cuando está definida (nunca JWT_SECRET)', () => {
+    process.env.ENCRYPTION_KEY = 'dedicated-encryption-key-value';
+    process.env.JWT_SECRET = 'a-completely-different-jwt-secret';
+    expect(resolveEncryptionMasterSecret()).toBe('dedicated-encryption-key-value');
+  });
+
+  it('LANZA en producción si ENCRYPTION_KEY no está definida (sin fallback silencioso)', () => {
+    delete process.env.ENCRYPTION_KEY;
+    process.env.NODE_ENV = 'production';
+    expect(() => resolveEncryptionMasterSecret()).toThrow(/ENCRYPTION_KEY/);
+  });
+
+  it('fuera de producción cae a una constante explícitamente marcada como dev-only', () => {
+    delete process.env.ENCRYPTION_KEY;
+    process.env.NODE_ENV = 'development';
+    expect(resolveEncryptionMasterSecret()).toMatch(/DEV-ONLY/);
   });
 });

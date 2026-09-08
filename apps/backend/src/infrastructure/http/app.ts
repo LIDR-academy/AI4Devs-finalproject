@@ -85,6 +85,8 @@ export interface AppOptions {
   consumptionReasonRepository?: IConsumptionReasonRepository;
   temperatureLogRepository?: ITemperatureLogRepository;
   jwtSecret?: string;
+  /** Secreto maestro del cifrado de credenciales; sin él se resuelve `ENCRYPTION_KEY` (AUDIT-SEC-004). */
+  encryptionKey?: string;
   corsAllowedOrigins?: string;
   rateLimit?: { windowMs: number; max: number };
   loginRateLimit?: { windowMs: number; max: number };
@@ -261,7 +263,8 @@ function buildDefaultRepositories(options: AppOptions): AppRepositories {
     recipeRepo: options.recipeRepository ?? new InMemoryRecipeRepository(),
     reconciliationRepo: options.reconciliationRepository ?? new InMemoryShiftReconciliationRepository(),
     recipePreparationRepo,
-    encryptionService: new CredentialEncryptionService(options.jwtSecret ?? process.env.JWT_SECRET),
+    // AUDIT-SEC-004: sin argumento → resuelve `ENCRYPTION_KEY` (dedicada, ya no reutiliza JWT_SECRET).
+    encryptionService: new CredentialEncryptionService(options.encryptionKey),
   };
 }
 
@@ -317,6 +320,26 @@ function mountApiRoutes(
   app.use('/api/v1/kitchen/temperature-logs', ...guard, createTemperatureLogsController(temperatureLogRepo, locationRepo, cryptoIdGenerator, systemClock, isAuthRequired));
 }
 
+// AUDIT-SEC-004: el router de auth necesita el allowlist de orígenes (para no confiar en el
+// header `Origin` al construir el enlace del email de reset) y avisa si no hay email real.
+function mountAuthRouter(app: Express, repos: AppRepositories, options: AppOptions): void {
+  if (process.env.NODE_ENV === 'production' && !options.emailService) {
+    console.warn('[startup] Sin IEmailService real inyectado — la recuperación de PIN de administrador no enviará correos en producción.');
+  }
+  const corsOrigin = resolveCorsOrigin(options.corsAllowedOrigins ?? process.env.CORS_ALLOWED_ORIGINS);
+  app.use(
+    '/api/v1/auth',
+    createAuthRouter(
+      repos.userRepo,
+      repos.jwtSecret,
+      repos.roleRepo,
+      options.emailService,
+      resolveLoginRateLimitOptions(options.loginRateLimit),
+      Array.isArray(corsOrigin) ? corsOrigin : [corsOrigin]
+    )
+  );
+}
+
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
 
@@ -358,16 +381,7 @@ export function createApp(options: AppOptions = {}): Express {
   // limiter mas estricto, aplicado despues de este en la cadena de middlewares.
   app.use('/api/v1', createRateLimiter(resolveRateLimitOptions(options.rateLimit)));
 
-  app.use(
-    '/api/v1/auth',
-    createAuthRouter(
-      repos.userRepo,
-      repos.jwtSecret,
-      repos.roleRepo,
-      options.emailService,
-      resolveLoginRateLimitOptions(options.loginRateLimit)
-    )
-  );
+  mountAuthRouter(app, repos, options);
   mountApiRoutes(app, repos, authMiddleware, isAuthRequired);
 
   // Middleware global de errores

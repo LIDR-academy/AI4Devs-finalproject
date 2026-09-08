@@ -25,6 +25,18 @@ variable "jwt_secret" {
   sensitive   = true
 }
 
+variable "encryption_key" {
+  description = "Clave dedicada al cifrado de credenciales de terceros (API keys de IA). DEBE diferir de jwt_secret (AUDIT-SEC-004); Guard 14 aborta el arranque en producción si falta."
+  type        = string
+  sensitive   = true
+}
+
+variable "client_origin" {
+  description = "Origen canónico del frontend para el enlace del email de recuperación de PIN (AUDIT-SEC-004). Opcional si cors_allowed_origins es un allowlist concreto."
+  type        = string
+  default     = ""
+}
+
 variable "postgres_user" {
   description = "Usuario de PostgreSQL — inyectado vía TF_VAR_postgres_user, nunca hardcodeado (Guard 23/25)."
   type        = string
@@ -168,6 +180,8 @@ resource "docker_container" "backend" {
     "NODE_ENV=production",
     "PORT=3000",
     "JWT_SECRET=${var.jwt_secret}",
+    "ENCRYPTION_KEY=${var.encryption_key}",
+    "CLIENT_ORIGIN=${var.client_origin}",
     "DATABASE_URL=postgresql://${var.postgres_user}:${var.postgres_password}@postgres:5432/${var.postgres_db}?schema=public",
     "CORS_ALLOWED_ORIGINS=${var.cors_allowed_origins}",
     "RATE_LIMIT_WINDOW_MS=${var.rate_limit_window_ms}",

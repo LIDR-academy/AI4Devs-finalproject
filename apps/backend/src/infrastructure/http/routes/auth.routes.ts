@@ -21,7 +21,8 @@ export function createAuthRouter(
   jwtSecret: string,
   roleRepository: IRoleRepository,
   emailService?: IEmailService,
-  loginRateLimit: { windowMs: number; max: number } = { windowMs: 15 * 60 * 1000, max: 10 }
+  loginRateLimit: { windowMs: number; max: number } = { windowMs: 15 * 60 * 1000, max: 10 },
+  allowedOrigins: string[] = ['*']
 ): Router {
   const router = Router();
   const mailer = emailService || new ConsoleEmailService();
@@ -35,7 +36,7 @@ export function createAuthRouter(
   const listUsersUseCase = new ListUsersUseCase(userRepository);
   const updateUserUseCase = new UpdateUserUseCase(userRepository);
   const changePinUseCase = new ChangePinUseCase(userRepository);
-  const requestAdminPinResetUseCase = new RequestAdminPinResetUseCase(userRepository, mailer);
+  const requestAdminPinResetUseCase = new RequestAdminPinResetUseCase(userRepository, mailer, allowedOrigins);
   const resetAdminPinUseCase = new ResetAdminPinUseCase(userRepository);
 
   const controller = new AuthController(

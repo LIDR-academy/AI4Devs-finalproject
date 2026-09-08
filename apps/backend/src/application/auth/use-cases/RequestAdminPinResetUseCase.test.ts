@@ -73,7 +73,7 @@ describe('RequestAdminPinResetUseCase — Expiracion y Resolucion de Origin (AUD
     expect(lastEmail?.resetUrl.startsWith('https://env-origin.example.com?resetToken=')).toBe(true);
   });
 
-  it('usa el fallback http://localhost:8085 cuando no hay clientOrigin ni CLIENT_ORIGIN', async () => {
+  it('usa el fallback http://localhost:8085 cuando no hay clientOrigin ni CLIENT_ORIGIN (allowlist dev `*`)', async () => {
     delete process.env.CLIENT_ORIGIN;
     const repo = buildRepoWithAdmin();
     const emailService = new ConsoleEmailService();
@@ -83,5 +83,45 @@ describe('RequestAdminPinResetUseCase — Expiracion y Resolucion de Origin (AUD
 
     const lastEmail = emailService.getLastSentEmail();
     expect(lastEmail?.resetUrl.startsWith('http://localhost:8085?resetToken=')).toBe(true);
+  });
+
+  describe('AUDIT-SEC-004: no confía en el header Origin sin allowlist', () => {
+    it('IGNORA un clientOrigin que NO está en el allowlist concreto (reset-poisoning) y usa el 1er origen concreto', async () => {
+      delete process.env.CLIENT_ORIGIN;
+      const repo = buildRepoWithAdmin();
+      const emailService = new ConsoleEmailService();
+      const useCase = new RequestAdminPinResetUseCase(repo, emailService, ['https://app.restostock.com']);
+
+      await useCase.execute({ email: 'admin@restostock.com', clientOrigin: 'https://evil.com' });
+
+      const lastEmail = emailService.getLastSentEmail();
+      expect(lastEmail?.resetUrl.startsWith('https://app.restostock.com?resetToken=')).toBe(true);
+      expect(lastEmail?.resetUrl).not.toContain('evil.com');
+    });
+
+    it('SÍ usa un clientOrigin que está en el allowlist concreto', async () => {
+      delete process.env.CLIENT_ORIGIN;
+      const repo = buildRepoWithAdmin();
+      const emailService = new ConsoleEmailService();
+      const useCase = new RequestAdminPinResetUseCase(repo, emailService, [
+        'https://app.restostock.com',
+        'https://admin.restostock.com',
+      ]);
+
+      await useCase.execute({ email: 'admin@restostock.com', clientOrigin: 'https://admin.restostock.com' });
+
+      expect(emailService.getLastSentEmail()?.resetUrl.startsWith('https://admin.restostock.com?resetToken=')).toBe(true);
+    });
+
+    it('CLIENT_ORIGIN del servidor gana incluso sobre un clientOrigin allowlisteado', async () => {
+      process.env.CLIENT_ORIGIN = 'https://canonical.restostock.com';
+      const repo = buildRepoWithAdmin();
+      const emailService = new ConsoleEmailService();
+      const useCase = new RequestAdminPinResetUseCase(repo, emailService, ['https://admin.restostock.com']);
+
+      await useCase.execute({ email: 'admin@restostock.com', clientOrigin: 'https://admin.restostock.com' });
+
+      expect(emailService.getLastSentEmail()?.resetUrl.startsWith('https://canonical.restostock.com?resetToken=')).toBe(true);
+    });
   });
 });
