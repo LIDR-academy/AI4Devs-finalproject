@@ -759,6 +759,7 @@ Instaladas, migradas, con `HasRoles` **ya conectado** al modelo `User` y **ya se
 [#269](https://github.com/LIDR-academy/AI4Devs-finalproject/pull/269)
 
 **Pull Request 2**
+[#314](https://github.com/LIDR-academy/AI4Devs-finalproject/pull/314)
 
 **Pull Request 3**
 
