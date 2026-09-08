@@ -11,6 +11,7 @@
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
 8. [Refactor de Complejidad y Mantenibilidad](#8-refactor-de-complejidad-y-mantenibilidad)
+9. [Entrega Final — Desarrollo Iterativo VSDD](#9-entrega-final--desarrollo-iterativo-vsdd-tk-063--tk-135)
 
 ---
 
@@ -288,5 +289,54 @@ Se refactorizaron 12 archivos: componentes con múltiples estados/secciones inli
 
 ### Nota de control humano:
 Se verificó que los 52 tests del frontend siguieran en verde sin modificar ninguno, que el linter quedara en 0 advertencias, y que la duplicación de código no aumentara (1.57%, bajo el umbral del 3%).
+
+---
+
+## 9. Entrega Final — Desarrollo Iterativo VSDD (TK-063 – TK-135)
+
+> La Entrega Final se construyó a lo largo de ~90 tickets sobre `finalproject-JDLM`. En vez de transcribir un prompt por ticket, se documentan aquí los **prompts estructurales** que se repitieron como patrón para cada nueva capacidad, remediación de auditoría y cierre de entrega. El detalle ticket a ticket vive en [`docs/05_agile_planning/15_history.md`](docs/05_agile_planning/15_history.md).
+
+### **9.1. Nueva capacidad de negocio (cascada spec-before-code, Guard 26)**
+
+**Prompt patrón:**
+```md
+Nueva capacidad: "<descripción en lenguaje natural>".
+
+Ejecuta la Etapa 1 de `.agents/workflows/01_cascading_spec_workflow.md` ANTES de tocar código de producción: entrada al PRD (SK-02), Historia de Usuario (SK-11), Ticket(s) Técnico(s) (SK-12), Matriz de Trazabilidad (SK-13) y Mapa del Backlog (SK-14). Recién con las fichas aprobadas, implementa con SK-16 (backend) / SK-17 (frontend) y cierra con el gate de calidad ticket-scoped, tests y `oasdiff` si cambia el contrato.
+```
+
+### Respuesta del agente de IA:
+Se aplicó para las épicas US-014, US-015, US-016/US-025, US-018, US-019/US-020/US-021, US-022/US-023/US-024, US-026→US-029 (ADR-003), US-030 (ADR-004), US-032, US-033, US-034, US-035 y US-036/US-037. Cada una dejó su ficha de US, sus tickets `TK-XXX(-FE)`, filas en la matriz `REQ-XXX` y entrada en `15_history.md`.
+
+### Nota de control humano:
+Se hizo cumplir el Guard 26: escribir código antes de la ficha —aunque se reconstruya la spec después en la misma sesión— es en sí una violación. El Guard 28 (interrogatorio de reglas de negocio) se usó para fijar decisiones como la inmutabilidad de `unitOfMeasure` y el congelamiento de composición de recetas con preparaciones cerradas. Restricción transversal explícita: **prohibida la fuga de datos del restaurante (recetas, insumos) al modelo de IA** — verificada en cada ticket del módulo de recetas.
+
+### **9.2. Auditoría de módulo y remediación técnica (carve-out C-DEV-006-4)**
+
+**Prompt patrón:**
+```md
+Audita el módulo <X> (seguridad / calidad / completitud CRUD / accesibilidad) con el skill correspondiente. Emite el informe en `docs/audits/AUDIT-<TIPO>-<NNN>-*.md` con hallazgos clasificados por severidad.
+
+Para cada hallazgo que sea un DEFECTO de código ya entregado (no una nueva regla de negocio): crea un ticket técnico standalone vía SK-12 (referenciando el audit), impleméntalo y ciérralo con su commit atómico propio. NO reabras el ticket original.
+```
+
+### Respuesta del agente de IA:
+Auditorías emitidas: AUDIT-SEC-001 (hardening RBAC — escalada de privilegios Crítica), AUDIT-SEC-002 (`/api/v1/roles` sin guard), AUDIT-SEC-003 (rate limiter con bucket compartido), AUDIT-SEC-004 (hardcode de credenciales y auth), AUDIT-DEV-006 (extracción de bodega), AUDIT-DEV-007 (módulo de recetas), AUDIT-DEV-012 (fuga IA + brechas CRUD), AUDIT-DEV-013/014/015 (calidad de TK-129/130/131). Remediaciones: TK-091→094, TK-098→101, TK-110, TK-117, TK-118, TK-125→128, TK-132→135.
+
+### Nota de control humano:
+Se validó el test decisivo del carve-out en cada remediación: "¿el product owner o un usuario notaría una diferencia en las reglas de negocio o en el comportamiento visible?" — si sí, cascada completa; si no (mismo resultado, bien construido), ticket técnico directo. Llamar "técnico" a una regla de negocio nueva para saltarse la cascada es en sí una violación del Guard.
+
+### **9.3. Pre-vuelo de CI y smoke test antes del push**
+
+**Prompt patrón:**
+```md
+Antes del push de la entrega, corre `docs/04_governance_and_quality/scripts/ci_local.sh` (reproduce los 3 jobs de `ci.yml`) y arréglalo si falla. Después levanta la pila completa con `docker compose up` en `NODE_ENV=production` y verifica login + un flujo crítico end-to-end a través del proxy nginx. NO hagas el push.
+```
+
+### Respuesta del agente de IA:
+`ci_local.sh` (TK-063) destapó, antes del push, CVEs HIGH de septiembre 2026 en dependencias transitivas de Prisma 7 y en el base Alpine del frontend (TK-134), y 4 tests RTL con carrera bajo carga paralela. El smoke test de `docker compose` (Fase 0.2) destapó un fallo de arranque real: `docker-compose.yml` inyectaba `CLIENT_ORIGIN`/`ENCRYPTION_KEY` como cadena vacía y el *fail-fast* de Guard 14 abortaba el backend en bucle (TK-135, regresión de TK-133). Ambos se arreglaron y quedaron con `ci_local.sh` en verde y los 3 contenedores `healthy`.
+
+### Nota de control humano:
+El push y el PR quedan explícitamente reservados para la fecha de entrega (2026-09-10); toda la sesión operó bajo la consigna "haz todo menos el push". No hay despliegue público en vivo — la verificación es local vía `docker compose` (readme §0.4).
 
 ---

@@ -51,7 +51,18 @@ RestoStock tiene como propósito eliminar las mermas invisibles y desperdicios d
 *   **Persistencia Real en Producción:** Todos los repositorios (incluyendo recetas, conciliaciones de turno y reportes) están respaldados por PostgreSQL en producción, con bootstrap idempotente del primer administrador en cada despliegue nuevo.
 *   **Gestión de Catálogo Maestro:** Panel de administración para dar de alta insumos y recetas (rol `ADMIN`) sin depender del script de seed, permitiendo operar con el inventario real del restaurante.
 *   **Reabastecimiento de Bodega:** Un Administrador puede sumar stock a un insumo existente cuando llega una entrega del proveedor, para que el restaurante siga operando más allá de la carga inicial de inventario.
-*   **Sectores Físicos de Almacenamiento y Stock Multi-Sector** *(spec aprobada — `US-016` / `US-025`)*: la bodega se subdivide en sub-sectores reales (Heladera de Carnes, Cámara de Congelados, Bodega de Secos); cada insumo se deposita en un sub-sector concreto al darlo de alta o reabastecerlo, su stock se rastrea por par `(insumo, sub-sector)`, y la extracción a cocina exige elegir el sector de origen validando su saldo.
+*   **Sectores Físicos de Almacenamiento y Stock Multi-Sector** (`US-016` / `US-025`): la bodega se subdivide en sub-sectores reales administrables (Heladera de Carnes, Cámara de Congelados, Bodega de Secos); cada insumo se deposita en un sub-sector concreto al darlo de alta o reabastecerlo, su stock se rastrea por par `(insumo, sub-sector)`, y la extracción a cocina exige elegir el sector de origen validando su saldo.
+*   **Trazabilidad Completa de Extracciones:** cada salida de bodega registra propósito (`stock de cocina`, `receta` o `descarte directo`), motivo o receta asociada y la identidad del operario, distinguiendo mermas directas de bodega de los traslados a cocina.
+*   **Roles y Permisos Dinámicos (RBAC):** un Administrador crea roles personalizados (Bodeguero, Cocinero, Sub-Chef…) con una matriz granular de permisos desde la web; la UI se habilita por permiso, no por nombre de rol, y el usuario se autoredirige a su pantalla al autenticarse.
+*   **Recuperación de PIN por Email:** el Administrador solicita el reseteo de su PIN por correo verificado y recibe un enlace con token de un solo uso y expiración de 15 minutos.
+*   **Trazabilidad de Preparación de Recetas y Mermas** (`US-026`–`US-029`): extraer insumos "para una receta" abre una preparación que agrupa la tanda; al cerrarla se declaran porciones producidas, sobrante (con ubicación) y merma (con motivo), y el reporte cruza consumo real vs. teórico por receta.
+*   **Catálogo Administrable de Motivos de Consumo:** el consumo manual y las varianzas negativas de conciliación exigen elegir un motivo de una lista consistente y mantenible, en vez de texto libre.
+*   **Escaneo de Código de Barras:** al registrar una extracción, el operario escanea el código de barras del insumo con la cámara de la tablet para seleccionarlo sin buscarlo por nombre.
+*   **Registro de Temperatura de Refrigeración:** al iniciar el turno se registra la temperatura leída en cada refrigerador/congelador, como evidencia de cumplimiento de seguridad alimentaria.
+*   **Reportes de Costeo y Rotación:** costo unitario por insumo y valor monetario de las mermas en el dashboard; indicador TRR real (tiempo medio de rotación de remanentes) contra el objetivo de 72 h; advertencia de apertura duplicada al extraer un insumo ya abierto en cocina.
+*   **Recetas de Aprovechamiento Anti-Desperdicio (IA opcional):** el sistema propone recetas para consumir remanentes próximos a caducar usando solo ingredientes disponibles, con un motor heurístico interno o un LLM configurable — **sin que las recetas ni los datos del restaurante salgan al modelo** — y estima la merma monetaria evitada.
+*   **Configuración del Agente de IA:** pantalla de ajustes para elegir proveedor (Gemini, OpenAI/Ollama o motor heurístico interno), guardar credenciales cifradas (AES-256-GCM) en base de datos y probar la conectividad.
+*   **Edición y Baja del Catálogo Maestro:** un Administrador corrige un insumo (`nombre`, `costo`, `código de barras`) o edita/da de baja una receta; la composición de una receta se congela si ya tiene preparaciones cerradas, para no distorsionar la trazabilidad histórica.
 *   **Sistema de Diseño FEFO (Turno Día/Noche):** Interruptor de tema persistido por dispositivo — turno Día (comanda de papel, alto contraste sobre fondo claro) y turno Noche (pizarra de turno, fondo oscuro con acentos en tiza), aplicado a toda la aplicación.
 *   **Navegación por Rutas (Shell de Aplicación):** Barra de navegación de nivel superior con direcciones propias (Inventario, Estaciones, Recetas, Reportes, Ajustes) y acceso por rol (Reportes y Ajustes solo `ADMIN`), con soporte de deep-link y botón "atrás" del navegador.
 
@@ -541,7 +552,7 @@ La API REST opera bajo el estándar OpenAPI 3.1.0. A continuación se detallan l
 
 ## 5. Historias de Usuario
 
-Se han definido detalladamente las siguientes 13 historias de usuario críticas (disponibles en el [Índice de Historias de Usuario](docs/05_agile_planning/11_user_stories/indice_user_stories.md)):
+Se detallan a continuación las 13 historias de usuario críticas del MVP (§5.1–5.13). El desarrollo posterior (Entrega Final) añadió otras 24, resumidas en §5.14. Todas las fichas completas están en el [Índice de Historias de Usuario](docs/05_agile_planning/11_user_stories/indice_user_stories.md):
 
 ### **5.1. US-001: Autenticación por PIN del Personal de Cocina**
 *   **Formato de Negocio:** Como operario de cocina (Staff), quiero autenticarme en la terminal táctil ingresando mi PIN personal de 4 dígitos, para registrar mis movimientos de insumos y consumos de forma rápida y segura sin interrumpir el ritmo del servicio.
@@ -637,6 +648,39 @@ Se han definido detalladamente las siguientes 13 historias de usuario críticas 
     *   *When* el Administrador invoca `PATCH /api/v1/stock/insumos/{id}/restock` con `quantity: 10.5`,
     *   *Then* el sistema suma la cantidad al stock existente (`15.500`) y registra un `StockMovement` tipo `RESTOCK`.
 *   **Estado:** ✅ Backend y Frontend implementados y verificados.
+
+### **5.14. Historias de Usuario Adicionales (US-014 – US-037)**
+
+Las 13 historias anteriores son el núcleo del MVP (Entregas 1 y 2). El desarrollo posterior (Entrega Final) añadió las siguientes, cada una con su ficha completa — formato de negocio, criterios Gherkin y trazabilidad — en el [Índice de Historias de Usuario](docs/05_agile_planning/11_user_stories/indice_user_stories.md):
+
+| US | Título | Como… quiero… para… (resumen) | Estado |
+| :-- | :-- | :-- | :--: |
+| **US-014** | Trazabilidad Completa en Extracciones | Operario/ADMIN: especificar propósito (`KITCHEN_STOCK`/`RECIPE`/`DIRECT_DISCARD`), motivo/receta e identidad al extraer, para una auditoría íntegra que distinga mermas directas de bodega de traslados a cocina. | ✅ |
+| **US-015** | Gestión de Permisos y Roles Dinámicos (RBAC) | ADMIN: crear roles personalizados con matriz granular de permisos desde la web y autoredirigir al usuario a su pantalla, para restringir acciones por puesto sin redeploy. | ✅ |
+| **US-016** | Definición de Sectores de Almacenamiento | ADMIN: dar de alta y administrar los sectores físicos reales (cámaras, refrigeradores, estaciones), para que extracción y reabastecimiento consuman ubicaciones configurables. | ✅ |
+| **US-017** | Configuración General del Restaurante y Parámetros FEFO | ADMIN: configurar identidad (nombre, moneda) y parámetros de inventario (umbral de alerta crítica, vida útil estándar), para adaptar el comportamiento a las reglas del establecimiento. | ✅ |
+| **US-018** | Recuperación de PIN del Administrador por Email | ADMIN: solicitar el reseteo de PIN por correo verificado con token de un solo uso y expiración de 15 min, para recuperar el acceso sin intervención técnica. | ✅ |
+| **US-019** | Costeo de Insumos y Valorización Monetaria de Mermas | ADMIN: registrar el costo unitario de cada insumo y ver el valor monetario de las mermas en el dashboard, para auditar la pérdida financiera real, no solo cantidades. | ✅ |
+| **US-020** | Indicador TRR Real en el Dashboard | ADMIN: ver el tiempo real promedio de rotación de remanentes (TRR efectivo), para verificar si el objetivo de 72 h se cumple en la práctica. | ✅ |
+| **US-021** | Advertencia de Apertura Duplicada al Extraer | Operario: recibir una advertencia visual si ya hay un remanente activo del mismo insumo en cocina, para evitar aperturas duplicadas y merma por insumos abiertos olvidados. | ✅ |
+| **US-022** | Sistema de Diseño FEFO — Turno Día/Noche | Operario: alternar la app entre modo Día (alto contraste sobre claro) y Noche (fondo pizarra), con la elección recordada por dispositivo, para legibilidad en cualquier luz. | ✅ |
+| **US-023** | Navegación por Rutas y Shell de Aplicación | Operario: una barra de navegación con direcciones propias (Inventario, Estaciones, Recetas, Reportes, Ajustes), para orientarse, usar "atrás", recargar sin perder sección y compartir enlaces directos. | ✅ |
+| **US-024** | Contenido de Ruta Inline y Consistente | Operario: que Reportes se muestre inline (no como modal flotante) y Ajustes pase a 5 sub-rutas deep-linkables, corrigiendo la inconsistencia de navegación de US-023. | ✅ |
+| **US-025** | Depósito en Sub-Sector y Stock Multi-Sector | ADMIN/Operario: indicar en qué sub-sector físico queda un insumo al darlo de alta/reabastecer y elegir el sub-sector de origen al extraer, para reflejar la ubicación real y validar saldo por sector. | ✅ |
+| **US-026** | Áreas de Cocina como Ubicaciones de Catálogo y Destino Dinámico | Operario: que el destino de una extracción a cocina se elija de un catálogo de áreas administrable, no de una lista fija en código. | ✅ |
+| **US-027** | Apertura Automática de Preparación de Receta al Extraer | Operario: que extraer insumos "para una receta concreta" abra automáticamente una **preparación** que agrupe esa tanda, para después declarar en un paso qué se consumió, sobró y descartó. | ✅ |
+| **US-028** | Cierre de Preparación — Sobrante con Ubicación y Merma con Motivo | Operario: cerrar una preparación declarando porciones producidas y, por ingrediente, cuánto sobró (y dónde se guardó) y cuánto se descartó (y por qué), para trazabilidad completa de la tanda. | ✅ |
+| **US-029** | Reporte de Mermas de Preparación y Consumo Real vs. Teórico | ADMIN: ver las mermas de preparación por receta/ingrediente/motivo y el consumo real vs. teórico, para detectar recetas mal calibradas y desvíos sistemáticos. | ✅ |
+| **US-030** | Catálogo de Motivos de Consumo (Administrable) | ADMIN: mantener un catálogo de motivos de consumo (crear/editar/activar), para que el equipo elija siempre de una lista consistente en vez de texto libre disperso. | ✅ |
+| **US-031** | Fusión Selectiva de Patrones de UI Explorados con Stitch | Operario: 4 mejoras puntuales de interacción (chips de operario reciente, acción rápida circular, resaltado de fila con varianza, toolbar de catálogo) elegidas entre mockups exploratorios. | ✅ |
+| **US-032** | Escaneo de Código de Barras en Extracción | Operario: escanear el código de barras de un insumo con la cámara de la tablet al extraer, para seleccionarlo sin buscarlo por nombre en una lista larga durante el rush. | ✅ |
+| **US-033** | Registro de Temperatura de Refrigeración al Iniciar Turno | Operario: registrar la temperatura leída en el termómetro físico de cada refrigerador/congelador al iniciar turno, para dejar evidencia de cumplimiento de seguridad alimentaria. | ✅ |
+| **US-034** | Configuración del Agente de IA | ADMIN: una pantalla `/ajustes/ia` para elegir proveedor (Gemini, OpenAI/Ollama o Motor Heurístico interno), guardar credenciales cifradas en BD y probar conectividad, para gobernar costo, privacidad y disponibilidad de los modelos. | ✅ Parcial (los toggles inertes se retiraron en TK-129) |
+| **US-035** | Recetas de Aprovechamiento Anti-Desperdicio (con IA opcional) | ADMIN: que el sistema analice los remanentes próximos a caducar (<48 h) y proponga recetas de aprovechamiento con ingredientes disponibles, para evitar mermas por vencimiento y acelerar la rotación FEFO. | ✅ |
+| **US-036** | Edición de un Insumo del Catálogo Maestro | ADMIN: corregir `name`/`unitCost`/`barcode` de un insumo existente vía `PUT /api/v1/stock/insumos/:id` (`unitOfMeasure` inmutable), para mantener el catálogo al día. | ✅ |
+| **US-037** | Edición y Baja de una Receta del Recetario | ADMIN: editar o dar de baja (soft-delete) una receta vía `PUT`/`DELETE /api/v1/recipes/:id`; la composición se congela (409) si ya tiene una preparación cerrada, para no distorsionar la trazabilidad histórica. | ✅ |
+
+> Detalle de la evolución cronológica ticket a ticket en [`docs/05_agile_planning/15_history.md`](docs/05_agile_planning/15_history.md).
 
 ---
 
@@ -777,6 +821,38 @@ Sus tickets de Frontend (`TK-049-FE`, `TK-050-FE`, `TK-057-FE`, `TK-060-FE`) est
     *   **Capas Afectadas:** `features/kitchen/services/kitchen.service.ts` (`fetchAvailableRecipes`), `features/kitchen/components/RecipeSelectorModal.tsx`.
     *   **DoD:** 5 pruebas RTL nuevas (recetas reales, resumen de ingredientes, fallback offline, estado vacío, confirmación con ID real) — `RecipeSelectorModal.test.tsx` no existía antes de este ticket.
 
+### 🎯 6.3. Tickets de la Entrega Final (TK-063 – TK-135)
+
+La Entrega Final agrupa **~90 tickets** (backend + frontend + gobernanza) sobre la rama `finalproject-JDLM`, organizados por tema. Cada ticket de código tiene su ficha exacta en `docs/05_agile_planning/12_tickets/{modulo}/{backend|frontend}/` (los de gobernanza `.agents/` viven versionados en `.agents/CHANGELOG.md`); el registro cronológico completo está en [`15_history.md`](docs/05_agile_planning/15_history.md) y las auditorías que motivaron muchas de las remediaciones en [`docs/audits/`](docs/audits/).
+
+| # | Tema / Epic | Descripción | Tickets |
+| :-: | :-- | :-- | :-- |
+| 1 | **Herramientas y Gobernanza DevSecOps** | `ci_local.sh` reproduce los 3 jobs de `ci.yml` antes del push; auditoría SecDevOps de `.agents/` y Guards 30/31/32; el framework de gobernanza IA evolucionó a v2.14.0 (carve-out de remediación técnica, gates ticket-scoped, WCAG 2.2, auditoría heurística de diseño). | TK-063, TK-064, TK-065, TK-066 |
+| 2 | **Reorganización de Módulos (arquitectura)** | Modularización del repositorio de Stock por ISP; extracción del feature `recipes` fuera de `catalog` (backend + frontend); "Recetario" simétrico al Inventario; migración de emojis a `lucide-react`. | TK-058, TK-069, TK-069-FE, TK-070-FE, TK-071 |
+| 3 | **Sistema de Diseño "Señal Industrial" → "Sistema FEFO"** | Design System v2.0.0 aplicado a cocina y backoffice; turno Día/Noche persistido por dispositivo (US-022); auditoría de fidelidad visual (US-028); evolución continua v4.x→**v5.9.0**: bordes tenues, `:focus-visible` global, `prefers-reduced-motion`, tokens de interlineado, estado *Loading* de botones, feedback de pulsación táctil, botón secundario "ghost", aro semántico en botones de acción. | TK-067, TK-068, TK-081-FE→TK-084-FE, TK-095-FE |
+| 4 | **Shell de Aplicación y Navegación por Rutas** (US-023 / US-024) | Barra de navegación de nivel superior con rutas propias (`react-router-dom` 7), deep-linking, botón "atrás"; Reportes inline y Ajustes en 5 sub-rutas; fix del fallback SPA de nginx. | TK-085-FE→TK-090-FE |
+| 5 | **Trazabilidad Completa en Extracciones** (US-014) | Propósito (`KITCHEN_STOCK`/`RECIPE`/`DIRECT_DISCARD`), motivo/receta, `operatorId` e interfaz táctil de extracción con responsable y motivo. | TK-072, TK-072-FE |
+| 6 | **Recuperación de PIN del Administrador por Email** (US-018) | `POST /forgot-pin` + `/reset-pin` con token de un solo uso (SHA-256 en BD, 15 min), *magic link*, pantallas de solicitud y reseteo. | TK-076, TK-077, TK-077-FE |
+| 7 | **Reportes Analíticos** (US-019 / US-020 / US-021) | Costeo de insumos y valorización monetaria de mermas; indicador TRR real en el dashboard; advertencia de apertura duplicada al extraer. | TK-078, TK-078-FE, TK-079, TK-079-FE, TK-080, TK-080-FE |
+| 8 | **Sectores Físicos de Almacenamiento y Stock Multi-Sector** (US-016 / US-025) | CRUD de sub-sectores con `requireRole('ADMIN')` por ruta y RFC 7807; stock rastreado por par `(insumo, sub-sector)`; selector de origen en extracción validando saldo por sector; destino de cocina dinámico. | TK-074, TK-074-FE, TK-096, TK-096-FE, TK-097, TK-102-FE |
+| 9 | **Hardening RBAC** (AUDIT-SEC-001, US-027) | Resolución *fail-safe* del rol (usuarios creados por API dejaban de autenticar como ADMIN — escalada de privilegios **Crítica**); rol explícito por ruta en mutaciones; paridad `prisma/migrations/` ↔ `schema.prisma`. | TK-091, TK-092, TK-093, TK-094 |
+| 10 | **RBAC Dinámico Completo** (US-015, AUDIT-SEC-002) | Matriz de permisos `Role`/`Permission`/`RolePermission`; `authorizePermissions` conectado a rutas reales (`/api/v1/roles` estaba **sin ningún guard** — cualquier usuario logueado reescribía permisos de cualquier rol); permisos embebidos en el JWT + *gating* de UI por permiso (no por `role === 'ADMIN'`). | TK-073, TK-073-FE, TK-117, TK-121, TK-121-FE |
+| 11 | **Módulo de Extracción de Bodega — Remediación** (AUDIT-DEV-006) | Propagación real de errores y aritmética decimal en la pantalla de extracción; `fromStorageLocationId` como FK con migración; id determinista + motivo de descarte validado como enum. | TK-098, TK-099, TK-100-FE, TK-101, TK-118 |
+| 12 | **Áreas de Cocina como Catálogo y Destino Dinámico** (US-026) | Áreas de cocina administrables como `StorageLocation`; las pestañas de filtro por área dejaron de desincronizarse de los remanentes reales. | TK-102, TK-102-FE, TK-112-FE |
+| 13 | **Trazabilidad de Preparación de Recetas y Mermas** (ADR-003, US-026→US-029) | `RecipePreparation` que agrupa la tanda extraída; cierre declarando porciones producidas, sobrante con ubicación y merma con motivo; panel de reporte de mermas de preparación; bugfix real de rollback en `InMemoryStockRepository`. | TK-103, TK-103-FE, TK-104, TK-104-FE, TK-105, TK-105-FE, TK-106-FE |
+| 14 | **Catálogo de Motivos de Consumo** (ADR-004, US-030 · US-004 v1.1 · US-008 v1.1) | CRUD de motivos administrables; motivo estructurado obligatorio en el consumo manual y en la varianza negativa de conciliación; bugfix de superávit no sincronizado. | TK-107, TK-107-FE, TK-108, TK-108-FE, TK-109, TK-109-FE |
+| 15 | **Umbral de Alerta Crítica FEFO Configurable** (US-017 Esc. 2) | `GetActiveRemanentesUseCase` ignoraba `SystemSettings.criticalAlertHours` y comparaba contra un `24` fijo. | TK-110 |
+| 16 | **Vista Previa de Disponibilidad de Receta** (US-007 v1.1) | `GET /kitchen/recipes/{id}/availability?portions=N` — vista previa por ingrediente antes de confirmar "Preparar Receta", en vez de enterarse del quiebre de stock recién con el `422`. | TK-111, TK-111-FE |
+| 17 | **Fusión Selectiva de UI (Stitch)** (US-031) | Chips de operario reciente en el login, resaltado full-bleed de fila con varianza en conciliación, toolbar acoplado en el catálogo (búsqueda + vista grid/lista); el botón circular de acción rápida ya existía. | TK-113-FE, TK-114-FE, TK-115-FE, TK-116-FE |
+| 18 | **Escaneo de Código de Barras en Extracción** (US-032) | `GET /stock/insumos/by-barcode/{barcode}`; escáner con `@zxing/browser` (aprobado por Guard 24, import dinámico ~117 KB en chunk aparte); el match se resuelve contra el catálogo ya en memoria. | TK-119, TK-119-FE |
+| 19 | **Registro de Temperatura de Refrigeración** (US-033) | `POST /kitchen/temperature-logs` al iniciar turno — evidencia de cumplimiento de seguridad alimentaria por ubicación. | TK-120, TK-120-FE |
+| 20 | **Recetas de Rescate Anti-Desperdicio + IA** (US-035, AUDIT-DEV-007) | Propuestas de aprovechamiento sobre remanentes próximos a caducar; doble modo (heurístico interno / LLM con frontera de confianza y adapters endurecidos); *zero-leakage* — las recetas y datos del restaurante nunca salen al modelo; valorización monetaria de la merma evitada. Remediación de arquitectura completa del módulo de recetas (G-A→G-D). | TK-122, TK-122-FE, TK-123, TK-123-FE, TK-124, TK-124-FE, TK-125, TK-126, TK-127, TK-128, TK-128-FE |
+| 21 | **Configuración del Agente de IA** (US-034) + saneamiento (AUDIT-DEV-012) | Pantalla `/ajustes/ia`: proveedor (Gemini / OpenAI-Ollama / Motor Heurístico), credenciales cifradas AES-256-GCM en BD, *ping* de conectividad; se retiraron los toggles de IA inertes. | TK-123, TK-123-FE, TK-129, TK-129-FE |
+| 22 | **Edición y Baja del Catálogo Maestro** (US-036 / US-037, AUDIT-DEV-012 C-1/C-2) | `PUT /stock/insumos/:id` (`unitOfMeasure` inmutable); `PUT`/`DELETE /recipes/:id` con soft-delete (`Recipe.isActive`) y composición congelada (409) si hay una preparación `CLOSED`. Auditorías AUDIT-DEV-014/015 APROBADO. | TK-130, TK-130-FE, TK-131, TK-131-FE |
+| 23 | **Remediaciones de Seguridad Pre-Entrega** (AUDIT-SEC-003 / AUDIT-SEC-004) | `trust proxy` + rate limiting por cliente real (detrás de nginx todo el restaurante compartía un bucket); `ENCRYPTION_KEY` dedicada con *fail-fast* en producción; origen del email de reset validado contra allowlist (anti *reset-poisoning*); `ci_local.sh` antes del push destapó CVEs de sept-2026 (Prisma 7 → `fast-uri`/`mysql2`; base Alpine); fix de arranque con `CLIENT_ORIGIN`/`ENCRYPTION_KEY` vacíos en `docker compose`. | TK-132, TK-133, TK-134, TK-135 |
+
+> Algunos números de ticket intermedios (p. ej. TK-125-FE) no llegaron a existir o quedaron fuera de alcance — no hay huecos funcionales, solo saltos de numeración durante la planificación en cascada. La lista canónica y su estado están en el [Índice de Tickets](docs/05_agile_planning/12_tickets/indice_tickets.md).
+
 ---
 
 ## 7. Pull Requests
@@ -801,5 +877,17 @@ A continuación se registra el histórico de Pull Requests de este repositorio:
     *   `pnpm run build && pnpm run lint` — 0 errores.
     *   `pnpm run test` — suite completa de tests unitarios/integración en verde (backend + frontend).
     *   Verificación en vivo con Docker real de los flujos críticos (login, extracción, reabastecimiento, catálogo, movimientos).
+
+### 🔄 PR #3: `feat: RestoStock — Entrega Final`
+*   **URL:** _(pendiente — se abre el 2026-09-10)_
+*   **Ramas:** `finalproject-JDLM` ➡️ `main`
+*   **Ticket Relacionado:** TK-063 a TK-135 (~90 tickets backend + frontend + gobernanza) — ver §6.3 y el [Índice de Tickets](docs/05_agile_planning/12_tickets/indice_tickets.md).
+*   **Descripción del Cambio:** Entrega final del producto sobre la base funcional de la Entrega 2. Nuevas capacidades de negocio: trazabilidad completa de extracciones con propósito y responsable (US-014), RBAC dinámico con matriz de permisos y *gating* de UI por permiso (US-015), sectores físicos de almacenamiento y stock multi-sector (US-016/US-025), recuperación de PIN por email (US-018), reportes de costeo y valorización monetaria de mermas + TRR real (US-019/US-020), navegación por rutas con *shell* de aplicación y turno Día/Noche (US-022/US-023/US-024), trazabilidad de preparación de recetas y mermas (US-026→US-029), catálogo administrable de motivos de consumo (US-030), escaneo de código de barras (US-032), registro de temperatura de refrigeración (US-033), configuración del agente de IA con credenciales cifradas (US-034), recetas de rescate anti-desperdicio con IA opcional y *zero-leakage* de datos del restaurante (US-035), y edición/baja del catálogo maestro (US-036/US-037). Remediaciones de auditoría: escalada de privilegios Crítica y RBAC por ruta (AUDIT-SEC-001/002), rate limiting por cliente real y clave de cifrado dedicada (AUDIT-SEC-003/004), y varias auditorías de calidad de módulo (AUDIT-DEV-006/007/012/013/014/015). Gobernanza: framework `.agents/` a v2.14.0, Design System "Sistema FEFO" a v5.9.0, `ci_local.sh` para reproducir CI antes del push.
+*   **Quality Gates (DoD):**
+    *   `pnpm run build && pnpm run lint` — 0 errores.
+    *   `pnpm run test` — 581 tests backend + 243 frontend en verde.
+    *   `ci_local.sh` (equivalente local de los 3 jobs de `ci.yml`: lint/tipos/OpenAPI/gobernanza, seguridad/CVEs/secretos, tests/build) — verde antes del push.
+    *   Smoke test de pila completa en `docker compose` con `NODE_ENV=production` — los 3 contenedores `healthy`, login + flujos críticos verificados vía API y a través del proxy nginx.
+    *   Gate de calidad ticket-scoped, trazabilidad end-to-end (matriz REQ↔US↔TK↔endpoint) y auditorías de módulo APROBADAS.
 
 

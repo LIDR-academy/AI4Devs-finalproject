@@ -4,7 +4,7 @@ id: TK-077-FE
 related_story: US-018
 points: 3
 type: frontend
-status: approved
+status: done
 inputs:
   - docs/05_agile_planning/11_user_stories/auth/US-018.md
   - docs/05_agile_planning/12_tickets/auth/backend/TK-077.md
