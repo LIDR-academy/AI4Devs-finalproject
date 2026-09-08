@@ -14,9 +14,13 @@ return [
     */
 
     'groups' => [
-        'platform' => 'Platform',
         'settings' => 'Settings',
-        'taxes' => 'Taxes',
+        'store' => 'Store',
+    ],
+
+    'clusters' => [
+        'products' => 'Products',
+        'store_settings' => 'Store settings',
     ],
 
     'items' => [

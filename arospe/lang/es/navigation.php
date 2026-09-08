@@ -15,9 +15,13 @@ return [
     */
 
     'groups' => [
-        'platform' => 'Plataforma',
         'settings' => 'Ajustes',
-        'taxes' => 'Impuestos',
+        'store' => 'Tienda',
+    ],
+
+    'clusters' => [
+        'products' => 'Productos',
+        'store_settings' => 'Configuración de tienda',
     ],
 
     'items' => [
