@@ -458,3 +458,8 @@ When a user has the notifictions for chrome deactivated, no notifications are re
 ----
 
 When a coachee cancels its enrollment to a class, the coach should recieve a notification and I have not recieved any when testing this scenario.
+
+
+# 27 - OpenCode - Big Pickle
+
+Given a coachee1 listed in a waitlist of a class where coachee2 has canceled the enrollment, now coachee1 can join class from the homepage. However, befor that, coachee2 rejoins again. In that scenario, even if I refresh the home of coachee1 by scrolling, the Join class button is still there, and if I click I can't join because it is full again. And that's correct, but it is not correct to still see the Join class button. Seems like something gets staled
