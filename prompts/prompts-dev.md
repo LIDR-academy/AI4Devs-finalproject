@@ -467,3 +467,7 @@ Given a coachee1 listed in a waitlist of a class where coachee2 has canceled the
 # 31 - OpenCode - Mimo V2.5 Free
 
 I'm almost done with the first phase of this project and it's almost ready to deliver. However, I'd like for you to review the entire readme file and make sure that everything that's on it is how it actually is now. I'm afraid that some things might have changed but I'm not really sure. Also, I'd like to make sure that the cloud-infrastucture.md is properly linked somewhere in the readme.In fact we also have the infrastructure.md that it is quite similar. maybe we can merge both into 1 unique infrastructure.md file? I'd like that.  
+
+----
+
+Now to leave it completely ready, I'd like for you to reset the database in Neon so that all the info about the test users is in synched
