@@ -256,7 +256,7 @@ Great. Now in desktop version, if I open the class details,it's show below the r
 
 Can you now mark all the tasks as done if applies and the US In Review in Linear please?
 
-# 14 - OpenCode - DeepSeek V4 Flash Free
+# 15 - OpenCode - DeepSeek V4 Flash Free
 
 [/speckit.specify] https://linear.app/ai4devs/issue/COACHER-19/us-24-calendar-block-management
 
@@ -266,7 +266,7 @@ Can you now mark all the tasks as done if applies and the US In Review in Linear
 [/speckit.implement]
 
 
-# 15 - OpenCode - DeepSeek V4 Flash Free
+# 16 - OpenCode - DeepSeek V4 Flash Free
 [/speckit.specify] https://linear.app/ai4devs/issue/COACHER-20/us-25-admincoach-calendar-ui
 
 [/speckit.plan]
@@ -274,7 +274,7 @@ Can you now mark all the tasks as done if applies and the US In Review in Linear
 [/speckit.implement]
 
 
-# 16 - OpenCode - DeepSeek V4 Flash Free
+# 17 - OpenCode - DeepSeek V4 Flash Free
 [/speckit.specify] https://linear.app/ai4devs/issue/COACHER-21/us-31-class-enrollment-and-cancellation
 
 [/speckit.plan]
@@ -282,7 +282,7 @@ Can you now mark all the tasks as done if applies and the US In Review in Linear
 [/speckit.implement]
 
 
-# 17 - OpenCode - DeepSeek V4 Flash Free
+# 18 - OpenCode - DeepSeek V4 Flash Free
 [/speckit.specify] https://linear.app/ai4devs/issue/COACHER-22/us-32-coachee-dashboard-and-calendar
 
 [/speckit.plan]
@@ -295,7 +295,7 @@ For the cochees calendar page I think i'd be much better the view where you have
 
 The cards should only appear if they belong to the selected day in the row above.
 
-# 18 - OpenCode - DeepSeek V4 Flash Free
+# 19 - OpenCode - DeepSeek V4 Flash Free
 
 [/speckit.specify] https://linear.app/ai4devs/issue/COACHER-23/us-33-waiting-list-joinleave
 
@@ -310,7 +310,7 @@ As a coachee, I should be able to see the potential group clases that I am able 
 I know see that as a coach, when I click to see a class details I see if there's people in the waiting list but I can not see who are they. We should list them too
 
 
-# 19 - OpenCode - DeepSeek V4 Flash Free
+# 20 - OpenCode - DeepSeek V4 Flash Free
 
 I have this task: https://linear.app/ai4devs/issue/COACHER-24/us-34-calendar-interactions-for-coachees 
 However, I'm not sure if it may be everything covered already. Please can you review and edit it accordingly with only what's left to do?
@@ -334,7 +334,7 @@ Also, a coachee should not see any busy block from any class that is not relevan
 And forr the group classes that a coachee has joined the waiting list, we shouldhave something in th card in the calendar view that says so. Maybe a tag saying waitlist or an icon? 
 
 
-# 20 - OpenCode - Big Pickle
+# 21 - OpenCode - Big Pickle
 
 [/speckit.specify] Let's start implementing push notifications. Here's the first task we need to do https://linear.app/ai4devs/issue/COACHER-25/us-41-push-notification-infrastructure
 
@@ -351,7 +351,7 @@ Is there a way to test if the push notifications are workinng from my computer?
 And forr the group classes that a coachee has joined the waiting list, we shouldhave something in th card in the calendar view that says so. Maybe a tag saying waitlist or an icon? 
 
 
-# 21 - OpenCode - MiMo 2.5 Free
+# 22 - OpenCode - MiMo 2.5 Free
 
 This is a project that I plan to sell at some point but for starters is a project for school. When I present this, I'd like to have some dummy data already in place so people can test it properly and navigate with the different roles and functionalities. I'd like to have 1 admin user, 1 coach user and 10 coachees. I'd like for 4 of those users to have a shared recurring class, I?d like for someone to have an individual recurring class, and be creative for the rest, so that there are classes where they can enroll, classses where they can join waiting lists, etc. I'd like that we can see all the diffferent possibilities the platform supports. I guess that the best for this is a seeder? For the new users, let's always use the same password: 123456789 (I know i'ts not secure but it's just dummy ufor testing). Also diferentiate some new coachee so that they can see the set password for the first time functionality. 
 You can remove all the current data that we have, also the instances from the google calendar. If needed, readapt whatever seeder we already have (if you feel like it's necessary).
@@ -369,7 +369,7 @@ Actually I do see them but one they later of what's written in the readme. If th
 Can we adapt the seed so that the classes are always created for the following week of the current instead of a hardcoded date?
 
 
-# 22 - OpenCode - MiMo 2.5 Free
+# 23 - OpenCode - MiMo 2.5 Free
 
 [/speckit.specify] https://linear.app/ai4devs/issue/COACHER-26/us-42-waiting-list-automation
 
@@ -377,7 +377,7 @@ Can we adapt the seed so that the classes are always created for the following w
 [/speckit.tasks]
 [/speckit.implement]
 
-# 23 - OpenCode - MiMo 2.5 Free
+# 24 - OpenCode - MiMo 2.5 Free
 
 [/speckit.specify] https://linear.app/ai4devs/issue/COACHER-27/us-43-class-lifecycle-notifications
 
@@ -386,7 +386,7 @@ Can we adapt the seed so that the classes are always created for the following w
 [/speckit.implement]
 
 
-# 24 - OpenCode - MiMo 2.5 Free
+# 25 - OpenCode - MiMo 2.5 Free
 
 [/speckit.specify] https://linear.app/ai4devs/issue/COACHER-29/us-45-in-app-notification-center
 
@@ -397,12 +397,12 @@ Can we adapt the seed so that the classes are always created for the following w
 I have the notifications box always shown
 
 
-# 25 - claude.com
+# 26 - claude.com
 
 I have an MVP of a project I neet to publish. Therefore I need some hosting service. It's a web project so I will also need a domain. The thinng is that I can't spend any money on it. Can you help me finding a free hosting and domain?
 
 
-# 24 - OpenCode - MiMo 2.5 Free
+# 27 - OpenCode - MiMo 2.5 Free
 
 I want to deploy this project using the free tier from Vercel. Can you please give me a step by step instructions? I have never done it before or used Vercel
 
@@ -434,12 +434,12 @@ Done. Can you connect to my Render account through the MCP  and check for the we
 ----
 
 
-# 25 - OpenCode - Big Pickle
+# 28 - OpenCode - Big Pickle
 
 I have this project live in Render and its database in Neon. By logging in with the coach user, I can see a class with the coachee2 but when i login as coachee2, I can not see that class in the calendar.
 
 
-# 26 - OpenCode - Big Pickle
+# 29 - OpenCode - Big Pickle
 
 In the home of a coachee, we have a next class card. In that card we should also have a button to cancel enrollment.
 
@@ -460,6 +460,10 @@ When a user has the notifictions for chrome deactivated, no notifications are re
 When a coachee cancels its enrollment to a class, the coach should recieve a notification and I have not recieved any when testing this scenario.
 
 
-# 27 - OpenCode - Big Pickle
+# 30 - OpenCode - Big Pickle
 
 Given a coachee1 listed in a waitlist of a class where coachee2 has canceled the enrollment, now coachee1 can join class from the homepage. However, befor that, coachee2 rejoins again. In that scenario, even if I refresh the home of coachee1 by scrolling, the Join class button is still there, and if I click I can't join because it is full again. And that's correct, but it is not correct to still see the Join class button. Seems like something gets staled
+
+# 31 - OpenCode - Mimo V2.5 Free
+
+I'm almost done with the first phase of this project and it's almost ready to deliver. However, I'd like for you to review the entire readme file and make sure that everything that's on it is how it actually is now. I'm afraid that some things might have changed but I'm not really sure. Also, I'd like to make sure that the cloud-infrastucture.md is properly linked somewhere in the readme.In fact we also have the infrastructure.md that it is quite similar. maybe we can merge both into 1 unique infrastructure.md file? I'd like that.  
