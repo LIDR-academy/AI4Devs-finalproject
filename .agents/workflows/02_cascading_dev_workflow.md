@@ -66,7 +66,7 @@ Antes de dar por terminado el desarrollo:
 > El agente desarrollador (`SK-16`/`SK-17`) no puede auto-aprobar las Quality Gates. Se debe invocar a un **Reviewer Independiente** (subagente aislado) que realice una revisión adversarial sobre la rama de características:
 > 1. Inspecciona el diff del código buscando ausencia de tipos inseguros, cumplimiento de SOLID y sanitización de entradas HTTP.
 > 2. Verifica la ejecución exitosa de pruebas TDD y linter (`SK-19`).
-> 3. En tickets UI, verifica la auditoría de accesibilidad WCAG 2.1 y ergonomía de componentes (`SK-21`).
+> 3. En tickets UI, verifica la auditoría de accesibilidad WCAG 2.2 y ergonomía de componentes (`SK-21`).
 > 4. Emite un veredicto formal (**APROBADO** / **RECHAZADO**). Solo con veredicto APROBADO se procede al commit.
 > 5. Todo defecto encontrado aquí (o cualquier corrección que el humano haya hecho sobre una propuesta del agente en fases anteriores) se evalúa en FASE 5.C antes del commit — no toda corrección amerita una regla permanente, ver el filtro de sistemicidad ahí.
 

@@ -79,8 +79,8 @@ Sigue estrictamente la siguiente metodología de auditoría en 7 Fases:
 ---
 
 ### FASE 5: Auditoría Frontend, Accesibilidad y Ergonomía Táctil (Si Afecta UI)
-1. Ergonomía Táctil: Verifica que todos los elementos interactivos cumplan con el tamaño mínimo accesible (≥48px × 48px).
-2. Cumplimiento WCAG 2.1: Comprueba contraste de colores HSL, atributos ARIA y manejo de estados defensivos (carga, error, vacíos).
+1. Ergonomía Táctil: Verifica que todos los elementos interactivos cumplan con el tamaño mínimo accesible (≥48px × 48px; piso normativo WCAG 2.2 SC 2.5.8 = 24px).
+2. Cumplimiento WCAG 2.2: Comprueba contraste de colores HSL, foco visible y no obstruido (SC 2.4.7 / 2.4.11), atributos ARIA, target size (SC 2.5.8), autenticación accesible (SC 3.3.8 — si el ticket toca login) y manejo de estados defensivos (carga, error, vacíos). Delega el detalle procedimental en `SK-21`.
 
 ---
 
@@ -103,7 +103,7 @@ Sigue estrictamente la siguiente metodología de auditoría en 7 Fases:
 - Fase 2 (Arquitectura Hexagonal / SOLID): [PASÓ / FALLÓ]
 - Fase 3 (Anti-Drift Arquitectónico): [PASÓ / FALLÓ]
 - Fase 4 (Seguridad, Entornos y Sanitización): [PASÓ / FALLÓ]
-- Fase 5 (UI / WCAG 2.1 Ergonomía Táctil): [N/A / PASÓ / FALLÓ]
+- Fase 5 (UI / WCAG 2.2 Ergonomía Táctil): [N/A / PASÓ / FALLÓ]
 
 ## 🚨 Defectos Detectados (Si los hay):
 - [Lista detallada de hallazgos indicando archivo y línea]
