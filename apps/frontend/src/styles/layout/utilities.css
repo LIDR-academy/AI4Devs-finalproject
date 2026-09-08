@@ -115,6 +115,11 @@
 
 .text-left { text-align: left; }
 
+/* Medida de legibilidad (frontend_rules.md §2 / SK-05 FASE 4): acota el texto
+   corrido a ~65 caracteres por línea. Aplicar a subtítulos de panel, textos de
+   ayuda y párrafos explicativos que renderizan en el ancho completo del <main>. */
+.measure { max-width: 65ch; }
+
 /* TK-119-FE: anuncio a lectores de pantalla sin ocupar espacio visual — clip estándar,
    no display:none (eso lo saca del árbol de accesibilidad). */
 .visually-hidden {

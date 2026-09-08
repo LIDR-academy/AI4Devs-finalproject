@@ -1,6 +1,6 @@
 ---
 document: ui_ux_design_system
-version: 5.3.0
+version: 5.4.0
 status: approved
 inputs:
   - docs/00_stack_manifest.md
@@ -131,6 +131,8 @@ Fuente real: `apps/frontend/src/styles/variables/typography.css`.
 | `--fs-3xl` | 2rem (32px) | 1.11× |
 
 `--fw-regular` (400) / `--fw-semibold` (600) / `--fw-bold` (700) / `--fw-black` (800).
+
+**Medida (longitud de línea) — v5.4.0.** Utilidad `.measure` (`max-width: 65ch`, en `styles/layout/utilities.css`) para acotar el texto corrido a ~65 caracteres por línea (rango objetivo 45–75). Aplicada a subtítulos de panel (vía `PanelHeader`), textos de ayuda de reportes y descripciones de panel que renderizan en el ancho completo del `<main>` (≤ 1200px). No aplica a texto en modales (ya acotados por `.modal-*` a 420–760px), celdas de tabla ni chips. Fundamentación: legibilidad (líneas > 75ch fuerzan sacádicos de retorno más largos), no estética.
 
 > **Gap declarado (Guard 7):** no existe token de `line-height` — cada regla que necesita interlineado lo fija ad-hoc o hereda el valor por defecto del navegador. Pendiente de una implementación aparte (candidato a ticket), no rellenado con un valor aspiracional.
 
@@ -296,6 +298,7 @@ Transversal a todas las pantallas — obligatorios en cada una:
 
 | Versión | Ticket/US | Sección(es) afectada(s) | Qué cambió |
 | :--- | :--- | :--- | :--- |
+| 5.4.0 | — (SK-05 v3.13.0 FASE 4, primer uso) | §1, §2, §3 | Medida de legibilidad. Nueva utilidad `.measure` (`max-width: 65ch`) aplicada a subtítulos de panel (vía `PanelHeader`, 7 paneles), descripciones de `RecipeCatalogPanel`/`InsumoCatalogPanel`/`AlertFeed` y textos de ayuda de 3 paneles de reporte. `frontend_rules.md` §2 pasa a "WCAG 2.2" y gana reglas explícitas de contraste de componente (1.4.11), foco visible (2.4.7/2.4.11), autenticación accesible (3.3.8) y medida 45–75ch; §1 nombra el piso SC 2.5.8 (24px). Auditoría acotada a medida: RestoStock es tabular/denso, sin copy de formato largo — la regla es preventiva; sin hallazgos de Gestalt/Hick en este pase. |
 | 5.3.0 | — (petición de producto) | §2, §8 | Bordes más tenues. Nuevo token `--border-hairline` (`#d7cfb9` día / `#3c433b` noche); ~40 bordes de contenedor/panel/modal/tabla/divisor pasan de `2px solid var(--rule)` a `1px solid var(--border-hairline)`. `--rule` se reserva para rellenos sólidos y **controles interactivos** (inputs, toggles, botones, keypad PIN), que además bajan a `1px` conservando el color de tinta para no romper WCAG 1.4.11 (≥ 3:1). El borde inferior `3px` del topbar y el contorno `3px` del `ActionButton` (noche) se mantienen. Gate `check_fefo_contrast.mjs` sigue verde (no toca ningún par documentado). |
 | 5.2.0 | — | §5 | Auditados los 39 `.module.css` del proyecto (no solo la capa compartida): 3 transiciones más migradas a los tokens de motion (mismo valor, cero cambio visual). Expuesta y documentada una inconsistencia real sin resolver: 2 barras de progreso con propósito casi idéntico usan duraciones distintas (`0.3s`/`0.4s`) sin token ni justificación — dejado como decisión de producto pendiente. |
 | 5.1.0 | — | §5, §9 | Motion deja de ser gap: 4 transiciones reales existentes extraídas a tokens (`variables/motion.css`), sin cambiar ningún valor. Cobertura de `prefers-reduced-motion` sigue incompleta (3 de 4), documentado como gap distinto. |

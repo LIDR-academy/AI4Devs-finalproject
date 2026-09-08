@@ -87,7 +87,7 @@ export const AlertFeed: React.FC<AlertFeedProps> = ({
         <h2 className="flex-gap-xs m-0 fs-xl">
           <AlertTriangle size={24} className="text-primary-color" /> Feed de Alertas & Remanentes CRÍTICOS
         </h2>
-        <p className="text-secondary-color mt-1 fs-md">
+        <p className="text-secondary-color mt-1 fs-md measure">
           Monitoreo en tiempo real del vencimiento de insumos por método FEFO.
         </p>
       </header>

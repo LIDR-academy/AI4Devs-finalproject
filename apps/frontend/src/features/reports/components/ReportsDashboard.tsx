@@ -253,7 +253,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = () => {
           <h1 className="flex-gap-xs fs-xl fw-bold">
             <BarChart3 className="text-primary-color" /> Dashboard de Reportes y Mermas FEFO
           </h1>
-          <p className="text-secondary-color fs-sm mt-1">
+          <p className="text-secondary-color fs-sm mt-1 measure">
             Indicadores de Desperdicio y Eficiencia en Tiempo Real
           </p>
         </div>

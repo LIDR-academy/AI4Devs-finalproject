@@ -141,7 +141,7 @@ export const PreparationWasteReportPanel: React.FC<PreparationWasteReportPanelPr
       <h3 className="flex-gap-xs mb-2 fs-lg fw-bold">
         <Scale size={18} className="text-primary-color" /> Mermas de Preparación de Recetas
       </h3>
-      <p className="text-secondary-color fs-sm mb-4">
+      <p className="text-secondary-color fs-sm mb-4 measure">
         Umbral de alerta configurado: {thresholdPercent}% — las líneas que lo superan se destacan (sin notificación).
       </p>
 

@@ -19,7 +19,7 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({ icon, title, subtitle,
       {icon}
       <div>
         <h1 className="m-0 fs-xl fw-bold">{title}</h1>
-        {subtitle && <p className="text-secondary-color mt-1 fs-sm">{subtitle}</p>}
+        {subtitle && <p className="text-secondary-color mt-1 fs-sm measure">{subtitle}</p>}
       </div>
     </div>
     {actions}

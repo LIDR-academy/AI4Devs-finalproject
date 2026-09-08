@@ -77,7 +77,7 @@ export const TemperatureLogReportPanel: React.FC<TemperatureLogReportPanelProps>
       <h3 className="flex-gap-xs mb-2 fs-lg fw-bold">
         <Thermometer size={18} className="text-primary-color" /> Control de Temperatura de Refrigeración
       </h3>
-      <p className="text-secondary-color fs-sm mb-4">
+      <p className="text-secondary-color fs-sm mb-4 measure">
         Umbral FDA: refrigerador ≤ 4 °C, congelador ≤ -18 °C.{' '}
         {outOfRangeCount > 0 && <strong>{outOfRangeCount} lectura(s) fuera de rango en este período.</strong>}
       </p>

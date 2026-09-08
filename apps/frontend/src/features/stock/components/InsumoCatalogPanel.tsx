@@ -22,7 +22,7 @@ const InsumoCatalogHeader: React.FC<InsumoCatalogHeaderProps> = ({ onCreateClick
       <Package size={22} className="text-primary-color flex-shrink-0" />
       <div>
         <h1 className="m-0 fs-lg fw-bold">Inventario y Catálogo de Bodega</h1>
-        <p className="text-secondary-color mt-1 fs-sm">
+        <p className="text-secondary-color mt-1 fs-sm measure">
           Gestiona el catálogo maestro de ingredientes y su disponibilidad en bodega principal.
         </p>
       </div>
