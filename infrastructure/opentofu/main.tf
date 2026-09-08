@@ -55,9 +55,21 @@ variable "rate_limit_window_ms" {
 }
 
 variable "rate_limit_max_requests" {
-  description = "Máximo de requests por IP dentro de rate_limit_window_ms (Guard 16)."
+  description = "Máximo de requests por IP REAL de cliente dentro de rate_limit_window_ms (Guard 16 / AUDIT-SEC-003: por cliente, no compartido, gracias a trust proxy)."
   type        = number
-  default     = 100
+  default     = 300
+}
+
+variable "login_rate_limit_window_ms" {
+  description = "Ventana (ms) del limiter anti-fuerza-bruta de login/forgot-pin/reset-pin (Guard 16)."
+  type        = number
+  default     = 900000
+}
+
+variable "login_rate_limit_max" {
+  description = "Máximo de intentos de login por IP real dentro de login_rate_limit_window_ms. Subir en sitios con NAT compartido (varias terminales tras una IP)."
+  type        = number
+  default     = 10
 }
 
 variable "seed_admin_pin" {
@@ -160,6 +172,8 @@ resource "docker_container" "backend" {
     "CORS_ALLOWED_ORIGINS=${var.cors_allowed_origins}",
     "RATE_LIMIT_WINDOW_MS=${var.rate_limit_window_ms}",
     "RATE_LIMIT_MAX_REQUESTS=${var.rate_limit_max_requests}",
+    "LOGIN_RATE_LIMIT_WINDOW_MS=${var.login_rate_limit_window_ms}",
+    "LOGIN_RATE_LIMIT_MAX=${var.login_rate_limit_max}",
     "SEED_ADMIN_PIN=${var.seed_admin_pin}",
     "SEED_ADMIN_NAME=${var.seed_admin_name}",
   ]

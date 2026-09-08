@@ -20,7 +20,8 @@ export function createAuthRouter(
   userRepository: IUserRepository,
   jwtSecret: string,
   roleRepository: IRoleRepository,
-  emailService?: IEmailService
+  emailService?: IEmailService,
+  loginRateLimit: { windowMs: number; max: number } = { windowMs: 15 * 60 * 1000, max: 10 }
 ): Router {
   const router = Router();
   const mailer = emailService || new ConsoleEmailService();
@@ -48,8 +49,9 @@ export function createAuthRouter(
     resetAdminPinUseCase
   );
 
-  // Rate Limiting anti-fuerza bruta: max 10 intentos por cada 15 min por IP (Guard 16)
-  const loginLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10 });
+  // Rate Limiting anti-fuerza bruta por IP real (Guard 16). Parametrizable vía
+  // LOGIN_RATE_LIMIT_* (resuelto en app.ts); default 10 intentos / 15 min.
+  const loginLimiter = createRateLimiter(loginRateLimit);
 
   const authMiddleware = createAuthenticateJWTMiddleware(jwtSecret);
   // TK-117 (US-015 Escenario 3): antes `requireRole('ADMIN')` fijo — sin cambio de

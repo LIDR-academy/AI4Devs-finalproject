@@ -87,6 +87,9 @@ export interface AppOptions {
   jwtSecret?: string;
   corsAllowedOrigins?: string;
   rateLimit?: { windowMs: number; max: number };
+  loginRateLimit?: { windowMs: number; max: number };
+  /** Express `trust proxy` — default: rangos privados/loopback (nginx del stack Docker). */
+  trustProxy?: boolean | string | string[] | number;
   enableDevSeeding?: boolean;
   enableSwagger?: boolean;
   requireAuth?: boolean;
@@ -108,17 +111,27 @@ function resolveCorsOrigin(raw: string | undefined): string | string[] {
     .filter((origin) => origin.length > 0);
 }
 
-// RATE_LIMIT_WINDOW_MS/RATE_LIMIT_MAX_REQUESTS estaban validadas en environment.ts pero no
-// las leia ningun middleware — la unica limitacion real era el limiter hardcodeado del login
-// (windowMs: 15min, max: 10, ver auth.routes.ts). Estos valores alimentan un limiter GLOBAL
-// para /api/v1/*, mas laxo (default 100/15min) que el de login, que se mantiene sin tocar
-// para no debilitar la proteccion anti-fuerza-bruta existente.
+// Limiter GLOBAL para /api/v1/* (default 300/15min por cliente real — AUDIT-SEC-003 subió
+// de 100, que compartido entre todos por el bug de `trust proxy` throttleaba la operación
+// multi-terminal normal). El login mantiene su limiter propio, más estricto.
 function resolveRateLimitOptions(raw: AppOptions['rateLimit']): { windowMs: number; max: number } {
   if (raw) {
     return raw;
   }
   const windowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '900000', 10);
-  const max = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS ?? '100', 10);
+  const max = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS ?? '300', 10);
+  return { windowMs, max };
+}
+
+// Limiter de login (default 10/15min por cliente real — Guard 16, anti-fuerza-bruta).
+// Antes hardcodeado en auth.routes.ts; ahora parametrizable vía LOGIN_RATE_LIMIT_* para
+// escenarios de NAT compartido (varias terminales tras una IP) sin re-desplegar (AUDIT-SEC-003).
+function resolveLoginRateLimitOptions(raw: AppOptions['loginRateLimit']): { windowMs: number; max: number } {
+  if (raw) {
+    return raw;
+  }
+  const windowMs = parseInt(process.env.LOGIN_RATE_LIMIT_WINDOW_MS ?? '900000', 10);
+  const max = parseInt(process.env.LOGIN_RATE_LIMIT_MAX ?? '10', 10);
   return { windowMs, max };
 }
 
@@ -307,6 +320,14 @@ function mountApiRoutes(
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
 
+  // Confianza en el proxy inverso (AUDIT-SEC-003). En el stack Docker el flujo es
+  // browser → nginx → backend; sin esto `req.ip` = IP del contenedor de nginx, idéntica
+  // para TODOS los clientes → un único bucket de rate-limit compartido por todo el
+  // restaurante. Se confía sólo en loopback + rangos privados (la red bridge de Docker es
+  // `uniquelocal`, 172.16/12): una petición directa desde una IP pública NO entra en la
+  // lista, su `X-Forwarded-For` se ignora y se usa el socket real → sin spoofing de XFF.
+  app.set('trust proxy', options.trustProxy ?? ['loopback', 'linklocal', 'uniquelocal']);
+
   // Helmet estricto activo por defecto a nivel global (HSTS, NoSniff, Frameguard, etc.)
   app.use(helmet());
   app.use(cors({ origin: resolveCorsOrigin(options.corsAllowedOrigins ?? process.env.CORS_ALLOWED_ORIGINS) }));
@@ -337,7 +358,16 @@ export function createApp(options: AppOptions = {}): Express {
   // limiter mas estricto, aplicado despues de este en la cadena de middlewares.
   app.use('/api/v1', createRateLimiter(resolveRateLimitOptions(options.rateLimit)));
 
-  app.use('/api/v1/auth', createAuthRouter(repos.userRepo, repos.jwtSecret, repos.roleRepo, options.emailService));
+  app.use(
+    '/api/v1/auth',
+    createAuthRouter(
+      repos.userRepo,
+      repos.jwtSecret,
+      repos.roleRepo,
+      options.emailService,
+      resolveLoginRateLimitOptions(options.loginRateLimit)
+    )
+  );
   mountApiRoutes(app, repos, authMiddleware, isAuthRequired);
 
   // Middleware global de errores

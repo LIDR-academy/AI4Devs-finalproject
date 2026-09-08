@@ -300,6 +300,7 @@ graph TD
 | | remediación [AUDIT-DEV-007](../audits/AUDIT-DEV-007-recipes-module-quality-report.md) G-B | [TK-126: Frontera de Confianza y Endurecimiento de Adapters de IA (F-3/F-4/F-11/F-14)](12_tickets/recipes/backend/TK-126.md) | N/A *(backend-only)* | ✅ Done |
 | | remediación [AUDIT-DEV-007](../audits/AUDIT-DEV-007-recipes-module-quality-report.md) G-C | [TK-127: Deuda de Calidad y Eficiencia del Módulo de Recetas (F-5/F-7/F-8/F-10)](12_tickets/recipes/backend/TK-127.md) | N/A *(backend-only)* | ✅ Done |
 | | [US-035](11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) Esc. 5/6 · [AUDIT-DEV-007](../audits/AUDIT-DEV-007-recipes-module-quality-report.md) G-D | [TK-128: Valorización Monetaria de la Merma Evitada (F-1/F-16)](12_tickets/recipes/backend/TK-128.md) | [TK-128-FE: Badge de Valor Monetario en el Modal](12_tickets/recipes/frontend/TK-128-FE.md) | ✅ Done |
+| **🔐 Seguridad (`security`)** | remediación [AUDIT-SEC-003](../audits/AUDIT-SEC-003-rate-limiter-shared-bucket.md) F-1 (C-DEV-006-4) | [TK-132: `trust proxy` + Rate Limiting por Cliente Real](12_tickets/security/backend/TK-132.md) | Frontend: `errorMessageMapper` caso `429` (mismo ticket) | ✅ Done |
 
 
 

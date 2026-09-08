@@ -35,11 +35,13 @@ export function createRateLimiter(options: RateLimitOptions) {
     store[ip].count += 1;
 
     if (store[ip].count > max) {
+      const retryAfterSeconds = Math.ceil((store[ip].resetTime - now) / 1000);
+      res.setHeader('Retry-After', String(retryAfterSeconds));
       res.status(429).json({
         type: 'https://restostock.com/errors/too-many-requests',
         title: 'TooManyRequestsException',
         status: 429,
-        detail: `Demasiados intentos de autenticacion. Por favor intente nuevamente en ${Math.ceil((store[ip].resetTime - now) / 1000)} segundos.`,
+        detail: `Demasiadas peticiones. Reintente en ${retryAfterSeconds} segundos.`,
         instance: req.originalUrl || req.url,
       });
       return;

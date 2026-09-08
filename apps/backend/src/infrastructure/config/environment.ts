@@ -14,7 +14,9 @@ const environmentSchema = z.object({
   JWT_SECRET: z.string().min(16, 'JWT_SECRET debe contener al menos 16 caracteres para alta entropia.'),
   CORS_ALLOWED_ORIGINS: z.string().default('*'),
   RATE_LIMIT_WINDOW_MS: z.string().transform((val) => parseInt(val, 10)).default('900000'), // 15 minutos
-  RATE_LIMIT_MAX_REQUESTS: z.string().transform((val) => parseInt(val, 10)).default('100'),
+  RATE_LIMIT_MAX_REQUESTS: z.string().transform((val) => parseInt(val, 10)).default('300'), // global /api/v1/*, por cliente real (AUDIT-SEC-003)
+  LOGIN_RATE_LIMIT_WINDOW_MS: z.string().transform((val) => parseInt(val, 10)).default('900000'),
+  LOGIN_RATE_LIMIT_MAX: z.string().transform((val) => parseInt(val, 10)).default('10'), // anti-fuerza-bruta login/forgot/reset PIN (Guard 16)
 });
 
 export type Environment = z.infer<typeof environmentSchema>;
