@@ -51,6 +51,20 @@
   filter: brightness(1.1);
 }
 
+/* Estado deshabilitado (WCAG: el control sigue percibiéndose, pero inerte).
+   `[aria-disabled="true"]` cubre los botones que quedan en el DOM enfocables
+   pero anulados por su handler. `opacity` marca el estado; el `:hover` no
+   levanta ni aclara el botón. */
+.btn-touch:disabled,
+.btn-touch[aria-disabled='true'],
+.btn-touch:disabled:hover,
+.btn-touch[aria-disabled='true']:hover {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
 /* Modificador de boton solo-icono (ej. cerrar modal); combinar con .btn-touch .btn-secondary */
 .btn-icon {
   padding: 0;

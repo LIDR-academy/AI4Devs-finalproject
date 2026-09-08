@@ -12,6 +12,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Foco visible global (WCAG 2.2 SC 2.4.7 / 2.4.11, frontend_rules.md §2) — anillo
+   único para botones, enlaces, RowButton y toggles. --color-primary sobre --bg-root
+   está verificado ≥ 6.79:1 por check_fefo_contrast.mjs. Los inputs conservan su
+   propio :focus (deben marcar foco también al puntero). Esquinas rectas del sistema
+   → outline sin radio. */
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   body { transition: background-color var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard); }
 }

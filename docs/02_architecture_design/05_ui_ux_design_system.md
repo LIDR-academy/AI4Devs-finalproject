@@ -1,6 +1,6 @@
 ---
 document: ui_ux_design_system
-version: 5.4.0
+version: 5.5.0
 status: approved
 inputs:
   - docs/00_stack_manifest.md
@@ -211,12 +211,14 @@ Superficie mínima **48×48px** con **8px** de margen (`.btn-touch`); teclado de
 
 | Componente/Variante | Default | Hover | Active | Focus-visible | Disabled | Loading | Error |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `.btn-primary` | ✅ | ✅ | ⚠️ solo transición genérica | ❌ gap | ❌ gap | ❌ gap | N/A |
-| `.btn-secondary` | ✅ | ✅ | ⚠️ solo transición genérica | ❌ gap | ❌ gap | ❌ gap | N/A |
-| `.btn-danger` | ✅ | ✅ (`filter: brightness`) | ⚠️ solo transición genérica | ❌ gap | ❌ gap | ❌ gap | N/A |
-| `.input-touch` | ✅ | N/A | N/A | ✅ (`box-shadow` anillo) | ❌ gap | N/A | vía `ErrorBanner`, no estilo propio del input |
+| `.btn-primary` | ✅ | ✅ | ⚠️ solo transición genérica | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ❌ gap | N/A |
+| `.btn-secondary` | ✅ | ✅ | ⚠️ solo transición genérica | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ❌ gap | N/A |
+| `.btn-danger` | ✅ | ✅ (`filter: brightness`) | ⚠️ solo transición genérica | ✅ (anillo global v5.5.0) | ✅ (`opacity .5`, v5.5.0) | ❌ gap | N/A |
+| `.input-touch` | ✅ | N/A | N/A | ✅ (`box-shadow` anillo propio) | ❌ gap | N/A | vía `ErrorBanner`, no estilo propio del input |
 
-> **Gap real declarado (Guard 7):** ningún botón tiene estilo explícito de `:focus-visible`, `:disabled` ni estado `Loading` (spinner/`aria-busy`) propio — hoy dependen del estilo nativo del navegador. Candidato a ticket de mejora de accesibilidad/estados, fuera de alcance de este refactor de estructura.
+> **Foco (v5.5.0):** regla global `:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px }` en `styles/base/reset.css` — cubre botones, enlaces, `RowButton` y toggles. `--color-primary` sobre `--bg-root` verificado ≥ 6.79:1 por `check_fefo_contrast.mjs`. Los inputs conservan su `:focus` propio (marcan foco también al puntero).
+>
+> **Gap real restante (Guard 7):** el estado `Loading` propio (spinner / `aria-busy`) sigue siendo por-componente y no todos lo tienen; `.input-touch:disabled` no tiene estilo dedicado. Candidatos a ticket de estados, menores.
 
 ### Atomic Design
 
@@ -298,6 +300,7 @@ Transversal a todas las pantallas — obligatorios en cada una:
 
 | Versión | Ticket/US | Sección(es) afectada(s) | Qué cambió |
 | :--- | :--- | :--- | :--- |
+| 5.5.0 | — (cierre de gap §7, enforce de `frontend_rules.md` §2) | §7 | **Foco visible y estado deshabilitado de botones.** Regla global `:focus-visible` (anillo `3px var(--color-primary)`, offset 2px) en `styles/base/reset.css` — cubre botones/enlaces/`RowButton`/toggles de una vez (antes: solo estilo nativo del navegador, violaba SC 2.4.7 y la regla §2 recién añadida). `.btn-touch:disabled`/`[aria-disabled]` gana `opacity: .5` + `cursor: not-allowed` + hover neutralizado. `check_fefo_contrast.mjs` verde (`--color-primary`/`--bg-root` ya a 6.79:1). Gap restante menor: estado `Loading` propio por-componente, `.input-touch:disabled`. |
 | 5.4.0 | — (SK-05 v3.13.0 FASE 4, primer uso) | §1, §2, §3 | Medida de legibilidad. Nueva utilidad `.measure` (`max-width: 65ch`) aplicada a subtítulos de panel (vía `PanelHeader`, 7 paneles), descripciones de `RecipeCatalogPanel`/`InsumoCatalogPanel`/`AlertFeed` y textos de ayuda de 3 paneles de reporte. `frontend_rules.md` §2 pasa a "WCAG 2.2" y gana reglas explícitas de contraste de componente (1.4.11), foco visible (2.4.7/2.4.11), autenticación accesible (3.3.8) y medida 45–75ch; §1 nombra el piso SC 2.5.8 (24px). Auditoría acotada a medida: RestoStock es tabular/denso, sin copy de formato largo — la regla es preventiva; sin hallazgos de Gestalt/Hick en este pase. |
 | 5.3.0 | — (petición de producto) | §2, §8 | Bordes más tenues. Nuevo token `--border-hairline` (`#d7cfb9` día / `#3c433b` noche); ~40 bordes de contenedor/panel/modal/tabla/divisor pasan de `2px solid var(--rule)` a `1px solid var(--border-hairline)`. `--rule` se reserva para rellenos sólidos y **controles interactivos** (inputs, toggles, botones, keypad PIN), que además bajan a `1px` conservando el color de tinta para no romper WCAG 1.4.11 (≥ 3:1). El borde inferior `3px` del topbar y el contorno `3px` del `ActionButton` (noche) se mantienen. Gate `check_fefo_contrast.mjs` sigue verde (no toca ningún par documentado). |
 | 5.2.0 | — | §5 | Auditados los 39 `.module.css` del proyecto (no solo la capa compartida): 3 transiciones más migradas a los tokens de motion (mismo valor, cero cambio visual). Expuesta y documentada una inconsistencia real sin resolver: 2 barras de progreso con propósito casi idéntico usan duraciones distintas (`0.3s`/`0.4s`) sin token ni justificación — dejado como decisión de producto pendiente. |
