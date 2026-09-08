@@ -9,6 +9,7 @@ body {
   color: var(--text-primary);
   font-family: var(--font-family);
   min-height: 100vh;
+  line-height: var(--leading-normal);
   -webkit-font-smoothing: antialiased;
   transition: background-color var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard);
 }

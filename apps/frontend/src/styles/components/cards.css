@@ -55,5 +55,6 @@
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.01em;
+  line-height: var(--leading-tight);
   color: var(--text-primary);
 }

@@ -30,7 +30,7 @@
 .info-card-text {
   font-size: var(--fs-sm);
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: var(--leading-normal);
   margin: 0;
 }
 

@@ -614,3 +614,14 @@ inputs:
   - Se eliminan los 2 gates `no-preference` ad-hoc (`body`, `ActionButton.circle:hover`), ahora redundantes; sus reglas pasan a incondicionales.
   - DS §5 gap note reescrita; DS **v5.5.0 → v5.6.0**. `frontend_rules.md` §2: nuevo bullet SC 2.3.3.
 - **Estado:** frontend 243 tests, build/lint verdes; gates verdes. **Sin cambio para usuarios sin la preferencia activada.** Sin push.
+
+### 2026-09-07 (cont.) - Design system v5.7.0: tokens de interlineado (cambio visible)
+- **Cierre del gap §3 Guard 7:** no existía token de `line-height`; `body` heredaba `normal` (~1.2) y 3 reglas lo fijaban ad-hoc.
+- **Acciones (commit, `[skip-tk]`):**
+  - `styles/variables/typography.css`: `--leading-tight` (1.15) / `--leading-snug` (1.35) / `--leading-normal` (1.45).
+  - `styles/base/reset.css`: `body { line-height: var(--leading-normal) }`. `styles/base/typography.css`: `h1,h2,h3 { line-height: var(--leading-tight) }`. `.card-title` → tight.
+  - Los 3 `line-height` ad-hoc (`ForgotPinModal`, `AiSettingsSection`, `RescueRecipesModal`) migran a token.
+  - DS §3 tabla de tokens (reemplaza la nota de gap); DS **v5.6.0 → v5.7.0**. `frontend_rules.md` §2: prohibido `line-height` ad-hoc.
+- **Cambio visible:** todo texto corrido gana ~20% de alto de línea; bloques multi-línea (descripciones, ayudas, celdas que envuelven) un poco más altos, texto de una línea sin cambio, headings en mayúsculas se mantienen apretados. Valor 1.45 elegido (no 1.5) para una UI densa. Aprobado por el humano antes de aplicar.
+- **Estado:** frontend 243 tests, build/lint verdes; `check_fefo_contrast` / `check_inline_styles` / duplicación verdes. Sin push.
+- **Gaps de diseño: cerrados §3/§5/§7-foco+disabled.** Queda solo el estado `Loading` propio por-componente (§7) — decisión: los botones ya se deshabilitan durante el submit (señal suficiente para esta app), no se aborda salvo caso concreto de latencia larga.

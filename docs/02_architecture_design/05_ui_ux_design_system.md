@@ -1,6 +1,6 @@
 ---
 document: ui_ux_design_system
-version: 5.6.0
+version: 5.7.0
 status: approved
 inputs:
   - docs/00_stack_manifest.md
@@ -132,9 +132,17 @@ Fuente real: `apps/frontend/src/styles/variables/typography.css`.
 
 `--fw-regular` (400) / `--fw-semibold` (600) / `--fw-bold` (700) / `--fw-black` (800).
 
+**Interlineado** (`--leading-*`, v5.7.0 — antes: gap Guard 7, `body` heredaba `normal` ≈ 1.2):
+
+| Token | Valor | Uso |
+| :--- | :--- | :--- |
+| `--leading-tight` | `1.15` | `h1`/`h2`/`h3` (display en mayúsculas) — `styles/base/typography.css` |
+| `--leading-snug` | `1.35` | Subtítulos y textos de ayuda compactos (`.auth-modal-subtitle`, `.recipe-desc`) |
+| `--leading-normal` | `1.45` | Cuerpo — default en `body` (`styles/base/reset.css`); compromiso legibilidad/densidad para una UI tabular |
+
 **Medida (longitud de línea) — v5.4.0.** Utilidad `.measure` (`max-width: 65ch`, en `styles/layout/utilities.css`) para acotar el texto corrido a ~65 caracteres por línea (rango objetivo 45–75). Aplicada a subtítulos de panel (vía `PanelHeader`), textos de ayuda de reportes y descripciones de panel que renderizan en el ancho completo del `<main>` (≤ 1200px). No aplica a texto en modales (ya acotados por `.modal-*` a 420–760px), celdas de tabla ni chips. Fundamentación: legibilidad (líneas > 75ch fuerzan sacádicos de retorno más largos), no estética.
 
-> **Gap declarado (Guard 7):** no existe token de `line-height` — cada regla que necesita interlineado lo fija ad-hoc o hereda el valor por defecto del navegador. Pendiente de una implementación aparte (candidato a ticket), no rellenado con un valor aspiracional.
+_(El gap Guard 7 de `line-height` quedó cerrado en v5.7.0 — ver la tabla `--leading-*` arriba.)_
 
 ---
 
@@ -300,6 +308,7 @@ Transversal a todas las pantallas — obligatorios en cada una:
 
 | Versión | Ticket/US | Sección(es) afectada(s) | Qué cambió |
 | :--- | :--- | :--- | :--- |
+| 5.7.0 | — (cierre de gap §3 Guard 7) | §3 | **Tokens de interlineado.** `--leading-tight` (1.15, headings) / `--leading-snug` (1.35) / `--leading-normal` (1.45, `body`). Antes `body` heredaba `normal` (~1.2) — cambio visible: todo texto corrido gana ~20% de alto de línea (bloques multi-línea un poco más altos; texto de una línea sin cambio). Headings en mayúsculas se mantienen apretados. Los 3 `line-height` ad-hoc previos migran a token. Valor 1.45 (no 1.5) como compromiso para una UI densa. |
 | 5.6.0 | — (cierre de gap §5) | §5 | **Reducción de movimiento, cobertura completa.** Regla global `@media (prefers-reduced-motion: reduce)` en `styles/base/reset.css` que vuelve instantánea toda transición/animación (`*`) — antes solo `body` y `ActionButton:hover` estaban condicionados (patrón opt-in), el `pulse` infinito de `AlertFeed` y el fade/scale de modales quedaban sin gatear. Se eliminan los 2 gates `no-preference` ad-hoc, ahora redundantes. Sin cambio para usuarios sin la preferencia activada. |
 | 5.5.0 | — (cierre de gap §7, enforce de `frontend_rules.md` §2) | §7 | **Foco visible y estado deshabilitado de botones.** Regla global `:focus-visible` (anillo `3px var(--color-primary)`, offset 2px) en `styles/base/reset.css` — cubre botones/enlaces/`RowButton`/toggles de una vez (antes: solo estilo nativo del navegador, violaba SC 2.4.7 y la regla §2 recién añadida). `.btn-touch:disabled`/`[aria-disabled]` gana `opacity: .5` + `cursor: not-allowed` + hover neutralizado. `check_fefo_contrast.mjs` verde (`--color-primary`/`--bg-root` ya a 6.79:1). Gap restante menor: estado `Loading` propio por-componente, `.input-touch:disabled`. |
 | 5.4.0 | — (SK-05 v3.13.0 FASE 4, primer uso) | §1, §2, §3 | Medida de legibilidad. Nueva utilidad `.measure` (`max-width: 65ch`) aplicada a subtítulos de panel (vía `PanelHeader`, 7 paneles), descripciones de `RecipeCatalogPanel`/`InsumoCatalogPanel`/`AlertFeed` y textos de ayuda de 3 paneles de reporte. `frontend_rules.md` §2 pasa a "WCAG 2.2" y gana reglas explícitas de contraste de componente (1.4.11), foco visible (2.4.7/2.4.11), autenticación accesible (3.3.8) y medida 45–75ch; §1 nombra el piso SC 2.5.8 (24px). Auditoría acotada a medida: RestoStock es tabular/denso, sin copy de formato largo — la regla es preventiva; sin hallazgos de Gestalt/Hick en este pase. |
