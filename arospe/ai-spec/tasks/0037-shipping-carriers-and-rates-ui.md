@@ -57,7 +57,7 @@ forces for `App\Livewire\Shipping\Index`. A separate rate component either colli
 invents a second shipping route nobody asked for. 0036 names the consumer explicitly: *"Story 0037
 is the named consumer, and it owns the whole screen including the carrier cards 0035 stubbed."*
 
-**This does not contradict [0034](0034-shipping-zones-ui.md) D-1**, which rejected folding zone CRUD
+**This does not contradict [0034](done/0034-shipping-zones-ui.md) D-1**, which rejected folding zone CRUD
 into `/shipping` on a "one component owning three unrelated concerns" argument. That argument
 carved *zones* out — a separate workflow with its own picker, its own validation surface and its own
 sidebar entry — leaving `Index` with **two** concerns that are one screen: PRD §2.4's own screenshot
@@ -175,14 +175,14 @@ second is the dangerous one, and only the exact `=== null` assertion catches it.
 Three independent reasons, any one sufficient:
 
 1. **Cardinality mismatch.** 0022 exists for the ~8,100-row geography catalog;
-   [0034](0034-shipping-zones-ui.md) **D-4**'s entire justification is that "a plain `<select>` does
+   [0034](done/0034-shipping-zones-ui.md) **D-4**'s entire justification is that "a plain `<select>` does
    not scale" *at that size*. Shipping zones are admin-curated groupings, realistically in the tens.
    `ShippingZone::orderBy('name')->get(['id', 'name'])` is one bounded query and the full option
    list in the DOM is unremarkable at that size.
 2. **Arity mismatch.** 0022 is a **multi**-select bound to an array. A rate carries exactly one
    zone (`shipping_zones.id` NOT NULL, one FK). Using it would mean binding an array and validating
    "exactly one" — fighting the component's own contract for no gain.
-3. **Risk avoidance.** [0034](0034-shipping-zones-ui.md) names embedding 0022's dropdown inside a
+3. **Risk avoidance.** [0034](done/0034-shipping-zones-ui.md) names embedding 0022's dropdown inside a
    `flux:modal` as an explicitly untested combination whose fallback, if unfixable, is a full-page
    editor. This story's zone control lives inside a modal. There is no reason to inherit an open
    risk that nothing here requires.
@@ -229,7 +229,7 @@ This resolves the question `frontend-qa` raised as ambiguous: it is not open, it
 
 ### D-6 — Row and toggle actions gate on **screen-level** `#[Computed]` capability flags, not per-row `Gate::allows()`.
 
-[0034](0034-shipping-zones-ui.md) **D-5**'s reasoning transfers unchanged. The Users screen computes
+[0034](done/0034-shipping-zones-ui.md) **D-5**'s reasoning transfers unchanged. The Users screen computes
 `canEdit`/`canDelete` per row because `UserPolicy` carries genuine per-target rules (Super Admin
 protection, trashed-target refusal). `ShippingRatePolicy` carries **none** — 0036 **D-11** ships four
 uniform abilities, and **D-5** deliberately keeps the only per-record rule in the shipping domain
@@ -310,7 +310,7 @@ always has a concrete `$rate`) avoids editing a file this story does not own. Ra
 this screen quotes a rate for a destination.
 
 Normally this project rejects "assert the absence of a thing nobody proposed" tests
-([0034](0034-shipping-zones-ui.md) rejects exactly that shape). This one is the narrow exception, on
+([0034](done/0034-shipping-zones-ui.md) rejects exactly that shape). This one is the narrow exception, on
 `frontend-qa`'s argument: the resolver is a real, directly-importable class sitting in the same
 namespace as everything this story *does* call, and 0036 **D-13** itself invites *"a future admin
 screen [to] surface coverage gaps from the same shape"* — a concrete, named temptation. So:

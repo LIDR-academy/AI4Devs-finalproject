@@ -379,7 +379,7 @@ Adopted properties, each load-bearing:
 
 **Error-bag key: `'shippingZoneId'`** — a hand-off contract the **zone**-delete modal binds its
 `@error` to, recorded in the action's docblock, following `CreateUser`'s `'email'` precedent. That
-modal belongs to [0034](0034-shipping-zones-ui.md) (**D-6**), which deliberately binds to the error
+modal belongs to [0034](done/0034-shipping-zones-ui.md) (**D-6**), which deliberately binds to the error
 bag rather than to a string precisely so this guard's message appears with no markup change there.
 
 > **Correction, 2026-08-19.** This paragraph originally named **0037** as the story that binds to
@@ -1092,7 +1092,7 @@ the screen on top of this.
       > **Correction, 2026-08-19.** Item (b) originally read *"bind its **delete-modal** `@error` to
       > the `shippingZoneId` error-bag key"*, which conflated two unrelated surfaces: `'shippingZoneId'`
       > is also the key **D-5**'s zone-delete guard raises, and that guard fires on
-      > [0034](0034-shipping-zones-ui.md)'s shipping-zone screen, never on 0037's rate-delete modal —
+      > [0034](done/0034-shipping-zones-ui.md)'s shipping-zone screen, never on 0037's rate-delete modal —
       > `DeleteShippingRate` has no such guard, so the original instruction named an error nothing on
       > that modal can raise. 0037's Phase 1 debate caught the misreading (its **OQ-A**) and adopted
       > the field-level reading above; the wording is corrected here so Phase 2 reviewers and Phase 3
