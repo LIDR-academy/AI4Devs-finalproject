@@ -67,7 +67,10 @@ FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-RUN apk add --no-cache openssl
+# TK-134: parches de seguridad de los paquetes de SO del base publicados tras el pin del tag
+# (la capa cacheada de `node:24-alpine` no los vería). `openssl` sigue siendo necesario para
+# el schema-engine de `prisma migrate deploy`.
+RUN apk --no-cache upgrade && apk add --no-cache openssl
 RUN addgroup -S restostock && adduser -S restostock -G restostock
 
 # node:24-alpine trae el CLI de npm bundleado (con sus propias devDependencies internas:

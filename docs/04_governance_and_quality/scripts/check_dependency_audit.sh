@@ -17,12 +17,9 @@ set -uo pipefail
 ALLOWED_GHSAS=(
   "GHSA-fx2h-pf6j-xcff" # vite: server.fs.deny bypass — solo dev server, nunca en produccion. Fix real exige Vite 6 (fuera del major aprobado en stack_manifest.md).
   "GHSA-5xrq-8626-4rwp" # vitest: RCE via UI server — solo `vitest --ui`, nunca invocado en Dockerfile/ci.yml. Fix real exige Vitest 3 (fuera del major aprobado).
-  # --- Transitivos de Prisma 7 (evaluados 2026-09-03, aprobados por el humano, Guard 24) ---
-  "GHSA-3f6p-5ww8-9rcr" # mysql2 via prisma@7 > mysql2 — el proyecto usa PostgreSQL (postgres:15-alpine, DATABASE_URL postgresql://); Prisma nunca carga el driver de MySQL. Inalcanzable. Fix upstream: Prisma que no arrastre mysql2 para datasources no-MySQL.
-  "GHSA-5jgf-p345-68v8" # fast-uri via prisma@7 > ajv > fast-uri — ajv valida el schema/config de Prisma en build/CLI, no en el path de request; los vectores SSRF/host-confusion exigen URIs controladas por el atacante, que no existen aqui. Fix real: Prisma 7.9.2+ (parche menor, candidato a ticket).
-  "GHSA-f65p-4m7j-42xc" # fast-uri (mismo paquete/ruta que GHSA-5jgf) — SSRF via IPv4-mapped IPv6. Mismo analisis: no alcanzable.
-  "GHSA-fph4-wmhf-6fwf" # fast-uri (mismo paquete/ruta) — host confusion via IDN. Mismo analisis: no alcanzable.
-  "GHSA-jqff-g426-hqxp" # fast-uri (mismo paquete/ruta) — 5o advisory del mismo fast-uri@3.1.5. Mismo analisis: no alcanzable.
+  # TK-134: los 5 advisories de mysql2 / fast-uri (transitivos de Prisma 7) que estaban aqui como
+  # riesgo residual aceptado ya NO aplican — `pnpm.overrides` fuerza mysql2>=3.22.0 y fast-uri>=3.1.6.
+  # Se quitan de la lista a proposito: si volvieran a aparecer, el gate DEBE fallar, no dejarlos pasar.
 )
 
 echo "🔍 Auditando dependencias (pnpm audit --audit-level=high) con riesgo residual documentado..."

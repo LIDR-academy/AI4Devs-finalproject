@@ -17,6 +17,11 @@ RUN pnpm --filter @restostock/frontend build
 # reconstruida contra el Alpine mas reciente (3.24, 0 CVEs High/Critical al validar, TK-044).
 FROM nginx:stable-alpine AS runner
 
+# TK-134: aplica los parches de seguridad de los paquetes de SO del base (libcrypto3/OpenSSL,
+# util-linux) publicados tras el pin del tag — `docker build` reutiliza la capa cacheada del
+# base y no vería los fixes. Determinista: trae la versión corregida desde el repo de Alpine.
+RUN apk --no-cache upgrade
+
 COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
 RUN addgroup -S restostock && adduser -S restostock -G restostock && \

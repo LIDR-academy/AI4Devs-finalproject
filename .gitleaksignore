@@ -18,6 +18,18 @@
 # porque readme.md se reescribio en TK-049-FE (nuevo blob hash) — detectado con TK-063 (ci_local.sh),
 # confirmado como el mismo caso ya documentado arriba, no un secreto nuevo.
 8ee1ed012b415ceb2b0db1f8a090c73895d6a07f:readme.md:generic-api-key:299
+
+# Fixtures de test añadidos desde Entrega 2 — cadenas literales tipo "test-secret-..." /
+# "test_jwt_secret_..." usadas como `jwtSecret` de una suite Vitest o `masterSecret` de un
+# unit test del cifrado. Ninguna es un secreto real ni alcanza producción (los tests corren
+# con NODE_ENV=test; la env var real la exige `getEnvironment()` con Fail-Fast en prod).
+# Detectados con `ci_local.sh` (TK-063) antes del push de la entrega final.
+d3be3098beee47695f719d4686ae4838a73553fc:apps/backend/tests/http/RateLimiting.test.ts:generic-api-key:17
+aa3e4111d9cea17fe3a44a18384e168da259fc49:apps/backend/src/infrastructure/security/CredentialEncryptionService.test.ts:generic-api-key:9
+036cedadcf582750f165afc95d489e3a708c8236:apps/backend/src/application/auth/use-cases/AuthenticateByPinUseCase.test.ts:generic-api-key:9
+2dbfbae1e318ac29759bdb1537df95b3c6716ed5:apps/backend/tests/kitchen/ConsumptionReasons.test.ts:generic-api-key:7
+6b1ff4b6c5603f8b249c60f0b446870fba13042f:apps/backend/tests/security/PerRouteRbac.test.ts:generic-api-key:18
+a756ef2ba9f2e481fd061f720eed762ee77c8e72:apps/backend/tests/auth/StrictPinRotationFlow.test.ts:generic-api-key:10
 64a9d6a4d7ef460e0d2c34e64da7bf934d0b1199:prompts.md:curl-auth-header:1088
 64a9d6a4d7ef460e0d2c34e64da7bf934d0b1199:readme.md:curl-auth-header:4028
 64a9d6a4d7ef460e0d2c34e64da7bf934d0b1199:readme.md:curl-auth-header:4288

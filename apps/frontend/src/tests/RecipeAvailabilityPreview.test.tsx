@@ -48,10 +48,12 @@ describe('TK-111-FE: RecipeSelectorModal — vista previa de disponibilidad de i
 
     render(<RecipeSelectorModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} />);
 
-    await waitFor(() => expect(screen.getByText(/0.100 \/ 0.050 L/)).toBeInTheDocument());
-
-    const confirmBtn = screen.getByRole('button', { name: /Confirmar Preparación/i });
-    expect(confirmBtn).toBeDisabled();
+    // La disponibilidad y el estado `disabled` del botón se asientan en renders distintos —
+    // asertar ambos dentro del mismo waitFor evita una carrera bajo carga de CPU (TK-134).
+    await waitFor(() => {
+      expect(screen.getByText(/0.100 \/ 0.050 L/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Confirmar Preparación/i })).toBeDisabled();
+    });
   });
 
   it('todos los ingredientes suficientes: "Confirmar Preparación" queda habilitado', async () => {
@@ -59,9 +61,10 @@ describe('TK-111-FE: RecipeSelectorModal — vista previa de disponibilidad de i
 
     render(<RecipeSelectorModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} />);
 
-    await waitFor(() => expect(screen.getByText(/0.100 \/ 0.500 L/)).toBeInTheDocument());
-
-    expect(screen.getByRole('button', { name: /Confirmar Preparación/i })).not.toBeDisabled();
+    await waitFor(() => {
+      expect(screen.getByText(/0.100 \/ 0.500 L/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Confirmar Preparación/i })).not.toBeDisabled();
+    });
   });
 
   it('cambiar porciones vuelve a consultar disponibilidad y puede pasar de habilitado a deshabilitado', async () => {
@@ -74,12 +77,16 @@ describe('TK-111-FE: RecipeSelectorModal — vista previa de disponibilidad de i
 
     render(<RecipeSelectorModal isOpen={true} onClose={vi.fn()} onSuccess={vi.fn()} />);
 
-    await waitFor(() => expect(screen.getByText(/0.100 \/ 0.150 L/)).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: /Confirmar Preparación/i })).not.toBeDisabled();
+    await waitFor(() => {
+      expect(screen.getByText(/0.100 \/ 0.150 L/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Confirmar Preparación/i })).not.toBeDisabled();
+    });
 
     fireEvent.click(screen.getByRole('button', { name: '+' }));
 
-    await waitFor(() => expect(screen.getByText(/0.200 \/ 0.150 L/)).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: /Confirmar Preparación/i })).toBeDisabled();
+    await waitFor(() => {
+      expect(screen.getByText(/0.200 \/ 0.150 L/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Confirmar Preparación/i })).toBeDisabled();
+    });
   });
 });

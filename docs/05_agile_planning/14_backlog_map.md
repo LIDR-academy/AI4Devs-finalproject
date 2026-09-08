@@ -302,6 +302,7 @@ graph TD
 | | [US-035](11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) Esc. 5/6 · [AUDIT-DEV-007](../audits/AUDIT-DEV-007-recipes-module-quality-report.md) G-D | [TK-128: Valorización Monetaria de la Merma Evitada (F-1/F-16)](12_tickets/recipes/backend/TK-128.md) | [TK-128-FE: Badge de Valor Monetario en el Modal](12_tickets/recipes/frontend/TK-128-FE.md) | ✅ Done |
 | **🔐 Seguridad (`security`)** | remediación [AUDIT-SEC-003](../audits/AUDIT-SEC-003-rate-limiter-shared-bucket.md) F-1 (C-DEV-006-4) | [TK-132: `trust proxy` + Rate Limiting por Cliente Real](12_tickets/security/backend/TK-132.md) | Frontend: `errorMessageMapper` caso `429` (mismo ticket) | ✅ Done |
 | **🔐 Seguridad (`security`)** | remediación [AUDIT-SEC-004](../audits/AUDIT-SEC-004-hardcoded-credentials-and-auth.md) F-1/F-2/F-3 (C-DEV-006-4) | [TK-133: Clave de Cifrado Dedicada + Origin del Reset Validado + Email de Producción Explícito](12_tickets/security/backend/TK-133.md) | N/A *(backend-only)* | ✅ Done |
+| **🔐 Seguridad (`security`)** | refresh pre-entrega — `ci_local.sh` destapó CVEs de sept-2026 (C-DEV-006-4 / TK-064) | [TK-134: Refresh de Seguridad Pre-Entrega — `fast-uri`/`mysql2` + Base Alpine](12_tickets/security/backend/TK-134.md) | N/A *(backend/infra)* | ✅ Done |
 
 
 

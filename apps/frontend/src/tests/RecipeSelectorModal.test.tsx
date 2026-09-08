@@ -108,8 +108,11 @@ describe('TK-061: RecipeSelectorModal conectado al catálogo real', () => {
     const onSuccess = vi.fn();
     render(<RecipeSelectorModal isOpen={true} onClose={() => {}} onSuccess={onSuccess} />);
 
+    // Esperar a que el botón esté habilitado (la vista previa de disponibilidad puede
+    // deshabilitarlo momentáneamente mientras carga) — evita un click no-op bajo carga (TK-134).
     await waitFor(() => {
       expect(screen.getByText('Lasagna Boloñesa')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Confirmar Preparación/i })).not.toBeDisabled();
     });
 
     fireEvent.click(screen.getByRole('button', { name: /Confirmar Preparación/i }));
