@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: coacher-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy && npm run build
+    startCommand: node dist/index.js
+    plan: free
+    region: frankfurt
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: COACH_FINANCIAL_ENCRYPTION_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: CORS_ORIGIN
+        value: https://coacher-frontend.onrender.com
+      - key: FIREBASE_SERVICE_ACCOUNT_KEY
+        sync: false
+
+  - type: static
+    name: coacher-frontend
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://ai4devs-finalproject-sby8.onrender.com
+      - key: VITE_FIREBASE_API_KEY
+        sync: false
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        sync: false
+      - key: VITE_FIREBASE_PROJECT_ID
+        sync: false
+      - key: VITE_FIREBASE_STORAGE_BUCKET
+        sync: false
+      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+        sync: false
+      - key: VITE_FIREBASE_APP_ID
+        sync: false
+      - key: VITE_FIREBASE_VAPID_KEY
+        sync: false

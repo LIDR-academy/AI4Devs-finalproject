@@ -16,7 +16,9 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 
 ## 1. Descripción general del producto
 
-**Prompt 1:**
+**Prompt 1: Prompt to generate a PDR:**
+[prompts/promptPDR.md]
+
 
 **Prompt 2:**
 
