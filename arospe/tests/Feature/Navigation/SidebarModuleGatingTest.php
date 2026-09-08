@@ -169,6 +169,47 @@ test('the Taxes group renders no heading at all when its only entry is hidden', 
 });
 
 // =====================================================================
+// Story 0034 — the shipping_zones entry, story 0034's own second new single-entry
+// group (after Taxes/sales_regions). Two generic Phase-4 guard tests already
+// cross-check the registry against the route with no edit needed (see below); this
+// trio mirrors the Taxes/sales_regions one above, per Phase 5 code-review finding
+// L-8 -- every earlier single-entry group got its own "renders no heading" test,
+// and this story had not added one.
+// =====================================================================
+
+test('a role holding exactly shipping.view sees the Shipping zones entry under the Shipping group', function () {
+    $this->actingAs(sidebarNavUserWith(['shipping.view']));
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('data-test="sidebar-group-shipping"', false)
+        ->assertSee('data-test="sidebar-link-shipping_zones"', false);
+});
+
+test('a role holding the related-but-different shipping.edit permission never sees the Shipping zones entry or the Shipping group', function () {
+    $this->actingAs(sidebarNavUserWith(['shipping.edit']));
+
+    $response = $this->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('data-test="sidebar-link-dashboard"', false);
+    $response->assertDontSee('data-test="sidebar-link-shipping_zones"', false);
+    $response->assertDontSee('data-test="sidebar-group-shipping"', false);
+});
+
+test('the Shipping group renders no heading at all when its only entry is hidden', function () {
+    $this->actingAs(sidebarNavUserWith(['users.view']));
+
+    $response = $this->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('data-test="sidebar-group-platform"', false);
+    $response->assertSee('data-test="sidebar-link-users"', false);
+    $response->assertDontSee('data-test="sidebar-group-shipping"', false);
+    $response->assertDontSee('data-test="sidebar-link-shipping_zones"', false);
+});
+
+// =====================================================================
 // Story 0025 — the product_categories entry. Two generic Phase-4 guard tests
 // already cross-check the registry against the route for every entry with no
 // edit needed (see below); what is added here is the per-entry coverage those
