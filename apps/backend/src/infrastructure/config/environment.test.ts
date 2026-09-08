@@ -28,6 +28,14 @@ describe('AUDIT-SEC-004: fail-fast de ENCRYPTION_KEY y CLIENT_ORIGIN en producci
     expect(() => getEnvironment({ ...PROD_BASE, CLIENT_ORIGIN: undefined })).not.toThrow();
   });
 
+  it('trata CLIENT_ORIGIN vacío (docker-compose ${VAR:-}) como ausente, no como URL inválida', () => {
+    expect(() => getEnvironment({ ...PROD_BASE, CLIENT_ORIGIN: '' })).not.toThrow();
+  });
+
+  it('trata ENCRYPTION_KEY vacío como ausente → aborta por obligatorio, no por longitud', () => {
+    expect(() => getEnvironment({ ...PROD_BASE, ENCRYPTION_KEY: '' })).toThrow(/ENCRYPTION_KEY es obligatorio/);
+  });
+
   it('en desarrollo no exige ENCRYPTION_KEY', () => {
     expect(() =>
       getEnvironment({

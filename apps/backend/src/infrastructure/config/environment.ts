@@ -7,6 +7,13 @@ dotenv.config();
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config({ path: path.resolve(process.cwd(), 'apps/backend/.env') });
 
+// `docker-compose` con `${VAR:-}` (y un `.env` con la clave presente pero vacía) inyecta la
+// variable como cadena vacía, no como ausente. Sin esto, `"".url()` / `"".min(16)` fallan la
+// validación de formato antes de que `.optional()` tenga oportunidad de aplicar → arranque abortado
+// aunque la variable sea legítimamente opcional. Normaliza "" a `undefined`.
+const optionalEnv = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((value) => (value === '' ? undefined : value), schema.optional());
+
 const environmentSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().transform((val) => parseInt(val, 10)).default('3000'),
@@ -16,10 +23,10 @@ const environmentSchema = z.object({
   // Clave dedicada para el cifrado AES-256-GCM de credenciales de terceros (API keys de IA).
   // Separada de JWT_SECRET a propósito (AUDIT-SEC-004): rotar el JWT no debe volver ilegibles
   // las credenciales cifradas, y una fuga de una no compromete la otra.
-  ENCRYPTION_KEY: z.string().min(16, 'ENCRYPTION_KEY debe tener al menos 16 caracteres.').optional(),
+  ENCRYPTION_KEY: optionalEnv(z.string().min(16, 'ENCRYPTION_KEY debe tener al menos 16 caracteres.')),
   // Origen (esquema+host) del frontend, usado para construir el enlace del email de
   // recuperación de PIN. En producción NO se confía en el header `Origin` de la petición.
-  CLIENT_ORIGIN: z.string().url('CLIENT_ORIGIN debe ser una URL válida.').optional(),
+  CLIENT_ORIGIN: optionalEnv(z.string().url('CLIENT_ORIGIN debe ser una URL válida.')),
   RATE_LIMIT_WINDOW_MS: z.string().transform((val) => parseInt(val, 10)).default('900000'), // 15 minutos
   RATE_LIMIT_MAX_REQUESTS: z.string().transform((val) => parseInt(val, 10)).default('300'), // global /api/v1/*, por cliente real (AUDIT-SEC-003)
   LOGIN_RATE_LIMIT_WINDOW_MS: z.string().transform((val) => parseInt(val, 10)).default('900000'),
