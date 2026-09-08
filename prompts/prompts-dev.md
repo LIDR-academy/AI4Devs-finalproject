@@ -471,3 +471,7 @@ I'm almost done with the first phase of this project and it's almost ready to de
 ----
 
 Now to leave it completely ready, I'd like for you to reset the database in Neon so that all the info about the test users is in synched
+
+----
+
+Last but not least, I need to create a PR description of the entire proejct. Please provide me an md ready to copy-paste and be short and precise. Just with the right amount of info
