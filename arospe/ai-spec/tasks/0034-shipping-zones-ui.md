@@ -1207,3 +1207,26 @@ closing that open question. Grounding read in full: 0033, 0032, 0022 and 0035; P
 `resources/views/livewire/users.blade.php` and
 `resources/views/layouts/app/sidebar.blade.php` as the house-style reference. No application code was
 written in this phase.
+
+## Implementation note (out-of-scope cleanup, 2026-09-08)
+
+While closing this story, a review of the full test suite's skipped tests (Phase 5/closure pass)
+surfaced `tests/Browser/Products/VariantBuilderTest.php`'s `->skip()`'d **B7** test (story 0031,
+already `done/`) as a scenario that can never be un-skipped: reaching `products.edit` at all
+requires the same `update` ability (`products.edit`) that `VariantBuilder::canManageVariants`
+checks (0031 **D-10** note 4, by design), so no actor can load the real routed page while still
+seeing a disabled variant row action. Unlike the Media Gallery upload skips elsewhere in the suite
+(waiting on an upstream `pestphp/pest-plugin-browser` fix), this is not a temporary gap — it is
+permanently unreachable through a real browser visit, by that screen's own design.
+
+**At the repo owner's explicit request**, that one test was deleted (not merely re-skipped) —
+`tests/Browser/Products/VariantBuilderTest.php`'s B7 section, replaced with a comment recording why
+and pointing at where the identical fact remains covered: `VariantBuilderAuthorizationTest.php`'s
+"canManageVariants reflects the same update ability every mutating method authorizes against" and
+`VariantBuilderRenderingTest.php`'s "every row action carries its data-test hook on both the
+enabled and the disabled branch," both still real, executing, un-skipped tests.
+
+This is **unrelated to story 0034's own scope** (no shipping-zones file touched) and is recorded
+here rather than by editing story 0031's own closed task file, since 0031 is already `done/` and
+this project's task-storage convention treats a closed task file as historical record rather than
+something a later, unrelated change reaches back into.

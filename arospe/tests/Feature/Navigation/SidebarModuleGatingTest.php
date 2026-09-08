@@ -190,6 +190,62 @@ test('the Store group renders no heading at all when neither of its clusters has
 });
 
 // =====================================================================
+// Story 0034 — the shipping_zones entry. RE-TARGETED at merge time (2026-09-08): 0034's own
+// branch shipped this as its own flat top-level `shipping` group (mirroring the now-retired
+// `taxes` shape); merging into `feature-entrega2-ARP` after story 0080 landed re-targets it into
+// 0080's real, shipped `store_settings` cluster instead -- the SAME cluster `sales_regions`
+// already occupies (0080's own forward note in config/modules.php named this exact outcome).
+// Two generic Phase-4 guard tests already cross-check the registry against the route with no
+// edit needed (see below); this trio covers what those cannot: shipping_zones' own per-entry
+// gating, AND (the genuinely new scenario `store_settings` did not exercise before this story,
+// since it held only one item) two siblings in the SAME cluster gated independently of each
+// other -- one visible while the other is hidden must still render the cluster.
+// =====================================================================
+
+test('a role holding exactly shipping.view sees the Shipping zones entry under the Store settings cluster, with Sales Regions hidden', function () {
+    $this->actingAs(sidebarNavUserWith(['shipping.view']));
+
+    $response = $this->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('data-test="sidebar-group-store"', false);
+    $response->assertSee('data-test="sidebar-cluster-store_settings"', false);
+    $response->assertSee('data-test="sidebar-link-shipping_zones"', false);
+    // This role holds no sales-regions permission, so its sibling in the SAME cluster must not
+    // render, while the cluster itself still does (this is the new case: a shared cluster with
+    // mixed per-item visibility, untestable before shipping_zones became store_settings' second
+    // member).
+    $response->assertDontSee('data-test="sidebar-link-sales_regions"', false);
+    // No products-family permission either, so the sibling Products cluster must not render.
+    $response->assertDontSee('data-test="sidebar-cluster-products"', false);
+});
+
+test('a role holding the related-but-different shipping.edit permission never sees the Shipping zones entry, the Store settings cluster or the Store group', function () {
+    $this->actingAs(sidebarNavUserWith(['shipping.edit']));
+
+    $response = $this->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('data-test="sidebar-link-dashboard"', false);
+    $response->assertDontSee('data-test="sidebar-link-shipping_zones"', false);
+    $response->assertDontSee('data-test="sidebar-cluster-store_settings"', false);
+    $response->assertDontSee('data-test="sidebar-group-store"', false);
+});
+
+test('the Store settings cluster still renders with only one visible child when its two members are gated independently', function () {
+    // Inverse of the first test above: this role holds sales-regions.view but not
+    // shipping.view, so the cluster survives on ITS OTHER member alone.
+    $this->actingAs(sidebarNavUserWith(['sales-regions.view']));
+
+    $response = $this->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('data-test="sidebar-cluster-store_settings"', false);
+    $response->assertSee('data-test="sidebar-link-sales_regions"', false);
+    $response->assertDontSee('data-test="sidebar-link-shipping_zones"', false);
+});
+
+// =====================================================================
 // Story 0025 — the product_categories entry. Two generic Phase-4 guard tests
 // already cross-check the registry against the route for every entry with no
 // edit needed (see below); what is added here is the per-entry coverage those

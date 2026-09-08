@@ -101,8 +101,8 @@ return [
             'label' => 'navigation.clusters.products',
             'icon' => 'cube',
         ],
-        // Story 0080 -- Sales Regions today; Shipping and any other
-        // store-wide configuration screen join later (D-1's forward note).
+        // Story 0080 -- Sales Regions today; Shipping (story 0034) joins here, exactly as
+        // this comment's own forward note predicted.
         'store_settings' => [
             'group' => 'store',
             'label' => 'navigation.clusters.store_settings',
@@ -189,6 +189,23 @@ return [
             'route' => 'product-attribute-types.index',
             'current_when' => 'product-attribute-types.*',
             'permissions' => ['products.view'],
+        ],
+        // Story 0034 -- RE-TARGETED at merge time into story 0080's new nested schema
+        // (0080 shipped after 0034's own branch): 'shipping' was a flat top-level group in
+        // 0034's own commit, matching the now-retired 'taxes' shape; sales_regions and
+        // shipping_zones are both store-wide configuration screens in the same sense
+        // (D-1/D-4), so this entry nests into the SAME `store_settings` cluster as
+        // sales_regions rather than keeping its own now-nonexistent flat group.
+        // 'permissions' is EXACTLY the ability routes/shipping.php's own `can:` middleware
+        // enforces -- never a broader set (see this file's header note).
+        'shipping_zones' => [
+            'group' => null,
+            'cluster' => 'store_settings',
+            'label' => 'navigation.items.shipping_zones',
+            'icon' => 'truck',
+            'route' => 'shipping.zones.index',
+            'current_when' => 'shipping.zones.*',
+            'permissions' => ['shipping.view'],
         ],
     ],
 ];
