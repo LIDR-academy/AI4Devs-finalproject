@@ -1,0 +1,10 @@
+# Normaliza saltos de línea a LF en el repo (evita churn CRLF en Windows).
+* text=auto eol=lf
+
+# Binarios explícitos (sin conversión).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary

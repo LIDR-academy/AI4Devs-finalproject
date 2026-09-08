@@ -1,0 +1,48 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# production build
+/build
+/dist
+
+# prisma — cliente generado (se regenera con `prisma generate`)
+/src/generated
+
+# testing
+/coverage
+/playwright-report
+/test-results
+/blob-report
+/playwright/.cache
+
+# env — nunca commitear secretos; usar .env.example como plantilla
+# Se ignora **todo** `.env*` y se rescata solo la plantilla: enumerar variantes
+# (`.env`, `.env*.local`) dejaba fuera del ignore justo las que se crean sin pensar
+# —`.env.vercel` de `vercel env pull`, `.env.production`, `.env.supabase`—, que son las
+# que traen credenciales de verdad.
+.env*
+!.env.example
+
+# misc
+*.pem
+.DS_Store
+*.tsbuildinfo
+.eslintcache
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+
+.vercel
+
+# Contraseñas de la instancia desplegada: se generan al sembrar y no se commitean.
+default_passwords
