@@ -606,3 +606,11 @@ inputs:
   - DS §7 (matriz de estados) actualizada: Focus-visible y Disabled de los 3 botones pasan de ❌ gap a ✅; DS **v5.4.0 → v5.5.0**. `frontend_rules.md` §2: el bullet de foco visible ahora referencia la implementación global.
 - **Estado:** frontend 243 tests, build/lint verdes; `check_fefo_contrast.mjs` verde (`--color-primary`/`--bg-root` ya a 6.79:1) / `check_inline_styles` / duplicación verdes. Riesgo visual nulo en flujo normal (rings solo en navegación por teclado; `:disabled` solo afecta botones ya deshabilitados). Sin push.
 - **Gaps de diseño restantes** (tickets aparte, cambios visibles): tokens `--leading-*` (line-height), cobertura completa de `prefers-reduced-motion`, estado `Loading` propio por-componente.
+
+### 2026-09-07 (cont.) - Design system v5.6.0: reducción de movimiento, cobertura completa
+- **Cierre del gap §5:** antes solo `body` y `ActionButton:hover` estaban condicionados a `prefers-reduced-motion` (patrón opt-in por componente); el `pulse` infinito de `AlertFeed`, el `fadeInOverlay`/`scaleUpModal` de los modales y todas las transiciones de color/borde/ancho quedaban sin gatear.
+- **Acciones (commit, `[skip-tk]`):**
+  - `styles/base/reset.css`: regla global `@media (prefers-reduced-motion: reduce)` que colapsa `animation-duration`/`animation-iteration-count`/`transition-duration` de `*`/`*::before`/`*::after` a instantáneo (patrón modern-reset estándar; `!important` justificado como override de accesibilidad). Sustituto de cada animación = su estado final sin recorrido.
+  - Se eliminan los 2 gates `no-preference` ad-hoc (`body`, `ActionButton.circle:hover`), ahora redundantes; sus reglas pasan a incondicionales.
+  - DS §5 gap note reescrita; DS **v5.5.0 → v5.6.0**. `frontend_rules.md` §2: nuevo bullet SC 2.3.3.
+- **Estado:** frontend 243 tests, build/lint verdes; gates verdes. **Sin cambio para usuarios sin la preferencia activada.** Sin push.

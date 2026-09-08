@@ -21,9 +21,8 @@
 }
 .circle:disabled { opacity: 0.5; cursor: not-allowed; }
 
-@media (prefers-reduced-motion: no-preference) {
-  .circle:hover:not(:disabled) { transform: translateY(-2px); }
-}
+/* El recorrido lo suprime la regla global `prefers-reduced-motion: reduce` de base/reset.css. */
+.circle:hover:not(:disabled) { transform: translateY(-2px); }
 
 .glyph {
   display: grid;
