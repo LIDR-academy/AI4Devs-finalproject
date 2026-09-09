@@ -1,6 +1,6 @@
 ---
 framework: ".agents / VSDD Governance Framework"
-version: "2.14.0 (SOTA Enterprise 2026 Edition)"
+version: "2.15.0 (SOTA Enterprise 2026 Edition)"
 author: "Jose Lacruz <lacruzjd@gmail.com>"
 program: "AI4Devs - Final Project"
 methodology: "Verified Spec-Driven Development (VSDD)"
@@ -58,8 +58,8 @@ flowchart TD
         W0X["03..08: Auditoría, TDD, QA, Observabilidad, Deploy"]
     end
 
-    subgraph CAPA2 ["2. CAPA DE HABILIDADES PROCEDIMENTALES (35 Skills)"]
-        S_Spec["Skills de Specs (SK-01 a SK-15, SK-35)"]
+    subgraph CAPA2 ["2. CAPA DE HABILIDADES PROCEDIMENTALES (36 Skills)"]
+        S_Spec["Skills de Specs (SK-01 a SK-15, SK-35, SK-36)"]
         S_Dev["Skills de Dev (SK-16 a SK-34)"]
     end
 
@@ -135,7 +135,7 @@ Las 35 habilidades son runbooks especializados organizados por fases y roles té
 
 ### Fase Documental (Product Owner & Architect Roles)
 *   **01_product_definition:** [SK-01 Descubrimiento de Producto](skills/specs/01_product_definition/SK-01_discover_product_vision.md) y [SK-02 Generación del PRD](skills/specs/01_product_definition/SK-02_generate_prd.md).
-*   **02_architecture_design:** [SK-03 Modelo de Dominio](skills/specs/02_architecture_design/SK-03_design_domain_model.md), [SK-04 Diseño Técnico](skills/specs/02_architecture_design/SK-04_design_technical_architecture.md) y [SK-05 Asistente de Diseño UI/UX](skills/specs/02_architecture_design/SK-05_design_ui_ux_system.md).
+*   **02_architecture_design:** [SK-03 Modelo de Dominio](skills/specs/02_architecture_design/SK-03_design_domain_model.md), [SK-04 Diseño Técnico](skills/specs/02_architecture_design/SK-04_design_technical_architecture.md), [SK-05 Asistente de Diseño UI/UX](skills/specs/02_architecture_design/SK-05_design_ui_ux_system.md) y [SK-36 Registro de Decisiones de Arquitectura (ADR)](skills/specs/02_architecture_design/SK-36_generate_architecture_decision_record.md).
 *   **03_persistence_and_api:** [SK-06 Esquema de Base de Datos](skills/specs/03_persistence_and_api/SK-06_design_database_schema.md) y [SK-07 Especificación API REST](skills/specs/03_persistence_and_api/SK-07_design_api_specification.md).
 *   **04_governance_and_quality:** [SK-08 Estrategia de Seguridad](skills/specs/04_governance_and_quality/SK-08_define_security_strategy.md), [SK-09 Estrategia de Pruebas](skills/specs/04_governance_and_quality/SK-09_define_testing_strategy.md), [SK-10 Pipeline CI/CD & OpenTofu IaC](skills/specs/04_governance_and_quality/SK-10_configure_cicd_pipeline.md) y [SK-35 Generación del Contrato Operativo Raíz (AGENTS.md)](skills/specs/04_governance_and_quality/SK-35_generate_root_contract.md).
 *   **05_agile_planning:** [SK-11 Historias de Usuario (INVEST)](skills/specs/05_agile_planning/SK-11_generate_user_stories.md), [SK-12 Planificación de Tickets](skills/specs/05_agile_planning/SK-12_generate_backlog_tickets.md), [SK-13 Matriz de Trazabilidad](skills/specs/05_agile_planning/SK-13_generate_traceability_matrix.md), [SK-14 Mapa del Backlog](skills/specs/05_agile_planning/SK-14_generate_backlog_map.md) y [SK-15 Registro de PRs](skills/specs/05_agile_planning/SK-15_document_pull_requests.md).

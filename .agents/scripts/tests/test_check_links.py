@@ -166,7 +166,7 @@ class CheckLinksTests(unittest.TestCase):
         checked, broken, messages, skill_count = run_checks(real_agents_dir, real_project_root)
 
         self.assertEqual(broken, 0, msg="\n".join(messages))
-        self.assertEqual(skill_count, 35)
+        self.assertEqual(skill_count, 36)
 
 
 if __name__ == "__main__":

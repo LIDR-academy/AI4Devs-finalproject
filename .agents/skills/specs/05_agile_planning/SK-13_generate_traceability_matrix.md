@@ -1,7 +1,7 @@
 ---
 name: traceability-matrix
 description: "Audita la trazabilidad biyectiva End-to-End del sistema (regla de cero orfandad) y autogenera la Matriz de Trazabilidad SDD."
-version: "3.1.0"
+version: "3.2.0"
 category: "05_agile_planning"
 inputs:
   - "docs/01_product_definition/02_prd.md"
@@ -13,7 +13,7 @@ outputs:
   - "docs/05_agile_planning/13_matriz_trazabilidad.md"
 ---
 
-# 📊 SK-13: Matriz de Trazabilidad End-to-End (v3.1.0)
+# 📊 SK-13: Matriz de Trazabilidad End-to-End (v3.2.0)
 
 Actúa como un **Lead Quality & Governance Architect** experto en trazabilidad documental, gestión de requerimientos y auditoría de alineación entre especificaciones de negocio, esquemas de BD, contratos de API y tickets de trabajo.
 
@@ -40,6 +40,11 @@ Durante la ejecución de este skill, el agente TIENE PROHIBIDO:
 
 ### 📍 Paso 3: Validación de Cobertura
 1. Confirmar que el 100% de los requerimientos del MVP tengan cobertura completa en backend y frontend.
+2. **Trazabilidad de decisiones de arquitectura (ADR):** si el proyecto tiene ADRs (`docs/02_architecture_design/adr/`, generados por [`SK-36`](../02_architecture_design/SK-36_generate_architecture_decision_record.md)), auditar el enlace en **ambos sentidos** y reportar las dos clases de huérfano:
+   - **ADR huérfano:** un ADR `Accepted` cuyo campo `Implementado por:` no nombra ninguna historia/ticket existente — la decisión se tomó pero nadie la ejecutó, o la ejecutó sin registrarlo.
+   - **Decisión no registrada:** un ticket cuyo alcance resuelve una disyuntiva con ≥2 caminos viables sin ADR que la respalde (ver Test Decisivo de `SK-36` Fase 1).
+
+   Ambos casos se **reportan al humano**, nunca se corrigen inventando el enlace que falta (misma prohibición de invención del Guard 2 de este skill).
 
 ---
 
