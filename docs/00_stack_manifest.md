@@ -1,9 +1,9 @@
 ---
 document: stack_manifest
-version: 1.16.0
+version: 1.17.0
 status: approved
 approved_by: "Jose Lacruz <lacruzjd@gmail.com>"
-approved_at: "2026-09-06"
+approved_at: "2026-09-09"
 authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agentes IA"
 ---
 
@@ -76,16 +76,20 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **Test Runner** | Vitest | **1.x** | Backend y Frontend |
 | **Testing Library** | React Testing Library | **14.x** | Para componentes React |
 | **E2E Browser** | Playwright | **1.x** | Page Object Model (POM) obligatorio |
-| **Mutation Testing** | Stryker | **8.x** | ⚠️ Score mínimo ≥70% **declarado pero NO operativo** — ver nota de verificación abajo |
+| **Mutation Testing** | Stryker | **8.x** | ⚠️ Score ≥70%: gate **local diff-scoped operativo** (`check_mutation_score.sh`, Guard 11), pero el paso de CI aún es full-scope + `continue-on-error` → `TK-138`. Ver nota abajo |
 | **Comando de Tests** | `pnpm test` | — | Ejecuta todos los workspaces |
 
-> **Nota de verificación (2026-09-06) — el umbral de mutación NO se está cumpliendo ni midiendo.** Al auditar la preparación para producción se ejecutó Stryker por primera vez de forma real, y el resultado invalida la línea de la tabla:
-> 1. **No está wireado en `ci.yml`.** Existe `pnpm --filter @restostock/backend run test:mutation` y `apps/backend/stryker.conf.json` con `thresholds.break = 70`, pero **ningún job del pipeline lo invoca**: el umbral es declarativo, nadie lo hace cumplir. `apps/frontend` **no tiene configuración de Stryker en absoluto**.
-> 2. **El número que produce hoy no es un score de mutación fiable.** Sobre `src/domain/kitchen/value-objects/Temperature.ts` (36 líneas, 10 mutantes) devuelve 60%, pero desglosado: **0 mutantes matados por un test** y **6 timeouts** con `coverageAnalysis: "perTest"` (1 matado / 5 timeouts al forzar `--coverageAnalysis off`). Stryker contabiliza un timeout como "detectado", así que el 60% se compone casi entero de timeouts, no de pruebas que atrapen el defecto. El propio reporte lo delata: *"Ran 0.00 tests per mutant on average"* (0.10 sin `perTest`) — el runner de Vitest apenas está ejecutando tests contra cada mutante.
-> 3. **Inviable como gate con la configuración actual:** ~2 minutos por un único archivo pequeño. El `mutate` configurado abarca `src/domain/**` + `src/application/**` (cientos de archivos), lo que proyecta muchas horas por corrida. Una corrida acotada solo al dominio `kitchen` se canceló tras 15 minutos sin terminar.
-> 4. **Hallazgo colateral real:** `Temperature.ts` no tiene test unitario propio (4 mutantes sin cobertura alguna); solo se ejercita indirectamente desde `RecordTemperatureLogUseCase.test.ts`.
+> **Nota de verificación — historia.**
 >
-> Arreglar la integración Stryker+Vitest y decidir un alcance ejecutable en CI merece su propio ticket. Hasta entonces, **este manifiesto no debe leerse como si el proyecto tuviera un score de mutación ≥70% verificado**.
+> **2026-09-06 (auditoría de preparación para producción):** se ejecutó Stryker por primera vez de forma real y el resultado invalidaba la línea de la tabla: (1) ningún job de `ci.yml` invocaba el gate; (2) el runner Vitest apenas ejecutaba tests contra cada mutante (*"Ran 0.00 tests per mutant on average"*), así que el 60% sobre `Temperature.ts` se componía casi entero de *timeouts*, no de pruebas que atrapan el defecto; (3) `mutate` full-scope (`src/domain/**` + `src/application/**`) proyectaba horas por corrida; (4) hallazgo colateral: `Temperature.ts` sin test unitario propio.
+>
+> **2026-09-09 (barrido de residuales pre-entrega):**
+> 1. **El runner ya funciona.** Corrida real sobre `Temperature.ts`: *"Ran 32.90 tests per mutant on average"* (123.90 tras añadir el test de `TK-137`). El problema (1)-(2) del runner está resuelto — lo que queda es **wiring de CI**.
+> 2. **Gate local diff-scoped operativo.** `docs/04_governance_and_quality/scripts/check_mutation_score.sh` (Guard 11) invoca Stryker **una vez por archivo backend `domain/`/`application/` tocado por el ticket en curso**, con `thresholds.break` por archivo. Es el gate real del flujo de desarrollo (`02_cascading_dev_workflow.md`).
+> 3. **`TK-137` cerró el hallazgo colateral:** `Temperature.test.ts` directo → score `Temperature.ts` **60% → 100%** (10/10 mutantes `killed`, 0 `no coverage`).
+> 4. **Sigue pendiente (`TK-138`, post-entrega):** el paso de CI `Mutation Testing` es full-scope + `continue-on-error` (quema minutos, nunca bloquea); `check_mutation_score.sh` no es *base-ref aware* para CI; `apps/frontend` sin config de Stryker. Decisión abierta: gate diff-scoped **bloqueante** vs **informativo** en CI.
+>
+> Hasta `TK-138`, **este manifiesto no debe leerse como si CI hiciera cumplir un score de mutación ≥70% repo-wide** — sí lo hace el gate local diff-scoped por ticket.
 
 ---
 
@@ -96,14 +100,14 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **Linter (Backend)** | ESLint | **9.x** (flat config) | `@eslint/js` recommended + `typescript-eslint` recommended |
 | **Linter (Frontend)** | ESLint | **9.x** (flat config) | + `eslint-plugin-react-hooks`, `eslint-plugin-jsx-a11y` (WCAG 2.2) |
 | **Comando de Lint** | `pnpm run lint` | — | `tsc --noEmit && eslint .` en cada workspace — el type-check NO reemplaza al linter |
-| **Duplication Detector** | jscpd | **5.x** | Umbral **3.5%** (`.jscpd.json`), **bloqueante** en CI vía `pnpm run duplication`. El gate por-ticket (`check_ticket_duplication.sh`, C-1) es el que exige diff limpio; el umbral repo absorbe deuda preexistente documentada — ver nota TK-091 |
+| **Duplication Detector** | jscpd | **5.x** | Umbral **3%** (`.jscpd.json`), **bloqueante** en CI vía `pnpm run duplication` (baseline real 2026-09-09: 1.48%). El gate por-ticket (`check_ticket_duplication.sh`, C-1) es el que exige diff limpio — ver nota TK-091 |
 | **Dead Code Detector** | knip | **6.x** | Guard 5, gate acotado al diff vía `check_dead_code.sh` (TK-055) |
 
 > **Nota histórica (TK-033):** hasta esta versión, `pnpm run lint` era un alias de `tsc --noEmit` sin ningún linter real detrás — el gate de calidad reportaba "0 errores" sin poder detectar duplicación de estilos, `any` inseguros, ni violaciones de accesibilidad. Corregido instalando ESLint real en ambos workspaces.
 >
 > **Nota histórica (TK-036):** `complexity`, `max-lines-per-function` (≤60) y `max-depth` (≤4) están activas en ambos `eslint.config.*` pero en severidad `warn` — **informativas a nivel de repositorio completo**, por deuda preexistente: 8 advertencias reales en backend (`runSeed`, `ConsumeRecipeUseCase.execute`, `PerformShiftReconciliationUseCase.execute`, `createApp`, `InMemoryRemanenteQueryRepository.findActiveRemanentes`) y 15 en frontend (sobre todo componentes React donde JSX infla el conteo de líneas). La duplicación de código (`jscpd`) es bloqueante a nivel repositorio.
 >
-> **Nota histórica (2026-09-03, US-024):** el baseline de `jscpd` subió del 1.68% original al ~3.2% por deuda acumulada — el grueso en `apps/backend/src/infrastructure/http/controllers/auth.controller.ts` (bloques repetidos de respuesta de error RFC 7807 entre métodos del controlador). El umbral repo de `.jscpd.json` se subió a **3.5%** para no bloquear CI por esa deuda ajena al ticket en curso — mismo criterio que `complexity`/`max-lines` como `warn` a nivel repo (TK-036/037): el gate real de "diff limpio" es `check_ticket_duplication.sh` (C-1), que compara clones vs. HEAD y bloquea solo los que el ticket introduce. El saneamiento de `auth.controller.ts` (extraer un helper de error→RFC 7807) queda como **TK-091** (backend, Should Have).
+> **Nota histórica (2026-09-03, US-024 → resuelto TK-091, 2026-09-09):** el baseline de `jscpd` subió del 1.68% original al ~3.2% por deuda acumulada — el grueso en `apps/backend/src/infrastructure/http/controllers/auth.controller.ts` (bloques `catch` repetidos: `ZodError` → `respondValidationError`, resto → `next`). El umbral repo de `.jscpd.json` se subió temporalmente a **3.5%** para no bloquear CI por esa deuda. **`TK-091` (2026-09-09):** `auth.controller.ts` adopta el helper `handleZodOrNext` ya existente (`TK-107`) en sus 7 `catch` → TypeScript 2.60%→2.00%, total 1.80%→**1.48%**; `.jscpd.json` `threshold` revertido a **3**. `kitchen`/`stock`/`reports` controllers aún tienen el bloque inline (candidato a `refactor` de seguimiento, no bloqueante). El gate real de "diff limpio" sigue siendo `check_ticket_duplication.sh` (C-1).
 >
 > **Nota histórica (TK-037):** activar `complexity`/`max-lines-per-function`/`max-depth` como bloqueantes a nivel repositorio rompería `pnpm run lint` para cualquier ticket futuro sin relación con la deuda existente. En su lugar, `docs/04_governance_and_quality/scripts/check_ticket_code_quality.sh` las hace **bloqueantes acotadas al diff del ticket en curso** (archivos sin commitear — working tree + staged): deuda preexistente en archivos no tocados nunca bloquea, pero código nuevo/modificado sí se exige limpio. Wireado en `SK-16`, `SK-17`, `SK-19` y `04_dev_audit_workflow.md`. En una regeneración completa del proyecto desde cero, todo archivo es "nuevo" en el ticket que lo crea — este mecanismo, aplicado ticket a ticket, produce un repositorio limpio por construcción sin exigir pagar deuda retroactiva.
 >

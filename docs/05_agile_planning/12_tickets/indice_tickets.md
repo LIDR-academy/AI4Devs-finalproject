@@ -23,6 +23,20 @@ Resultado: **96 `done`**, **9 pendientes reales**, 1 `not_needed`, 1 `MOSTLY_DON
 
 > ⚠️ El estado de un ticket se cierra **al terminarlo**, en el mismo commit atómico que lo implementa (`02_cascading_dev_workflow.md` FASE 6). Este saneamiento retroactivo es una excepción puntual, no un procedimiento a repetir.
 
+### Cierre de los pendientes (2026-09-09)
+
+Barrido final antes del push de la Entrega Final. Los pendientes se resolvieron así:
+
+| Ticket(s) | Resolución | Evidencia |
+| :--- | :--- | :--- |
+| `TK-072`, `TK-072-FE`, `TK-077-FE` | Ya cerrados en `ff93831` (2026-09-08): matriz de trazabilidad + tests confirman entrega; el frontmatter quedó rezagado en `bb969fc`. | `feat(auth)… (TK-077)` `2b44bb5`; suite RTL de extracción y recuperación de PIN verde. |
+| `TK-007`, `TK-007-C`, `TK-007-D`, `TK-007-E`, `TK-008` | **Deriva de estado, no trabajo pendiente.** Implementados en el commit monolítico `7f92ad4` (previo a la convención `(TK-XXX)`, por eso el método de `bb969fc` no los detectó). Verificados contra código + criterios de aceptación + tests con el nombre del ticket en el `describe`. Marcados `done`. | `AlertFeed.test.tsx` (`describe('TK-007…')`), `ShiftReconciliationWizard.test.tsx` (`TK-007-D`), `ReportsDashboard.test.tsx` (`TK-007-E`), `RecipeSelectorModal.test.tsx`, `ConsumeRecipeUseCase.test.ts` (`describe('TK-008 / TK-105…')` — cascada FEFO multi-remanente + atomicidad). |
+| `TK-091` | **Implementado ahora.** Los 7 bloques `catch` inline de `auth.controller.ts` pasan a `handleZodOrNext` (helper ya existente desde `TK-107`). jscpd TypeScript 2.60 % → 2.00 %, total 1.80 % → 1.48 %. | `refactor(auth)… (TK-091)`. |
+
+Residual de calidad de mutation testing (auditoría 2026-09-06, `docs/00_stack_manifest.md` §5):
+- **`TK-137`** (`done`, 2026-09-09) — `Temperature.ts` sin test unitario directo: añadido `Temperature.test.ts`, score de ese archivo 60 % → 100 %.
+- **`TK-138`** (`approved`, post-entrega) — el paso de CI `Mutation Testing` es full-scope + `continue-on-error`; `check_mutation_score.sh` no es *base-ref aware*; `apps/frontend` sin config de Stryker. Decisión abierta: gate diff-scoped bloqueante vs informativo.
+
 ---
 
 ## ⚖️ 1. Matriz Multidimensional de Criterios de Priorización
