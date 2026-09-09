@@ -37,8 +37,10 @@ Residual de calidad de mutation testing (auditoría 2026-09-06, `docs/00_stack_m
 - **`TK-137`** (`done`, 2026-09-09) — `Temperature.ts` sin test unitario directo: añadido `Temperature.test.ts`, score de ese archivo 60 % → 100 %.
 - **`TK-138`** (`approved`, post-entrega) — el paso de CI `Mutation Testing` es full-scope + `continue-on-error`; `check_mutation_score.sh` no es *base-ref aware*; `apps/frontend` sin config de Stryker. Decisión abierta: gate diff-scoped bloqueante vs informativo.
 
-Residual de gobernanza de `.agents/` (auditoría de patrones de prompt, 2026-09-09):
-- **`TK-139`** (`approved`, post-entrega) — no existe skill que genere o gobierne los ADRs (`SK-36`); los 4 ADRs existentes se crearon ad-hoc. El saneamiento retroactivo de formato/estado ya se aplicó (`docs(adr)`, incluida la corrección de `ADR-003`, que figuraba `Proposed` con su épica cerrada); falta la skill que evite la próxima deriva. **No se hizo antes del push a propósito:** una skill nunca ejecutada es el Antipatrón B de `rules/04_verified_implementation_standard.md`.
+Residual de gobernanza de `.agents/` (auditoría de patrones de prompt, 2026-09-09) — **cerrado**:
+- **`TK-139`** (`done`) — nueva `SK-36` que genera y gobierna los ADRs, **ejecutada de verdad** contra una decisión abierta real (hallazgo `O-1` de `AUDIT-SEC-004`) → [`ADR-005`](../../02_architecture_design/adr/ADR-005-session-token-storage.md). `SK-13` 3.2.0 audita ADRs huérfanos en ambos sentidos; framework 2.14.0 → 2.15.0. Excluido a propósito: el wiring en `01_cascading_spec_workflow.md`.
+- **`TK-141`** (`done`) — hallazgo colateral de la Fase 0 de `SK-36`: el `nginx` del SPA no emitía **ninguna** cabecera de seguridad. CSP calibrada contra el build real + 4 cabeceras más, verificadas contra la imagen construida y corriendo.
+- **`TK-140`** (`approved`, post-entrega) — ejecuta la decisión de `ADR-005`: mover el token de sesión de `localStorage` a cookie `httpOnly`. Cambia el contrato de autenticación de punta a punta, por eso no entra antes del push.
 
 ---
 
