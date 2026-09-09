@@ -1,0 +1,104 @@
+/* ============================================================
+   Sistema FEFO v4.0.0 (turno Dia/Noche) — TK-081-FE, US-022.
+   Reemplaza "Senal Industrial" v3.0.0. Turno Dia = valores por defecto
+   en :root (evita FOUC antes de que App.tsx evalue localStorage/SO).
+   Turno Noche: prefers-color-scheme (si no hay eleccion guardada) y
+   :root[data-theme="dark"] (interruptor explicito, gana en ambos sentidos).
+   ============================================================ */
+:root {
+  /* Turno Dia — "comanda de papel" */
+  --bg-root: #efe8d8;
+  --bg-card: #f7f2e6;
+  --border-card: #18140f;
+  --rule: #18140f;
+  /* Hairline decorativo (v5.3.0): bordes de contenedores/paneles/divisores — NO controles
+     interactivos (inputs, botones, toggles siguen en --rule por WCAG 1.4.11 ≥ 3:1). */
+  --border-hairline: #d7cfb9;
+
+  --color-primary: #2e5f76;
+  --color-primary-hover: #24495c;
+  --color-primary-on: #fbf8ef;
+  --color-primary-text: #244d61; /* mas oscuro que --color-primary: AA 6:1 sobre su propio badge 15% tint (--color-primary solo pasaba por apenas ~4.63:1) — mismo valor que --color-info-text, --color-info es un alias intencional de --color-primary */
+  --color-secondary: #6e6555;
+
+  --color-danger: #b43a24;
+  --color-danger-text: #a03420;
+  --color-danger-on: #fbf8ef;
+  --color-warning: #8a6414;
+  --color-warning-text: #6b4c0e; /* mas oscuro que --color-warning: AA 4.5:1 como texto sobre su propio badge 15% tint (--color-warning solo, sin este ajuste, da ~3.98:1) */
+  --color-success: #3e6b3a;
+  --color-success-text: #345c2f; /* mas oscuro que --color-success: AA 5.2:1 sobre su propio badge 15% tint (--color-success solo da ~4.19:1, bajo AA — bug real encontrado en TK-084-FE) */
+  --color-info: #2e5f76;
+  --color-info-text: #244d61; /* mas oscuro que --color-info: AA 6:1 sobre su propio badge 15% tint (--color-info solo pasaba por apenas 4.63:1, sin margen real) */
+
+  --overlay-white-subtle: rgba(24, 20, 15, 0.06);
+  --overlay-white-faint: rgba(24, 20, 15, 0.02);
+  --shadow-elevation-1: none;
+  --shadow-elevation-2: none;
+
+  --text-primary: #18140f;
+  --text-secondary: #6e6555;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    /* Turno Noche — "pizarra de turno" */
+    --bg-root: #171c18;
+    --bg-card: #1f251f;
+    --border-card: #e9e4d0;
+    --rule: #e9e4d0;
+    --border-hairline: #3c433b;
+
+    --color-primary: #6faac7;
+    --color-primary-hover: #8bc0d8;
+    --color-primary-on: #171c18;
+    --color-primary-text: #6faac7;
+    --color-secondary: #9aa394;
+
+    --color-danger: #e1573a;
+    --color-danger-text: #f0806a; /* mas claro que --color-danger: distinguible y AA 5:1+ sobre su propio badge tint (igualar ambos daba ~3.57:1) */
+    --color-danger-on: #171c18;
+    --color-warning: #e6be55;
+    --color-warning-text: #e6be55;
+    --color-success: #7cb36e;
+    --color-success-text: #7cb36e;
+    --color-info: #6faac7;
+    --color-info-text: #6faac7;
+
+    --overlay-white-subtle: rgba(242, 238, 221, 0.08);
+    --overlay-white-faint: rgba(242, 238, 221, 0.02);
+
+    --text-primary: #f2eedd;
+    --text-secondary: #9aa394;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg-root: #171c18;
+  --bg-card: #1f251f;
+  --border-card: #e9e4d0;
+  --rule: #e9e4d0;
+  --border-hairline: #3c433b;
+
+  --color-primary: #6faac7;
+  --color-primary-hover: #8bc0d8;
+  --color-primary-on: #171c18;
+  --color-primary-text: #6faac7;
+  --color-secondary: #9aa394;
+
+  --color-danger: #e1573a;
+  --color-danger-text: #f0806a;
+  --color-danger-on: #171c18;
+  --color-warning: #e6be55;
+  --color-warning-text: #e6be55;
+  --color-success: #7cb36e;
+  --color-success-text: #7cb36e;
+  --color-info: #6faac7;
+  --color-info-text: #6faac7;
+
+  --overlay-white-subtle: rgba(242, 238, 221, 0.08);
+  --overlay-white-faint: rgba(242, 238, 221, 0.02);
+
+  --text-primary: #f2eedd;
+  --text-secondary: #9aa394;
+}

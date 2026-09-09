@@ -1,0 +1,32 @@
+.p-4 { padding: var(--space-4); }
+
+.btn-compact-icon-sm { padding: 6px 8px; }
+.location-form-grid { grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.locations-list-scroll { max-height: 240px; overflow-y: auto; padding-right: var(--space-1); }
+.location-row {
+  padding: var(--space-3);
+  background-color: var(--bg-root);
+  border: 1px solid var(--border-hairline);
+  border-radius: 0;
+}
+.location-row--inactive {
+  border-color: var(--color-danger);
+  opacity: 0.65;
+}
+
+.location-badge {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 0;
+  font-weight: 700;
+}
+.location-badge--warehouse {
+  background-color: color-mix(in srgb, var(--color-info) 15%, transparent);
+  color: var(--color-info-text);
+  border: 1px solid color-mix(in srgb, var(--color-info) 30%, transparent);
+}
+.location-badge--kitchen {
+  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: var(--color-success-text);
+  border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+}

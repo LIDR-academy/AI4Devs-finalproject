@@ -1,0 +1,2872 @@
+openapi: 3.1.0
+info:
+  title: RestoStock API
+  description: REST API specification for RestoStock real-time inventory and FEFO traceability system.
+  version: 7.0.0 # TK-129 / AUDIT-DEV-012 L-3: /settings/ai GET+PUT drop the inert replenishmentOn / anomalyAuditOn fields (no use case ever read them). oasdiff-confirmed removal of required response properties; deliberate. Single consumer is this repo's own frontend (TK-129-FE). Prior: 6.0.0 = TK-128 / US-035: RescueRecipeProposal.preventedWasteEstimate (physical quantity, meaningless — summed heterogeneous units, AUDIT-DEV-007 F-1) -> preventedWasteCost (nullable monetary string). oasdiff-confirmed breaking change, deliberate: the previous metric was wrong by construction. Single consumer is this monorepo's own frontend, updated in TK-128-FE. Prior: 5.0.0 = TK-108/ADR-004 (POST /kitchen/remanentes/{id}/consume requires reasonId).
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+  - url: https://api.restostock.internal
+    description: Production Server
+
+paths:
+  /api/v1/auth/login-pin:
+    post:
+      summary: Authenticate operator via 4-6 digit PIN
+      operationId: authenticatePin
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthPinRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthPinResponse'
+        '400':
+          description: Input validation failed (userId/pin missing or malformed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid credentials or inactive user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many login attempts from this IP (anti-brute-force rate limit)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/users:
+    get:
+      summary: List all operator/admin accounts (ADMIN only, TK-056)
+      operationId: listUsers
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of users (never includes pinHash)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreateUserResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a new kitchen operator or admin account (ADMIN only)
+      operationId: createUser
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateUserResponse'
+        '400':
+          description: Invalid name/role/pin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/users/{id}/status:
+    patch:
+      summary: Block or reactivate an operator account (ADMIN only)
+      operationId: setUserStatus
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetUserStatusRequest'
+      responses:
+        '200':
+          description: User status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetUserStatusResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/forgot-pin:
+    post:
+      summary: Request Administrator PIN reset via email token (TK-077)
+      operationId: requestForgotPin
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPinRequest'
+      responses:
+        '200':
+          description: Recovery request processed (generic response to prevent user enumeration)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForgotPinResponse'
+        '400':
+          description: Malformed email input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/reset-pin:
+    post:
+      summary: Reset Administrator PIN using one-time signed email token (TK-077)
+      operationId: resetAdminPin
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPinRequest'
+      responses:
+        '200':
+          description: Administrator PIN successfully updated and account unblocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPinResponse'
+        '400':
+          description: Invalid PIN format (must be 4-6 digits)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or expired reset token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/stock/extraction:
+    post:
+      summary: Record stock extraction from main warehouse to kitchen
+      operationId: recordExtraction
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordExtractionRequest'
+      responses:
+        '201':
+          description: Extraction recorded and active remanente created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordExtractionResponse'
+        '400':
+          description: Input validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Insufficient stock in warehouse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/stock/movements:
+    get:
+      summary: Query stock movement audit trail (ADMIN only)
+      operationId: getStockMovementHistory
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: insumoId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Movement history ordered by most recent first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StockMovementHistoryItem'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/stock/insumos:
+    get:
+      summary: List all insumos in the master catalog (TK-057)
+      operationId: listInsumos
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of insumos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreateInsumoResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a new insumo in the master catalog with 0 initial stock (ADMIN only, TK-057)
+      operationId: createInsumo
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInsumoRequest'
+      responses:
+        '201':
+          description: Insumo created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInsumoResponse'
+        '400':
+          description: Invalid name/unitOfMeasure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: An insumo already exists with the same name, or (US-032/TK-119) the same barcode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/stock/insumos/by-barcode/{barcode}:
+    get:
+      summary: Find an insumo by its barcode, scanned with the device's built-in camera (US-032/TK-119)
+      operationId: findInsumoByBarcode
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: barcode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Insumo matching the scanned barcode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInsumoResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No insumo registered with that barcode — the frontend never auto-creates one; only ADMIN completes the catalog entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/stock/insumos/{id}/restock:
+    patch:
+      summary: Increment an existing insumo's warehouse stock (ADMIN only, US-013/TK-060)
+      operationId: restockInsumo
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestockInsumoRequest'
+      responses:
+        '200':
+          description: Insumo restocked successfully (quantity added to existing warehouseStock)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestockInsumoResponse'
+        '400':
+          description: Quantity is missing, zero or negative
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Insumo not found, or storageLocationId does not exist / is not WAREHOUSE-type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/stock/insumos/{id}:
+    put:
+      summary: Edit an existing insumo's name / unitCost / barcode (ADMIN only, US-036/TK-130)
+      description: >
+        Partial update — only the fields present in the body change; absent fields are kept,
+        an explicit `null` clears `unitCost` / `barcode`. `unitOfMeasure` is immutable via
+        this route (any unknown key → 400). Changing `unitCost` affects only future
+        valorizations; historical StockMovement snapshots are unchanged.
+      operationId: updateInsumo
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInsumoRequest'
+      responses:
+        '200':
+          description: Insumo updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInsumoResponse'
+        '400':
+          description: Empty name, malformed unitCost/barcode, or an unknown / non-editable field
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Insumo not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Another insumo already uses that name or barcode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/locations:
+    get:
+      summary: List physical storage locations (US-016)
+      operationId: listStorageLocations
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of storage locations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListStorageLocationsResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a physical storage location (US-016)
+      operationId: createStorageLocation
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStorageLocationRequest'
+      responses:
+        '201':
+          description: Storage location created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageLocation'
+        '400':
+          description: Input validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/locations/{id}:
+    put:
+      summary: Update or (de)activate a storage location (US-016)
+      operationId: updateStorageLocation
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStorageLocationRequest'
+      responses:
+        '200':
+          description: Storage location updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageLocation'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Storage location not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: US-025 — cannot deactivate a location that still holds stock
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete a storage location (US-016)
+      operationId: deleteStorageLocation
+      tags:
+        - Stock & Warehouse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Storage location deleted
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: US-025 — cannot delete a location that still holds stock
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/consumption-reasons:
+    get:
+      summary: List consumption reasons (US-030 / ADR-004)
+      description: >-
+        By default returns only active reasons, visible to any authenticated user.
+        `includeInactive=true` additionally returns deactivated reasons and requires the ADMIN role.
+      operationId: listConsumptionReasons
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: includeInactive
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of consumption reasons
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListConsumptionReasonsResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: includeInactive=true requested by a non-ADMIN user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a consumption reason (US-030 / ADR-004)
+      operationId: createConsumptionReason
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConsumptionReasonRequest'
+      responses:
+        '201':
+          description: Consumption reason created (active by default)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionReason'
+        '400':
+          description: Input validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/consumption-reasons/{id}:
+    put:
+      summary: Rename and/or (de)activate a consumption reason (US-030 / ADR-004)
+      description: 'Deactivate-never-delete: a deactivated reason is preserved for historical `StockMovement` references and simply disappears from the active-only listing.'
+      operationId: updateConsumptionReason
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConsumptionReasonRequest'
+      responses:
+        '200':
+          description: Consumption reason updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionReason'
+        '400':
+          description: Input validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Consumption reason not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/remanentes-activos:
+    get:
+      summary: List active kitchen remanentes ordered by FEFO
+      operationId: listActiveRemanentes
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: location
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [KITCHEN_FRIDGE, KITCHEN_FREEZER, KITCHEN_PANTRY, KITCHEN_PREP]
+        - name: insumoId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filters to active remanentes of a single insumo, across all kitchen locations. Used by the warehouse extraction screen to warn about a possible duplicate opening before confirming a new extraction (US-021).
+      responses:
+        '200':
+          description: List of active remanentes ordered by earliest expiration date
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RemanenteItem'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/recipe-preparations:
+    get:
+      summary: List recipe preparations (US-027, ADR-003)
+      operationId: listRecipePreparations
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [OPEN, CLOSED, ABANDONED]
+            default: OPEN
+      responses:
+        '200':
+          description: Recipe preparations with the given status (default OPEN)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipePreparationSummary'
+
+  /api/v1/kitchen/recipe-preparations/{id}:
+    get:
+      summary: Recipe preparation detail with its linked remanentes (US-027)
+      operationId: getRecipePreparation
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Recipe preparation detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipePreparationDetail'
+        '404':
+          description: Preparation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/recipe-preparations/{id}/close:
+    post:
+      summary: Close and reconcile a recipe preparation (US-028)
+      description: >
+        Per linked remanente derives consumed = extracted − leftover − waste and,
+        in a single transaction, records CONSUMPTION_RECIPE / DISCARD_RECIPE_PREP,
+        relocates the leftover (kitchen area → TRANSFER_KITCHEN; pristine → warehouse
+        sub-sector → RETURN_TO_WAREHOUSE + WarehouseStock re-increment), materializes
+        the RecipePreparationItem and marks the preparation CLOSED.
+      operationId: closeRecipePreparation
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloseRecipePreparationRequest'
+      responses:
+        '200':
+          description: Preparation closed and reconciled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CloseRecipePreparationResponse'
+        '400':
+          description: Balance mismatch (leftover + waste exceeds extracted) or waste without reason
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Preparation or destination location not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Preparation is not OPEN (already closed or abandoned)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Return-to-warehouse rejected — remanente is not pristine
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/recipe-preparations/{id}/abandon:
+    post:
+      summary: Abandon a recipe preparation without reconciling (US-028)
+      description: >
+        Marks the preparation ABANDONED; linked remanentes stay ACTIVE and lose their
+        recipePreparationId (back to the FEFO pool). No waste is assumed.
+      operationId: abandonRecipePreparation
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                closedByOperatorId:
+                  type: string
+      responses:
+        '200':
+          description: Preparation abandoned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbandonRecipePreparationResponse'
+        '404':
+          description: Preparation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Preparation is not OPEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/remanentes/{id}/consume:
+    post:
+      summary: Record partial or total consumption of an active remanente (ADR-004 — reasonId required)
+      operationId: consumeRemanente
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumeRemanenteRequest'
+      responses:
+        '200':
+          description: Consumption recorded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumeRemanenteResponse'
+        '400':
+          description: Invalid quantity, missing reasonId, or reasonId references a deactivated ConsumptionReason (ADR-004)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Active remanente not found, or reasonId does not match any ConsumptionReason (ADR-004)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Quantity to consume exceeds remaining quantity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/remanentes/{id}/discard:
+    post:
+      summary: Discard active remanente due to waste or expiration
+      operationId: discardRemanente
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscardRemanenteRequest'
+      responses:
+        '200':
+          description: Remanente discarded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscardRemanenteResponse'
+        '400':
+          description: Missing or invalid discard reason (must be EXPIRATION, DAMAGED or QUALITY_FAIL — TK-118)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Active remanente not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/recipes/{id}/consume:
+    post:
+      summary: Consume stock in cascade FEFO based on recipe ingredients
+      operationId: consumeRecipe
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumeRecipeRequest'
+      responses:
+        '200':
+          description: Recipe consumption executed in FEFO cascade across all ingredients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumeRecipeResponse'
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Insufficient stock for one or more ingredients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/recipes/{id}/availability:
+    get:
+      summary: Preview required vs. available quantity per ingredient before confirming a recipe (US-007 v1.1.0)
+      operationId: getRecipeAvailability
+      tags:
+        - Kitchen Operations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: portions
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: Per-ingredient availability preview — read-only, mutates nothing (may still show isFullyAvailable false; the authoritative check is consumeRecipe's own 422)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeAvailabilityResponse'
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/recipes:
+    get:
+      summary: List all recipes, with ingredients (TK-069, modulo recipe independiente de TK-057)
+      operationId: listRecipes
+      tags:
+        - Recipes
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipeListItem'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a new recipe with its ingredients (ADMIN only, TK-069)
+      operationId: createRecipe
+      tags:
+        - Recipes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecipeRequest'
+      responses:
+        '201':
+          description: Recipe created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateRecipeResponse'
+        '400':
+          description: Invalid name/category/ingredients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: One or more ingredient insumoId references a non-existent insumo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/recipes/{id}:
+    put:
+      summary: Edit an existing recipe (ADMIN only, US-037/TK-131)
+      description: >
+        Partial update of name / category / description / ingredients. Absent fields are
+        kept; `description: null` clears it; `ingredients` replaces the whole composition.
+        Any unknown key -> 400. The composition cannot be edited once the recipe has a
+        CLOSED RecipePreparation (409) -- that would retroactively change preparation-waste
+        reports (US-029).
+      operationId: updateRecipe
+      tags:
+        - Recipes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRecipeRequest'
+      responses:
+        '200':
+          description: Recipe updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateRecipeResponse'
+        '400':
+          description: Invalid field, unknown key, or malformed quantity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Recipe not found, already deactivated, or an ingredient insumoId is unknown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: The recipe has a CLOSED preparation — its ingredient list is frozen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Soft-delete a recipe (ADMIN only, US-037/TK-131)
+      description: >
+        Marks the recipe isActive = false. It disappears from GET /recipes, the CATALOG
+        rescue ranking and per-recipe availability; historical RecipePreparation rows are
+        untouched (Recipe.preparations is onDelete Restrict — no physical delete).
+      operationId: deactivateRecipe
+      tags:
+        - Recipes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Recipe deactivated
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Recipe not found or already deactivated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/shift-reconciliation:
+    post:
+      summary: Process shift closing — compares physical counts vs theoretical stock, auto-discards variances
+      operationId: performShiftReconciliation
+      tags:
+        - Shift & Audit
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShiftReconciliationRequest'
+      responses:
+        '201':
+          description: Shift reconciliation processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShiftReconciliationResponse'
+        '400':
+          description: Invalid reconciliation payload, or a negative-variance line is missing reasonId / references a deactivated ConsumptionReason (ADR-004) — nothing in the batch is applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: A line's reasonId does not match any ConsumptionReason (ADR-004) — nothing in the batch is applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/kitchen/temperature-logs:
+    post:
+      summary: Record a manual temperature reading for a storage sector at shift start (US-033/TK-120)
+      operationId: recordTemperatureLog
+      tags:
+        - Shift & Audit
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTemperatureLogRequest'
+      responses:
+        '201':
+          description: >-
+            Temperature log recorded. Always 201 regardless of the reading — an
+            out-of-range value never blocks; it only sets isWithinSafeRange to false
+            for later audit visibility (explicit business decision).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemperatureLogResponse'
+        '400':
+          description: Invalid storageLocationId/unitType/temperatureCelsius format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: storageLocationId does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: List historical temperature readings for audit (ADMIN only, US-033/TK-120)
+      operationId: listTemperatureLogs
+      tags:
+        - Shift & Audit
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: storageLocationId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Temperature readings, most recent first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TemperatureLogResponse'
+        '401':
+          description: Missing or invalid Bearer JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/reports/waste:
+    get:
+      summary: Get consolidated waste report by date range (ADMIN role only)
+      operationId: getWasteReport
+      tags:
+        - Reports & Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Waste report items aggregated by reason
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WasteReportItem'
+        '400':
+          description: Missing or invalid startDate/endDate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/reports/rotation-metrics:
+    get:
+      summary: Get the average Remanente Rotation Time (TRR) over a date range (ADMIN role only, US-020)
+      operationId: getRotationMetrics
+      tags:
+        - Reports & Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Average TRR across all remanentes that reached a terminal state (EXHAUSTED or DISCARDED — the real Remanente.status enum; "CONSUMED" is aspirational-doc wording that doesn't match the implemented schema) in the range
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RotationMetricsResponse'
+        '400':
+          description: Missing or invalid startDate/endDate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/reports/preparation-waste:
+    get:
+      summary: Recipe-preparation waste report + real-vs-theoretical consumption (ADMIN role only, US-029)
+      description: >
+        Aggregates RecipePreparationItem from CLOSED preparations closed in the date
+        range: waste grouped by recipe → ingredient → reason (quantity, $ valorization
+        via Insumo.unitCost, % of extracted, and overThreshold vs.
+        SystemSettings.preparationWasteAlertPercent — no notification is sent, #12
+        deferred) and consumption grouped by recipe → ingredient (theoretical vs.
+        actual consumedQty, with the difference).
+      operationId: getPreparationWasteReport
+      tags:
+        - Reports & Analytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Preparation waste and consumption-vs-theoretical report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreparationWasteReportResponse'
+        '400':
+          description: Missing or invalid startDate/endDate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Authenticated user does not have the ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/settings/ai:
+    get:
+      summary: Get AI agent configuration
+      description: Returns the active AI configuration and enabled capabilities, masking sensitive credentials. Requires ADMIN role.
+      operationId: getAiConfiguration
+      tags:
+        - Settings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current AI configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiConfigurationResponse'
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update AI agent configuration
+      description: Updates provider, model, API key (encrypted at rest), temperature, and feature toggles. Requires ADMIN role.
+      operationId: updateAiConfiguration
+      tags:
+        - Settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAiConfigurationRequest'
+      responses:
+        '200':
+          description: Configuration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiConfigurationResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/settings/ai/test:
+    post:
+      summary: Test AI provider connectivity
+      description: Executes a diagnostics ping against the currently configured AI provider. Requires ADMIN role.
+      operationId: testAiConnection
+      tags:
+        - Settings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Diagnostics ping result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestAiConnectionResponse'
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/recipes/rescue-suggestions:
+    post:
+      summary: Generate dynamic anti-waste rescue recipes
+      description: Analyzes active remanentes in kitchen expiring within 48 hours and proposes structured recipes using exclusively available stock, with deterministic local heuristic fallback.
+      operationId: generateRescueRecipes
+      tags:
+        - Recipes
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Generation mode (CATALOG for zero data leakage, CREATIVE for AI)
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RescueSuggestionsRequest'
+      responses:
+
+        '200':
+          description: List of rescue recipe suggestions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescueSuggestionsResponse'
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    DecimalString:
+      type: string
+      pattern: '^\d+(\.\d{1,4})?$'
+      example: "2.0000"
+
+    AuthPinRequest:
+      type: object
+      required:
+        - userId
+        - pin
+      properties:
+        userId:
+          type: string
+          example: "usr-maria-2"
+        pin:
+          type: string
+          pattern: '^\d{4,6}$'
+          example: "1234"
+
+    AuthPinResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: >-
+            JWT firmado. Desde TK-121 (US-015 Escenario 2) su payload incluye
+            `permissions` (array de códigos como `stock:extract`) además de `role`.
+            Ese listado es **informativo, para que el cliente no ofrezca acciones que
+            fallarían**: la autorización real la resuelve el servidor en cada petición
+            contra el repositorio de roles, de modo que revocar un permiso surte efecto
+            de inmediato y no al expirar el token. Los tokens emitidos antes de TK-121
+            no traen el campo.
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            role:
+              type: string
+              enum: [KITCHEN_STAFF, ADMIN]
+
+    ForgotPinRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: "admin@restostock.com"
+
+    ForgotPinResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Si el correo coincide con un administrador registrado, se enviaron instrucciones de recuperación."
+
+    ResetPinRequest:
+      type: object
+      required:
+        - token
+        - newPin
+      properties:
+        token:
+          type: string
+          example: "a8f5c3b2e1d04f6789abcde..."
+        newPin:
+          type: string
+          pattern: '^\d{4,6}$'
+          example: "9876"
+
+    ResetPinResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "PIN de administrador actualizado exitosamente."
+
+    CreateUserRequest:
+      type: object
+      required:
+        - name
+        - role
+        - pin
+      properties:
+        name:
+          type: string
+          example: "Nuevo Operario"
+        role:
+          type: string
+          enum: [KITCHEN_STAFF, ADMIN]
+        pin:
+          type: string
+          pattern: '^\d{4,6}$'
+          example: "4321"
+
+    CreateUserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [KITCHEN_STAFF, ADMIN]
+        status:
+          type: string
+          enum: [ACTIVE, BLOCKED]
+
+    SetUserStatusRequest:
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          type: string
+          enum: [BLOCK, ACTIVATE]
+
+    SetUserStatusResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, BLOCKED]
+
+    RecordExtractionRequest:
+      type: object
+      required:
+        - insumoId
+        - quantity
+        - fromStorageLocationId
+      properties:
+        insumoId:
+          type: string
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+        fromStorageLocationId:
+          type: string
+          description: >-
+            US-025 — id of the WAREHOUSE-type, active StorageLocation the stock is
+            drawn from. The backend validates the balance of the
+            (insumoId, fromStorageLocationId) line only. 404 if it does not exist,
+            422 if the insumo has no stock line in that sector.
+        toStorageLocationId:
+          type: string
+          default: KITCHEN_FRIDGE
+          description: >-
+            US-026 — id of the KITCHEN-type, active StorageLocation the remanente
+            is placed in. Legacy literals (KITCHEN_FRIDGE / KITCHEN_PREP /
+            KITCHEN_LINE) are still accepted and resolved without a catalog FK.
+            404 if a non-legacy value does not resolve to an active KITCHEN area.
+        purpose:
+          type: string
+          enum: [KITCHEN_STOCK, RECIPE, DIRECT_DISCARD]
+          default: KITCHEN_STOCK
+          description: Propósito u origen de la extracción de bodega
+        reason:
+          type: string
+          description: Motivo o justificación descriptiva de la extracción
+        recipeId:
+          type: string
+          description: >-
+            US-027 — obligatorio cuando purpose == RECIPE (400 si falta). ID de la
+            receta que se va a preparar.
+        plannedPortions:
+          type: integer
+          minimum: 1
+          description: US-027 — porciones planificadas (modo RECIPE); default 1.
+        recipePreparationId:
+          type: string
+          description: >-
+            US-027 — id de una RecipePreparation OPEN de la misma receta a la que
+            añadir esta extracción; si se omite se abre una nueva. 404 si no
+            resuelve a una preparación abierta de esa receta.
+
+    RecipePreparationSummary:
+      type: object
+      description: US-027 / ADR-003 — cabecera de una tanda de preparación de receta.
+      properties:
+        id: { type: string }
+        recipeId: { type: string }
+        plannedPortions: { type: integer }
+        actualPortions: { type: integer, nullable: true }
+        status: { type: string, enum: [OPEN, CLOSED, ABANDONED] }
+        openedByOperatorId: { type: string, nullable: true }
+        openedAt: { type: string, format: date-time }
+        closedByOperatorId: { type: string, nullable: true }
+        closedAt: { type: string, format: date-time, nullable: true }
+        notes: { type: string, nullable: true }
+
+    RecipePreparationDetail:
+      allOf:
+        - $ref: '#/components/schemas/RecipePreparationSummary'
+        - type: object
+          properties:
+            remanentes:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string }
+                  insumoId: { type: string }
+                  insumoName: { type: string }
+                  currentQuantity: { $ref: '#/components/schemas/DecimalString' }
+                  initialQuantity: { $ref: '#/components/schemas/DecimalString' }
+                  storageLocationId: { type: string, nullable: true }
+                  storageLocationName: { type: string }
+                  isPristine:
+                    type: boolean
+                    description: >-
+                      US-028 — true mientras no se haya consumido nada de este remanente.
+                      Habilita "devolver a bodega" al cerrar la preparación.
+                  status: { type: string }
+
+    CloseRecipePreparationRequest:
+      type: object
+      description: US-028 / ADR-003 §3.3 — cierre y conciliación de una preparación.
+      required: [actualPortions]
+      properties:
+        actualPortions: { type: integer, minimum: 0 }
+        closedByOperatorId: { type: string }
+        items:
+          type: array
+          description: >
+            Una entrada por ingrediente con sobrante o merma. Un ingrediente omitido
+            se concilia como consumo total (sobrante = 0, merma = 0).
+          items:
+            type: object
+            required: [insumoId]
+            properties:
+              insumoId: { type: string }
+              leftoverQty: { $ref: '#/components/schemas/DecimalString' }
+              leftoverLocationId:
+                type: string
+                description: >
+                  StorageLocation destino del sobrante. Un sub-sector de bodega
+                  (type = WAREHOUSE) solo es admisible si el remanente está intacto
+                  (isPristine) y markedUnopened = true.
+              markedUnopened: { type: boolean }
+              wastedQty: { $ref: '#/components/schemas/DecimalString' }
+              wasteReason:
+                type: string
+                description: Obligatorio cuando wastedQty > 0.
+
+    CloseRecipePreparationResponse:
+      type: object
+      properties:
+        id: { type: string }
+        recipeId: { type: string }
+        status: { type: string, enum: [CLOSED] }
+        actualPortions: { type: integer }
+        closedByOperatorId: { type: string, nullable: true }
+        closedAt: { type: string, format: date-time }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              insumoId: { type: string }
+              extractedQty: { $ref: '#/components/schemas/DecimalString' }
+              consumedQty: { $ref: '#/components/schemas/DecimalString' }
+              leftoverQty: { $ref: '#/components/schemas/DecimalString' }
+              leftoverLocationId: { type: string, nullable: true }
+              wastedQty: { $ref: '#/components/schemas/DecimalString' }
+              wasteReason: { type: string, nullable: true }
+
+    AbandonRecipePreparationResponse:
+      type: object
+      properties:
+        id: { type: string }
+        status: { type: string, enum: [ABANDONED] }
+        unlinkedRemanentes: { type: integer }
+        closedAt: { type: string, format: date-time }
+
+    RecordExtractionResponse:
+      type: object
+      properties:
+        recipePreparationId:
+          type: string
+          description: US-027 — id de la preparación de receta abierta/reutilizada (solo modo RECIPE).
+        remanenteId:
+          type: string
+          nullable: true
+          description: >-
+            null for purpose=DIRECT_DISCARD — a direct discard debits warehouse
+            stock without creating a kitchen remanente (AUDIT-DEV-006 F-9).
+        insumoId:
+          type: string
+        insumoName:
+          type: string
+        quantityExtracted:
+          $ref: '#/components/schemas/DecimalString'
+        fromStorageLocationId:
+          type: string
+          description: US-025 — sub-sector the stock was drawn from.
+        remainingSectorStock:
+          $ref: '#/components/schemas/DecimalString'
+        remainingWarehouseStock:
+          $ref: '#/components/schemas/DecimalString'
+        location:
+          type: string
+        expirationDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+
+    StockMovementHistoryItem:
+      type: object
+      properties:
+        id:
+          type: string
+        insumoId:
+          type: string
+        insumoName:
+          type: string
+        type:
+          type: string
+          example: "DISCARD_EXPIRATION"
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+        fromLoc:
+          type: string
+          description: 'AUDIT-DEV-006 F-7: nombre ACTUAL del sub-sector de origen si `fromStorageLocationId` aún resuelve (join); si no, el snapshot histórico guardado.'
+        fromStorageLocationId:
+          type: string
+          nullable: true
+          description: 'AUDIT-DEV-006 F-7 / TK-101: id del sub-sector de bodega de origen. `null` en movimientos sin sub-sector de origen (RESTOCK, CONSUMPTION, SHIFT_RECONCILIATION_VARIANCE) o históricos previos a esta migración.'
+        toLoc:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    StockByLocationEntry:
+      type: object
+      description: US-025 — quantity of one insumo held in one warehouse sub-sector.
+      properties:
+        storageLocationId:
+          type: string
+        storageLocationName:
+          type: string
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+
+    CreateInsumoRequest:
+      type: object
+      required:
+        - name
+        - unitOfMeasure
+        - storageLocationId
+      properties:
+        name:
+          type: string
+          example: "Harina 000"
+        unitOfMeasure:
+          type: string
+          enum: [KG, L, UNITS]
+          example: "KG"
+        storageLocationId:
+          type: string
+          description: >-
+            US-025 — required. Id of the WAREHOUSE-type, active StorageLocation
+            where the initial stock is deposited. 400 if missing, 404 if it does
+            not exist or is not WAREHOUSE-type.
+          example: "loc-seed-dry"
+        initialWarehouseStock:
+          $ref: '#/components/schemas/DecimalString'
+        unitCost:
+          $ref: '#/components/schemas/DecimalString'
+          description: Optional cost per purchase unit of unitOfMeasure (e.g. cost per KG), used to valuate waste reports in currency (US-019). Nullable — legacy insumos may have no cost recorded. Unlike other DecimalString fields (up to 4 decimals), the HTTP layer enforces at most 2 decimals and 10 integer digits here to match the Decimal(12,2) column exactly.
+        barcode:
+          type: string
+          maxLength: 64
+          description: Optional barcode (UPC/EAN), captured via the device's built-in camera or manual entry (US-032/TK-119). Unique when present — 409 if already registered on another insumo.
+          example: "7791234567890"
+
+    CreateInsumoResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        unitOfMeasure:
+          type: string
+          enum: [KG, L, UNITS]
+        warehouseStock:
+          $ref: '#/components/schemas/DecimalString'
+        stockByLocation:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockByLocationEntry'
+        unitCost:
+          $ref: '#/components/schemas/DecimalString'
+          description: Nullable — absent when the insumo has no cost recorded yet. At most 2 decimals (see CreateInsumoRequest.unitCost).
+        barcode:
+          type: string
+          nullable: true
+          description: Nullable — absent when the insumo has no barcode captured yet (US-032/TK-119).
+          example: "7791234567890"
+
+    UpdateInsumoRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+          example: "Harina 000"
+        unitCost:
+          type: string
+          nullable: true
+          pattern: '^\d{1,10}(\.\d{1,2})?$'
+          description: Monto en la moneda del sistema, 2 decimales. `null` clears it.
+          example: "820.00"
+        barcode:
+          type: string
+          nullable: true
+          maxLength: 64
+          description: UPC/EAN. `null` clears it.
+          example: "7791234567890"
+
+    RestockInsumoRequest:
+      type: object
+      required:
+        - quantity
+        - storageLocationId
+      properties:
+        quantity:
+          type: number
+          exclusiveMinimum: 0
+          example: 20
+        storageLocationId:
+          type: string
+          description: >-
+            US-025 — required. WAREHOUSE-type, active StorageLocation to add the
+            received quantity to; the (insumo, sector) line is created if absent.
+          example: "loc-seed-freezer"
+
+    RestockInsumoResponse:
+      type: object
+      properties:
+        insumoId:
+          type: string
+        insumoName:
+          type: string
+        storageLocationId:
+          type: string
+        quantityAdded:
+          $ref: '#/components/schemas/DecimalString'
+        newSectorStock:
+          $ref: '#/components/schemas/DecimalString'
+        newWarehouseStock:
+          $ref: '#/components/schemas/DecimalString'
+
+    StorageLocation:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: "Heladera de Carnes"
+        type:
+          type: string
+          enum: [WAREHOUSE, KITCHEN]
+        description:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+
+    CreateStorageLocationRequest:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          minLength: 2
+        type:
+          type: string
+          enum: [WAREHOUSE, KITCHEN]
+        description:
+          type: string
+
+    UpdateStorageLocationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+        type:
+          type: string
+          enum: [WAREHOUSE, KITCHEN]
+        description:
+          type: string
+        isActive:
+          type: boolean
+
+    ListStorageLocationsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/StorageLocation'
+
+    ConsumptionReason:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+          example: "Preparación de plato"
+        isActive:
+          type: boolean
+
+    CreateConsumptionReasonRequest:
+      type: object
+      required:
+        - label
+      properties:
+        label:
+          type: string
+          minLength: 1
+
+    UpdateConsumptionReasonRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          minLength: 1
+        isActive:
+          type: boolean
+
+    ListConsumptionReasonsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ConsumptionReason'
+
+    RemanenteItem:
+      type: object
+      properties:
+        id:
+          type: string
+        insumoId:
+          type: string
+        insumoName:
+          type: string
+        unitOfMeasure:
+          type: string
+        currentQuantity:
+          $ref: '#/components/schemas/DecimalString'
+        initialQuantity:
+          $ref: '#/components/schemas/DecimalString'
+        location:
+          type: string
+          description: US-026 — display cache (kitchen area name or legacy literal).
+        storageLocationId:
+          type: string
+          nullable: true
+          description: US-026 — FK to the KITCHEN-type StorageLocation (null for legacy remanentes).
+        storageLocationName:
+          type: string
+          description: US-026 — resolved area name; falls back to `location`.
+        expirationDate:
+          type: string
+          format: date-time
+        hoursRemaining:
+          type: integer
+        isCriticalAlert:
+          type: boolean
+        status:
+          type: string
+          enum: [ACTIVE, CONSUMED, DISCARDED]
+
+    ConsumeRemanenteRequest:
+      type: object
+      required:
+        - quantity
+        - reasonId
+      properties:
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+        reasonId:
+          type: string
+          description: 'ADR-004 / US-030: id of an active ConsumptionReason. Required — every consumption must state a reason.'
+        notes:
+          type: string
+          description: Free text, always optional — complements but never replaces the structured reason.
+
+    ConsumeRemanenteResponse:
+      type: object
+      properties:
+        remanenteId:
+          type: string
+        consumedQuantity:
+          $ref: '#/components/schemas/DecimalString'
+        remainingQuantity:
+          $ref: '#/components/schemas/DecimalString'
+        status:
+          type: string
+          enum: [ACTIVE, CONSUMED, DISCARDED]
+        isExhausted:
+          type: boolean
+
+    DiscardRemanenteRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          # TK-118: antes solo `type: string` sin enum — el backend aceptaba cualquier
+          # texto no vacío. El catálogo de motivos de descarte es fijo (no administrable,
+          # a diferencia de ConsumptionReason/ADR-004); se documenta y valida ahora.
+          enum: [EXPIRATION, DAMAGED, QUALITY_FAIL]
+          example: "EXPIRATION"
+
+    DiscardRemanenteResponse:
+      type: object
+      properties:
+        remanenteId:
+          type: string
+        discardedQuantity:
+          $ref: '#/components/schemas/DecimalString'
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, CONSUMED, DISCARDED]
+
+    ConsumeRecipeRequest:
+      type: object
+      properties:
+        portions:
+          type: integer
+          minimum: 1
+          default: 1
+          example: 2
+
+    ConsumeRecipeResponse:
+      type: object
+      properties:
+        recipeId:
+          type: string
+        recipeName:
+          type: string
+        portions:
+          type: integer
+        ingredientsConsumed:
+          type: array
+          items:
+            type: object
+            properties:
+              insumoId:
+                type: string
+              totalConsumed:
+                $ref: '#/components/schemas/DecimalString'
+              remanentesAffectedCount:
+                type: integer
+
+    RecipeAvailabilityResponse:
+      type: object
+      properties:
+        recipeId:
+          type: string
+        recipeName:
+          type: string
+        portions:
+          type: integer
+        ingredients:
+          type: array
+          items:
+            type: object
+            properties:
+              insumoId:
+                type: string
+              insumoName:
+                type: string
+              unitOfMeasure:
+                type: string
+              requiredQuantity:
+                $ref: '#/components/schemas/DecimalString'
+              availableQuantity:
+                $ref: '#/components/schemas/DecimalString'
+              isSufficient:
+                type: boolean
+        isFullyAvailable:
+          type: boolean
+
+    CreateRecipeIngredient:
+      type: object
+      required:
+        - insumoId
+        - quantity
+      properties:
+        insumoId:
+          type: string
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+
+    UpdateRecipeRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        category:
+          type: string
+          minLength: 1
+          maxLength: 60
+        description:
+          type: string
+          nullable: true
+          maxLength: 500
+        ingredients:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/CreateRecipeIngredient'
+
+    CreateRecipeRequest:
+      type: object
+      required:
+        - name
+        - category
+        - ingredients
+      properties:
+        name:
+          type: string
+          example: "Pizza Margarita"
+        category:
+          type: string
+          example: "Pizzas"
+        description:
+          type: string
+        ingredients:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CreateRecipeIngredient'
+
+    CreateRecipeResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        recipeId:
+          type: string
+
+    RecipeListItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateRecipeIngredient'
+
+    ShiftReconciliationRequest:
+      type: object
+      required:
+        - operatorId
+        - items
+      properties:
+        operatorId:
+          type: string
+        notes:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - remanenteId
+              - physicalQuantity
+            properties:
+              remanenteId:
+                type: string
+              physicalQuantity:
+                $ref: '#/components/schemas/DecimalString'
+              reasonId:
+                type: string
+                description: 'ADR-004 / US-008: id of an active ConsumptionReason. Required only when physicalQuantity < the remanente''s current theoretical quantity (negative variance) — a positive variance (surplus) needs none.'
+
+    ShiftReconciliationResponse:
+      type: object
+      properties:
+        reconciliationId:
+          type: string
+        autoDiscardedCount:
+          type: integer
+        processedItemsCount:
+          type: integer
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              remanenteId:
+                type: string
+              insumoId:
+                type: string
+              physicalQuantity:
+                $ref: '#/components/schemas/DecimalString'
+              theoreticalQuantity:
+                $ref: '#/components/schemas/DecimalString'
+              variance:
+                $ref: '#/components/schemas/DecimalString'
+
+    CreateTemperatureLogRequest:
+      type: object
+      required:
+        - storageLocationId
+        - unitType
+        - temperatureCelsius
+      properties:
+        storageLocationId:
+          type: string
+          example: "loc-seed-fridge-a"
+        unitType:
+          type: string
+          enum: [REFRIGERATOR, FREEZER]
+          description: Determines the safe-range threshold applied in isWithinSafeRange (FDA Food Code — REFRIGERATOR <= 4.00°C, FREEZER <= -18.00°C).
+        temperatureCelsius:
+          type: string
+          description: Decimal string, up to 2 decimals, may be negative (e.g. freezer readings).
+          example: "3.50"
+
+    TemperatureLogResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        storageLocationId:
+          type: string
+        unitType:
+          type: string
+          enum: [REFRIGERATOR, FREEZER]
+        temperatureCelsius:
+          type: string
+        isWithinSafeRange:
+          type: boolean
+          description: Derived in the domain layer from temperatureCelsius/unitType — never persisted, never blocks the write when false.
+        recordedByUserId:
+          type: string
+        recordedAt:
+          type: string
+          format: date-time
+
+    WasteReportItem:
+      type: object
+      properties:
+        insumoId:
+          type: string
+        insumoName:
+          type: string
+        unitOfMeasure:
+          type: string
+        totalDiscardedQuantity:
+          $ref: '#/components/schemas/DecimalString'
+        totalDiscardedCost:
+          $ref: '#/components/schemas/DecimalString'
+          description: totalDiscardedQuantity × insumo.unitCost. Null when the insumo has no unitCost recorded (US-019) — the frontend must render "Sin costo registrado" instead of "$0", never conflating the two.
+        reason:
+          type: string
+
+    RotationMetricsResponse:
+      type: object
+      properties:
+        averageTrrHours:
+          type: number
+          nullable: true
+          description: Average elapsed hours between Remanente.createdAt and its terminalAt timestamp (status EXHAUSTED or DISCARDED — the real enum), across every remanente that reached a terminal state within the requested range (US-020 — discards count toward the average, per explicit product decision). Null when sampleSize is 0.
+          example: 48.3
+        targetTrrHours:
+          type: number
+          description: The product's TRR target, mirrored from the PRD North Star metric (72h) for the frontend to render a pass/fail visual state without hardcoding the threshold.
+          example: 72
+        sampleSize:
+          type: integer
+          description: Number of remanentes included in the average. 0 means no remanente reached a terminal state in the range — the frontend must render an empty state, not "0h" (which would misleadingly read as a perfect score).
+          example: 134
+
+    PreparationWasteLine:
+      type: object
+      description: US-029 — one recipe → ingredient → wasteReason group.
+      properties:
+        recipeId: { type: string }
+        recipeName: { type: string }
+        insumoId: { type: string }
+        insumoName: { type: string }
+        unitOfMeasure: { type: string }
+        wasteReason: { type: string }
+        totalWastedQty: { $ref: '#/components/schemas/DecimalString' }
+        totalExtractedQty: { $ref: '#/components/schemas/DecimalString' }
+        wastePercent:
+          type: string
+          description: totalWastedQty / totalExtractedQty × 100, 2 decimals.
+          example: '12.00'
+        wastedCost:
+          type: string
+          nullable: true
+          description: totalWastedQty × insumo.unitCost. Null (not "0.00") when the insumo has no unitCost recorded (US-019).
+        overThreshold:
+          type: boolean
+          description: wastePercent > SystemSettings.preparationWasteAlertPercent. No notification is sent for this (#12, deferred) — display-only.
+
+    RecipeConsumptionLine:
+      type: object
+      description: US-029 Escenario 2 — real vs. theoretical consumption for one recipe → ingredient.
+      properties:
+        recipeId: { type: string }
+        recipeName: { type: string }
+        insumoId: { type: string }
+        insumoName: { type: string }
+        unitOfMeasure: { type: string }
+        theoreticalQty:
+          $ref: '#/components/schemas/DecimalString'
+        actualQty:
+          $ref: '#/components/schemas/DecimalString'
+        differenceQty:
+          type: string
+          description: actualQty − theoreticalQty. Positive means the recipe systematically consumes more than specified.
+
+    PreparationWasteReportResponse:
+      type: object
+      properties:
+        wasteByReason:
+          type: array
+          items:
+            $ref: '#/components/schemas/PreparationWasteLine'
+        consumptionVsTheoretical:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeConsumptionLine'
+        wasteAlertThresholdPercent:
+          type: integer
+          description: SystemSettings.preparationWasteAlertPercent at the time of the query.
+
+    ErrorResponse:
+      description: RFC 7807 Problem Details format (Guard 19)
+      type: object
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+      properties:
+        type:
+          type: string
+          format: uri
+          example: "https://restostock.com/errors/validation-error"
+        title:
+          type: string
+          example: "ValidationError"
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+        instance:
+          type: string
+          example: "/api/v1/stock/extraction"
+
+    AiConfigurationResponse:
+      type: object
+      required:
+        - id
+        - provider
+        - modelName
+        - temperature
+        - hasApiKey
+        - rescueRecipesOn
+        - updatedAt
+      properties:
+        id:
+          type: string
+          example: "default"
+        provider:
+          type: string
+          enum: [GEMINI, OPENAI_COMPATIBLE, HEURISTIC]
+          example: "GEMINI"
+        modelName:
+          type: string
+          example: "gemini-2.5-flash"
+        endpointUrl:
+          type: string
+          nullable: true
+          example: "https://generativelanguage.googleapis.com"
+        temperature:
+          type: number
+          example: 0.0
+        hasApiKey:
+          type: boolean
+          example: true
+        rescueRecipesOn:
+          type: boolean
+          description: Único módulo cognitivo implementado (TK-129 retiró los toggles inertes replenishmentOn/anomalyAuditOn).
+          example: true
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpdateAiConfigurationRequest:
+      type: object
+      required:
+        - provider
+        - modelName
+        - temperature
+      properties:
+        provider:
+          type: string
+          enum: [GEMINI, OPENAI_COMPATIBLE, HEURISTIC]
+          example: "GEMINI"
+        modelName:
+          type: string
+          example: "gemini-2.5-flash"
+        apiKey:
+          type: string
+          description: Plaintext API key to be encrypted at rest (optional if already configured)
+          nullable: true
+        endpointUrl:
+          type: string
+          nullable: true
+          example: "https://api.openai.com/v1"
+        temperature:
+          type: number
+          minimum: 0.0
+          maximum: 0.2
+          example: 0.0
+        rescueRecipesOn:
+          type: boolean
+          default: true
+
+    TestAiConnectionResponse:
+      type: object
+      required:
+        - success
+        - message
+        - latencyMs
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Connection successful"
+        latencyMs:
+          type: integer
+          example: 215
+
+    RescueIngredientItem:
+      type: object
+      required:
+        - insumoId
+        - insumoName
+        - quantity
+        - unit
+        - isAtRisk
+      properties:
+        insumoId:
+          type: string
+          format: uuid
+        insumoName:
+          type: string
+          example: "Queso Mozzarella"
+        quantity:
+          $ref: '#/components/schemas/DecimalString'
+        unit:
+          type: string
+          example: "KG"
+        isAtRisk:
+          type: boolean
+          example: true
+
+    RescueRecipeProposal:
+      type: object
+      required:
+        - name
+        - description
+        - category
+        - estimatedPortions
+        - ingredients
+        - preventedWasteCost
+      properties:
+        name:
+          type: string
+          example: "Sopa Crema de Vegetales y Queso"
+        description:
+          type: string
+          example: "Aprovecha crema y verduras próximas a caducar"
+        category:
+          type: string
+          example: "ENTRANTE"
+        estimatedPortions:
+          type: integer
+          example: 8
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RescueIngredientItem'
+        preventedWasteCost:
+          type: string
+          nullable: true
+          description: >
+            Valor monetario del stock en riesgo que la receta aprovecharía
+            (suma de unitCost x cantidad sobre los ingredientes isAtRisk,
+            2 decimales). `null` si algún ingrediente en riesgo no tiene
+            unitCost registrado (US-035 Escenario 5/6, AUDIT-DEV-007 F-1).
+          example: "42.50"
+
+    RescueSuggestionsRequest:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [CATALOG, CREATIVE]
+          default: CATALOG
+          description: CATALOG uses only local recipes (zero external AI network calls, 100% data privacy). CREATIVE queries AI with anonymized ingredients.
+
+    RescueSuggestionsResponse:
+      type: object
+      required:
+        - source
+        - proposals
+      properties:
+        source:
+          type: string
+          enum: [CATALOG, GEMINI, OPENAI_COMPATIBLE, HEURISTIC]
+          example: "CATALOG"
+        proposals:
+          type: array
+          items:
+            $ref: '#/components/schemas/RescueRecipeProposal'
+
+

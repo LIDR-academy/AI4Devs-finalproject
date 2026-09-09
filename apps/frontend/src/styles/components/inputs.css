@@ -1,0 +1,49 @@
+.input-touch {
+  min-height: 48px;
+  padding: 12px 16px;
+  border-radius: 0;
+  background-color: var(--bg-root);
+  border: 1px solid var(--rule);
+  color: var(--text-primary);
+  font-size: 1rem;
+  width: 100%;
+  outline: none;
+  transition: border-color var(--duration-base) var(--ease-standard);
+}
+
+.input-touch:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* TK-095-FE WS-2 #5/#6: los formularios de /ajustes ya no se centran ni se
+   encogen (ver `.flex-column`), pero un campo único no debe estirarse a todo el
+   ancho del `<main>`. Los acota a un ancho legible, alineados a la izquierda. */
+.settings-form {
+  max-width: 680px;
+}
+
+.search-input-wrapper {
+  margin-bottom: 20px;
+  position: relative;
+  max-width: 400px;
+}
+
+.search-icon-left {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+}
+
+.input-with-icon {
+  padding-left: 38px;
+}

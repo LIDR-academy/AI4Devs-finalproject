@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RestoStock - Ingreso (Turno Noche)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@900&amp;family=IBM+Plex+Mono:wght@400;700&amp;family=IBM+Plex+Sans:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "success-night": "#7cb36e",
+                "surface-container-high": "#e7e8ea",
+                "on-primary": "#ffffff",
+                "surface-container-low": "#f3f3f5",
+                "primary-container": "#2e5f76",
+                "surface-variant": "#e2e2e4",
+                "neutral-day": "#efe8d8",
+                "on-tertiary": "#ffffff",
+                "on-primary-fixed-variant": "#174c62",
+                "on-surface": "#1a1c1d",
+                "on-secondary-fixed": "#211b0f",
+                "primary-fixed-dim": "#9dcde8",
+                "surface-container": "#edeef0",
+                "error": "#ba1a1a",
+                "surface": "#f9f9fb",
+                "on-tertiary-fixed": "#002203",
+                "on-background": "#1a1c1d",
+                "ink-dark": "#18140f",
+                "surface-container-highest": "#e2e2e4",
+                "on-error": "#ffffff",
+                "danger-night": "#e1573a",
+                "danger-day": "#b43a24",
+                "card-night": "#1f251f",
+                "on-surface-variant": "#41484c",
+                "on-tertiary-fixed-variant": "#245022",
+                "inverse-on-surface": "#f0f1f2",
+                "outline-variant": "#c1c7cd",
+                "secondary-fixed": "#eee1cd",
+                "on-secondary-fixed-variant": "#4e4637",
+                "on-secondary-container": "#6c6353",
+                "inverse-surface": "#2e3132",
+                "secondary-fixed-dim": "#d1c5b2",
+                "secondary-night": "#9aa394",
+                "tertiary-container": "#376434",
+                "on-primary-container": "#a8d8f2",
+                "warning-night": "#e6be55",
+                "error-container": "#ffdad6",
+                "paper-bright": "#fbf8ef",
+                "surface-tint": "#33647b",
+                "tertiary": "#204c1e",
+                "surface-dim": "#d9dadc",
+                "primary-night": "#6faac7",
+                "surface-bright": "#f9f9fb",
+                "secondary": "#665d4e",
+                "warning-day": "#8a6414",
+                "outline": "#71787d",
+                "on-primary-fixed": "#001e2b",
+                "neutral-night": "#171c18",
+                "on-secondary": "#ffffff",
+                "primary-fixed": "#c1e8ff",
+                "background": "#f9f9fb",
+                "card-day": "#f7f2e6",
+                "secondary-container": "#eee1cd",
+                "tertiary-fixed": "#bcf0b2",
+                "success-day": "#3e6b3a",
+                "tertiary-night": "#7cb36e",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-container": "#acdfa2",
+                "tertiary-fixed-dim": "#a1d398",
+                "on-error-container": "#93000a",
+                "inverse-primary": "#9dcde8",
+                "primary": "#10475d"
+              },
+              "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+              },
+              "spacing": {
+                "action-target-lg": "72px",
+                "touch-target-min": "48px",
+                "sm": "8px",
+                "lg": "24px",
+                "md": "16px",
+                "sidebar-width": "88px"
+              },
+              "fontFamily": {
+                "h1": [
+                  "Big Shoulders Display"
+                ],
+                "h2": [
+                  "Big Shoulders Display"
+                ],
+                "label-sm": [
+                  "IBM Plex Sans"
+                ],
+                "body-md": [
+                  "IBM Plex Sans"
+                ],
+                "data-mono": [
+                  "IBM Plex Mono"
+                ],
+                "h1-mobile": [
+                  "Big Shoulders Display"
+                ]
+              },
+              "fontSize": {
+                "h1": [
+                  "2.25rem",
+                  {
+                    "lineHeight": "1.1",
+                    "fontWeight": "900"
+                  }
+                ],
+                "h2": [
+                  "1.5rem",
+                  {
+                    "lineHeight": "1.2",
+                    "fontWeight": "900"
+                  }
+                ],
+                "label-sm": [
+                  "0.875rem",
+                  {
+                    "lineHeight": "1",
+                    "fontWeight": "600"
+                  }
+                ],
+                "body-md": [
+                  "1rem",
+                  {
+                    "lineHeight": "1.5",
+                    "fontWeight": "500"
+                  }
+                ],
+                "data-mono": [
+                  "1rem",
+                  {
+                    "lineHeight": "1.4",
+                    "fontWeight": "400"
+                  }
+                ],
+                "h1-mobile": [
+                  "1.75rem",
+                  {
+                    "lineHeight": "1.1",
+                    "fontWeight": "900"
+                  }
+                ]
+              }
+            },
+          },
+        }
+      </script>
+<style>
+        .rounded-none { border-radius: 0 !important; }
+      </style>
+</head>
+<body class="bg-[#171c18] text-[#f5f3e9] h-screen w-screen flex flex-col font-body-md overflow-hidden relative">
+<!-- Background Graphic Element -->
+<div class="absolute inset-0 opacity-10 pointer-events-none flex items-center justify-center z-0" style="background-image: repeating-linear-gradient(45deg, #171c18 0, #171c18 2px, transparent 2px, transparent 10px);">
+</div>
+<!-- Header -->
+<header class="flex justify-between items-center px-lg h-[88px] w-full border-b-[1px] border-[#efe8d8] bg-[#1a1f1b] flex-shrink-0 relative z-20">
+<div class="flex items-center gap-md">
+<span class="font-h1 text-h1 uppercase tracking-tighter text-[#f5f3e9]">RESTOSTOCK</span>
+<div class="h-8 w-0.5 bg-[#9e9c93] mx-sm"></div>
+<span class="font-h2 text-h2 uppercase tracking-tighter text-[#9e9c93] flex items-center gap-2">
+                SISTEMA TÁCTIL DE INVENTARIO FEFO
+            </span>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-data-mono text-data-mono font-bold text-[#9e9c93] mr-4">14:32:05</span>
+<button class="h-touch-target-min px-md border-2 border-transparent bg-transparent text-[#9e9c93] font-label-sm text-label-sm uppercase rounded-none hover:bg-neutral-night transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined">light_mode</span>
+                Día
+            </button>
+<button class="h-touch-target-min px-md border-[1px] border-[#efe8d8] bg-[#1a1f1b] text-[#f5f3e9] font-label-sm text-label-sm uppercase rounded-none transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined">dark_mode</span>
+                Noche
+            </button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow flex flex-col items-center justify-center p-lg relative z-10">
+<!-- Authentication Card -->
+<div class="bg-[#1a1f1b] border-[1px] border-[#efe8d8] border-t-4 border-t-primary-night p-[48px] w-full max-w-[560px] relative z-10 rounded-none flex flex-col gap-lg shadow-[8px_8px_0px_0px_#171c18]">
+<div class="text-center mb-sm"><div class="flex flex-col items-center justify-center gap-2 mb-sm"><div class="w-12 h-12 rounded-full bg-primary-night flex items-center justify-center mb-2"><span class="material-symbols-outlined text-ink-dark">lock</span></div><h2 class="font-h2 text-h2 text-[#f5f3e9] uppercase font-bold">ACCESO TÁCTIL DE OPERARIOS</h2><p class="font-body-md text-body-md text-[#9e9c93]">Ingrese su ID de operario y su PIN de seguridad</p></div></div>
+<!-- Operator ID Input -->
+<div class="flex flex-col gap-sm">
+<label class="font-label-sm text-label-sm text-[#9e9c93] uppercase tracking-wider font-bold">ID de Operario:</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-[#9e9c93]">person</span>
+<input class="w-full h-touch-target-min bg-transparent border-[1px] border-[#efe8d8] pl-10 pr-sm font-data-mono text-data-mono font-bold text-[#f5f3e9] rounded-none focus:outline-none focus:border-primary-night focus:ring-1 focus:ring-primary-night placeholder:text-[#9e9c93]" placeholder="ej. bootstrap-admin" readonly="" type="text" value="bootstrap-admin"/>
+</div>
+<div class="flex flex-wrap gap-2 mt-2">
+<button class="h-8 px-3 border border-[#efe8d8] bg-transparent text-[#f5f3e9] font-label-sm text-[12px] uppercase hover:bg-neutral-night">CHEF_EJECUTIVO</button>
+<button class="h-8 px-3 border border-[#efe8d8] bg-transparent text-[#f5f3e9] font-label-sm text-[12px] uppercase hover:bg-neutral-night">LINEA_COCINA</button>
+<button class="h-8 px-3 border border-[#efe8d8] bg-transparent text-[#f5f3e9] font-label-sm text-[12px] uppercase hover:bg-neutral-night">BODEGA</button>
+</div>
+</div>
+<!-- PIN Display -->
+<div class="flex flex-col gap-sm items-center mt-2 mb-2">
+<div class="flex gap-6 border-[1px] border-[#efe8d8] px-8 py-4 bg-transparent rounded-none">
+<div class="text-[#f5f3e9] text-2xl leading-none">●</div>
+<div class="text-[#f5f3e9] text-2xl leading-none">●</div>
+<div class="text-[#f5f3e9] text-2xl leading-none">●</div>
+<div class="text-[#f5f3e9] text-2xl leading-none">●</div>
+</div>
+</div>
+<!-- Notification Banner -->
+<div class="border-[1px] border-danger-day bg-[#2a1d1b] p-3 flex items-start gap-3 rounded-none mb-2">
+<span class="material-symbols-outlined text-danger-day shrink-0">info</span>
+<span class="font-body-md text-sm text-[#f5f3e9]">Sesión cerrada por inactividad táctil (15 minutos sin interacción).</span>
+</div>
+<!-- PinPad -->
+<div class="grid grid-cols-3 gap-md mx-auto w-fit">
+<!-- Row 1 -->
+<button class="w-[64px] h-[64px] bg-transparent border-[1px] border-[#efe8d8] font-data-mono text-[24px] font-bold text-[#f5f3e9] rounded-none hover:bg-neutral-night active:bg-[#2a2a2a] transition-colors flex items-center justify-center">1</button>
+<button class="w-[64px] h-[64px] bg-transparent border-[1px] border-[#efe8d8] font-data-mono text-[24px] font-bold text-[#f5f3e9] rounded-none hover:bg-neutral-night active:bg-[#2a2a2a] transition-colors flex items-center justify-center">2</button>
+<button class="w-[64px] h-[64px] bg-transparent border-[1px] border-[#efe8d8] font-data-mono text-[24px] font-bold text-[#f5f3e9] rounded-none hover:bg-neutral-night active:bg-[#2a2a2a] transition-colors flex items-center justify-center">3</button>
+<!-- Row 2 -->
+<button class="w-[64px] h-[64px] bg-transparent border-[1px] border-[#efe8d8] font-data-mono text-[24px] font-bold text-[#f5f3e9] rounded-none hover:bg-neutral-night active:bg-[#2a2a2a] transition-colors flex items-center justify-center">4</button>
+<button class="w-[64px] h-[64px] bg-transparent border-[1px] border-[#efe8d8] font-data-mono text-[24px] font-bold text-[#f5f3e9] rounded-none hover:bg-neutral-night active:bg-[#2a2a2a] transition-colors flex items-center justify-center">5</button>
+<button class="w-[64px] h-[64px] bg-transparent border-[1px] border-[#efe8d8] font-data-mono text-[24px] font-bold text-[#f5f3e9] rounded-none hover:bg-neutral-night active:bg-[#2a2a2a] transition-colors flex items-center justify-center">6</button>
+<!-- Row 3 -->
+<button class="w-[64px] h-[64px] bg-transparent border-[1px] border-[#efe8d8] font-data-mono text-[24px] font-bold text-[#f5f3e9] rounded-none hover:bg-neutral-night active:bg-[#2a2a2a] transition-colors flex items-center justify-center">7</button>
+<button class="w-[64px] h-[64px] bg-transparent border-[1px] border-[#efe8d8] font-data-mono text-[24px] font-bold text-[#f5f3e9] rounded-none hover:bg-neutral-night active:bg-[#2a2a2a] transition-colors flex items-center justify-center">8</button>
+<button class="w-[64px] h-[64px] bg-transparent border-[1px] border-[#efe8d8] font-data-mono text-[24px] font-bold text-[#f5f3e9] rounded-none hover:bg-neutral-night active:bg-[#2a2a2a] transition-colors flex items-center justify-center">9</button>
+<!-- Row 4 -->
+<div class="w-[64px] h-[64px]"></div>
+<button class="w-[64px] h-[64px] bg-transparent border-[1px] border-[#efe8d8] font-data-mono text-[24px] font-bold text-[#f5f3e9] rounded-none hover:bg-neutral-night active:bg-[#2a2a2a] transition-colors flex items-center justify-center">0</button>
+<button class="w-[64px] h-[64px] bg-[#2a1d1b] border-[1px] border-danger-day text-danger-day rounded-none hover:bg-[#3a2522] transition-colors flex items-center justify-center font-data-mono text-[24px] font-bold"><span class="material-symbols-outlined">backspace</span></button>
+</div>
+<!-- Primary Action -->
+<button class="w-full h-[50px] bg-primary-night text-ink-dark font-label-sm text-[16px] font-bold uppercase tracking-wider rounded-none hover:opacity-90 transition-opacity flex items-center justify-center gap-sm mt-2"><span class="material-symbols-outlined">person_check</span><span>Ingresar a Cocina</span></button><div class="text-center mt-2"><a class="text-sm font-bold text-primary-night underline hover:text-white transition-colors" href="#">¿Olvidó su PIN de Administrador?</a></div>
+</div>
+<div class="mt-8 font-data-mono text-sm text-[#9e9c93]">Terminal de Cocina #01 · Conexión Segura FEFO</div>
+</main>
+</body></html>

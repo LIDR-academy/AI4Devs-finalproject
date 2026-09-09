@@ -1,0 +1,39 @@
+.banner-alert {
+  padding: 16px;
+  border-radius: 0;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.banner-alert-danger {
+  background-color: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  border: 1px solid var(--color-danger);
+  color: var(--text-primary);
+}
+
+.banner-alert-success {
+  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
+  border: 1px solid var(--color-success);
+  color: var(--text-primary);
+}
+
+.banner-alert-warning {
+  background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  border: 1px solid var(--color-warning);
+  color: var(--text-primary);
+}
+
+/* Helper classes for PIN recovery & Auth Modals (TK-077) */
+.banner-success {
+  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
+  border: 1px solid var(--color-success);
+  border-radius: 0;
+  padding: 14px 16px;
+  color: var(--color-success-text);
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.error-banner-compact { padding: 10px 14px; font-size: 0.88rem; }

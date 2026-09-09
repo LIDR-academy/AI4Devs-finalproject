@@ -1,0 +1,38 @@
+/* TK-116-FE (US-031): franja acoplada directamente sobre la tabla/grilla del catálogo. */
+.catalog-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-hairline);
+  border-bottom: none;
+  padding: var(--space-3) var(--space-4);
+}
+
+.view-toggle {
+  display: flex;
+  border: 1px solid var(--rule);
+}
+
+.view-toggle-btn {
+  min-width: 40px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.view-toggle-btn + .view-toggle-btn {
+  border-left: 1px solid var(--rule);
+}
+
+.view-toggle-btn[aria-pressed='true'] {
+  background-color: var(--color-primary);
+  color: var(--color-primary-on);
+}

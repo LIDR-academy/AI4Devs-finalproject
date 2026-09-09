@@ -1,0 +1,347 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  // Prisma 7 (TK-062): sin motor Rust — requiere un driver adapter (@prisma/adapter-pg)
+  // en el constructor de PrismaClient. moduleFormat = "cjs" evita migrar todo el backend
+  // a ESM (el resto del proyecto sigue en CommonJS/NodeNext tal como estaba).
+  provider     = "prisma-client"
+  moduleFormat = "cjs"
+  // Dentro de src/ a proposito (no ../generated) — tsconfig.json fija rootDir=./src
+  // (Guard 12), y ampliarlo para incluir una carpeta hermana rompe la estructura de
+  // dist/. Generando aqui, tsc lo compila junto con el resto de src/ sin tocar tsconfig.
+  output       = "../src/generated/prisma"
+}
+
+datasource db {
+  // La URL de conexion se movio a prisma.config.ts (Prisma 7 ya no soporta `url` aqui).
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum LocationType {
+  WAREHOUSE
+  KITCHEN
+}
+
+enum RemanenteStatus {
+  ACTIVE
+  EXHAUSTED
+  DISCARDED
+}
+
+// US-027 / ADR-003
+enum RecipePreparationStatus {
+  OPEN
+  CLOSED
+  ABANDONED
+}
+
+// US-033/TK-120: clasifica el equipo al momento de la lectura — determina el umbral
+// seguro (REFRIGERATOR <= 4.00°C, FREEZER <= -18.00°C, FDA Food Code), independiente
+// de LocationType (que responde "dónde está", no "qué tan frío debería estar").
+enum TemperatureUnitType {
+  REFRIGERATOR
+  FREEZER
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  name        String
+  module      String
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model User {
+  id                String          @id @default(uuid())
+  name              String
+  roleId            String?
+  role              Role?           @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  pinHash           String
+  status            UserStatus      @default(ACTIVE)
+  mustChangePin     Boolean         @default(true)
+  failedAttempts    Int             @default(0)
+  email             String?         @unique
+  resetTokenHash    String?
+  resetTokenExpires DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  stockMovements    StockMovement[]
+  temperatureLogs   TemperatureLog[]
+}
+
+model StorageLocation {
+  id              String           @id @default(uuid())
+  name            String           @unique
+  type            LocationType     @default(KITCHEN)
+  description     String?
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  // US-025: existencias de bodega alojadas en este sub-sector
+  warehouseStocks WarehouseStock[]
+  // US-026: remanentes de cocina ubicados en esta área (type = KITCHEN)
+  remanentes      Remanente[]
+  // AUDIT-DEV-006 F-7 / TK-101: movimientos de extracción/descarte con este sub-sector como origen
+  stockMovements  StockMovement[]
+  // US-033/TK-120: lecturas de temperatura registradas para este sub-sector
+  temperatureLogs TemperatureLog[]
+}
+
+// US-033/TK-120: registro manual (sin sensor, Non-Goal #4 del PRD) de temperatura de un
+// sub-sector al iniciar turno. isWithinSafeRange NO se persiste — se deriva siempre en
+// el dominio (TemperatureLog.isWithinSafeRange) a partir de temperatureCelsius/unitType,
+// para que nunca pueda desincronizarse del umbral real si este cambia.
+model TemperatureLog {
+  id                 String              @id @default(uuid())
+  storageLocationId  String
+  unitType           TemperatureUnitType
+  temperatureCelsius Decimal             @db.Decimal(5, 2)
+  recordedByUserId   String
+  recordedAt         DateTime            @default(now())
+
+  storageLocation StorageLocation @relation(fields: [storageLocationId], references: [id], onDelete: Restrict)
+  recordedBy      User            @relation(fields: [recordedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([storageLocationId])
+  @@index([recordedAt])
+}
+
+model SystemSettings {
+  id                           String   @id @default("default")
+  restaurantName               String   @default("RestoStock Kitchen")
+  taxId                        String?
+  currencySymbol               String   @default("$")
+  criticalAlertHours           Int      @default(24)
+  defaultRemanenteHours        Int      @default(24)
+  varianceTolerancePercent     Decimal  @default(5.0) @db.Decimal(5, 2)
+  idleTimeoutMinutes           Int      @default(15)
+  // US-029 / ADR-003 / TK-105: umbral (%) de merma de preparación destacado en el reporte.
+  preparationWasteAlertPercent Int      @default(5)
+  updatedAt                    DateTime @updatedAt
+}
+
+// US-034 / TK-121: Configuración de agente de IA y conectividad
+model AiConfiguration {
+  id              String   @id @default("default")
+  provider        String   @default("HEURISTIC") // GEMINI, OPENAI_COMPATIBLE, HEURISTIC
+  modelName       String   @default("gemini-2.5-flash")
+  endpointUrl     String?
+  encryptedApiKey String?
+  temperature     Decimal  @default(0.0) @db.Decimal(3, 2)
+  rescueRecipesOn Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+  updatedBy       String?
+
+  @@map("ai_configurations")
+}
+
+model Insumo {
+  id              String           @id @default(uuid())
+  name            String
+  unitOfMeasure   String           @default("KG")
+  unitCost        Decimal?         @db.Decimal(12, 2)
+  barcode         String?          @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  warehouseStocks WarehouseStock[]
+  remanentes      Remanente[]
+  stockMovements  StockMovement[]
+}
+
+model WarehouseStock {
+  id                String          @id @default(uuid())
+  insumoId          String
+  storageLocationId String
+  quantity          Decimal         @default(0) @db.Decimal(12, 3)
+  updatedAt         DateTime        @updatedAt
+  insumo            Insumo          @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+  // US-025: RESTRICT — un sub-sector con existencias no puede borrarse (Invariante 1-bis)
+  storageLocation   StorageLocation @relation(fields: [storageLocationId], references: [id], onDelete: Restrict)
+
+  @@unique([insumoId, storageLocationId])
+  @@index([storageLocationId])
+}
+
+model Remanente {
+  id                  String             @id @default(uuid())
+  insumoId            String
+  currentQuantity     Decimal            @default(0) @db.Decimal(12, 3)
+  initialQuantity     Decimal            @default(0) @db.Decimal(12, 3)
+  // US-026: caché denormalizado de display/movimiento (= name del área). La fuente
+  // canónica de la ubicación es storageLocationId cuando está presente.
+  location            String             @default("KITCHEN_FRIDGE")
+  // US-026: FK al área de cocina del catálogo (type = KITCHEN). Nullable: los remanentes
+  // históricos conservan solo el literal en `location`. RESTRICT: un área con remanentes
+  // ACTIVE no puede borrarse (Invariante 5).
+  storageLocationId   String?
+  // US-027: FK a la preparación de receta que originó este remanente (null = extracción normal).
+  recipePreparationId String?
+  // US-028 / ADR-003 #6: true mientras no se haya consumido nada de este remanente.
+  // Pasa a false en el primer consumeQuantity. Habilita "devolver a bodega" junto con
+  // el marcado manual "envase sin abrir" del operario.
+  isPristine          Boolean            @default(true)
+  status              RemanenteStatus    @default(ACTIVE)
+  expirationDate      DateTime
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  terminalAt          DateTime?
+  insumo              Insumo             @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+  storageLocation     StorageLocation?   @relation(fields: [storageLocationId], references: [id], onDelete: Restrict)
+  recipePreparation   RecipePreparation? @relation(fields: [recipePreparationId], references: [id], onDelete: SetNull)
+
+  @@index([storageLocationId])
+  @@index([recipePreparationId])
+}
+
+model StockMovement {
+  id                    String             @id @default(uuid())
+  insumoId              String
+  type                  String // EXTRACTION, DISCARD, RECONCILIATION, RESTOCK, EXTRACTION_RECIPE, DISCARD_DIRECT
+  quantity              Decimal            @db.Decimal(12, 3)
+  fromLoc               String
+  // AUDIT-DEV-006 F-7 / TK-101: id del sub-sector de bodega de origen (FK). `fromLoc`
+  // se conserva como snapshot de display para movimientos sin FK (históricos, cocina).
+  fromStorageLocationId String?
+  toLoc                 String
+  operatorId            String?
+  purpose               String? // KITCHEN_STOCK, RECIPE, DIRECT_DISCARD
+  reason                String? // Motivo descriptivo de extracción o descarte directo / notas libres de consumo (ADR-004)
+  reasonId              String? // ADR-004 / TK-108 / TK-109: motivo estructurado del catálogo ConsumptionReason
+  recipeId              String? // ID de receta asociada si purpose == RECIPE
+  createdAt             DateTime           @default(now())
+  insumo                Insumo             @relation(fields: [insumoId], references: [id], onDelete: Cascade)
+  operator              User?              @relation(fields: [operatorId], references: [id], onDelete: SetNull)
+  // Preserva el histórico si el motivo se desactiva o, en un caso límite, se borra manualmente en BD.
+  consumptionReason     ConsumptionReason? @relation(fields: [reasonId], references: [id], onDelete: SetNull)
+  // Preserva el histórico si el sub-sector se borra manualmente en BD (la app no lo permite
+  // mientras tenga stock — Invariante 1-bis — pero sí una vez vaciado).
+  fromStorageLocation   StorageLocation?   @relation(fields: [fromStorageLocationId], references: [id], onDelete: SetNull)
+
+  @@index([reasonId])
+  @@index([fromStorageLocationId])
+}
+
+// ADR-004 / US-030: catálogo administrable de motivos de consumo (US-004) y de
+// varianza negativa de conciliación de turno (US-008). Se desactiva, nunca se borra.
+model ConsumptionReason {
+  id        String          @id @default(uuid())
+  label     String
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  movements StockMovement[]
+}
+
+model SystemHealth {
+  id        String   @id @default(uuid())
+  status    String
+  createdAt DateTime @default(now())
+}
+
+model Recipe {
+  id           String              @id @default(uuid())
+  name         String
+  category     String
+  description  String?
+  // US-037: baja lógica. Una receta inactiva no aparece en el recetario, el rescate ni
+  // la disponibilidad, pero se conserva por la trazabilidad de sus RecipePreparation.
+  isActive     Boolean             @default(true)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  ingredients  RecipeIngredient[]
+  preparations RecipePreparation[]
+}
+
+model RecipeIngredient {
+  id       String  @id @default(uuid())
+  recipeId String
+  insumoId String
+  quantity Decimal @db.Decimal(12, 4)
+  recipe   Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+}
+
+// US-027 / US-028 / ADR-003: tanda de preparación de una receta.
+model RecipePreparation {
+  id                 String                  @id @default(uuid())
+  recipeId           String
+  plannedPortions    Int
+  status             RecipePreparationStatus @default(OPEN)
+  openedByOperatorId String?
+  openedAt           DateTime                @default(now())
+  actualPortions     Int?
+  closedByOperatorId String?
+  closedAt           DateTime?
+  notes              String?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  recipe             Recipe                  @relation(fields: [recipeId], references: [id], onDelete: Restrict)
+  remanentes         Remanente[]
+  items              RecipePreparationItem[]
+
+  @@index([status])
+  @@index([recipeId])
+}
+
+// US-028 / ADR-003: se materializa al cerrar la preparación (uno por ingrediente extraído).
+model RecipePreparationItem {
+  id                  String            @id @default(uuid())
+  preparationId       String
+  insumoId            String
+  extractedQty        Decimal           @db.Decimal(12, 4)
+  consumedQty         Decimal           @db.Decimal(12, 4)
+  leftoverQty         Decimal           @default(0) @db.Decimal(12, 4)
+  leftoverLocationId  String?
+  leftoverRemanenteId String?
+  wastedQty           Decimal           @default(0) @db.Decimal(12, 4)
+  wasteReason         String?
+  createdAt           DateTime          @default(now())
+  preparation         RecipePreparation @relation(fields: [preparationId], references: [id], onDelete: Cascade)
+
+  @@index([preparationId])
+}
+
+model ShiftReconciliation {
+  id         String                    @id @default(uuid())
+  shiftDate  DateTime
+  operatorId String
+  notes      String?
+  createdAt  DateTime                  @default(now())
+  items      ShiftReconciliationItem[]
+}
+
+model ShiftReconciliationItem {
+  id                  String              @id @default(uuid())
+  reconciliationId    String
+  remanenteId         String
+  insumoId            String
+  physicalQuantity    Decimal             @db.Decimal(12, 4)
+  theoreticalQuantity Decimal             @db.Decimal(12, 4)
+  variance            Decimal             @db.Decimal(12, 4)
+  reconciliation      ShiftReconciliation @relation(fields: [reconciliationId], references: [id], onDelete: Cascade)
+}

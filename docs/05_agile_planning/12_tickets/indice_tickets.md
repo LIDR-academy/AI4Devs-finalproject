@@ -1,0 +1,468 @@
+# 📖 Índice de Tickets de Trabajo (Sprint Backlog & Criterios de Priorización)
+
+Este documento centraliza el backlog técnico y funcional del Producto Mínimo Viable (MVP) para **RestoStock**, organizado por **Epic/Módulo**, priorización cualitativa y separado en **Backend** y **Frontend**. Permite realizar un seguimiento claro de la trazabilidad desde las historias de usuario hasta el desarrollo físico en la base de código.
+
+---
+
+## 🔄 Saneamiento de Estados (2026-09-06)
+
+El campo `status` del frontmatter había quedado desactualizado: **65 tickets figuraban `approved` estando implementados y commiteados** (ej. `TK-092`/`TK-093`/`TK-094`, cuyo cierre está documentado en `AUDIT-SEC-001`). Con esa deriva era imposible responder "¿qué falta?" leyendo la documentación.
+
+**Método de reconciliación aplicado** (evidencia de git, no criterio del agente): se marcó `done` únicamente el ticket con un commit `feat(`/`fix(`/`refactor(` cuyo asunto lo nombra en cualquiera de las dos convenciones que ha usado el repositorio — `[TK-XXX]` (histórica) o `(TK-XXX)` (actual). Una simple mención dentro de un commit `docs:` **no** se aceptó como prueba de implementación.
+
+Resultado: **96 `done`**, **9 pendientes reales**, 1 `not_needed`, 1 `MOSTLY_DONE`.
+
+**Pendientes reales tras el saneamiento:**
+
+| Ticket | Situación |
+| :--- | :--- |
+| `TK-091` | Deuda diferida y documentada: extraer un helper de error→RFC 7807 en `auth.controller.ts` (ver nota histórica de `docs/00_stack_manifest.md`). |
+| `TK-007`, `TK-007-C`, `TK-007-D`, `TK-007-E` | Sub-tickets de UI sin evidencia de cierre en el historial. |
+| `TK-072`, `TK-072-FE`, `TK-077-FE` | Sin evidencia de cierre en el historial. |
+| `TK-008` | Evidencia débil: solo aparece citado en commits `docs:`, nunca en uno de implementación. Requiere verificación humana contra el código antes de darlo por cerrado. |
+
+> ⚠️ El estado de un ticket se cierra **al terminarlo**, en el mismo commit atómico que lo implementa (`02_cascading_dev_workflow.md` FASE 6). Este saneamiento retroactivo es una excepción puntual, no un procedimiento a repetir.
+
+### Cierre de los pendientes (2026-09-09)
+
+Barrido final antes del push de la Entrega Final. Los pendientes se resolvieron así:
+
+| Ticket(s) | Resolución | Evidencia |
+| :--- | :--- | :--- |
+| `TK-072`, `TK-072-FE`, `TK-077-FE` | Ya cerrados en `ff93831` (2026-09-08): matriz de trazabilidad + tests confirman entrega; el frontmatter quedó rezagado en `bb969fc`. | `feat(auth)… (TK-077)` `2b44bb5`; suite RTL de extracción y recuperación de PIN verde. |
+| `TK-007`, `TK-007-C`, `TK-007-D`, `TK-007-E`, `TK-008` | **Deriva de estado, no trabajo pendiente.** Implementados en el commit monolítico `7f92ad4` (previo a la convención `(TK-XXX)`, por eso el método de `bb969fc` no los detectó). Verificados contra código + criterios de aceptación + tests con el nombre del ticket en el `describe`. Marcados `done`. | `AlertFeed.test.tsx` (`describe('TK-007…')`), `ShiftReconciliationWizard.test.tsx` (`TK-007-D`), `ReportsDashboard.test.tsx` (`TK-007-E`), `RecipeSelectorModal.test.tsx`, `ConsumeRecipeUseCase.test.ts` (`describe('TK-008 / TK-105…')` — cascada FEFO multi-remanente + atomicidad). |
+| `TK-091` | **Implementado ahora.** Los 7 bloques `catch` inline de `auth.controller.ts` pasan a `handleZodOrNext` (helper ya existente desde `TK-107`). jscpd TypeScript 2.60 % → 2.00 %, total 1.80 % → 1.48 %. | `refactor(auth)… (TK-091)`. |
+
+Residual de calidad de mutation testing (auditoría 2026-09-06, `docs/00_stack_manifest.md` §5):
+- **`TK-137`** (`done`, 2026-09-09) — `Temperature.ts` sin test unitario directo: añadido `Temperature.test.ts`, score de ese archivo 60 % → 100 %.
+- **`TK-138`** (`approved`, post-entrega) — el paso de CI `Mutation Testing` es full-scope + `continue-on-error`; `check_mutation_score.sh` no es *base-ref aware*; `apps/frontend` sin config de Stryker. Decisión abierta: gate diff-scoped bloqueante vs informativo.
+
+Residual de gobernanza de `.agents/` (auditoría de patrones de prompt, 2026-09-09) — **cerrado**:
+- **`TK-139`** (`done`) — nueva `SK-36` que genera y gobierna los ADRs, **ejecutada de verdad** contra una decisión abierta real (hallazgo `O-1` de `AUDIT-SEC-004`) → [`ADR-005`](../../02_architecture_design/adr/ADR-005-session-token-storage.md). `SK-13` 3.2.0 audita ADRs huérfanos en ambos sentidos; framework 2.14.0 → 2.15.0. Excluido a propósito: el wiring en `01_cascading_spec_workflow.md`.
+- **`TK-141`** (`done`) — hallazgo colateral de la Fase 0 de `SK-36`: el `nginx` del SPA no emitía **ninguna** cabecera de seguridad. CSP calibrada contra el build real + 4 cabeceras más, verificadas contra la imagen construida y corriendo.
+- **`TK-140`** (`approved`, post-entrega) — ejecuta la decisión de `ADR-005`: mover el token de sesión de `localStorage` a cookie `httpOnly`. Cambia el contrato de autenticación de punta a punta, por eso no entra antes del push.
+
+Primera corrida real de CI (2026-09-09, run #13):
+- **`TK-144`** (`approved`, post-entrega) — **`ci_local.sh` no reproduce `ci.yml`.** Daba 38 pasos verdes mientras el pipeline real fallaba en 2 jobs de 3: no ejecuta Semgrep (Guard 33, bloqueante), omite el SBOM, y usaba un comando distinto para `prisma validate` — donde `ci.yml` tenía `npx prisma` **sin pinnear**, que resolvió a `prisma@8.0.0-rc.13` y rompió el job (violación del Guard 30 dentro del propio pipeline). Los fixes que ponen CI en verde ya se aplicaron; este ticket ataca por qué no lo supimos antes.
+
+Despliegue del entorno de revisión (2026-09-09):
+- **`TK-143`** (`approved`, post-entrega) — **deuda de claridad, no defecto:** existen dos módulos de seed independientes (`prisma/seed.ts`, el que ejecuta el entrypoint, y `src/infrastructure/seeds/seed.ts`, inalcanzable en producción) con lógica de PIN duplicada y divergente. Ya indujo un error de análisis real en esta sesión — se llegó a reportar un riesgo inexistente y a "corregir" dos afirmaciones de documentación que eran correctas; los tres cambios se revirtieron. La ruta de producción es correcta y `AUDIT-SEC-004` lo había clasificado bien.
+- **`TK-142`** (`approved`, posterior al PR #3) — ejecuta [`ADR-006`](../../02_architecture_design/adr/ADR-006-render-deployment-topology.md): parametriza el upstream de `nginx` (hoy `proxy_pass http://backend:3000` hardcodeado, inexistente en Render) y declara la infra en `render.yaml`. **La topología elegida preserva el mismo origen**, que es la premisa de la que dependen `ADR-005` y la CSP de `TK-141` — la topología por defecto de Render (Static Site + Web Service) habría roto la app entera y obligado a superseder `ADR-005`. Guard 24: Render aprobado en el manifiesto (v1.18.0); Guard 22: carve-out de `render.yaml` documentado.
+
+---
+
+## ⚖️ 1. Matriz Multidimensional de Criterios de Priorización
+
+Para determinar la secuencia de desarrollo en el Sprint Backlog y garantizar el máximo retorno de inversión (ROI) minimizando el riesgo técnico, cada ticket se evalúa en 4 dimensiones estratégicas:
+
+1. **Impacto en el Usuario y Valor del Negocio:** Relevancia en la operación diaria de cocina y reducción directa de mermas (*Muy Alto*, *Alto*, *Medio*, *Bajo*).
+2. **Urgencia basada en Tendencias y Feedback:** Cumplimiento del método FEFO, higiene alimentaria y ergonomía táctil en pantalla de cocina (*Muy Alta*, *Alta*, *Media*, *Baja*).
+3. **Complejidad y Esfuerzo Estimado (Story Points - SP):** Puntos de Historia basados en escala Fibonacci (1, 2, 3, 5, 8).
+4. **Riesgos y Dependencias Técnicas:** Identificación de prerrequisitos entre capas Hexagonales y bloqueantes de arquitectura.
+
+### 📊 Evaluación y Ranking del Backlog
+
+| ID Ticket | Módulo | Valor de Negocio | Urgencia de Mercado | Esfuerzo (SP) | Riesgos & Dependencias Críticas | Nivel de Prioridad |
+| :--- | :--- | :---: | :---: | :---: | :--- | :---: |
+| **TK-001** | `shared` | **Muy Alto** | **Muy Alta** | 3 SP | Ninguno. Habilitador crítico de BD Prisma y Monorepo Core. | 🔴 P0 - Bloqueante |
+| **TK-001-FE** | `shared` | **Muy Alto** | **Muy Alta** | 3 SP | Ninguno. Habilitador de UI Táctil 48px y Vite React. | 🔴 P0 - Bloqueante |
+| **TK-002** | `auth` | **Muy Alto** | **Alta** | 3 SP | Depende de `TK-001`. Cero trazabilidad sin autenticación PIN. | 🔴 P0 - Crítica |
+| **TK-007-B** | `auth` | **Muy Alto** | **Alta** | 3 SP | Depende de `TK-001-FE` y `TK-002`. Pantalla Login PIN. | 🔴 P0 - Crítica |
+| **TK-003** | `stock` | **Muy Alto** | **Muy Alta** | 5 SP | Depende de `TK-001`, `TK-002`. Riesgo de precisión decimal. | 🔴 P0 - Crítica |
+| **TK-007-F** | `stock` | **Muy Alto** | **Muy Alta** | 3 SP | Depende de `TK-003`. Formulario de extracción de bodega. | 🔴 P0 - Crítica |
+| **TK-004** | `kitchen` | **Muy Alto** | **Muy Alta** | 3 SP | Depende de `TK-003`. Algoritmo FEFO de remanentes activos. | 🔴 P0 - Crítica |
+| **TK-005** | `kitchen` | **Alto** | **Alta** | 3 SP | Depende de `TK-004`. Consumo parcial de fracciones en turno. | 🟡 P1 - Alta |
+| **TK-006** | `kitchen` | **Alto** | **Alta** | 3 SP | Depende de `TK-004`. Registro de mermas y descarte. | 🟡 P1 - Alta |
+| **TK-008** | `kitchen` | **Alto** | **Alta** | 5 SP | Depende de `TK-004`. Algoritmo complejo de Recetas FEFO. | 🟡 P1 - Alta |
+| **TK-009** | `kitchen` | **Alto** | **Media** | 5 SP | Depende de `TK-004`, `TK-005`. Conciliación de cierre de turno. | 🟡 P1 - Alta |
+| **TK-010** | `reports` | **Medio** | **Media** | 3 SP | Depende de `TK-006`. Visualización de mermas y analítica. | 🟢 P2 - Media |
+| **TK-048** | `shared` | **Alto** | **Alta** | 5 SP | Depende de `TK-008`, `TK-009`, `TK-010`. Cierre de persistencia parcial en producción. | 🟡 P1 - Alta |
+| **TK-049** | `auth` | **Alto** | **Alta** | 3 SP | Depende de `TK-002`. Gestión mínima de personal (alta/bloqueo). | 🟡 P1 - Alta |
+| **TK-050** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-003`, `TK-005`, `TK-006`. Trazabilidad de movimientos. | 🟢 P2 - Media |
+| **TK-051** | `shared` | **Muy Alto** | **Muy Alta** | 5 SP | Depende de `TK-049`. Bootstrap del primer administrador en despliegue nuevo. | 🔴 P0 - Bloqueante |
+| **TK-056** | `auth` | **Medio** | **Media** | 2 SP | Depende de `TK-049`. Listado de operarios (cierre de deuda). | 🟢 P2 - Media |
+| **TK-057** | `catalog` | **Alto** | **Media** | 5 SP | Depende de `TK-003`, `TK-008`. Alta de insumos y recetas en el catálogo maestro. | 🟡 P1 - Alta |
+| **TK-058** | `shared` | **Medio** | **Baja** | 3 SP | Depende de `TK-057`. Refactor ISP puro, cero cambio de comportamiento. | 🟢 P2 - Media |
+| **TK-059** | `shared` | **Alto** | **Alta** | 2 SP | Depende de `TK-057`, `TK-058`. Fix de conectividad frontend↔backend en Docker (nginx sin proxy `/api`). | 🟡 P1 - Alta |
+| **TK-060** | `stock` | **Muy Alto** | **Alta** | 3 SP | Depende de `TK-057`, `TK-058`. Sin reabastecimiento, un insumo agotado queda inutilizable de forma permanente. | 🔴 P0 - Bloqueante |
+| **TK-061** | `shared` | **Alto** | **Alta** | 2 SP | Depende de `TK-057`. Conecta el selector de recetas de cocina al catálogo real (deuda de `US-012`). | 🟡 P1 - Alta |
+| **TK-062** | `shared` | **Medio** | **Baja** | 5 SP | Sin dependencias. Migración de Prisma 5→7 (driver adapters) — decisión de negocio del humano, no un hallazgo de auditoría. | 🟢 P2 - Media |
+| **TK-063** | `shared` | **Medio** | **Media** | 3 SP | Sin dependencias. Script `ci_local.sh` — reproduce los 3 jobs de `ci.yml` localmente, motivado por 4 rondas de fallos de CI en el PR de Entrega 2. | 🟢 P2 - Media |
+| **TK-064** | `shared` | **Alto** | **Media** | 5 SP | Depende de `TK-063`. Guards 30/31/32 (SecDevOps) en `.agents/` — cierra el gap de gobernanza que permitió los 5 fallos reales de CI. | 🟡 P1 - Alta |
+| **TK-067** | `shared` | **Medio** | **Media** | 3 SP | Sin dependencias funcionales. Migración visual de las pantallas táctiles de cocina al Design System v2.0.0 ("Señal Industrial"), aprobado por el humano tras comparar 3 direcciones. | 🟢 P2 - Media |
+| **TK-068** | `shared` | **Bajo** | **Baja** | 3 SP | Depende de `TK-067`. Extiende la paleta v2.0.0 al backoffice (Catálogo, Reportes, panel de acciones), a pedido explícito del humano; cierra además literales hex hardcodeados preexistentes (Guard 29). | 🟢 P2 - Media |
+| **TK-069** | `recipes` | **Medio** | **Media** | 5 SP | Depende de `TK-057`. Extrae el módulo `recipes` de `catalog` (recetas ya eran 100% de ese módulo) y mueve `/api/v1/catalog/recipes` → `/api/v1/recipes`, a pedido explícito del humano tras un análisis de organización de módulos. | 🟡 P1 - Alta |
+| **TK-069-FE** | `recipes` | **Medio** | **Media** | 3 SP | Depende de `TK-069`. Contraparte frontend: mueve `CreateRecipeForm`/`catalog.service.ts` a `features/recipes/`; cierra duplicación de endpoints de insumos, código muerto y un bug real de resincronización de `insumoId` encontrado en la verificación en vivo. | 🟡 P1 - Alta |
+| **TK-070-FE** | `recipes` | **Medio** | **Media** | 3 SP | Depende de `TK-069-FE`. Restructura "Alta de Receta" a "Recetario" (lista + buscador + alta en modal), simétrico a Inventario de Bodega, a pedido explícito del humano tras comparar capturas de ambas pestañas. | 🟡 P1 - Alta |
+| **TK-071** | `shared` | **Bajo** | **Baja** | 2 SP | Depende de `TK-070-FE`. Reemplaza emoji sueltos por íconos lucide-react en Catálogo/Recetario. | 🟢 P2 - Media |
+| **TK-072** | `stock` | **Muy Alto** | **Alta** | 5 SP | Depende de `TK-003`, `TK-050`. Trazabilidad completa en extracciones de bodega (responsable, motivo, propósito y descarte directo). | 🔴 P0 - Crítica |
+| **TK-072-FE** | `stock` | **Muy Alto** | **Alta** | 3 SP | Depende de `TK-072`, `TK-007-F`. Interfaz táctil para extracciones con motivo y responsable. | 🔴 P0 - Crítica |
+| **TK-073** | `security` | **Alto** | **Alta** | 5 SP | Depende de `TK-002`. Dynamic RBAC: Modelos `Role`, `Permission`, `RolePermission`, endpoints y middleware `authorizePermissions`. ✅ Done (`authorizePermissions` conectado a rutas reales en `TK-117`). | 🟡 P1 - Alta |
+| **TK-073-FE** | `security` | **Alto** | **Alta** | 3 SP | Depende de `TK-073`. Interfaz táctil de administración de roles, matriz de permisos y autoredirección por perfiles. 🟡 Parcial — panel de administración hecho (ahora con efecto real, `TK-117`), autoredirección/ocultamiento por permiso sin implementar. | 🟡 P1 - Alta |
+| **TK-117** | `security` | **Alto** | **Crítica** | 5 SP | `US-015` Escenario 3: `authorizePermissions` conectado a rutas reales; corrige `AUDIT-SEC-002` F-1 crítico (`/api/v1/roles` sin ningún guard de rol/permiso). ✅ Done. | 🔴 P0 - Crítica |
+| **TK-132** | `security` | **Alto** | **Baja** | 3 SP | `AUDIT-SEC-003` F-1: `app.set('trust proxy', …)` faltaba → detrás de nginx el rate limiter agrupaba a **todos** los clientes en un bucket (10 logins / 100 peticiones cada 15 min para todo el restaurante). `req.ip` pasa a ser la IP real; límite global `100→300`; login parametrizable (`LOGIN_RATE_LIMIT_*`); mensaje `429` con tiempo real + `Retry-After`. Remediación técnica (C-DEV-006-4). ✅ Done. | 🟡 P1 - Alta |
+| **TK-133** | `security` | **Alto** | **Baja** | 3 SP | `AUDIT-SEC-004` F-1/F-2/F-3: (1) el cifrado de credenciales reutilizaba `JWT_SECRET` y tenía una clave hardcodeada de fallback → `ENCRYPTION_KEY` dedicada + Fail-Fast en prod; (2) `req.headers.origin` (atacante-controlable) construía el enlace del email de reset (reset-poisoning) → validado contra el allowlist de CORS; (3) `ConsoleEmailService` en prod volcaba el token de reset a los logs → sólo `console.error` sin token + aviso de arranque. Remediación técnica (C-DEV-006-4). ✅ Done. | 🟠 P0/P1 |
+| **TK-134** | `security` | **Alto** | **Baja** | 2 SP | Refresh de seguridad pre-entrega (`ci_local.sh` antes del push): `pnpm.overrides` para `fast-uri`≥3.1.6 / `mysql2`≥3.22.0 (4+1 CVEs HIGH de sept-2026, transitivos de Prisma 7); `apk --no-cache upgrade` en el stage runner de ambos Dockerfiles (9 CVEs de SO en el base Alpine del frontend); +6 fingerprints de fixtures de test en `.gitleaksignore`; 3 tests RTL de disponibilidad endurecidos contra carrera bajo carga. Remediación técnica (C-DEV-006-4). ✅ Done. | 🟠 P1 - Alta |
+| **TK-135** | `security` | **Alto** | **Baja** | 1 SP | Regresión de `TK-133` destapada por el smoke test de la Fase 0.2 (`docker compose up` en producción): `docker-compose.yml` inyecta `CLIENT_ORIGIN`/`ENCRYPTION_KEY` como cadena vacía cuando el operador no las define → `"".url()`/`"".min(16)` fallan antes de `.optional()` → el backend aborta en bucle (Guard 14). Helper `optionalEnv()` normaliza `'' → undefined`. +2 tests. Remediación técnica (C-DEV-006-4). ✅ Done. | 🟠 P1 - Alta |
+| **TK-136** | `security` | **Alto** | **Baja** | 1 SP | Continuación de `TK-134`: `ci_local.sh` completo destapó un advisory nuevo (`GHSA-2883-xcg3-v3hh`, `js-yaml` `4.3.1` HIGH CPU-DoS, transitivo de `eslint` — solo devDependency). `pnpm.overrides` → `js-yaml ^4.3.2`. Cubre además el re-chequeo de `pnpm audit`/`trivy` en la ventana hasta el push del 2026-09-10. Remediación técnica (C-DEV-006-4). ✅ Done. | 🟠 P1 - Alta |
+| **TK-074** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-003`. Cierra deuda del CRUD de sectores (`StorageLocation`): `requireRole('ADMIN')` por ruta, RFC 7807, flag `hasStock`. | 🟢 P2 - Media |
+| **TK-074-FE** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-074`. Destino de cocina dinámico en extracción + bloqueo de toggle/borrado de sector con existencias. ✅ Done (el destino dinámico se cerró en `TK-102-FE`; este ticket quedó mal marcado como parcial hasta corregirlo). | 🟢 P2 - Media |
+| **TK-096** | `stock` | **Muy Alto** | **Media** | 8 SP | Depende de `TK-060`, `TK-072`, `TK-074`. Stock multi-sector de bodega (`WarehouseStock` 1:N con FK a `StorageLocation`), sector obligatorio en alta/reabastecimiento, origen elegido en extracción, migración de datos. ✅ Done. | 🟢 P2 - Media |
+| **TK-096-FE** | `stock` | **Alto** | **Media** | 5 SP | Depende de `TK-096`, `TK-074-FE`. Selectores de sub-sector en alta/reabastecimiento/extracción + desglose de stock por sector en el catálogo. ✅ Done. | 🟢 P2 - Media |
+| **TK-075** | `settings` | **Medio** | **Media** | 3 SP | Depende de `TK-001`. API de Configuración General del Restaurante (`SystemSettings`). ✅ Done (status corregido en `TK-110` — estaba implementado desde hace varios tickets, el doc había quedado en `BACKLOG`). | 🟢 P2 - Media |
+| **TK-075-FE** | `settings` | **Medio** | **Media** | 3 SP | Depende de `TK-075`. Modal de Configuración General y branding dinámico en header. ✅ Done (status corregido en `TK-110`, mismo motivo). | 🟢 P2 - Media |
+| **TK-077** | `auth` | **Alto** | **Alta** | 5 SP | Depende de `TK-002`. Recuperación de Acceso y Reseteo de PIN del Administrador por Email. | 🟡 P1 - Alta |
+| **TK-077-FE** | `auth` | **Alto** | **Alta** | 3 SP | Depende de `TK-077`. Modal Táctil y Pantalla de Recuperación de PIN de Administrador. | 🟡 P1 - Alta |
+| **TK-078** | `reports` | **Alto** | **Media** | 3 SP | Depende de `TK-057`, `TK-010`. Costeo de insumos y valorización monetaria de mermas — cierra el gap del KPI financiero #1 del PRD. | 🟡 P1 - Alta |
+| **TK-078-FE** | `reports` | **Alto** | **Media** | 2 SP | Depende de `TK-078`. Campo de costo en alta de insumo y valor `$` en el dashboard de mermas. | 🟡 P1 - Alta |
+| **TK-079** | `reports` | **Alto** | **Media** | 3 SP | Depende de `TK-004`, `TK-006`. Indicador TRR real (rotation metrics) — cierra el gap del KPI #2 del PRD, hoy nunca medido. ✅ Done. | 🟡 P1 - Alta |
+| **TK-079-FE** | `reports` | **Alto** | **Media** | 2 SP | Depende de `TK-079`. Card de KPI de TRR real en el dashboard de reportes. ✅ Done. | 🟡 P1 - Alta |
+| **TK-080** | `stock` | **Medio** | **Media** | 2 SP | Depende de `TK-004`. Filtro `insumoId` en remanentes activos, para detección de apertura duplicada — cierra el gap del KPI #3 del PRD. ✅ Done. | 🟢 P2 - Media |
+| **TK-080-FE** | `stock` | **Medio** | **Media** | 3 SP | Depende de `TK-080`, `TK-072-FE`. Advertencia no bloqueante de apertura duplicada en el modal de extracción. ✅ Done. | 🟢 P2 - Media |
+| **TK-085-FE** | `shared` | **Alto** | **Media** | 8 SP | Depende de `TK-084-FE` + enmienda al stack manifest v1.13.0 (Guard 24). Adopta `react-router-dom@7.18.3`, `AppShell` y `ProtectedRoute` — prerrequisito de `TK-086-FE`/`TK-087-FE`/`TK-088-FE`. | 🟡 P1 - Alta |
+| **TK-086-FE** | `shared` | **Medio** | **Media** | 5 SP | Depende de `TK-085-FE`. Botón de acción circular, chip de urgencia de 4 niveles y botón de fila con prioridad; separa la capa de color de acción de la de estado. | 🟢 P2 - Media |
+| **TK-087-FE** | `shared` | **Medio** | **Media** | 3 SP | Depende de `TK-086-FE`. Panel Estado de 3 cubetas + leyenda numérica en la health bar + grid Acciones\|Estado. | 🟢 P2 - Media |
+| **TK-088-FE** | `shared` | **Alto** | **Media** | 3 SP | Depende de `TK-085-FE`..`TK-087-FE`. Auditoría de contraste AAA 7:1 (`SK-21`) en ambos turnos — cierra la decisión abierta #3 del artefacto Sistema FEFO. | 🟡 P1 - Alta |
+| **TK-089-FE** | `shared` | **Medio** | **Media** | 3 SP | Depende de `TK-085-FE`. `US-024`: `ReportsDashboard` gana modo `embedded`; `/reportes` deja de abrirse como `<Modal>` flotante. | 🟢 P2 - Media |
+| **TK-090-FE** | `shared` | **Medio** | **Media** | 8 SP | Depende de `TK-085-FE`, `TK-089-FE`. `US-024`: `/ajustes` pasa a layout route con 5 sub-rutas inline deep-linkables; los 5 paneles admin ganan modo `embedded`. | 🟢 P2 - Media |
+| **TK-095-FE** | `shared` | **Medio** | **Media** | 13 SP | Depende de `TK-085-FE`..`TK-090-FE`. Pase de fidelidad visual vs. artefacto "Sistema FEFO": 16 desviaciones (borde del keypad PIN, login como pantalla no `<Modal>`, proporción grid Acciones\|Estado, ancho de `/ajustes/personal`+`/roles`, IA de `/estaciones` y sub-ruta Catálogo, nota QA en UI). 4 workstreams P0–P2; WS-3 requiere decisión de producto. | 🟢 P2 - Media |
+| **TK-091** | `shared` | **Bajo** | **Baja** | 3 SP | Sin dependencias. Deuda de calidad: extrae el mapeo de error→RFC 7807 duplicado en `auth.controller.ts` a un helper; baja el baseline `jscpd` bajo 3% para revertir el umbral a 3. | 🟢 P2 - Media |
+| **TK-092** | `shared` | **Alto** | **Baja** | 5 SP | Sin dependencias. Cierra `AUDIT-SEC-001` F-1 (**Crítica** — todo usuario creado por API autentica como ADMIN): `PrismaUserRepository` persiste `roleId` y resuelve rol fail-safe (`UNASSIGNED`, nunca `ADMIN`); rechaza roles fuera del catálogo (F-2); seed reconcilia huérfanos. | 🔴 P0 - Crítica |
+| **TK-093** | `shared` | **Medio** | **Baja** | 3 SP | Depende de `TK-092`. Cierra `AUDIT-SEC-001` F-3: `requireRole(...)` explícito por ruta en las mutaciones de `kitchen.routes.ts` / `stock.routes.ts` (hoy sólo auth a nivel de mount). Sin cambio de comportamiento. | 🟢 P2 - Media |
+| **TK-094** | `shared` | **Medio** | **Baja** | 3 SP | Sin dependencias. Cierra `AUDIT-DEV-005` D-6: `prisma/migrations/` desincronizado de `schema.prisma` (faltan `mustChangePin` / `idleTimeoutMinutes`) → `check_seed_idempotency.sh` rojo con `migrate deploy`. El stack real usa `db push` y no lo nota. | 🟢 P2 - Media |
+| **TK-097** | `shared` | **Alto** | **Media** | 2 SP | Depende de `TK-094`. Revierte `docker-entrypoint.sh` de `prisma db push --accept-data-loss` (parche de `TK-071`) a `prisma migrate deploy` (Guard 25) — `db push` salta el backfill seguro de las migraciones y pierde datos en BD real. ✅ Done. | 🟡 P1 - Alta |
+| **TK-098** | `stock` | **Muy Alto** | **Media** | 8 SP | Depende de `TK-096`. Cierra `AUDIT-DEV-006` F-1/F-2 (**Críticas**): `RecordExtractionUseCase` escribe stock + remanente + movimiento en 3 transacciones separadas (fallo intermedio = pérdida silenciosa de inventario) y deduce saldo con read-modify-write sin decremento atómico (sobreventa bajo concurrencia). Introduce `withTransaction` + `UPDATE … WHERE quantity >= :q`. ✅ Done (commit `878ff7b`; verificado contra Postgres real). | 🔴 P0 - Crítica |
+| **TK-099** | `stock` | **Medio** | **Baja** | 5 SP | Depende de `TK-098`. Cierra `AUDIT-DEV-006` F-3/F-4/F-7/F-8/F-9: `Date.now()`/ids no-UUID en la capa de aplicación (colisión de PK de movimiento), `throw new Error` crudo en descarte, `operatorId` aceptado del body. Puertos `Clock`/`IdGenerator`, excepción de dominio, autoría solo-token. ✅ Done (commit `c2fdf24`). **F-7 diferido a `TK-101`** (requiere migración Prisma). | 🟢 P2 - Media |
+| **TK-101** | `stock` | **Medio** | **Baja** | 3 SP | Depende de `TK-099`. `AUDIT-DEV-006` F-7 (diferido de `TK-099`): `StockMovement` guarda el nombre del sub-sector de origen, no su id — renombrar un `StorageLocation` desincroniza el histórico. Columna nueva + migración Prisma; de paso, barrido `IdGenerator` en `RestockInsumoUseCase`/`CreateLocationUseCase`. ✅ Done. | 🟢 P2 - Media |
+| **TK-100-FE** | `stock` | **Medio** | **Baja** | 3 SP | Depende de `TK-072-FE`, `TK-096-FE`. Cierra `AUDIT-DEV-006` F-5/F-6: el `catch` de `StockService.recordExtraction` devuelve un **éxito falso** (modo demo) ocultando `422`/`500` del backend (Guard 38); stepper de cantidad con aritmética float (Guard 17). Elimina el fallback demo y migra a `DecimalQuantity`. ✅ Done (commit `8edc4b4`). | 🟡 P1 - Alta |
+| **TK-102** | `stock` | **Alto** | **Media** | 8 SP | Depende de `TK-074`, `TK-096`. `US-026` / ADR-003: áreas de cocina como `StorageLocation` type=KITCHEN; `Remanente.location` String → FK; destino de cocina del catálogo en la extracción; migración Prisma. Prerrequisito de la trazabilidad de preparación. ✅ Done. | 🟢 P2 - Media |
+| **TK-102-FE** | `stock` | **Medio** | **Media** | 5 SP | Depende de `TK-102`, `TK-074-FE`. `US-026`: desplegable de destino de cocina dinámico + gestión de áreas KITCHEN. Cierra deuda de `TK-074-FE`. ✅ Done (`d0eb145`). | 🟢 P2 - Media |
+| **TK-103** | `kitchen` | **Alto** | **Media** | 8 SP | Depende de `TK-102`, `TK-072`, `TK-069`. `US-027` / ADR-003: agregado `RecipePreparation`, apertura automática al extraer con `purpose=RECIPE`, `recipeId` obligatorio, tablero de preparaciones abiertas. ✅ Done (`e4b6777`, verificado contra Postgres real incl. rollback). | 🟢 P2 - Media |
+| **TK-103-FE** | `kitchen` | **Medio** | **Media** | 5 SP | Depende de `TK-103`, `TK-102-FE`. `US-027`: receta obligatoria + porciones planificadas en el modal de extracción; tablero "Preparaciones en curso". ✅ Done. | 🟢 P2 - Media |
+| **TK-104** | `kitchen` | **Muy Alto** | **Media** | 13 SP | Depende de `TK-103`, `TK-102`, `TK-101`. `US-028` / ADR-003: cierre y abandono de preparación — consumo por cuadre, sobrante con ubicación (área de cocina o bodega si "intacto"), merma con motivo, todo en una transacción (C-DEV-006-1). ✅ Done. | 🟢 P2 - Media |
+| **TK-104-FE** | `kitchen` | **Alto** | **Media** | 8 SP | Depende de `TK-104`, `TK-103-FE`. `US-028`: pantalla "Cerrar preparación" (sobrante + dónde + merma + motivo, cuadre visible, "envase sin abrir"). ✅ Done. | 🟢 P2 - Media |
+| **TK-105** | `reports` | **Medio** | **Baja** | 5 SP | Depende de `TK-104`, `TK-078`. `US-029`: reporte de mermas de preparación + consumo real vs teórico; `ConsumeRecipeUseCase` legacy pasa a emitir `CONSUMPTION_RECIPE`. ✅ Done. | 🟢 P2 - Media |
+| **TK-105-FE** | `reports` | **Bajo** | **Baja** | 3 SP | Depende de `TK-105`, `TK-078-FE`. `US-029`: panel de reporte de mermas de preparación + ajuste de umbral. ✅ Done. | 🟢 P2 - Media |
+| **TK-106-FE** | `stock` | **Alto** | **Muy Alta** | 2 SP | Depende de `TK-096-FE`. `US-025` — bug reportado en vivo: la extracción no avisaba que el sub-sector de origen no tenía el insumo (mostraba el total agregado). Aviso en vivo + validación de cliente. ✅ Done. | 🔴 P0 - Bug en vivo |
+| **TK-107** | `kitchen` | **Medio** | **Alta** | 5 SP | `US-030`: catálogo de motivos de consumo administrable (crear/editar/activar-desactivar), semilla editable. ✅ Done. | 🟡 P1 - Alta |
+| **TK-107-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-107`. `US-030`: panel de administración del catálogo en `/ajustes`. ✅ Done. | 🟡 P1 - Alta |
+| **TK-108** | `kitchen` | **Medio** | **Alta** | 3 SP | Depende de `TK-107`. `US-004`: motivo estructurado obligatorio + texto libre opcional al consumir un remanente — cierra el hueco de trazabilidad más transitado de la app. ✅ Done. | 🟡 P1 - Alta |
+| **TK-108-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-108`, `TK-107-FE`. `US-004`: modal de motivo al consumir (reemplaza el toque directo). ✅ Done. | 🟡 P1 - Alta |
+| **TK-109** | `kitchen` | **Alto** | **Alta** | 5 SP | Depende de `TK-107`. `US-008`: motivo obligatorio en varianza negativa de conciliación de turno + fix de bug (superávit no sincronizaba el remanente). ✅ Done. | 🟡 P1 - Alta |
+| **TK-109-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-109`, `TK-107-FE`. `US-008`: selector de motivo por línea con varianza negativa en el wizard de cierre de turno. ✅ Done. | 🟡 P1 - Alta |
+| **TK-110** | `kitchen` | **Bajo** | **Baja** | 2 SP | `US-017`: umbral de alerta crítica FEFO leía un `24` hardcodeado en vez de `SystemSettings.criticalAlertHours` — remediación técnica (C-DEV-006-4). ✅ Done. | 🟢 P2 - Media |
+| **TK-111** | `kitchen` | **Medio** | **Alta** | 3 SP | `US-007`: vista previa de disponibilidad por ingrediente (`GET /kitchen/recipes/:id/availability`), reutiliza el cálculo de `ConsumeRecipeUseCase` sin mutar. ✅ Done. | 🟡 P1 - Alta |
+| **TK-111-FE** | `kitchen` | **Bajo** | **Alta** | 3 SP | Depende de `TK-111`. `US-007`: `RecipeSelectorModal` muestra requerido/disponible por ingrediente y bloquea confirmar si falta stock. ✅ Done. | 🟡 P1 - Alta |
+| **TK-112-FE** | `kitchen` | **Medio** | **Alta** | 3 SP | `US-026`: pestañas de filtro por área de cocina (`LocationFilterTabs`) filtraban por literales legados que dejaron de coincidir con `Remanente.location` desde `TK-102-FE` — bug confirmado en vivo (0 resultados en toda pestaña de área). ✅ Done. | 🔴 P0 - Crítica |
+| **TK-113-FE** | `auth` | **Bajo** | **Baja** | 2 SP | `US-031`: chips de operario reciente (`localStorage`, device-local) en `PinLoginModal` — fusión selectiva de mockup Stitch. ✅ Done. | 🟢 P2 - Media |
+| **TK-114-FE** | `kitchen` | **Bajo** | **Baja** | 2 SP | `US-031`: botón circular de acción rápida junto a la barra de Salud FEFO. ⚪ No aplica — ya implementado (`ActionButton` de `US-023`/`TK-086-FE` en `AccionesEstadoGrid`), cerrado sin código. | 🟢 P2 - Media |
+| **TK-115-FE** | `kitchen` | **Bajo** | **Baja** | 1 SP | `US-031`: resaltado full-bleed de fila con varianza negativa pendiente de motivo en `ShiftReconciliationWizard`. ✅ Done. | 🟢 P3 - Baja |
+| **TK-116-FE** | `stock` | **Medio** | **Baja** | 3 SP | `US-031`: barra de herramientas acoplada (búsqueda + vista grid/lista, persistida por dispositivo) en el catálogo de bodega. ✅ Done. | 🟢 P2 - Media |
+| **TK-118** | `kitchen` | **Bajo** | **Alta** | 2 SP | Remediación técnica: `DiscardRemanenteUseCase` seguía con `Date.now()` como id (mismo patrón que `AUDIT-DEV-006` F-3, caso no cubierto por `TK-099`/`TK-101`) + motivo de descarte sin validar en backend. ✅ Done. | 🟡 P1 - Alta |
+| **TK-125** | `recipes` | **Bajo** | **Baja** | 5 SP | Sin dependencias. Remediación de `AUDIT-DEV-007` G-A (F-2/F-6/F-13): `SuggestRescueRecipesUseCase` deja de importar infraestructura (resolución de credencial IA + fallback IA→heurística a infra); mapper único dominio→DTO y parser JSON compartido entre adapters Gemini/OpenAI; logging del fallback estructurado en infra. Contrato HTTP intacto. ✅ Done — auditoría `AUDIT-DEV-008` APROBADO; mutation scoped 75.74%. | 🟢 P2 - Media |
+| **TK-126** | `recipes` | **Medio** | **Baja** | 5 SP | Depende de `TK-125`. Remediación de `AUDIT-DEV-007` G-B (F-3/F-4/F-11/F-14): frontera de confianza LLM — re-valida los `insumoId` que devuelve la IA contra el catálogo (descarta el alucinado, decisión humana Q2); prompt con bloque `<datos-de-inventario>` delimitado (anti-inyección); API key de Gemini al header `x-goog-api-key`; `top_p` 0.2 (Guard 9), timeout a constante, modelo default `gemini-2.5-flash`. ✅ Done — auditoría `AUDIT-DEV-009` APROBADO. | 🟡 P1 - Alta |
+| **TK-127** | `recipes` | **Bajo** | **Baja** | 5 SP | Depende de `TK-125`, `TK-126`. Remediación de `AUDIT-DEV-007` G-C (F-5/F-7/F-8/F-10): `CreateRecipeUseCase` con `IdGenerator` inyectado + validación de insumos en batch; Zod de `POST /recipes` endurecido (regex `Decimal(12,4)`, topes de longitud/nº, rechazo de `insumoId` duplicado — 400 en vez de 500); `PrismaRecipeRepository.save` rama `update` reconstruye ingredientes; `IRecipeRepository.findByInsumoIds` para el ranking de rescate (deja de cargar todo el catálogo). ✅ Done — auditoría `AUDIT-DEV-010` APROBADO. | 🟢 P2 - Media |
+| **TK-128** | `recipes` | **Medio** | **Baja** | 5 SP | Depende de `TK-125`..`TK-127`. `AUDIT-DEV-007` G-D (F-1/F-16) → cascada US-035 Esc. 5/6: `preventedWasteEstimate` (cantidad física sin sentido — sumaba KG+L+UNIDAD) → `preventedWasteCost` (`string` monetario `null`), valorizado `unitCost × cantidad` con la semántica de `US-019`; desempate del ranking corregido (más valor primero). Contrato mayor `openapi.yaml` `6.0.0` (oasdiff-confirmado, único consumidor es el frontend propio). Aplica `C-DEV-007-1`. ✅ Done — auditoría `AUDIT-DEV-011` APROBADO. | 🟡 P1 - Alta |
+| **TK-128-FE** | `recipes` | **Bajo** | **Baja** | 2 SP | Depende de `TK-128`. Muestra `preventedWasteCost` como valor monetario (`{símbolo}{monto} de merma evitada`) o "Valor de merma no disponible" cuando es `null`, con `currencySymbol` de `SettingsService`. `RescueRecipesModal` refactorizado (`useCurrencySymbol`/`useCatalogSaver`/`ModeSelector`/`SourceBar`) para bajar de los límites de longitud. ✅ Done. | 🟢 P2 - Media |
+| **TK-131-FE** | `recipes` | **Medio** | **Baja** | 3 SP | Depende de `TK-131`. Acciones "Editar" / "Dar de baja" (ADMIN) en `RecipeCatalogPanel`; `EditRecipeModal` con `PUT` parcial y manejo del `409` (composición congelada); `ConfirmModal` para el soft-delete (Guard 38). `IngredientRowsEditor` + `RowActionButtons`/`editRowAction` compartidos (eliminan los clones con `CreateRecipeForm` e `InsumoManageActions`). ✅ Done. | 🟢 P2 - Media |
+| **TK-129** | `settings` | **Medio** | **Baja** | 5 SP | Sin dependencias. `AUDIT-DEV-012` L-3/L-4/L-5: elimina los toggles `replenishmentOn`/`anomalyAuditOn` (inertes, ningún use case los leía — migración `DROP COLUMN` ×2); `Update`/`Test` use cases dejan de importar infra (puerto `ICredentialCipher`); env var unificada (`resolveProviderApiKey`); API key de la sonda de Gemini al header `x-goog-api-key`. Contrato `openapi.yaml` `7.0.0` (breaking deliberado). ✅ Done — auditoría `AUDIT-DEV-013` APROBADO. | 🟡 P1 - Alta |
+| **TK-129-FE** | `settings` | **Bajo** | **Baja** | 2 SP | Depende de `TK-129`. Quita el toggle de reabastecimiento inerte de `AiSettingsSection`; `useAiSettings` refactorizado en sub-hooks y el componente en sub-componentes para respetar los límites de longitud. ✅ Done. | 🟢 P2 - Media |
+| **TK-130** | `stock` | **Alto** | **Media** | 5 SP | Depende de `TK-096`, `TK-119`. `US-036` / `AUDIT-DEV-012` C-1: `PUT /api/v1/stock/insumos/:id` — un ADMIN corrige `name` / `unitCost` / `barcode` de un insumo (`unitOfMeasure` inmutable vía `.strict()` → 400). `Insumo.withDetails`; check-then-write de unicidad + `P2002`. Contrato aditivo. ✅ Done — auditoría `AUDIT-DEV-014` APROBADO. | 🔴 P0 - Crítica |
+| **TK-131** | `recipes` | **Alto** | **Media** | 8 SP | Depende de `TK-103`, `TK-127`. `US-037` / `AUDIT-DEV-012` C-2: `PUT` / `DELETE /api/v1/recipes/:id` — un ADMIN edita (`name`/`category`/`description`/`ingredients`) o da de baja (soft-delete `Recipe.isActive`, `onDelete: Restrict`) una receta. La composición se congela si hay una `RecipePreparation` `CLOSED` (`RecipeCompositionLockedException` 409, trazabilidad `US-029`). Las inactivas desaparecen de `GET /recipes`, del rescate CATALOG y de la disponibilidad. Migración aditiva. ✅ Done — auditoría `AUDIT-DEV-015` APROBADO; mutation scoped 93.22%. | 🟡 P1 - Alta |
+
+---
+
+## 📊 2. Trazabilidad del Sprint Backlog (Backend vs. Frontend)
+
+### ⚙️ Tickets de Backend
+
+| ID Ticket | ID US Relacionada | Título del Ticket | Módulo / Slice Afectado | Estimación (SP) | Prioridad MoSCoW | Ruta del Fichero |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TK-001** | N/A (Técnico) | Configuración del Core del Backend y Base de Datos | `shared` | 3 | Must Have | [shared/backend/TK-001.md](shared/backend/TK-001.md) |
+| **TK-002** | [US-001](../11_user_stories/auth/US-001.md) | Implementación de Autenticación de Operarios por PIN | `auth` | 3 | Must Have | [auth/backend/TK-002.md](auth/backend/TK-002.md) |
+| **TK-003** | [US-002](../11_user_stories/stock/US-002.md) | Implementación del Slice de Registro de Extracciones de Bodega | `stock` | 5 | Must Have | [stock/backend/TK-003.md](stock/backend/TK-003.md) |
+| **TK-004** | [US-003](../11_user_stories/kitchen/US-003.md) | Implementación del Slice de Consulta de Remanentes Activos en Cocina (FEFO) | `kitchen` | 3 | Must Have | [kitchen/backend/TK-004.md](kitchen/backend/TK-004.md) |
+| **TK-005** | [US-004](../11_user_stories/kitchen/US-004.md) | Implementación del Slice de Consumo Parcial de Remanentes | `kitchen` | 3 | Must Have | [kitchen/backend/TK-005.md](kitchen/backend/TK-005.md) |
+| **TK-006** | [US-005](../11_user_stories/kitchen/US-005.md) | Implementación del Slice de Descarte y Mermas de Cocina | `kitchen` | 3 | Must Have | [kitchen/backend/TK-006.md](kitchen/backend/TK-006.md) |
+| **TK-008** | [US-007](../11_user_stories/kitchen/US-007.md) | Implementación de Recetas y Descuento FEFO en Cascadas | `catalog`/`kitchen` | 5 | Should Have | [kitchen/backend/TK-008.md](kitchen/backend/TK-008.md) |
+| **TK-009** | [US-008](../11_user_stories/kitchen/US-008.md) | Implementación de Cierre de Turno y Conciliación en Cocina | `kitchen` | 5 | Should Have | [kitchen/backend/TK-009.md](kitchen/backend/TK-009.md) |
+| **TK-010** | [US-009](../11_user_stories/reports/US-009.md) | Implementación del Módulo de Reportes y Analítica de Mermas | `reports` | 3 | Should Have | [reports/backend/TK-010.md](reports/backend/TK-010.md) |
+| **TK-048** | N/A (Técnico) | Cierre de Persistencia Parcial en Producción | `shared` | 5 | Must Have | [shared/backend/TK-048.md](shared/backend/TK-048.md) |
+| **TK-049** | [US-010](../11_user_stories/auth/US-010.md) | Gestión Mínima de Personal (Alta y Bloqueo de Operarios) | `auth` | 3 | Must Have | [auth/backend/TK-049.md](auth/backend/TK-049.md) |
+| **TK-050** | [US-011](../11_user_stories/stock/US-011.md) | Trazabilidad de Movimientos de Stock | `stock` | 3 | Should Have | [stock/backend/TK-050.md](stock/backend/TK-050.md) |
+| **TK-051** | N/A (Técnico) | Bootstrap del Primer Administrador | `shared` | 5 | Must Have | [shared/backend/TK-051.md](shared/backend/TK-051.md) |
+| **TK-056** | [US-010](../11_user_stories/auth/US-010.md) | Listado de Operarios (Cierre de Deuda de TK-049) | `auth` | 2 | Should Have | [auth/backend/TK-056.md](auth/backend/TK-056.md) |
+| **TK-057** | [US-012](../11_user_stories/catalog/US-012.md) | Gestión de Catálogo Maestro (Alta de Insumos y Recetas) | `stock`/`catalog` | 5 | Should Have | [catalog/backend/TK-057.md](catalog/backend/TK-057.md) |
+| **TK-058** | N/A (Técnico) | Modularización del Repositorio de Stock (ISP) | `shared` | 3 | Should Have | [shared/backend/TK-058.md](shared/backend/TK-058.md) |
+| **TK-060** | [US-013](../11_user_stories/stock/US-013.md) | Reabastecimiento de Bodega (Backend) | `stock` | 3 | Must Have | [stock/backend/TK-060.md](stock/backend/TK-060.md) |
+| **TK-069** | [US-012](../11_user_stories/catalog/US-012.md) | Extracción del Módulo `recipes` (independiente de `catalog`) | `recipes` | 5 | Should Have | [recipes/backend/TK-069.md](recipes/backend/TK-069.md) |
+| **TK-072** | [US-014](../11_user_stories/stock/US-014.md) | Trazabilidad Completa en Extracciones de Bodega (Backend) | `stock` | 5 | Must Have | [stock/backend/TK-072.md](stock/backend/TK-072.md) |
+| **TK-073** | [US-015](../11_user_stories/security/US-015.md) | Backend Dynamic RBAC Models, Seed & Middleware | `security` | 5 | Should Have | [security/backend/TK-073.md](security/backend/TK-073.md) |
+| **TK-074** | [US-016](../11_user_stories/stock/US-016.md) | Backend Storage Locations API | `stock` | 3 | Should Have | [stock/backend/TK-074.md](stock/backend/TK-074.md) |
+| **TK-096** | [US-025](../11_user_stories/stock/US-025.md) | Stock Multi-Sector de Bodega y Depósito por Sub-Sector (Backend) | `stock` | 8 | Should Have | [stock/backend/TK-096.md](stock/backend/TK-096.md) |
+| **TK-075** | [US-017](../11_user_stories/settings/US-017.md) | Backend System Settings API | `settings` | 3 | Should Have | [settings/backend/TK-075.md](settings/backend/TK-075.md) |
+| **TK-077** | [US-018](../11_user_stories/auth/US-018.md) | Backend Admin PIN Recovery via Email Token & Magic Link | `auth` | 5 | Should Have | [auth/backend/TK-077.md](auth/backend/TK-077.md) |
+| **TK-078** | [US-019](../11_user_stories/reports/US-019.md) | Costeo de Insumos y Valorización Monetaria de Mermas | `reports` | 3 | Should Have | [reports/backend/TK-078.md](reports/backend/TK-078.md) |
+| **TK-079** | [US-020](../11_user_stories/reports/US-020.md) | Indicador TRR Real (Rotation Metrics) | `reports` | 3 | Should Have | [reports/backend/TK-079.md](reports/backend/TK-079.md) |
+| **TK-080** | [US-021](../11_user_stories/stock/US-021.md) | Filtro `insumoId` para Detección de Apertura Duplicada | `stock` | 2 | Should Have | [stock/backend/TK-080.md](stock/backend/TK-080.md) |
+| **TK-091** | N/A (Técnico) | Saneamiento de Duplicación en `auth.controller.ts` (jscpd) | `shared` | 3 | Should Have | [shared/backend/TK-091.md](shared/backend/TK-091.md) |
+| **TK-092** | [US-010](../11_user_stories/auth/US-010.md) · [US-015](../11_user_stories/security/US-015.md) | Resolución Fail-Safe de Rol de Usuario (AUDIT-SEC-001 F-1/F-2) | `shared` | 5 | Must Have | [shared/backend/TK-092.md](shared/backend/TK-092.md) |
+| **TK-093** | [US-015](../11_user_stories/security/US-015.md) | Declaración Explícita de Rol por Ruta en Mutaciones Cocina/Stock (AUDIT-SEC-001 F-3) | `shared` | 3 | Should Have | [shared/backend/TK-093.md](shared/backend/TK-093.md) |
+| **TK-094** | N/A (Técnico) | Paridad `prisma/migrations/` ↔ `schema.prisma` (`mustChangePin` / `idleTimeoutMinutes`) (AUDIT-DEV-005 D-6) | `shared` | 3 | Should Have | [shared/backend/TK-094.md](shared/backend/TK-094.md) |
+| **TK-097** | N/A (Técnico) | Restaurar `prisma migrate deploy` en `docker-entrypoint.sh` (Guard 25) | `shared` | 2 | Should Have | [shared/backend/TK-097.md](shared/backend/TK-097.md) |
+| **TK-098** | [US-014](../11_user_stories/stock/US-014.md) · [US-025](../11_user_stories/stock/US-025.md) | Integridad Transaccional y Decremento Atómico en Extracción (AUDIT-DEV-006 F-1/F-2) | `stock` | 8 | Must Have | [stock/backend/TK-098.md](stock/backend/TK-098.md) |
+| **TK-099** | [US-014](../11_user_stories/stock/US-014.md) | Reloj/ID Inyectados, Excepción de Dominio y Auditoría en Extracción (AUDIT-DEV-006 F-3/F-4/F-7/F-8/F-9) | `stock` | 5 | Should Have | [stock/backend/TK-099.md](stock/backend/TK-099.md) |
+| **TK-101** | [US-011](../11_user_stories/stock/US-011.md) · [US-014](../11_user_stories/stock/US-014.md) | Trazabilidad del Sub-Sector de Origen por ID en `StockMovement` (AUDIT-DEV-006 F-7) | `stock` | 3 | Should Have | [stock/backend/TK-101.md](stock/backend/TK-101.md) |
+| **TK-102** | [US-026](../11_user_stories/stock/US-026.md) | Áreas de Cocina como `StorageLocation` y `Remanente.location` → FK | `stock` | 8 | Should Have | [stock/backend/TK-102.md](stock/backend/TK-102.md) |
+| **TK-103** | [US-027](../11_user_stories/kitchen/US-027.md) | Agregado `RecipePreparation` y Apertura Automática al Extraer para Receta | `kitchen` | 8 | Should Have | [kitchen/backend/TK-103.md](kitchen/backend/TK-103.md) |
+| **TK-104** | [US-028](../11_user_stories/kitchen/US-028.md) | Cierre y Abandono de Preparación de Receta | `kitchen` | 13 | Should Have | [kitchen/backend/TK-104.md](kitchen/backend/TK-104.md) |
+| **TK-105** | [US-029](../11_user_stories/reports/US-029.md) | Reporte de Mermas de Preparación + Auditoría del Consumo Ad-hoc | `reports` | 5 | Should Have | [reports/backend/TK-105.md](reports/backend/TK-105.md) |
+| **TK-122** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Generación de Recetas de Rescate con IA y Fallback Heurístico (Backend) | `recipes` | 5 | Should Have | [recipes/backend/TK-122.md](recipes/backend/TK-122.md) |
+| **TK-123** | [US-034](../11_user_stories/settings/US-034_configuracion_agente_ia.md) | Modelo de Persistencia y Endpoints de Configuración de IA (Backend) | `settings` | 3 | Should Have | [settings/backend/TK-123.md](settings/backend/TK-123.md) |
+| **TK-129** | N/A (Técnico) | Saneamiento del Módulo de Configuración de IA (AUDIT-DEV-012 L-3/L-4/L-5) | `settings` | 5 | Should Have | [settings/backend/TK-129.md](settings/backend/TK-129.md) |
+| **TK-130** | [US-036](../11_user_stories/catalog/US-036_edicion_insumo.md) | Endpoint de Edición de Insumo (PUT /stock/insumos/:id) | `stock` | 5 | Must Have | [stock/backend/TK-130.md](stock/backend/TK-130.md) |
+| **TK-124** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Modo Dual de Rescate (Catálogo Propio Zero-Leakage & Creativo IA) (Backend) | `recipes` | 3 | Must Have | [recipes/backend/TK-124.md](recipes/backend/TK-124.md) |
+| **TK-125** | N/A (Técnico) | Aislamiento Hexagonal y De-duplicación del Caso de Uso de Recetas de Rescate (AUDIT-DEV-007 F-2/F-6/F-13) | `recipes` | 5 | Should Have | [recipes/backend/TK-125.md](recipes/backend/TK-125.md) |
+| **TK-126** | N/A (Técnico) | Frontera de Confianza y Endurecimiento de los Adapters de IA de Recetas (AUDIT-DEV-007 F-3/F-4/F-11/F-14) | `recipes` | 5 | Should Have | [recipes/backend/TK-126.md](recipes/backend/TK-126.md) |
+| **TK-127** | N/A (Técnico) | Deuda de Calidad y Eficiencia del Módulo de Recetas (AUDIT-DEV-007 F-5/F-7/F-8/F-10) | `recipes` | 5 | Should Have | [recipes/backend/TK-127.md](recipes/backend/TK-127.md) |
+| **TK-128** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Valorización Monetaria de la Merma Evitada en Recetas de Rescate (US-035 Esc. 5/6, AUDIT-DEV-007 F-1/F-16) | `recipes` | 5 | Should Have | [recipes/backend/TK-128.md](recipes/backend/TK-128.md) |
+| **TK-131** | [US-037](../11_user_stories/catalog/US-037_edicion_baja_receta.md) | Edición y Baja de Recetas (PUT / DELETE /api/v1/recipes/:id) | `recipes` | 8 | Should Have | [recipes/backend/TK-131.md](recipes/backend/TK-131.md) |
+
+
+### 🖥️ Tickets de Frontend
+
+| ID Ticket | ID US Relacionada | Título del Ticket | Módulo / Slice Afectado | Estimación (SP) | Prioridad MoSCoW | Ruta del Fichero |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TK-001-FE** | N/A (Técnico) | Configuración del Workspace Frontend y Design System Base | `shared` | 3 | Must Have | [shared/frontend/TK-001-FE.md](shared/frontend/TK-001-FE.md) |
+| **TK-007** | [US-006](../11_user_stories/kitchen/US-006.md) | Implementación de Pantalla de Notificaciones y Alertas Dinámicas | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-007.md](kitchen/frontend/TK-007.md) |
+| **TK-007-B** | [US-001](../11_user_stories/auth/US-001.md) | Pantalla de Login por PIN | `auth` | 3 | Must Have | [auth/frontend/TK-007-B.md](auth/frontend/TK-007-B.md) |
+| **TK-007-C** | [US-007](../11_user_stories/kitchen/US-007.md) | Interfaz de Consumo de Recetas | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-007-C.md](kitchen/frontend/TK-007-C.md) |
+| **TK-007-D** | [US-008](../11_user_stories/kitchen/US-008.md) | Formulario de Reconciliación de Turno | `kitchen` | 5 | Should Have | [kitchen/frontend/TK-007-D.md](kitchen/frontend/TK-007-D.md) |
+| **TK-007-E** | [US-009](../11_user_stories/reports/US-009.md) | Dashboard de Reportes de Desperdicio y Eficiencia FEFO | `reports` | 3 | Should Have | [reports/frontend/TK-007-E.md](reports/frontend/TK-007-E.md) |
+| **TK-007-F** | [US-002](../11_user_stories/stock/US-002.md) | Pantalla de Registro de Extracciones de Bodega | `stock` | 3 | Must Have | [stock/frontend/TK-007-F.md](stock/frontend/TK-007-F.md) |
+| **TK-049-FE** | [US-010](../11_user_stories/auth/US-010.md) | Panel de Gestión de Personal | `auth` | 3 | Should Have | [auth/frontend/TK-049-FE.md](auth/frontend/TK-049-FE.md) |
+| **TK-050-FE** | [US-011](../11_user_stories/stock/US-011.md) | Panel de Auditoría de Movimientos de Stock | `stock` | 3 | Should Have | [stock/frontend/TK-050-FE.md](stock/frontend/TK-050-FE.md) |
+| **TK-057-FE** | [US-012](../11_user_stories/catalog/US-012.md) | Panel de Gestión de Catálogo | `catalog` | 3 | Should Have | [catalog/frontend/TK-057-FE.md](catalog/frontend/TK-057-FE.md) |
+| **TK-060-FE** | [US-013](../11_user_stories/stock/US-013.md) | Reabastecimiento de Bodega (Frontend) | `stock` | 2 | Must Have | [stock/frontend/TK-060-FE.md](stock/frontend/TK-060-FE.md) |
+| **TK-069-FE** | [US-012](../11_user_stories/catalog/US-012.md) | Extracción del Feature `recipes` (independiente de `catalog`) | `recipes` | 3 | Should Have | [recipes/frontend/TK-069-FE.md](recipes/frontend/TK-069-FE.md) |
+| **TK-070-FE** | [US-012](../11_user_stories/catalog/US-012.md) | Recetario: lista, búsqueda y alta en modal | `recipes` | 3 | Should Have | [recipes/frontend/TK-070-FE.md](recipes/frontend/TK-070-FE.md) |
+| **TK-071** | N/A (Técnico) | Reemplaza emoji sueltos por íconos lucide-react en Catálogo/Recetario | `shared` | 2 | Should Have | [shared/frontend/TK-071.md](shared/frontend/TK-071.md) |
+| **TK-067** | N/A (Técnico) | Migración Visual al Design System v2.0.0 ("Señal Industrial") | `shared` | 3 | Should Have | [shared/frontend/TK-067.md](shared/frontend/TK-067.md) |
+| **TK-068** | N/A (Técnico) | Migración Visual del Backoffice al Design System v2.0.0 | `shared` | 3 | Should Have | [shared/frontend/TK-068.md](shared/frontend/TK-068.md) |
+| **TK-072-FE** | [US-014](../11_user_stories/stock/US-014.md) | Interfaz Táctil para Extracciones con Responsable y Motivo | `stock` | 3 | Must Have | [stock/frontend/TK-072-FE.md](stock/frontend/TK-072-FE.md) |
+| **TK-073-FE** | [US-015](../11_user_stories/security/US-015.md) | Frontend Dynamic RBAC UI & Autoredirection | `security` | 3 | Should Have | [security/frontend/TK-073-FE.md](security/frontend/TK-073-FE.md) |
+| **TK-117** | [US-015](../11_user_stories/security/US-015.md) | Conectar authorizePermissions a Rutas Reales + Cerrar /roles Sin Guard | `security` | 5 | Must Have | [security/backend/TK-117.md](security/backend/TK-117.md) |
+| **TK-132** | N/A (Técnico) | `trust proxy` + Rate Limiting por Cliente Real (AUDIT-SEC-003) | `security` | 3 | Must Have | [security/backend/TK-132.md](security/backend/TK-132.md) |
+| **TK-133** | N/A (Técnico) | Clave de Cifrado Dedicada + Origin del Reset Validado + Email de Producción Explícito (AUDIT-SEC-004) | `security` | 3 | Must Have | [security/backend/TK-133.md](security/backend/TK-133.md) |
+| **TK-134** | N/A (Técnico) | Refresh de Seguridad Pre-Entrega — `fast-uri`/`mysql2` + Base Alpine (`ci_local.sh` Job 2) | `security` | 2 | Must Have | [security/backend/TK-134.md](security/backend/TK-134.md) |
+| **TK-135** | N/A (Técnico) | `CLIENT_ORIGIN`/`ENCRYPTION_KEY` Vacíos Abortan el Arranque en `docker compose` (Fase 0.2 pre-entrega) | `security` | 1 | Must Have | [security/backend/TK-135.md](security/backend/TK-135.md) |
+| **TK-136** | N/A (Técnico) | Barrido de CVEs de Dependencias en la Ventana Pre-Push (`js-yaml` `GHSA-2883-xcg3-v3hh`) | `security` | 1 | Must Have | [security/backend/TK-136.md](security/backend/TK-136.md) |
+| **TK-118** | [US-005](../11_user_stories/kitchen/US-005.md) | Id Determinista + Motivo de Descarte Validado en DiscardRemanenteUseCase | `kitchen` | 2 | Should Have | [kitchen/backend/TK-118.md](kitchen/backend/TK-118.md) |
+| **TK-074-FE** | [US-016](../11_user_stories/stock/US-016.md) | Frontend Storage Locations UI | `stock` | 3 | Should Have | [stock/frontend/TK-074-FE.md](stock/frontend/TK-074-FE.md) |
+| **TK-096-FE** | [US-025](../11_user_stories/stock/US-025.md) | Selector de Sub-Sector de Bodega y Desglose de Stock (Frontend) | `stock` | 5 | Should Have | [stock/frontend/TK-096-FE.md](stock/frontend/TK-096-FE.md) |
+| **TK-100-FE** | [US-014](../11_user_stories/stock/US-014.md) | Propagación Real de Errores y Aritmética Decimal en la Pantalla de Extracción (AUDIT-DEV-006 F-5/F-6) | `stock` | 3 | Should Have | [stock/frontend/TK-100-FE.md](stock/frontend/TK-100-FE.md) |
+| **TK-102-FE** | [US-026](../11_user_stories/stock/US-026.md) | Destino de Cocina Dinámico y Gestión de Áreas de Cocina | `stock` | 5 | Should Have | [stock/frontend/TK-102-FE.md](stock/frontend/TK-102-FE.md) |
+| **TK-103-FE** | [US-027](../11_user_stories/kitchen/US-027.md) | Extracción para Receta con Preparación + Tablero "Preparaciones en Curso" | `kitchen` | 5 | Should Have | [kitchen/frontend/TK-103-FE.md](kitchen/frontend/TK-103-FE.md) |
+| **TK-104-FE** | [US-028](../11_user_stories/kitchen/US-028.md) | Pantalla "Cerrar Preparación de Receta" | `kitchen` | 8 | Should Have | [kitchen/frontend/TK-104-FE.md](kitchen/frontend/TK-104-FE.md) |
+| **TK-105-FE** | [US-029](../11_user_stories/reports/US-029.md) | Panel de Reporte de Mermas de Preparación | `reports` | 3 | Should Have | [reports/frontend/TK-105-FE.md](reports/frontend/TK-105-FE.md) |
+| **TK-107** | [US-030](../11_user_stories/kitchen/US-030.md) | Catálogo de Motivos de Consumo — CRUD | `kitchen` | 5 | Should Have | [kitchen/backend/TK-107.md](kitchen/backend/TK-107.md) |
+| **TK-107-FE** | [US-030](../11_user_stories/kitchen/US-030.md) | Panel de Administración de Motivos de Consumo | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-107-FE.md](kitchen/frontend/TK-107-FE.md) |
+| **TK-108** | [US-004](../11_user_stories/kitchen/US-004.md) | Motivo Obligatorio en el Consumo Manual de Remanentes | `kitchen` | 3 | Should Have | [kitchen/backend/TK-108.md](kitchen/backend/TK-108.md) |
+| **TK-108-FE** | [US-004](../11_user_stories/kitchen/US-004.md) | Modal de Motivo al Consumir un Remanente | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-108-FE.md](kitchen/frontend/TK-108-FE.md) |
+| **TK-109** | [US-008](../11_user_stories/kitchen/US-008.md) | Motivo en Varianza Negativa + Fix de Superávit | `kitchen` | 5 | Should Have | [kitchen/backend/TK-109.md](kitchen/backend/TK-109.md) |
+| **TK-109-FE** | [US-008](../11_user_stories/kitchen/US-008.md) | Selector de Motivo por Línea en Cierre de Turno | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-109-FE.md](kitchen/frontend/TK-109-FE.md) |
+| **TK-110** | [US-017](../11_user_stories/settings/US-017.md) | Umbral de Alerta Crítica FEFO Ignoraba SystemSettings | `kitchen` | 2 | Should Have | [kitchen/backend/TK-110.md](kitchen/backend/TK-110.md) |
+| **TK-111** | [US-007](../11_user_stories/kitchen/US-007.md) | Vista Previa de Disponibilidad por Ingrediente de Receta | `kitchen` | 3 | Should Have | [kitchen/backend/TK-111.md](kitchen/backend/TK-111.md) |
+| **TK-111-FE** | [US-007](../11_user_stories/kitchen/US-007.md) | Vista Previa de Disponibilidad en "Preparar Receta" | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-111-FE.md](kitchen/frontend/TK-111-FE.md) |
+| **TK-112-FE** | [US-026](../11_user_stories/stock/US-026.md) | Pestañas de Filtro por Área de Cocina Dejaron de Coincidir con los Remanentes Reales | `kitchen` | 3 | Should Have | [kitchen/frontend/TK-112-FE.md](kitchen/frontend/TK-112-FE.md) |
+| **TK-113-FE** | [US-031](../11_user_stories/shared/US-031.md) | Chips de Operario Reciente en el Login | `auth` | 2 | Could Have | [shared/frontend/TK-113-FE.md](shared/frontend/TK-113-FE.md) |
+| **TK-114-FE** | [US-031](../11_user_stories/shared/US-031.md) | Botón de Acción Rápida Circular en el Tablero de Cocina | `kitchen` | 2 | Could Have | [kitchen/frontend/TK-114-FE.md](kitchen/frontend/TK-114-FE.md) |
+| **TK-115-FE** | [US-031](../11_user_stories/shared/US-031.md) | Resaltado Full-Bleed de Fila con Varianza en Conciliación | `kitchen` | 1 | Could Have | [kitchen/frontend/TK-115-FE.md](kitchen/frontend/TK-115-FE.md) |
+| **TK-116-FE** | [US-031](../11_user_stories/shared/US-031.md) | Barra de Herramientas Acoplada en el Catálogo de Bodega | `stock` | 3 | Could Have | [stock/frontend/TK-116-FE.md](stock/frontend/TK-116-FE.md) |
+| **TK-106-FE** | [US-025](../11_user_stories/stock/US-025.md) | Aviso de Stock por Sub-Sector en la Extracción de Bodega | `stock` | 2 | Must Have | [stock/frontend/TK-106-FE.md](stock/frontend/TK-106-FE.md) |
+| **TK-075-FE** | [US-017](../11_user_stories/settings/US-017.md) | Frontend System Settings & Branding UI | `settings` | 3 | Should Have | [settings/frontend/TK-075-FE.md](settings/frontend/TK-075-FE.md) |
+| **TK-077-FE** | [US-018](../11_user_stories/auth/US-018.md) | Modal Táctil y Pantalla de Recuperación de PIN de Administrador | `auth` | 3 | Should Have | [auth/frontend/TK-077-FE.md](auth/frontend/TK-077-FE.md) |
+| **TK-078-FE** | [US-019](../11_user_stories/reports/US-019.md) | Costo de Insumo y Valorización Monetaria en Dashboard | `reports` | 2 | Should Have | [reports/frontend/TK-078-FE.md](reports/frontend/TK-078-FE.md) |
+| **TK-079-FE** | [US-020](../11_user_stories/reports/US-020.md) | Card de KPI de TRR Real en el Dashboard | `reports` | 2 | Should Have | [reports/frontend/TK-079-FE.md](reports/frontend/TK-079-FE.md) |
+| **TK-080-FE** | [US-021](../11_user_stories/stock/US-021.md) | Advertencia de Apertura Duplicada en Extracción | `stock` | 3 | Should Have | [stock/frontend/TK-080-FE.md](stock/frontend/TK-080-FE.md) |
+| **TK-081-FE** | [US-022](../11_user_stories/shared/US-022.md) | Núcleo del Sistema FEFO (Tokens Día/Noche + Interruptor) — Tablero Principal | `shared` | 5 | Should Have | [shared/frontend/TK-081-FE.md](shared/frontend/TK-081-FE.md) |
+| **TK-082-FE** | [US-022](../11_user_stories/shared/US-022.md) | Sistema FEFO — Modales de Operación de Cocina | `shared` | 3 | Should Have | [shared/frontend/TK-082-FE.md](shared/frontend/TK-082-FE.md) |
+| **TK-083-FE** | [US-022](../11_user_stories/shared/US-022.md) | Sistema FEFO — Autenticación Táctil (PIN) | `shared` | 3 | Should Have | [shared/frontend/TK-083-FE.md](shared/frontend/TK-083-FE.md) |
+| **TK-084-FE** | [US-022](../11_user_stories/shared/US-022.md) | Sistema FEFO — Backoffice y Administración | `shared` | 5 | Should Have | [shared/frontend/TK-084-FE.md](shared/frontend/TK-084-FE.md) |
+| **TK-085-FE** | [US-023](../11_user_stories/shared/US-023.md) | Adopción de react-router + Shell de Rutas FEFO (`AppShell` + `ProtectedRoute`) | `shared` | 8 | Should Have | [shared/frontend/TK-085-FE.md](shared/frontend/TK-085-FE.md) |
+| **TK-086-FE** | [US-023](../11_user_stories/shared/US-023.md) | Componentes de la Lámina "Aplicación" (Botón Circular, Chip 4 Niveles, Botón de Fila) | `shared` | 5 | Should Have | [shared/frontend/TK-086-FE.md](shared/frontend/TK-086-FE.md) |
+| **TK-087-FE** | [US-023](../11_user_stories/shared/US-023.md) | Panel "Estado" de 3 Cubetas + Leyenda Numérica + Grid Acciones\|Estado | `shared` | 3 | Should Have | [shared/frontend/TK-087-FE.md](shared/frontend/TK-087-FE.md) |
+| **TK-088-FE** | [US-023](../11_user_stories/shared/US-023.md) | Auditoría de Contraste AAA 7:1 del Sistema FEFO (Ambos Turnos) | `shared` | 3 | Should Have | [shared/frontend/TK-088-FE.md](shared/frontend/TK-088-FE.md) |
+| **TK-089-FE** | [US-024](../11_user_stories/shared/US-024.md) | Reportes Inline (sin `<Modal>` flotante) | `shared` | 3 | Should Have | [shared/frontend/TK-089-FE.md](shared/frontend/TK-089-FE.md) |
+| **TK-090-FE** | [US-024](../11_user_stories/shared/US-024.md) | Ajustes con Sub-Rutas Inline Deep-Linkables | `shared` | 8 | Should Have | [shared/frontend/TK-090-FE.md](shared/frontend/TK-090-FE.md) |
+| **TK-095-FE** | [US-023](../11_user_stories/shared/US-023.md) · [US-024](../11_user_stories/shared/US-024.md) | Pase de Fidelidad Visual y UX vs. Artefacto "Sistema FEFO" | `shared` | 13 | Should Have | [shared/frontend/TK-095-FE.md](shared/frontend/TK-095-FE.md) |
+| **TK-122-FE** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Modal y Visualización de Recetas Anti-Desperdicio (Frontend) | `recipes` | 3 | Should Have | [recipes/frontend/TK-122-FE.md](recipes/frontend/TK-122-FE.md) |
+| **TK-123-FE** | [US-034](../11_user_stories/settings/US-034_configuracion_agente_ia.md) | Sub-ruta y Panel de Configuración de Agentes IA (Frontend) | `settings` | 3 | Should Have | [settings/frontend/TK-123-FE.md](settings/frontend/TK-123-FE.md) |
+| **TK-124-FE** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Selector de Modo Dual y Badge de Privacidad Zero-Leakage (Frontend) | `recipes` | 2 | Must Have | [recipes/frontend/TK-124-FE.md](recipes/frontend/TK-124-FE.md) |
+| **TK-128-FE** | [US-035](../11_user_stories/reports/US-035_recetas_aprovechamiento_ia.md) | Mostrar la Merma Evitada como Valor Monetario en el Modal de Rescate (Esc. 5/6) | `recipes` | 2 | Should Have | [recipes/frontend/TK-128-FE.md](recipes/frontend/TK-128-FE.md) |
+| **TK-131-FE** | [US-037](../11_user_stories/catalog/US-037_edicion_baja_receta.md) | Edición y Baja de Recetas en el Recetario | `recipes` | 3 | Should Have | [recipes/frontend/TK-131-FE.md](recipes/frontend/TK-131-FE.md) |
+| **TK-129-FE** | N/A (Técnico) | Quitar el Toggle de Reabastecimiento Inerte de la Pantalla de Configuración de IA | `settings` | 2 | Should Have | [settings/frontend/TK-129-FE.md](settings/frontend/TK-129-FE.md) |
+| **TK-130-FE** | [US-036](../11_user_stories/catalog/US-036_edicion_insumo.md) | Modal de Edición de Insumo en el Catálogo de Bodega | `stock` | 3 | Must Have | [stock/frontend/TK-130-FE.md](stock/frontend/TK-130-FE.md) |
+
+---
+
+## 🗂️ 3. Resumen de Fichas Técnicas de Tickets por Módulo
+
+### 🛠️ Shared / Transversal
+*   **[TK-001: Configuración del Core del Backend y Base de Datos](shared/backend/TK-001.md)**
+*   **[TK-001-FE: Configuración del Workspace Frontend y Design System Base](shared/frontend/TK-001-FE.md)**
+
+### 🔐 Autenticación y Seguridad (`security/` / `auth/`)
+*   **[TK-002: Autenticación por PIN](auth/backend/TK-002.md)** (Backend)
+*   **[TK-007-B: Pantalla de Login por PIN](auth/frontend/TK-007-B.md)** (Frontend)
+*   **[TK-073: Backend Dynamic RBAC](security/backend/TK-073.md)** (Backend)
+*   **[TK-073-FE: Frontend Dynamic RBAC UI](security/frontend/TK-073-FE.md)** (Frontend)
+*   **[TK-117: Conectar authorizePermissions a Rutas Reales](security/backend/TK-117.md)** (Backend) — cierra `AUDIT-SEC-002` F-1 (crítico) y `US-015` Escenario 3.
+*   **[TK-132: `trust proxy` + Rate Limiting por Cliente Real](security/backend/TK-132.md)** (Backend) — ✅ Done. `AUDIT-SEC-003` F-1: sin `app.set('trust proxy')`, detrás de nginx `req.ip` colapsaba a la IP del contenedor de nginx y el rate limiter compartía un único bucket entre todo el restaurante (10 logins / 100 peticiones cada 15 min combinados). Ahora por cliente real; global `100→300`; login vía `LOGIN_RATE_LIMIT_*`; `429` con `Retry-After` y tiempo real. `errorMessageMapper` refactorizado (complejidad 33→8).
+*   **[TK-133: Clave de Cifrado Dedicada + Origin del Reset Validado + Email de Producción Explícito](security/backend/TK-133.md)** (Backend) — ✅ Done. `AUDIT-SEC-004` F-1/F-2/F-3: (1) `CredentialEncryptionService` reutilizaba `JWT_SECRET` y tenía `?? 'fallback-insecure-...'` → `ENCRYPTION_KEY` dedicada, Fail-Fast en prod (falta / == JWT_SECRET); (2) `req.headers.origin` construía el enlace del email de recuperación de PIN (reset-poisoning) → sólo se usa si está en el allowlist de CORS, si no `CLIENT_ORIGIN`/primer origen concreto; (3) `ConsoleEmailService` en prod volcaba el token de reset a stdout → `console.error` sin token + aviso de arranque. +11 tests (579 backend).
+*   **[TK-134: Refresh de Seguridad Pre-Entrega — `fast-uri`/`mysql2` + Base Alpine](security/backend/TK-134.md)** (Backend) — ✅ Done. Remediación técnica (C-DEV-006-4, patrón `TK-064`): `ci_local.sh` antes del push del 2026-09-10 destapó, en el Job 2, 5 CVEs HIGH de npm (transitivos de Prisma 7: `mysql2` GHSA-3f6p-5ww8-9rcr + 4× `fast-uri` SSRF) y 9 CVEs HIGH de SO en el base `nginx:stable-alpine` (`libcrypto3`/OpenSSL DoS + 7× `util-linux`), publicadas tras Entrega 2. `pnpm.overrides` (`mysql2 ^3.22.0`, `fast-uri ^3.1.6`) + `apk --no-cache upgrade` en el stage `runner` de ambos Dockerfiles + 6 fingerprints de fixtures de test en `.gitleaksignore`. `trivy image` sobre ambas imágenes reconstruidas → 0 HIGH/CRITICAL.
+*   **[TK-135: `CLIENT_ORIGIN`/`ENCRYPTION_KEY` Vacíos Abortan el Arranque en `docker compose`](security/backend/TK-135.md)** (Backend) — ✅ Done. Remediación técnica (C-DEV-006-4), regresión de `TK-133` detectada en el smoke test de pila completa de la Fase 0.2 pre-entrega: `docker-compose.yml` pasa `CLIENT_ORIGIN: ${CLIENT_ORIGIN:-}` → Compose inyecta cadena vacía cuando el operador no la define, y `"".url()`/`"".min(16)` fallan la validación de formato antes de `.optional()` → Guard 14 aborta el arranque del backend en bucle. Helper `optionalEnv()` en `environment.ts` normaliza `'' → undefined`; +2 tests.
+*   **[TK-136: Barrido de CVEs de Dependencias en la Ventana Pre-Push](security/backend/TK-136.md)** (Backend) — ✅ Done. Remediación técnica (C-DEV-006-4), continuación de `TK-134`: `ci_local.sh` completo (post Fase 1) destapó `GHSA-2883-xcg3-v3hh` (`js-yaml` `4.3.1`, HIGH — `maxTotalMergeKeys` no limita CPU con *merge sources* vacías; transitivo de `eslint`, solo devDependency, nunca en producción). `pnpm.overrides` → `js-yaml ^4.3.2`. Cubre además el re-chequeo de `pnpm audit`/`trivy image` en la ventana hasta el push del 2026-09-10.
+*   **[TK-118: Id Determinista + Motivo de Descarte Validado](kitchen/backend/TK-118.md)** (Backend) — mismo patrón de `AUDIT-DEV-006` F-3 en un caso que `TK-099`/`TK-101` no cubrieron; motivo de descarte pasa a enum fijo validado en backend.
+*   **[TK-077: Backend Admin PIN Recovery via Email Token & Magic Link](auth/backend/TK-077.md)** (Backend)
+*   **[TK-092: Resolución Fail-Safe de Rol de Usuario (AUDIT-SEC-001 F-1/F-2)](shared/backend/TK-092.md)** (Backend) — cierra la escalada de privilegios Crítica: usuarios creados por API dejan de autenticar como ADMIN.
+*   **[TK-093: Declaración Explícita de Rol por Ruta en Mutaciones Cocina/Stock (AUDIT-SEC-001 F-3)](shared/backend/TK-093.md)** (Backend)
+*   **[TK-094: Paridad `prisma/migrations/` ↔ `schema.prisma` (AUDIT-DEV-005 D-6)](shared/backend/TK-094.md)** (Backend)
+*   **[TK-097: Restaurar `prisma migrate deploy` en `docker-entrypoint.sh` (Guard 25)](shared/backend/TK-097.md)** (Backend) — ✅ Done. Revierte el parche `db push` de `TK-071`; `db push --accept-data-loss` saltaba el backfill de las migraciones y perdía datos en producción.
+
+
+### 📦 Bodega y Stock (`stock/`)
+*   **[TK-003: Extracciones de Bodega](stock/backend/TK-003.md)** (Backend)
+*   **[TK-007-F: Pantalla de Extracciones](stock/frontend/TK-007-F.md)** (Frontend)
+*   **[TK-074: Storage Locations API](stock/backend/TK-074.md)** (Backend) — cierra deuda: `requireRole('ADMIN')` por ruta (gap RBAC), RFC 7807, flag `hasStock`.
+*   **[TK-074-FE: Storage Locations UI](stock/frontend/TK-074-FE.md)** (Frontend) — ✅ Done. Destino de cocina dinámico en extracción (cerrado en `TK-102-FE`) + bloqueo de sector con existencias.
+*   **[TK-096: Stock Multi-Sector de Bodega](stock/backend/TK-096.md)** (Backend) — `WarehouseStock` 1:N real con FK a `StorageLocation`, sector obligatorio en alta/reabastecimiento, origen elegido en extracción con validación de saldo por sector, migración de `MAIN_WAREHOUSE`.
+*   **[TK-096-FE: Selector de Sub-Sector y Desglose de Stock](stock/frontend/TK-096-FE.md)** (Frontend) — selectores de sub-sector en alta/reabastecimiento/extracción + desglose por sector en el catálogo.
+*   **[TK-106-FE: Aviso de Stock por Sub-Sector en la Extracción de Bodega](stock/frontend/TK-106-FE.md)** (Frontend) — ✅ Done. Bug en vivo (`US-025`): la extracción mostraba el stock total agregado en vez del saldo del sub-sector de origen elegido, causando un `422` confuso cuando el insumo estaba en otro sector. Aviso en vivo + validación de cliente.
+*   **[TK-098: Integridad Transaccional y Decremento Atómico en Extracción](stock/backend/TK-098.md)** (Backend) — ✅ Done. Cierra `AUDIT-DEV-006` F-1/F-2 (Críticas): `withTransaction` para stock+remanente+movimiento y `UPDATE … WHERE quantity >= :q` contra sobreventa por concurrencia.
+*   **[TK-099: Reloj/ID Inyectados y Auditoría en Extracción](stock/backend/TK-099.md)** (Backend) — ✅ Done. Cierra `AUDIT-DEV-006` F-3/F-4/F-8/F-9: puertos `Clock`/`IdGenerator`, excepción de dominio para descarte, autoría solo-token. **F-7 → `TK-101`**.
+*   **[TK-100-FE: Propagación Real de Errores y Aritmética Decimal en Extracción](stock/frontend/TK-100-FE.md)** (Frontend) — ✅ Done. Cierra `AUDIT-DEV-006` F-5/F-6: elimina el fallback "modo demo" que fingía éxitos ante `422`/`500` (Guard 38); `DecimalQuantity` en el stepper (Guard 17).
+*   **[TK-101: Trazabilidad del Sub-Sector de Origen por ID en `StockMovement`](stock/backend/TK-101.md)** (Backend) — ✅ Done. `AUDIT-DEV-006` F-7 diferido de `TK-099`: `StockMovement.fromStorageLocationId` + migración Prisma `20260904200000` (verificada contra Postgres real). Cierra `AUDIT-DEV-006` por completo.
+*   **[TK-102: Áreas de Cocina como `StorageLocation` + `Remanente.location` → FK](stock/backend/TK-102.md)** (Backend) — ✅ Done. `US-026` / `ADR-003`: activa las filas `StorageLocation` type=KITCHEN; migración de `Remanente.location` literal → FK; destino de cocina del catálogo en la extracción. Prerrequisito de la trazabilidad de preparación de recetas.
+*   **[TK-102-FE: Destino de Cocina Dinámico y Gestión de Áreas](stock/frontend/TK-102-FE.md)** (Frontend) — ✅ Done. `US-026`: cierra la deuda de `TK-074-FE` (desplegable dinámico) + administración de áreas KITCHEN.
+*   **[TK-080: Filtro `insumoId` para Detección de Apertura Duplicada](stock/backend/TK-080.md)** (Backend) — cierra el gap del KPI #3 del PRD (duplicidad de aperturas), hoy sin ningún mecanismo activo.
+*   **[TK-080-FE: Advertencia de Apertura Duplicada en Extracción](stock/frontend/TK-080-FE.md)** (Frontend)
+
+### ⚙️ Configuración (`settings/`)
+*   **[TK-075: System Settings API](settings/backend/TK-075.md)** (Backend)
+*   **[TK-075-FE: System Settings UI](settings/frontend/TK-075-FE.md)** (Frontend)
+*   **[TK-129: Saneamiento del Módulo de Configuración de IA](settings/backend/TK-129.md)** (Backend) — ✅ Done. `AUDIT-DEV-012` L-3/L-4/L-5: elimina `replenishmentOn`/`anomalyAuditOn` (toggles inertes, migración `DROP COLUMN` ×2); puerto `ICredentialCipher` (aísla `Update`/`Test` de infra); `resolveProviderApiKey` unifica la env var; API key de la sonda Gemini al header. `openapi.yaml` `7.0.0`. Auditoría [AUDIT-DEV-013](../../audits/AUDIT-DEV-013-TK-129-quality-report.md) APROBADO.
+*   **[TK-129-FE: Quitar el Toggle de Reabastecimiento Inerte](settings/frontend/TK-129-FE.md)** (Frontend) — ✅ Done. `CognitiveModulesControl` deja solo el toggle de recetas de rescate; `useAiSettings` y `AiSettingsSection` descompuestos por los límites de longitud de función.
+
+### 🍳 Cocina (`kitchen/`)
+*   **[TK-004: Remanentes Activos FEFO](kitchen/backend/TK-004.md)** (Backend)
+*   **[TK-005: Consumo Parcial](kitchen/backend/TK-005.md)** (Backend)
+*   **[TK-006: Descarte y Mermas](kitchen/backend/TK-006.md)** (Backend)
+*   **[TK-008: Recetas y Descuento FEFO](kitchen/backend/TK-008.md)** (Backend)
+*   **[TK-009: Cierre y Conciliación](kitchen/backend/TK-009.md)** (Backend)
+*   **[TK-007: Alertas y Notificaciones](kitchen/frontend/TK-007.md)** (Frontend)
+*   **[TK-007-C: Consumo de Recetas](kitchen/frontend/TK-007-C.md)** (Frontend)
+*   **[TK-007-D: Formulario Conciliación](kitchen/frontend/TK-007-D.md)** (Frontend)
+*   **[TK-103: Agregado `RecipePreparation` + Apertura al Extraer para Receta](kitchen/backend/TK-103.md)** (Backend) — ✅ Done. `US-027` / `ADR-003`: cierra el lazo abierto entre extracción para receta y preparación real; `recipeId` obligatorio en modo RECIPE.
+*   **[TK-103-FE: Extracción para Receta + Tablero de Preparaciones en Curso](kitchen/frontend/TK-103-FE.md)** (Frontend) — ✅ Done. `US-027`.
+*   **[TK-104: Cierre y Abandono de Preparación de Receta](kitchen/backend/TK-104.md)** (Backend) — ✅ Done. `US-028` / `ADR-003`: consumo por cuadre, sobrante con ubicación (área de cocina o bodega si "intacto"), merma con motivo, todo en una transacción (C-DEV-006-1). Responde a "¿qué pasó con lo que sobró, dónde se guardó?".
+*   **[TK-104-FE: Pantalla "Cerrar Preparación de Receta"](kitchen/frontend/TK-104-FE.md)** (Frontend) — ✅ Done. `US-028`.
+
+### 📊 Reportes (`reports/`)
+*   **[TK-010: Módulo de Reportes](reports/backend/TK-010.md)** (Backend)
+*   **[TK-007-E: Dashboard de Mermas](reports/frontend/TK-007-E.md)** (Frontend)
+*   **[TK-078: Costeo de Insumos y Valorización Monetaria de Mermas](reports/backend/TK-078.md)** (Backend) — cierra el gap del KPI #1 del PRD (diferencia financiera), hoy solo medible en cantidades físicas.
+*   **[TK-078-FE: Costo de Insumo y Valorización Monetaria en Dashboard](reports/frontend/TK-078-FE.md)** (Frontend)
+*   **[TK-079: Indicador TRR Real (Rotation Metrics)](reports/backend/TK-079.md)** (Backend) — cierra el gap del KPI #2 del PRD (TRR < 72h), hoy forzado pero nunca reportado.
+*   **[TK-079-FE: Card de KPI de TRR Real en el Dashboard](reports/frontend/TK-079-FE.md)** (Frontend)
+*   **[TK-105: Reporte de Mermas de Preparación + Auditoría del Consumo Ad-hoc](reports/backend/TK-105.md)** (Backend) — ✅ Done. `US-029` / `ADR-003`: explota los datos de cierre de preparación; de paso `ConsumeRecipeUseCase` legacy pasa a emitir `CONSUMPTION_RECIPE` (antes invisible en la auditoría).
+*   **[TK-105-FE: Panel de Reporte de Mermas de Preparación](reports/frontend/TK-105-FE.md)** (Frontend) — ✅ Done. `US-029`.
+
+### 🔐 Autenticación (`auth/`)
+*   **[TK-002: Autenticación por PIN](auth/backend/TK-002.md)** (Backend)
+*   **[TK-007-B: Pantalla de Login por PIN](auth/frontend/TK-007-B.md)** (Frontend)
+
+### 📦 Bodega y Stock (`stock/`)
+*   **[TK-003: Extracciones de Bodega](stock/backend/TK-003.md)** (Backend)
+*   **[TK-007-F: Pantalla de Extracciones](stock/frontend/TK-007-F.md)** (Frontend)
+
+### 🍳 Cocina (`kitchen/`)
+*   **[TK-004: Remanentes Activos FEFO](kitchen/backend/TK-004.md)** (Backend)
+*   **[TK-005: Consumo Parcial](kitchen/backend/TK-005.md)** (Backend)
+*   **[TK-006: Descarte y Mermas](kitchen/backend/TK-006.md)** (Backend)
+*   **[TK-008: Recetas y Descuento FEFO](kitchen/backend/TK-008.md)** (Backend)
+*   **[TK-009: Cierre y Conciliación](kitchen/backend/TK-009.md)** (Backend)
+*   **[TK-007: Alertas y Notificaciones](kitchen/frontend/TK-007.md)** (Frontend)
+*   **[TK-007-C: Consumo de Recetas](kitchen/frontend/TK-007-C.md)** (Frontend)
+*   **[TK-007-D: Formulario Conciliación](kitchen/frontend/TK-007-D.md)** (Frontend)
+
+### 📊 Reportes (`reports/`)
+*   **[TK-010: Módulo de Reportes](reports/backend/TK-010.md)** (Backend)
+*   **[TK-007-E: Dashboard de Mermas](reports/frontend/TK-007-E.md)** (Frontend)
+
+### 🛠️ Shared / Transversal (Post-MVP, Cierre de Deuda)
+*   **[TK-048: Cierre de Persistencia Parcial en Producción](shared/backend/TK-048.md)** (Backend)
+*   **[TK-051: Bootstrap del Primer Administrador](shared/backend/TK-051.md)** (Backend)
+*   **[TK-058: Modularización del Repositorio de Stock (ISP)](shared/backend/TK-058.md)** (Backend) — split de `IStockRepository` en `IInsumoRepository`/`IRemanenteRepository`, motivado por `TK-057`.
+*   **[TK-059: Fix de Conectividad Frontend↔Backend en Despliegue Dockerizado](shared/backend/TK-059.md)** (Backend) — nginx del frontend no reenviaba `/api` al backend; detectado por auditoría de código muerto (`knip`).
+*   **[TK-061: Conectar el Selector de Recetas de Cocina al Catálogo Real](shared/frontend/TK-061.md)** (Frontend) — `RecipeSelectorModal.tsx` usaba una lista hardcodeada en vez de `GET /api/v1/catalog/recipes`; cierra la deuda ya documentada en `US-012`.
+*   **[TK-062: Migración de Prisma 5 a Prisma 7 (Driver Adapters)](shared/backend/TK-062.md)** (Backend) — upgrade de dependencia mayor a pedido explícito del humano; `datasource.url` en `schema.prisma` deja de estar soportado, se mueve a `prisma.config.ts` + adapter.
+*   **[TK-063: Script Orquestador `ci_local.sh`](shared/backend/TK-063.md)** (Backend) — reproduce los 3 jobs de `ci.yml` localmente antes del push; auto-descarga `tofu`/`oasdiff`/`gitleaks` si faltan.
+*   **[TK-064: Guards 30/31/32 (SecDevOps)](shared/backend/TK-064.md)** (Backend) — cierra el gap de gobernanza SecDevOps en `.agents/` (verificación de pins de terceros, codegen antes de build, re-verificación de seguridad post-upgrade mayor).
+*   **[TK-067: Migración Visual al Design System v2.0.0](shared/frontend/TK-067.md)** (Frontend) — propaga la paleta "Señal Industrial" (`docs/02_architecture_design/05_ui_ux_design_system.md` v2.0.0) a `index.css` y a los componentes de cocina; cero cambio de comportamiento, backoffice de Catálogo fuera de alcance.
+*   **[TK-068: Migración Visual del Backoffice al Design System v2.0.0](shared/frontend/TK-068.md)** (Frontend) — extiende `TK-067` al backoffice (Catálogo, Reportes, panel de acciones de `App.tsx`) a pedido explícito del humano; cierra de paso literales hex hardcodeados preexistentes de `TK-057-FE`/`TK-060-FE` (Guard 29).
+*   **[TK-071: Reemplaza emoji sueltos por íconos lucide-react](shared/frontend/TK-071.md)** (Frontend) — corrige la iconografía de Catálogo/Recetario (`Package`, `Search`, `Truck`, `ChefHat`) a pedido explícito del humano; misma deuda pendiente en pantallas de cocina, fuera de alcance.
+*   **[TK-081-FE: Núcleo del Sistema FEFO (Tokens Día/Noche + Interruptor)](shared/frontend/TK-081-FE.md)** (Frontend) — reemplaza la paleta única oscura "Señal Industrial" v3.0.0 por el sistema dual Día/Noche (`US-022`); introduce el interruptor de tema y lo aplica al tablero principal. Prerrequisito de `TK-082-FE`/`TK-083-FE`/`TK-084-FE`.
+*   **[TK-082-FE: Sistema FEFO — Modales de Operación de Cocina](shared/frontend/TK-082-FE.md)** (Frontend) — extiende `TK-081-FE` a `WarehouseExtractionModal`/`RecipeSelectorModal`/`DiscardModal`/`ShiftReconciliationWizard` y al shell compartido `Modal.tsx`.
+*   **[TK-083-FE: Sistema FEFO — Autenticación Táctil (PIN)](shared/frontend/TK-083-FE.md)** (Frontend) — extiende `TK-081-FE` a `PinLoginModal`/`PinPad`/`ForceChangePinModal`/`ResetPinModal`/`ForgotPinModal`; preserva el mínimo táctil de 64×64px del teclado de PIN.
+*   **[TK-084-FE: Sistema FEFO — Backoffice y Administración](shared/frontend/TK-084-FE.md)** (Frontend) — cierra `US-022` extendiendo `TK-081-FE` a Reportes, Gestión de Usuarios, Catálogo, Recetas, Configuración, Ubicaciones y Roles.
+*   **[TK-085-FE: Adopción de react-router + Shell de Rutas FEFO](shared/frontend/TK-085-FE.md)** (Frontend) — `US-023`: introduce `react-router-dom@7.18.3` (enmienda al stack manifest v1.13.0), el componente raíz `AppShell` (barra lateral comanda + topbar de navegación) y `ProtectedRoute` (gating por sesión y por rol `ADMIN` para Reportes/Ajustes). Prerrequisito de `TK-086-FE`/`TK-087-FE`/`TK-088-FE`.
+*   **[TK-086-FE: Componentes de la Lámina "Aplicación"](shared/frontend/TK-086-FE.md)** (Frontend) — `US-023`: botón de acción circular (72px), chip de urgencia de 4 niveles (`Hoy`/`Mañana`/`2 Días`/`4 Días`, marca + texto) y botón de fila con variante crítica; separa la capa de color de acción de la de estado/urgencia.
+*   **[TK-087-FE: Panel "Estado" de 3 Cubetas + Leyenda Numérica](shared/frontend/TK-087-FE.md)** (Frontend) — `US-023`: el resumen del tablero pasa de 2 tarjetas a 3 cubetas de severidad alineadas con la `FEFOInventoryHealthBar`, que gana leyenda numérica; grid `Acciones|Estado`.
+*   **[TK-088-FE: Auditoría de Contraste AAA 7:1 del Sistema FEFO](shared/frontend/TK-088-FE.md)** (Frontend) — `US-023`: ejecuta `SK-21` sobre las 5 rutas en ambos turnos, verifica cada par color/fondo con fórmula WCAG real contra el fondo real, corrige tokens que fallen y archiva evidencia. Cierra la decisión abierta #3 del artefacto Sistema FEFO.
+*   **[TK-089-FE: Reportes Inline (sin `<Modal>` flotante)](shared/frontend/TK-089-FE.md)** (Frontend) — `US-024`: `ReportsDashboard` gana `embedded`; `/reportes` se renderiza inline en el `<main>` del shell, consistente con `/estaciones`/`/recetas`. Limpia `isOpen`/`onClose`/`AccessDeniedState` muertos.
+*   **[TK-090-FE: Ajustes con Sub-Rutas Inline Deep-Linkables](shared/frontend/TK-090-FE.md)** (Frontend) — `US-024`: `/ajustes` pasa a layout route (`<nav>` de sub-pestañas + `<Outlet>`) con 5 sub-rutas deep-linkables (`configuracion`/`personal`/`roles`/`movimientos`/`catalogo`); los 5 paneles admin ganan `embedded`; `*Modal.tsx` renombrados a `*Panel.tsx`.
+*   **[TK-095-FE: Pase de Fidelidad Visual y UX vs. Artefacto "Sistema FEFO"](shared/frontend/TK-095-FE.md)** (Frontend) — auditoría de las 9 rutas + login en día/noche contra el artefacto; 16 desviaciones en 4 workstreams (P0: borde keypad PIN, login como pantalla FEFO no `<Modal>`, proporción grid, colores; P1: ancho de `/ajustes/personal`+`/roles`, IA de `/estaciones` y sub-ruta Catálogo; P2: nota QA en UI, toggle día/noche, etiquetas de filtro). WS-3 requiere decisión de producto.
+*   **[TK-091: Saneamiento de Duplicación en `auth.controller.ts`](shared/backend/TK-091.md)** (Backend) — deuda de calidad: extrae el mapeo de error→RFC 7807 duplicado entre métodos del controlador de auth a un helper compartido; baja el baseline `jscpd` del ~3.2% bajo el 3% para revertir el umbral de `.jscpd.json` a 3.
+
+### 🔐 Autenticación (`auth/`) — Post-MVP
+*   **[TK-049: Gestión Mínima de Personal](auth/backend/TK-049.md)** (Backend)
+*   **[TK-049-FE: Panel de Gestión de Personal](auth/frontend/TK-049-FE.md)** (Frontend)
+*   **[TK-056: Listado de Operarios](auth/backend/TK-056.md)** (Backend) — cierra la deuda de `TK-049`.
+
+### 📦 Bodega y Stock (`stock/`) — Post-MVP
+*   **[TK-130: Endpoint de Edición de Insumo (PUT /stock/insumos/:id)](stock/backend/TK-130.md)** (Backend) — ✅ Done. `US-036` / `AUDIT-DEV-012` C-1: un ADMIN corrige `name`/`unitCost`/`barcode` de un insumo (`unitOfMeasure` inmutable). Cierra deuda de `US-012` §[N]; desbloquea la valorización de `TK-128`. Auditoría [AUDIT-DEV-014](../../audits/AUDIT-DEV-014-TK-130-quality-report.md) APROBADO.
+*   **[TK-130-FE: Modal de Edición de Insumo](stock/frontend/TK-130-FE.md)** (Frontend) — ✅ Done. Botón "Editar" (ADMIN) → `EditInsumoModal` con envío parcial (`PUT`, `null` limpia opcionales). `InsumoManageActions` compartido entre tabla y grilla.
+*   **[TK-050: Trazabilidad de Movimientos de Stock](stock/backend/TK-050.md)** (Backend)
+*   **[TK-050-FE: Panel de Auditoría de Movimientos](stock/frontend/TK-050-FE.md)** (Frontend)
+*   **[TK-060: Reabastecimiento de Bodega](stock/backend/TK-060.md)** (Backend) — sin esto, un insumo agotado en bodega quedaba inutilizable para siempre.
+*   **[TK-060-FE: Panel de Reabastecimiento](stock/frontend/TK-060-FE.md)** (Frontend)
+*   **[TK-119: Escaneo de Código de Barras en Extracción de Bodega](stock/backend/TK-119.md)** (Backend) — `US-032`, `Insumo.barcode` + endpoint de búsqueda; sin match, solo `ADMIN` completa el alta.
+*   **[TK-119-FE: Escaneo de Código de Barras (Frontend)](stock/frontend/TK-119-FE.md)** (Frontend) — `US-032`; decisión de librería de escaneo pendiente (Guard 24).
+
+### 🍳 Cocina (`kitchen/`) — Post-MVP
+*   **[TK-120: Registro de Temperatura de Refrigeración](kitchen/backend/TK-120.md)** (Backend) — `US-033`, entidad `TemperatureLog` nueva; registro manual, sin sensor; solo advierte fuera de rango FDA, nunca bloquea.
+*   **[TK-120-FE: Registro de Temperatura (Frontend)](kitchen/frontend/TK-120-FE.md)** (Frontend) — `US-033`; panel de registro accesible desde Inventario + histórico solo-`ADMIN` en Reportes.
+
+### 📖 Catálogo (`catalog/`) — Post-MVP
+*   **[TK-057: Gestión de Catálogo Maestro (Alta de Insumos y Recetas)](catalog/backend/TK-057.md)** (Backend) — cierra además la deuda de `TK-008` (`POST /api/catalog/recipes` nunca implementado). **Superseded parcialmente por `TK-069`** (las recetas se movieron a su propio módulo).
+*   **[TK-057-FE: Panel de Gestión de Catálogo](catalog/frontend/TK-057-FE.md)** (Frontend) — **superseded parcialmente por `TK-069-FE`**.
+
+### 🍝 Recetas (`recipes/`) — Post-MVP
+*   **[TK-069: Extracción del Módulo `recipes`](recipes/backend/TK-069.md)** (Backend) — mueve `Recipe`/`RecipeIngredient` y el endpoint de `catalog` a un módulo propio (`/api/v1/catalog/recipes` → `/api/v1/recipes`), a pedido explícito del humano tras un análisis de organización de módulos.
+*   **[TK-069-FE: Extracción del Feature `recipes`](recipes/frontend/TK-069-FE.md)** (Frontend) — mueve `CreateRecipeForm`/`catalog.service.ts` a `features/recipes/`; cierra duplicación de endpoints de insumos, código muerto (`CatalogService.createInsumo`) y un bug real de resincronización de `insumoId` encontrado en la verificación en vivo.
+*   **[TK-070-FE: Recetario (lista + búsqueda + alta en modal)](recipes/frontend/TK-070-FE.md)** (Frontend) — restructura la pestaña de recetas para que sea simétrica a Inventario de Bodega; `CreateRecipeForm.tsx` no se modifica, solo se envuelve en un modal nuevo.
+*   **[TK-122: Generación de Recetas de Rescate con IA y Fallback Heurístico](recipes/backend/TK-122.md)** (Backend) — `US-035`, adapter multimodal y use case anti-desperdicio.
+*   **[TK-122-FE: Modal y Visualización de Recetas Anti-Desperdicio](recipes/frontend/TK-122-FE.md)** (Frontend) — `US-035`, modal táctil para generar propuestas y agregarlas al catálogo.
+*   **[TK-124: Modo Dual de Rescate (Catálogo Propio Zero-Leakage & Creativo IA)](recipes/backend/TK-124.md)** (Backend) — `US-035`, cruce local determinista con recetas existentes garantizando Zero Data Leakage.
+*   **[TK-124-FE: Selector de Modo Dual y Badge de Privacidad Zero-Leakage](recipes/frontend/TK-124-FE.md)** (Frontend) — `US-035`, selector accesible táctil (≥48px) y badge de seguridad.
+*   **[TK-125: Aislamiento Hexagonal y De-duplicación del Caso de Uso de Recetas de Rescate](recipes/backend/TK-125.md)** (Backend) — ✅ Done. Remediación de [AUDIT-DEV-007](../../audits/AUDIT-DEV-007-recipes-module-quality-report.md) G-A (F-2/F-6/F-13): `SuggestRescueRecipesUseCase` deja de importar infraestructura; mapper único dominio→DTO + parser JSON compartido entre adapters; logging del fallback en infra. Contrato HTTP intacto; auditoría [AUDIT-DEV-008](../../audits/AUDIT-DEV-008-TK-125-quality-report.md) APROBADO.
+*   **[TK-126: Frontera de Confianza y Endurecimiento de los Adapters de IA de Recetas](recipes/backend/TK-126.md)** (Backend) — ✅ Done. Remediación de [AUDIT-DEV-007](../../audits/AUDIT-DEV-007-recipes-module-quality-report.md) G-B (F-3/F-4/F-11/F-14): re-validación de `insumoId` de la IA contra el catálogo (`sanitizeRescueProposals`), prompt con bloque de datos delimitado, API key de Gemini al header, `top_p` 0.2 + timeout/modelo parametrizados. Aplica `C-DEV-007-2`. Auditoría [AUDIT-DEV-009](../../audits/AUDIT-DEV-009-TK-126-quality-report.md) APROBADO.
+*   **[TK-127: Deuda de Calidad y Eficiencia del Módulo de Recetas](recipes/backend/TK-127.md)** (Backend) — ✅ Done. Remediación de [AUDIT-DEV-007](../../audits/AUDIT-DEV-007-recipes-module-quality-report.md) G-C (F-5/F-7/F-8/F-10): `IdGenerator` inyectado + validación de insumos en batch (`CreateRecipeUseCase`); Zod endurecido (regex `Decimal(12,4)`, topes, `insumoId` duplicado → 400); `PrismaRecipeRepository.save` rama `update` reconstruye ingredientes; `IRecipeRepository.findByInsumoIds` para el ranking de rescate. Auditoría [AUDIT-DEV-010](../../audits/AUDIT-DEV-010-TK-127-quality-report.md) APROBADO.
+*   **[TK-128: Valorización Monetaria de la Merma Evitada](recipes/backend/TK-128.md)** (Backend) — ✅ Done. `AUDIT-DEV-007` G-D (F-1/F-16) → cascada `US-035` Esc. 5/6: `preventedWasteEstimate` (cantidad sin sentido) → `preventedWasteCost` (`string` monetario `null`) valorizado con `unitCost` (semántica de `US-019`); desempate del ranking corregido (más valor primero). `openapi.yaml` `6.0.0` (breaking deliberado, oasdiff-confirmado). Aplica `C-DEV-007-1`. Auditoría [AUDIT-DEV-011](../../audits/AUDIT-DEV-011-TK-128-quality-report.md) APROBADO.
+*   **[TK-128-FE: Merma Evitada como Valor Monetario en el Modal de Rescate](recipes/frontend/TK-128-FE.md)** (Frontend) — ✅ Done. `US-035` Esc. 5/6: badge `{símbolo}{monto} de merma evitada` o "Valor de merma no disponible" (`null`), `currencySymbol` de `SettingsService`. `RescueRecipesModal` refactorizado en sub-hooks/sub-componentes para respetar los límites de longitud de función.
+*   **[TK-131: Edición y Baja de Recetas (PUT / DELETE /api/v1/recipes/:id)](recipes/backend/TK-131.md)** (Backend) — ✅ Done. `US-037` / `AUDIT-DEV-012` C-2: un ADMIN edita o da de baja (soft-delete `Recipe.isActive`) una receta. `RecipeCompositionLockedException` (409) congela los ingredientes si hay una `RecipePreparation` `CLOSED` (trazabilidad `US-029`). Las inactivas salen de `GET /recipes`, del rescate CATALOG y de la disponibilidad. Migración aditiva. Auditoría [AUDIT-DEV-015](../../audits/AUDIT-DEV-015-TK-131-quality-report.md) APROBADO; mutation scoped 93.22%.
+*   **[TK-131-FE: Edición y Baja de Recetas en el Recetario](recipes/frontend/TK-131-FE.md)** (Frontend) — ✅ Done. Acciones "Editar" / "Dar de baja" (ADMIN) en `RecipeCatalogPanel`; `EditRecipeModal` con `PUT` parcial y banner para el `409` de composición congelada; `ConfirmModal` para el soft-delete. `IngredientRowsEditor` y `RowActionButtons`/`editRowAction` extraídos como fuente única (eliminan los clones con `CreateRecipeForm` e `InsumoManageActions`).
+
+
+`TK-056` cerró la deuda residual de listado de operarios; `TK-057`/`TK-057-FE` cierran la deuda de alta de catálogo (insumos y recetas) y la de `TK-008` — `TK-049`/`TK-049-FE`/`TK-050`/`TK-050-FE`/`TK-057`/`TK-057-FE` quedan sin pendientes conocidos. `TK-059` cierra el fix de conectividad Docker frontend↔backend; `TK-060`/`TK-060-FE` cierran el reabastecimiento de bodega (`US-013`); `TK-061` cierra la deuda de `US-012` sobre `RecipeSelectorModal.tsx`; `TK-069`/`TK-069-FE` extraen las recetas de `catalog` a un módulo `recipes` independiente; `TK-070-FE` le da al Recetario la misma estructura que Inventario de Bodega.

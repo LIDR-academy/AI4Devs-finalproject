@@ -1,0 +1,103 @@
+/* Regla de Ergonomía Táctil Innegociable (Touch Target >= 48px x 48px) */
+.btn-touch {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 12px 20px;
+  border-radius: 0;
+  font-weight: 700;
+  font-size: 1rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--duration-base) var(--ease-standard-in-out);
+  touch-action: manipulation;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-on);
+  border-color: var(--color-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+/* Feedback táctil <50ms (SK-05 / design system §7, v5.9.0): antes ningún botón tenía
+   estado `:active` — en tablet no había respuesta visual al pulsar. El recorrido lo
+   suprime `prefers-reduced-motion: reduce` (v5.6.0), el hundimiento visual queda. */
+.btn-touch:active:not(:disabled):not([aria-disabled='true']) {
+  transform: scale(0.97);
+}
+
+/* Secundario = "ghost" (v5.9.0): se funde con el fondo (transparente, borde 1px) en vez
+   de un recuadro de relleno + borde 2px brillante que competía con las acciones primarias.
+   El borde `--rule` a 1px sigue dando > 3:1 → afordancia intacta (WCAG 1.4.11). */
+.btn-secondary {
+  background-color: transparent;
+  border-width: 1px;
+  border-color: var(--rule);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-card);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* .btn-danger: usado por acciones destructivas (RolesManagementModal, LocationsManagementModal,
+   ConfirmModal). --color-danger-on evita el bug de contraste del turno Dia: --text-primary es
+   tinta oscura de dia, y --color-danger de dia es un rojo medio que necesita texto claro encima. */
+.btn-danger {
+  background-color: var(--color-danger);
+  color: var(--color-danger-on);
+  border-color: var(--color-danger);
+}
+
+.btn-danger:hover {
+  filter: brightness(1.1);
+}
+
+/* Estado deshabilitado (WCAG: el control sigue percibiéndose, pero inerte).
+   `[aria-disabled="true"]` cubre los botones que quedan en el DOM enfocables
+   pero anulados por su handler. `opacity` marca el estado; el `:hover` no
+   levanta ni aclara el botón. */
+.btn-touch:disabled,
+.btn-touch[aria-disabled='true'],
+.btn-touch:disabled:hover,
+.btn-touch[aria-disabled='true']:hover {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+/* Estado Loading (v5.8.0): un botón de submit muestra `aria-busy="true"` mientras
+   su acción está en vuelo. El anillo giratorio precede a la etiqueta (que sigue
+   swapeando a su texto "-ando..."); ancho estable. El giro lo suprime la regla
+   global `prefers-reduced-motion: reduce` — y ahí se oculta del todo para no dejar
+   un arco congelado. `aria-busy` ya lo anuncian los lectores de pantalla. */
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+.btn-touch[aria-busy='true']::before {
+  content: '';
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-touch[aria-busy='true']::before { display: none; }
+}
+
+/* Modificador de boton solo-icono (ej. cerrar modal); combinar con .btn-touch .btn-secondary */
+.btn-icon {
+  padding: 0;
+}

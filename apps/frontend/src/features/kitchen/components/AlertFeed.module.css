@@ -1,0 +1,31 @@
+.alert-feed-container {
+  background-color: var(--bg-root);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.alert-feed-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.alert-feed-main {
+  padding: 1rem;
+  flex: 1;
+}
+
+.alert-empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+}
+
+.skeleton-item {
+  height: 100px;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+  opacity: 0.6;
+  animation: pulse 1.5s infinite ease-in-out;
+}

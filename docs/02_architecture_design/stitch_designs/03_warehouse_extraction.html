@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RestoStock - Extracción de Bodega</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400..900&amp;family=IBM+Plex+Mono:ital,wght@0,100..700;1,100..700&amp;family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "primary-fixed": "#c1e8ff",
+          "on-secondary": "#ffffff",
+          "on-primary": "#ffffff",
+          "on-surface": "#1a1c1d",
+          "tertiary-container": "#376434",
+          "surface-dim": "#d9dadc",
+          "on-primary-fixed": "#001e2b",
+          "primary": "#10475d",
+          "secondary-fixed-dim": "#d1c5b2",
+          "surface-bright": "#f9f9fb",
+          "outline": "#71787d",
+          "on-secondary-container": "#6c6353",
+          "on-primary-container": "#a8d8f2",
+          "surface-container-low": "#f3f3f5",
+          "secondary-night": "#9aa394",
+          "surface-container-lowest": "#ffffff",
+          "surface-container": "#edeef0",
+          "success-day": "#3e6b3a",
+          "surface": "#f9f9fb",
+          "on-tertiary-fixed-variant": "#245022",
+          "on-secondary-fixed": "#211b0f",
+          "surface-tint": "#33647b",
+          "tertiary-fixed-dim": "#a1d398",
+          "on-background": "#1a1c1d",
+          "success-night": "#7cb36e",
+          "outline-variant": "#c1c7cd",
+          "inverse-on-surface": "#f0f1f2",
+          "warning-day": "#8a6414",
+          "card-day": "#f7f2e6",
+          "secondary": "#665d4e",
+          "neutral-night": "#171c18",
+          "error": "#ba1a1a",
+          "paper-bright": "#fbf8ef",
+          "surface-container-highest": "#e2e2e4",
+          "secondary-fixed": "#eee1cd",
+          "primary-night": "#6faac7",
+          "background": "#f9f9fb",
+          "on-secondary-fixed-variant": "#4e4637",
+          "warning-night": "#e6be55",
+          "on-tertiary-fixed": "#002203",
+          "danger-night": "#e1573a",
+          "danger-day": "#b43a24",
+          "on-surface-variant": "#41484c",
+          "on-error-container": "#93000a",
+          "on-tertiary": "#ffffff",
+          "neutral-day": "#efe8d8",
+          "ink-dark": "#18140f",
+          "primary-fixed-dim": "#9dcde8",
+          "surface-container-high": "#e7e8ea",
+          "on-primary-fixed-variant": "#174c62",
+          "on-error": "#ffffff",
+          "secondary-container": "#eee1cd",
+          "primary-container": "#2e5f76",
+          "surface-variant": "#e2e2e4",
+          "error-container": "#ffdad6",
+          "tertiary-night": "#7cb36e",
+          "inverse-surface": "#2e3132",
+          "inverse-primary": "#9dcde8",
+          "tertiary-fixed": "#bcf0b2",
+          "card-night": "#1f251f",
+          "tertiary": "#204c1e",
+          "on-tertiary-container": "#acdfa2"
+        },
+        "borderRadius": {
+          "DEFAULT": "0px",
+          "lg": "0px",
+          "xl": "0px",
+          "full": "9999px"
+        },
+        "spacing": {
+          "sm": "8px",
+          "lg": "24px",
+          "touch-target-min": "48px",
+          "md": "16px",
+          "action-target-lg": "72px",
+          "sidebar-width": "88px"
+        },
+        "fontFamily": {
+          "label-sm": [
+            "IBM Plex Sans"
+          ],
+          "data-mono": [
+            "IBM Plex Mono"
+          ],
+          "h2": [
+            "Big Shoulders Display"
+          ],
+          "h1": [
+            "Big Shoulders Display"
+          ],
+          "body-md": [
+            "IBM Plex Sans"
+          ],
+          "h1-mobile": [
+            "Big Shoulders Display"
+          ]
+        },
+        "fontSize": {
+          "label-sm": [
+            "0.875rem",
+            {
+              "lineHeight": "1",
+              "fontWeight": "600"
+            }
+          ],
+          "data-mono": [
+            "1rem",
+            {
+              "lineHeight": "1.4",
+              "fontWeight": "400"
+            }
+          ],
+          "h2": [
+            "1.5rem",
+            {
+              "lineHeight": "1.2",
+              "fontWeight": "900"
+            }
+          ],
+          "h1": [
+            "2.25rem",
+            {
+              "lineHeight": "1.1",
+              "fontWeight": "900"
+            }
+          ],
+          "body-md": [
+            "1rem",
+            {
+              "lineHeight": "1.5",
+              "fontWeight": "500"
+            }
+          ],
+          "h1-mobile": [
+            "1.75rem",
+            {
+              "lineHeight": "1.1",
+              "fontWeight": "900"
+            }
+          ]
+        }
+      },
+    },
+  }
+</script>
+<style>
+  body {
+    background-color: #171c18;
+  }
+</style>
+</head>
+<body class="font-body-md text-on-surface dark:text-paper-bright flex h-screen overflow-hidden bg-neutral-night">
+<!-- Sidebar Component (Background) -->
+<aside class="fixed left-0 top-0 h-screen w-sidebar-width border-r border-outline-variant dark:border-outline bg-paper-bright dark:bg-neutral-night opacity-30 pointer-events-none z-0 flex flex-col items-center py-md">
+<div class="[writing-mode:vertical-rl] font-h2 text-h2 text-ink-dark dark:text-paper-bright font-black py-lg mb-8">
+      RESTOSTOCK UNO
+    </div>
+<div class="text-on-surface-variant dark:text-surface-variant w-full aspect-square flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+</div>
+<div class="bg-primary-container text-on-primary-container dark:bg-primary dark:text-on-primary w-full aspect-square flex items-center justify-center border-l-4 border-primary">
+<span class="material-symbols-outlined" data-icon="warehouse" data-weight="fill" style="font-variation-settings: 'FILL' 1;">warehouse</span>
+</div>
+<div class="text-on-surface-variant dark:text-surface-variant w-full aspect-square flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+</div>
+<div class="text-on-surface-variant dark:text-surface-variant w-full aspect-square flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+</div>
+<div class="text-on-surface-variant dark:text-surface-variant w-full aspect-square flex items-center justify-center mt-auto">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</div>
+</aside>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+<!-- Modal Container -->
+<div class="relative w-full max-w-2xl bg-[#1a1f1b] border border-neutral-day border-t-4 border-t-primary-night shadow-2xl flex flex-col max-h-[921px]">
+<!-- Header -->
+<header class="flex items-start justify-between p-lg border-b border-neutral-day/20">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary-night text-3xl" data-icon="local_shipping">local_shipping</span>
+<div>
+<h2 class="font-h2 text-[24px] text-paper-bright uppercase tracking-wide">EXTRACCIÓN DE STOCK DE BODEGA</h2>
+<p class="font-body-md text-sm text-[#9e9c93] mt-1">Mueve stock de bodega a la cocina o asócialo a una receta activa</p>
+</div>
+</div>
+<button aria-label="Cerrar" class="h-touch-target-min w-touch-target-min flex items-center justify-center text-[#9e9c93] hover:text-paper-bright hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</header>
+<!-- Body -->
+<div class="flex-1 overflow-y-auto p-lg space-y-8">
+<!-- Form Fields -->
+<div class="space-y-6">
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm text-[#9e9c93] uppercase tracking-wider block">SELECCIONAR INSUMO DE BODEGA</label>
+<div class="relative">
+<select class="w-full h-touch-target-min bg-transparent border border-neutral-day/30 text-paper-bright font-body-md pl-4 pr-12 appearance-none rounded-none focus:outline-none focus:border-primary-night focus:ring-1 focus:ring-primary-night">
+<option class="bg-[#1a1f1b]" value="leche">Leche Entera (Stock Bodega: 10 L)</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#9e9c93] pointer-events-none">arrow_drop_down</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm text-[#9e9c93] uppercase tracking-wider block">SUB-SECTOR DE ORIGEN EN BODEGA</label>
+<div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+<div class="relative flex-1 w-full">
+<select class="w-full h-touch-target-min bg-transparent border border-neutral-day/30 text-paper-bright font-body-md pl-4 pr-12 appearance-none rounded-none focus:outline-none focus:border-primary-night focus:ring-1 focus:ring-primary-night">
+<option class="bg-[#1a1f1b]" value="camara">Cámara Fría Principal</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#9e9c93] pointer-events-none">arrow_drop_down</span>
+</div>
+<div class="h-touch-target-min px-4 flex items-center justify-center border border-primary-night/30 bg-primary-night/5 text-primary-night font-data-mono text-sm whitespace-nowrap">
+                Disponible aquí: 10,0 L
+              </div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm text-[#9e9c93] uppercase tracking-wider block">PROPÓSITO / MOTIVO</label>
+<div class="relative">
+<select class="w-full h-touch-target-min bg-transparent border border-neutral-day/30 text-paper-bright font-body-md pl-4 pr-12 appearance-none rounded-none focus:outline-none focus:border-primary-night focus:ring-1 focus:ring-primary-night">
+<option class="bg-[#1a1f1b]" value="uso">Uso General en Cocina (Stock Activo)</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#9e9c93] pointer-events-none">arrow_drop_down</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm text-[#9e9c93] uppercase tracking-wider block">ESTACIÓN DE DESTINO EN COCINA</label>
+<div class="relative">
+<select class="w-full h-touch-target-min bg-transparent border border-neutral-day/30 text-paper-bright font-body-md pl-4 pr-12 appearance-none rounded-none focus:outline-none focus:border-primary-night focus:ring-1 focus:ring-primary-night">
+<option class="bg-[#1a1f1b]" value="refri">Refrigerador Principal Cocina</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#9e9c93] pointer-events-none">arrow_drop_down</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Quantity Stepper -->
+<div class="pt-6 border-t border-neutral-day/20">
+<label class="font-label-sm text-label-sm text-paper-bright uppercase tracking-wider block mb-4 text-center">CANTIDAD A EXTRAER</label>
+<div class="flex items-center justify-center gap-4 mb-6">
+<button class="h-[56px] w-[56px] flex items-center justify-center border border-neutral-day/50 text-paper-bright hover:bg-neutral-day/10 active:bg-neutral-day/20 transition-colors">
+<span class="material-symbols-outlined text-2xl" data-icon="remove">remove</span>
+</button>
+<div class="h-[56px] min-w-[140px] px-6 flex items-center justify-center border border-neutral-day text-paper-bright font-data-mono font-bold text-[28px] bg-black/20 shadow-inner">
+              1,0 L
+            </div>
+<button class="h-[56px] w-[56px] flex items-center justify-center border border-neutral-day/50 text-paper-bright hover:bg-neutral-day/10 active:bg-neutral-day/20 transition-colors">
+<span class="material-symbols-outlined text-2xl" data-icon="add">add</span>
+</button>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+<button class="h-touch-target-min border border-neutral-day text-paper-bright font-data-mono text-sm hover:bg-neutral-day/10 active:bg-neutral-day/20 transition-colors">
+              [ +0.5 L ]
+            </button>
+<button class="h-touch-target-min border border-neutral-day text-paper-bright font-data-mono text-sm hover:bg-neutral-day/10 active:bg-neutral-day/20 transition-colors">
+              [ +1.0 L ]
+            </button>
+<button class="h-touch-target-min border border-neutral-day text-paper-bright font-data-mono text-sm hover:bg-neutral-day/10 active:bg-neutral-day/20 transition-colors">
+              [ +5.0 L ]
+            </button>
+<button class="h-touch-target-min border border-primary-night text-primary-night font-data-mono text-sm hover:bg-primary-night/10 active:bg-primary-night/20 transition-colors">
+              [ Todo el Stock ]
+            </button>
+</div>
+</div>
+</div>
+<!-- Footer Actions -->
+<footer class="p-lg border-t border-neutral-day/20 bg-black/20 flex flex-col-reverse sm:flex-row gap-4 justify-end">
+<button class="h-touch-target-min px-8 flex items-center justify-center border border-neutral-day text-paper-bright font-label-sm text-label-sm uppercase hover:bg-neutral-day/10 transition-colors">
+          CANCELAR
+        </button>
+<button class="h-touch-target-min px-8 flex items-center justify-center gap-2 bg-primary-night text-ink-dark font-label-sm text-label-sm uppercase font-bold hover:bg-primary-fixed transition-colors">
+<span class="material-symbols-outlined" data-icon="outbox">outbox</span>
+          CONFIRMAR EXTRACCIÓN
+        </button>
+</footer>
+</div>
+</div>
+</body></html>

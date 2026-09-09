@@ -1,0 +1,54 @@
+.health-bar-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: 0;
+  padding: 14px 20px;
+  margin-bottom: 24px;
+}
+
+.health-bar-embedded {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.health-bar-track {
+  height: 10px;
+  width: 100%;
+  background-color: var(--bg-root);
+  border: 1px solid var(--border-hairline);
+  border-radius: 0;
+  overflow: hidden;
+  display: flex;
+}
+
+.text-danger-text-color { color: var(--color-danger-text); }
+.text-warning-color { color: var(--color-warning-text); }
+
+.health-bar-segment {
+  width: var(--bar-pct, 0%);
+  transition: width 0.3s;
+}
+.health-bar-segment--safe { background-color: var(--color-success); }
+.health-bar-segment--warning { background-color: var(--color-warning); }
+.health-bar-segment--critical { background-color: var(--color-danger); }
+
+/* Leyenda numérica bajo la barra (TK-087-FE) */
+.health-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-2);
+  font-family: var(--font-family-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-secondary);
+}
+.health-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.health-legend-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+}

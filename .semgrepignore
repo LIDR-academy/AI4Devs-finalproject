@@ -1,0 +1,20 @@
+# Exclusiones de SAST (Semgrep, Guard 33) — TK-144.
+# Cada patrón se justifica; prohibido añadir uno sin explicar por qué NO es un hallazgo real.
+#
+# Semgrep respeta .gitignore por defecto; este fichero AÑADE exclusiones propias del SAST.
+
+# ── Fixtures de test ────────────────────────────────────────────────────────────
+# Guard 33 exige SAST sobre el "código fuente de la aplicación". Los tests declaran
+# secretos sintéticos a propósito (`test-secret-permissions-in-jwt-12345`, etc.) para
+# firmar/verificar JWT en memoria — la regla `jwt-hardcode.hardcoded-jwt-secret` los marca
+# como credencial embebida. Son las mismas cadenas ya verificadas y allowlisteadas en
+# `.gitleaksignore`, y nunca alcanzan producción: `getEnvironment()` exige `JWT_SECRET`
+# real con Fail-Fast (Guard 14). Excluir tests del SAST es política deliberada, no un
+# parche para silenciar un hallazgo incómodo.
+*.test.ts
+*.test.tsx
+
+# ── Artefactos generados y dependencias ─────────────────────────────────────────
+apps/backend/src/generated/
+**/dist/
+**/node_modules/

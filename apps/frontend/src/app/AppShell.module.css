@@ -1,0 +1,177 @@
+/* AppShell — Shell de rutas del Sistema FEFO (US-023 / TK-085-FE).
+   Grid: barra lateral "ficha de comanda" (88px) + cuerpo.
+   Consume tokens globales de index.css (--rule, --bg-root, --color-primary). */
+
+.shell {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  min-height: 100vh;
+}
+
+/* ---------- Barra lateral (ficha de comanda) ---------- */
+.sidebar {
+  position: relative;
+  background-color: var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4) 0;
+}
+
+.wordmark {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--font-family-display);
+  font-weight: 900;
+  font-size: var(--fs-xl);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bg-root);
+  white-space: nowrap;
+  overflow: hidden;
+  max-height: 70vh;
+  text-overflow: ellipsis;
+}
+
+/* Perforaciones de la ficha de comanda: valores geométricos decorativos (diámetro
+   y solape sobre el borde), no tokenizables en la escala --space-*. */
+.punch {
+  position: absolute;
+  right: -9px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--bg-root);
+  border: 1px solid var(--border-hairline);
+}
+.punch-top { top: 56px; }
+.punch-bottom { bottom: 56px; }
+
+/* ---------- Cuerpo ---------- */
+.body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 3px solid var(--rule);
+}
+
+.nav {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-1) var(--space-1) 0;
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+.nav-link:hover { color: var(--color-primary); }
+.nav-link-active { border-bottom-color: var(--color-primary); }
+
+.topbar-session {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.user-badge {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-hairline);
+  padding: var(--space-2) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-success-text);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-success);
+  flex-shrink: 0;
+}
+
+.content {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5);
+}
+
+/* ---------- Interruptor Dia / Noche (Sistema FEFO, US-022) ---------- */
+.theme-toggle {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+}
+.theme-toggle-btn {
+  font-family: var(--font-family-body);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  padding: var(--space-2) var(--space-4);
+  min-height: 48px;
+  min-width: 48px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.theme-toggle-btn + .theme-toggle-btn {
+  border-left: 1px solid var(--rule);
+}
+.theme-toggle-btn[aria-pressed='true'] {
+  background: var(--text-primary);
+  color: var(--bg-root);
+}
+
+/* ---------- Responsivo: barra lateral -> franja superior ---------- */
+@media (max-width: 640px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    padding: var(--space-2) var(--space-4);
+    justify-content: flex-start;
+  }
+  .wordmark {
+    writing-mode: horizontal-tb;
+    transform: none;
+    font-size: var(--fs-lg);
+    max-height: none;
+  }
+  .punch {
+    display: none;
+  }
+}

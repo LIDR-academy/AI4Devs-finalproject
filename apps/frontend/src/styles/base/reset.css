@@ -1,0 +1,42 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-root);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  min-height: 100vh;
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard);
+}
+
+/* Foco visible global (WCAG 2.2 SC 2.4.7 / 2.4.11, frontend_rules.md §2) — anillo
+   único para botones, enlaces, RowButton y toggles. --color-primary sobre --bg-root
+   está verificado ≥ 6.79:1 por check_fefo_contrast.mjs. Los inputs conservan su
+   propio :focus (deben marcar foco también al puntero). Esquinas rectas del sistema
+   → outline sin radio. */
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Reducción de movimiento global (WCAG 2.2 SC 2.3.3, frontend_rules.md §2) — cuando
+   el usuario pide menos movimiento, toda transición y animación (incluido el `pulse`
+   infinito de AlertFeed y el fade/scale de los modales) se vuelve instantánea. El
+   sustituto de cada animación es su estado final sin recorrido — no hay ninguna que
+   comunique información por su trayectoria. `!important` es la práctica estándar para
+   este override de accesibilidad. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,13 @@
+.pin-pad-grid { display: grid; grid-template-columns: repeat(3, 64px); gap: var(--space-3); justify-content: center; margin: var(--space-5) auto; }
+.pin-digit-spacer { width: 64px; height: 64px; }
+
+/* TK-095-FE WS-1 #1: el borde de "sello" de estos botones lo pisaba
+   `.btn-touch { border: 2px solid transparent }` de index.css (misma especificidad,
+   gana por orden de cascada). Se anida bajo `.pin-pad-grid` para ganar especificidad. */
+.pin-pad-grid .pin-digit-btn { width: 64px; height: 64px; border-radius: 0; background-color: var(--bg-card); border: 1px solid var(--rule); color: var(--text-primary); font-family: var(--font-family-mono); font-size: var(--fs-xl); font-weight: var(--fw-bold); transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard); }
+.pin-pad-grid .pin-delete-btn { width: 64px; height: 64px; border-radius: 0; background-color: color-mix(in srgb, var(--color-danger) 15%, transparent); border: 2px solid var(--color-danger); color: var(--color-danger-text); }
+
+/* v5.9.0: feedback de pulsación explícito — el keypad se sentía inerte en tablet.
+   Flash del color primario (o del rojo, para borrar) mientras el dedo está sobre la tecla. */
+.pin-pad-grid .pin-digit-btn:active:not(:disabled) { background-color: var(--color-primary); color: var(--color-primary-on); }
+.pin-pad-grid .pin-delete-btn:active:not(:disabled) { background-color: var(--color-danger); color: var(--color-danger-on); }

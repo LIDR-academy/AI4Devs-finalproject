@@ -1,0 +1,27 @@
+/* Manifiesto de Partials (ITCSS/7-1) — index.css no declara reglas propias.
+   Orden crítico: variables -> base -> components -> layout/utilities (última,
+   para que las utilidades de una sola responsabilidad ganen sobre estilos de
+   componente cuando se combinan en el mismo elemento, ej. "card-dashboard mb-4"). */
+
+/* Variables */
+@import url('./styles/variables/colors.css');
+@import url('./styles/variables/typography.css');
+@import url('./styles/variables/spacing.css');
+@import url('./styles/variables/motion.css');
+
+/* Base */
+@import url('./styles/base/reset.css');
+@import url('./styles/base/typography.css');
+
+/* Components */
+@import url('./styles/components/buttons.css');
+@import url('./styles/components/inputs.css');
+@import url('./styles/components/cards.css');
+@import url('./styles/components/tables.css');
+@import url('./styles/components/modals.css');
+@import url('./styles/components/banners.css');
+@import url('./styles/components/pin.css');
+@import url('./styles/components/user-management.css');
+
+/* Layout (utilidades, siempre al final) */
+@import url('./styles/layout/utilities.css');

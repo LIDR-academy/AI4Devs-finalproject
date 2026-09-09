@@ -1,0 +1,391 @@
+import express, { Express } from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+
+import { errorHandler } from './middlewares/errorHandler.js';
+import { createAuthRouter } from './routes/auth.routes.js';
+import { createStockRouter } from '../stock/http/routes/stock.routes.js';
+import { createKitchenRouter } from '../kitchen/http/routes/kitchen.routes.js';
+import { createReportsRouter } from '../reports/http/routes/reports.routes.js';
+import { createRecipesRouter } from '../recipes/http/routes/recipes.routes.js';
+import { InMemoryUserRepository } from '../auth/repositories/InMemoryUserRepository.js';
+import { InMemoryStockRepository } from '../stock/repositories/InMemoryStockRepository.js';
+import { InMemoryRemanenteQueryRepository } from '../kitchen/repositories/InMemoryRemanenteQueryRepository.js';
+import { InMemoryReportRepository } from '../reports/repositories/InMemoryReportRepository.js';
+import { InMemoryRecipeRepository } from '../recipes/repositories/InMemoryRecipeRepository.js';
+import { InMemoryRecipePreparationRepository } from '../kitchen/repositories/InMemoryRecipePreparationRepository.js';
+import { IRecipePreparationRepository } from '../../domain/kitchen/repositories/IRecipePreparationRepository.js';
+import { IUserRepository } from '../../domain/auth/repositories/IUserRepository.js';
+import { IInsumoRepository } from '../../domain/stock/repositories/IInsumoRepository.js';
+import { IRemanenteRepository } from '../../domain/stock/repositories/IRemanenteRepository.js';
+import { IStockUnitOfWork } from '../../domain/stock/repositories/IStockUnitOfWork.js';
+import { IStockMovementQueryRepository } from '../../domain/stock/repositories/IStockMovementQueryRepository.js';
+import { InMemoryStockMovementQueryRepository } from '../stock/repositories/InMemoryStockMovementQueryRepository.js';
+import { IRemanenteQueryRepository } from '../../domain/kitchen/repositories/IRemanenteQueryRepository.js';
+import { IReportRepository } from '../../domain/reports/repositories/IReportRepository.js';
+import { IRecipeRepository } from '../../domain/recipes/repositories/IRecipeRepository.js';
+
+import path from 'path';
+import fs from 'fs';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
+
+import { runSeed } from '../seeds/seed.js';
+
+import { createAuthenticateJWTMiddleware } from './middlewares/authenticateJWT.js';
+import { createRateLimiter } from './middlewares/rateLimiter.js';
+import { IShiftReconciliationRepository } from '../../domain/kitchen/repositories/IShiftReconciliationRepository.js';
+import { InMemoryShiftReconciliationRepository } from '../kitchen/repositories/InMemoryShiftReconciliationRepository.js';
+
+import { IRoleRepository } from '../../domain/security/repositories/IRoleRepository.js';
+import { InMemoryRoleRepository } from '../security/repositories/InMemoryRoleRepository.js';
+import { createRolesController } from '../security/http/controllers/roles.controller.js';
+
+import { IStorageLocationRepository } from '../../domain/stock/repositories/IStorageLocationRepository.js';
+import { InMemoryLocationRepository } from '../stock/repositories/InMemoryLocationRepository.js';
+import { createLocationsController } from '../stock/http/controllers/locations.controller.js';
+
+import { ISystemSettingsRepository } from '../../domain/settings/repositories/ISystemSettingsRepository.js';
+import { InMemorySettingsRepository } from '../settings/repositories/InMemorySettingsRepository.js';
+import { createSettingsController } from '../settings/http/controllers/settings.controller.js';
+import { IEmailService } from '../../domain/auth/ports/IEmailService.js';
+
+import { IConsumptionReasonRepository } from '../../domain/kitchen/repositories/IConsumptionReasonRepository.js';
+import { InMemoryConsumptionReasonRepository } from '../kitchen/repositories/InMemoryConsumptionReasonRepository.js';
+import { createConsumptionReasonsController } from '../kitchen/http/controllers/consumption-reasons.controller.js';
+import { cryptoIdGenerator } from '../shared/cryptoIdGenerator.js';
+import { systemClock } from '../shared/systemClock.js';
+
+import { ITemperatureLogRepository } from '../../domain/kitchen/repositories/ITemperatureLogRepository.js';
+import { InMemoryTemperatureLogRepository } from '../kitchen/repositories/InMemoryTemperatureLogRepository.js';
+import { createTemperatureLogsController } from '../kitchen/http/controllers/temperature-logs.controller.js';
+
+import { IAiConfigurationRepository } from '../../domain/settings/repositories/IAiConfigurationRepository.js';
+import { InMemoryAiConfigurationRepository } from '../settings/repositories/InMemoryAiConfigurationRepository.js';
+import { createAiSettingsController } from '../settings/http/controllers/aiSettings.controller.js';
+import { CredentialEncryptionService } from '../security/CredentialEncryptionService.js';
+import { SuggestRescueRecipesUseCase } from '../../application/recipes/use-cases/SuggestRescueRecipesUseCase.js';
+import { CompositeAiRecipeGeneratorAdapter } from '../recipes/gateways/CompositeAiRecipeGeneratorAdapter.js';
+import { AiRecipeGenerationOptionsResolver } from '../recipes/gateways/AiRecipeGenerationOptionsResolver.js';
+
+export interface AppOptions {
+  userRepository?: IUserRepository;
+  emailService?: IEmailService;
+  stockRepository?: IInsumoRepository & IRemanenteRepository & IStockUnitOfWork;
+  stockMovementQueryRepository?: IStockMovementQueryRepository;
+  remanenteQueryRepository?: IRemanenteQueryRepository;
+  reportRepository?: IReportRepository;
+  recipeRepository?: IRecipeRepository;
+  reconciliationRepository?: IShiftReconciliationRepository;
+  recipePreparationRepository?: IRecipePreparationRepository;
+  roleRepository?: IRoleRepository;
+  locationRepository?: IStorageLocationRepository;
+  settingsRepository?: ISystemSettingsRepository;
+  aiConfigRepository?: IAiConfigurationRepository;
+  consumptionReasonRepository?: IConsumptionReasonRepository;
+  temperatureLogRepository?: ITemperatureLogRepository;
+  jwtSecret?: string;
+  /** Secreto maestro del cifrado de credenciales; sin él se resuelve `ENCRYPTION_KEY` (AUDIT-SEC-004). */
+  encryptionKey?: string;
+  corsAllowedOrigins?: string;
+  rateLimit?: { windowMs: number; max: number };
+  loginRateLimit?: { windowMs: number; max: number };
+  /** Express `trust proxy` — default: rangos privados/loopback (nginx del stack Docker). */
+  trustProxy?: boolean | string | string[] | number;
+  enableDevSeeding?: boolean;
+  enableSwagger?: boolean;
+  requireAuth?: boolean;
+}
+
+
+// CORS_ALLOWED_ORIGINS es "*" (dev/test) o una lista separada por comas de origenes exactos
+// (produccion — Guard 14 ya prohibe "*" ahi vía Fail-Fast en environment.ts). Antes de este
+// fix, `app.use(cors())` ignoraba esta variable por completo: se validaba estrictamente pero
+// el middleware real seguia aceptando cualquier origen sin importar el valor configurado.
+function resolveCorsOrigin(raw: string | undefined): string | string[] {
+  const value = raw ?? '*';
+  if (value === '*') {
+    return '*';
+  }
+  return value
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+}
+
+// Limiter GLOBAL para /api/v1/* (default 300/15min por cliente real — AUDIT-SEC-003 subió
+// de 100, que compartido entre todos por el bug de `trust proxy` throttleaba la operación
+// multi-terminal normal). El login mantiene su limiter propio, más estricto.
+function resolveRateLimitOptions(raw: AppOptions['rateLimit']): { windowMs: number; max: number } {
+  if (raw) {
+    return raw;
+  }
+  const windowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '900000', 10);
+  const max = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS ?? '300', 10);
+  return { windowMs, max };
+}
+
+// Limiter de login (default 10/15min por cliente real — Guard 16, anti-fuerza-bruta).
+// Antes hardcodeado en auth.routes.ts; ahora parametrizable vía LOGIN_RATE_LIMIT_* para
+// escenarios de NAT compartido (varias terminales tras una IP) sin re-desplegar (AUDIT-SEC-003).
+function resolveLoginRateLimitOptions(raw: AppOptions['loginRateLimit']): { windowMs: number; max: number } {
+  if (raw) {
+    return raw;
+  }
+  const windowMs = parseInt(process.env.LOGIN_RATE_LIMIT_WINDOW_MS ?? '900000', 10);
+  const max = parseInt(process.env.LOGIN_RATE_LIMIT_MAX ?? '10', 10);
+  return { windowMs, max };
+}
+
+function isSwaggerEnabled(options: AppOptions): boolean {
+  if (options.enableSwagger !== undefined) {
+    return options.enableSwagger;
+  }
+  if (process.env.ENABLE_SWAGGER !== undefined) {
+    return process.env.ENABLE_SWAGGER === 'true';
+  }
+  // En produccion se deshabilita por defecto para mitigar Information Disclosure
+  return process.env.NODE_ENV !== 'production';
+}
+
+// Swagger UI - Documentacion Interactiva de API REST (OpenAPI 3.1)
+function setupSwaggerDocs(app: Express, enabled: boolean): boolean {
+  if (!enabled) {
+    return false;
+  }
+
+  const openApiPath = path.resolve(process.cwd(), 'docs/03_persistence_and_api/openapi.yaml');
+  const fallbackPath = path.resolve(process.cwd(), '../../docs/03_persistence_and_api/openapi.yaml');
+  const finalOpenApiPath = fs.existsSync(openApiPath) ? openApiPath : (fs.existsSync(fallbackPath) ? fallbackPath : null);
+  if (!finalOpenApiPath) {
+    return false;
+  }
+
+  try {
+    const swaggerDocument = YAML.load(finalOpenApiPath);
+    // CSP Aislado especificamente para Swagger UI sin debilitar la API global
+    const swaggerCsp = helmet.contentSecurityPolicy({
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        'script-src': ["'self'", "'unsafe-inline'"],
+        'style-src': ["'self'", "'unsafe-inline'"],
+        'img-src': ["'self'", 'data:'],
+      },
+    });
+
+    app.use('/docs', swaggerCsp, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    app.use('/api-docs', swaggerCsp, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    return true;
+  } catch (err) {
+    console.warn('⚠️ No se pudo cargar Swagger UI desde openapi.yaml:', err);
+    return false;
+  }
+}
+
+
+// Fail-Fast Environment Validation for JWT Secret (Guard 14).
+// Solo "test" tiene excepción: Vitest fija NODE_ENV=test automáticamente y los
+// tests de integración dependen de un secreto conocido sin tener que declararlo
+// en cada suite. Cualquier otro entorno (development, staging, production, o
+// NODE_ENV sin definir) exige un JWT_SECRET real — nunca un fallback hardcodeado
+// en el repositorio, que sería trivialmente conocido por cualquiera con el código.
+function assertJwtSecretConfigured(options: AppOptions): void {
+  const isTestEnv = process.env.NODE_ENV === 'test';
+  if (!isTestEnv && !options.jwtSecret && !process.env.JWT_SECRET) {
+    throw new Error(
+      'CONFIG FATAL: Variable de entorno JWT_SECRET es obligatoria fuera del entorno de test (Guard 14 Fail-Fast Secrets).'
+    );
+  }
+}
+
+interface AppRepositories {
+  userRepo: IUserRepository;
+  jwtSecret: string;
+  stockRepo: IInsumoRepository & IRemanenteRepository & IStockUnitOfWork;
+  stockMovementQueryRepo: IStockMovementQueryRepository;
+  remanenteQueryRepo: IRemanenteQueryRepository;
+  reportRepo: IReportRepository;
+  recipeRepo: IRecipeRepository;
+  reconciliationRepo: IShiftReconciliationRepository;
+  recipePreparationRepo: IRecipePreparationRepository;
+  roleRepo: IRoleRepository;
+  locationRepo: IStorageLocationRepository;
+  settingsRepo: ISystemSettingsRepository;
+  consumptionReasonRepo: IConsumptionReasonRepository;
+  temperatureLogRepo: ITemperatureLogRepository;
+  aiConfigRepo: IAiConfigurationRepository;
+  encryptionService: CredentialEncryptionService;
+}
+
+function buildQueryRepositories(
+  options: AppOptions,
+  stockRepo: IInsumoRepository & IRemanenteRepository & IStockUnitOfWork,
+  // AUDIT-DEV-006 F-7 / TK-101: el histórico de movimientos resuelve el nombre ACTUAL
+  // del sub-sector de origen (join) cuando aún existe — necesita el catálogo de ubicaciones.
+  locationRepo: IStorageLocationRepository
+) {
+  const stockInMemory = stockRepo as InMemoryStockRepository;
+  return {
+    stockMovementQueryRepo:
+      options.stockMovementQueryRepository ??
+      new InMemoryStockMovementQueryRepository(stockInMemory, locationRepo),
+    remanenteQueryRepo:
+      options.remanenteQueryRepository ?? new InMemoryRemanenteQueryRepository(stockInMemory),
+  };
+}
+
+function buildAuxiliaryRepositories(options: AppOptions) {
+  return {
+    roleRepo: options.roleRepository ?? new InMemoryRoleRepository(),
+    locationRepo: options.locationRepository ?? new InMemoryLocationRepository(),
+    settingsRepo: options.settingsRepository ?? new InMemorySettingsRepository(),
+    aiConfigRepo: options.aiConfigRepository ?? new InMemoryAiConfigurationRepository(),
+    consumptionReasonRepo: options.consumptionReasonRepository ?? new InMemoryConsumptionReasonRepository(),
+    temperatureLogRepo: options.temperatureLogRepository ?? new InMemoryTemperatureLogRepository(),
+  };
+}
+
+// Repositorios e inyeccion de dependencias por defecto para dev/standalone
+function buildDefaultRepositories(options: AppOptions): AppRepositories {
+  const stockRepo = options.stockRepository ?? new InMemoryStockRepository();
+  const auxRepos = buildAuxiliaryRepositories(options);
+  const queryRepos = buildQueryRepositories(options, stockRepo, auxRepos.locationRepo);
+  const recipePreparationRepo =
+    options.recipePreparationRepository ??
+    new InMemoryRecipePreparationRepository(stockRepo as InMemoryStockRepository);
+  return {
+    userRepo: options.userRepository ?? new InMemoryUserRepository(),
+    jwtSecret: options.jwtSecret ?? process.env.JWT_SECRET ?? 'restostock-test-only-jwt-secret',
+    stockRepo,
+    ...queryRepos,
+    ...auxRepos,
+    reportRepo: options.reportRepository ?? new InMemoryReportRepository(),
+    recipeRepo: options.recipeRepository ?? new InMemoryRecipeRepository(),
+    reconciliationRepo: options.reconciliationRepository ?? new InMemoryShiftReconciliationRepository(),
+    recipePreparationRepo,
+    // AUDIT-SEC-004: sin argumento → resuelve `ENCRYPTION_KEY` (dedicada, ya no reutiliza JWT_SECRET).
+    encryptionService: new CredentialEncryptionService(options.encryptionKey),
+  };
+}
+
+// Sembrado de Datos Desacoplado e Idempotente (SK-28)
+function triggerDevSeedingIfNeeded(repos: AppRepositories, options: AppOptions): void {
+  const shouldSeed = options.enableDevSeeding ?? (!options.userRepository && process.env.NODE_ENV !== 'test');
+  if (!shouldSeed) {
+    return;
+  }
+
+  const { userRepo, stockRepo, remanenteQueryRepo, recipeRepo } = repos;
+  runSeed(
+    { userRepo, stockRepo, remanenteQueryRepo, recipeRepo },
+    { includeSyntheticFixtures: process.env.NODE_ENV !== 'production' }
+  ).catch((err) => console.warn('⚠️ Advertencia ejecutando seeding:', err));
+}
+
+// Rutas Protegidas de Control de Bodega y Stock (Guard 15): las rutas exigen JWT
+// SIEMPRE por defecto, sin importar NODE_ENV. Un test de negocio que legítimamente
+// necesite aislar la lógica de auth debe pasar requireAuth:false explícito.
+function mountApiRoutes(
+  app: Express,
+  repos: AppRepositories,
+  authMiddleware: ReturnType<typeof createAuthenticateJWTMiddleware>,
+  isAuthRequired: boolean
+): void {
+  const { stockRepo, stockMovementQueryRepo, remanenteQueryRepo, recipeRepo, reconciliationRepo, recipePreparationRepo, reportRepo, roleRepo, locationRepo, settingsRepo, aiConfigRepo, encryptionService, consumptionReasonRepo, temperatureLogRepo } = repos;
+  const guard = isAuthRequired ? [authMiddleware] : [];
+
+  app.use('/api/v1/stock', ...guard, createStockRouter(stockRepo, stockMovementQueryRepo, isAuthRequired, locationRepo, recipePreparationRepo, roleRepo));
+  app.use('/api/v1/kitchen', ...guard, createKitchenRouter(remanenteQueryRepo, stockRepo, recipeRepo, reconciliationRepo, isAuthRequired, recipePreparationRepo, stockRepo, locationRepo, consumptionReasonRepo, settingsRepo, roleRepo));
+  app.use('/api/v1/reports', ...guard, createReportsRouter(reportRepo, roleRepo, settingsRepo, isAuthRequired));
+  const rescueGenerationGateway = new CompositeAiRecipeGeneratorAdapter();
+  const rescueOptionsResolver = new AiRecipeGenerationOptionsResolver(aiConfigRepo, encryptionService);
+  const suggestRescueRecipesUseCase = new SuggestRescueRecipesUseCase(
+    remanenteQueryRepo,
+    stockRepo,
+    recipeRepo,
+    rescueOptionsResolver,
+    rescueGenerationGateway
+  );
+  app.use('/api/v1/recipes', ...guard, createRecipesRouter(recipeRepo, stockRepo, suggestRescueRecipesUseCase, recipePreparationRepo));
+  app.use('/api/v1/roles', ...guard, createRolesController(roleRepo, isAuthRequired));
+  app.use('/api/v1/locations', ...guard, createLocationsController(locationRepo, isAuthRequired, stockRepo));
+  app.use('/api/v1/settings/ai', ...guard, createAiSettingsController(aiConfigRepo, encryptionService, isAuthRequired));
+  app.use('/api/v1/settings', ...guard, createSettingsController(settingsRepo));
+  // US-030: catálogo de motivos de consumo — lectura para cualquier autenticado,
+  // mutación y `includeInactive` solo ADMIN (gateado dentro del propio controller).
+  app.use('/api/v1/consumption-reasons', ...guard, createConsumptionReasonsController(consumptionReasonRepo, cryptoIdGenerator, isAuthRequired));
+  // US-033/TK-120: registro (cualquier rol) gateado solo por `guard` (autenticación);
+  // el histórico (`GET`) exige ADMIN dentro del propio controller (mismo patrón que
+  // consumption-reasons con `includeInactive`).
+  app.use('/api/v1/kitchen/temperature-logs', ...guard, createTemperatureLogsController(temperatureLogRepo, locationRepo, cryptoIdGenerator, systemClock, isAuthRequired));
+}
+
+// AUDIT-SEC-004: el router de auth necesita el allowlist de orígenes (para no confiar en el
+// header `Origin` al construir el enlace del email de reset) y avisa si no hay email real.
+function mountAuthRouter(app: Express, repos: AppRepositories, options: AppOptions): void {
+  if (process.env.NODE_ENV === 'production' && !options.emailService) {
+    console.warn('[startup] Sin IEmailService real inyectado — la recuperación de PIN de administrador no enviará correos en producción.');
+  }
+  const corsOrigin = resolveCorsOrigin(options.corsAllowedOrigins ?? process.env.CORS_ALLOWED_ORIGINS);
+  app.use(
+    '/api/v1/auth',
+    createAuthRouter(
+      repos.userRepo,
+      repos.jwtSecret,
+      repos.roleRepo,
+      options.emailService,
+      resolveLoginRateLimitOptions(options.loginRateLimit),
+      Array.isArray(corsOrigin) ? corsOrigin : [corsOrigin]
+    )
+  );
+}
+
+export function createApp(options: AppOptions = {}): Express {
+  const app = express();
+
+  // Confianza en el proxy inverso (AUDIT-SEC-003). En el stack Docker el flujo es
+  // browser → nginx → backend; sin esto `req.ip` = IP del contenedor de nginx, idéntica
+  // para TODOS los clientes → un único bucket de rate-limit compartido por todo el
+  // restaurante. Se confía sólo en loopback + rangos privados (la red bridge de Docker es
+  // `uniquelocal`, 172.16/12): una petición directa desde una IP pública NO entra en la
+  // lista, su `X-Forwarded-For` se ignora y se usa el socket real → sin spoofing de XFF.
+  app.set('trust proxy', options.trustProxy ?? ['loopback', 'linklocal', 'uniquelocal']);
+
+  // Helmet estricto activo por defecto a nivel global (HSTS, NoSniff, Frameguard, etc.)
+  app.use(helmet());
+  app.use(cors({ origin: resolveCorsOrigin(options.corsAllowedOrigins ?? process.env.CORS_ALLOWED_ORIGINS) }));
+
+  app.use(express.json());
+  const swaggerActive = setupSwaggerDocs(app, isSwaggerEnabled(options));
+
+  // Endpoint de salud
+  app.get('/health', (_req, res) => {
+    res.status(200).json({
+      status: 'ok',
+      system: 'RestoStock Backend Core',
+      docs: swaggerActive ? '/docs' : 'disabled',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+
+  assertJwtSecretConfigured(options);
+
+  const repos = buildDefaultRepositories(options);
+  triggerDevSeedingIfNeeded(repos, options);
+
+  const authMiddleware = createAuthenticateJWTMiddleware(repos.jwtSecret);
+  const isAuthRequired = options.requireAuth ?? true;
+
+  // Rate limiting global para /api/v1/* (Guard 16) — el login mantiene ademas su propio
+  // limiter mas estricto, aplicado despues de este en la cadena de middlewares.
+  app.use('/api/v1', createRateLimiter(resolveRateLimitOptions(options.rateLimit)));
+
+  mountAuthRouter(app, repos, options);
+  mountApiRoutes(app, repos, authMiddleware, isAuthRequired);
+
+  // Middleware global de errores
+  app.use(errorHandler);
+
+  return app;
+}

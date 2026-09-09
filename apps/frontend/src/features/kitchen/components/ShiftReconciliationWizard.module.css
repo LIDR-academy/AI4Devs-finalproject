@@ -1,0 +1,52 @@
+/* Estructura base compartida: `.reconciliation-item-row` en index.css (TK-104-FE). */
+.reconciliation-row--critical {
+  border-color: var(--color-danger);
+  background-color: color-mix(in srgb, var(--color-danger) 8%, transparent);
+}
+
+/*
+ * TK-115-FE (US-031, fusión de mockup Stitch): fila con varianza negativa
+ * pendiente de motivo — fondo tintado de sangre completa (edge-to-edge dentro
+ * de la lista de conciliación, no solo un borde), más visible bajo luz de
+ * cocina que `.reconciliation-row--critical`. Independiente de esa clase:
+ * una fila puede tener ambas (crítica Y sin motivo aún).
+ */
+.reconciliation-row--pending-reason {
+  margin-inline: calc(-1 * var(--space-4));
+  padding-inline: var(--space-4);
+  border-color: color-mix(in srgb, var(--color-danger) 20%, transparent);
+  background-color: color-mix(in srgb, var(--color-danger) 5%, transparent);
+}
+
+.qty-stepper-btn-sm { min-width: 40px; min-height: 40px; padding: 0; }
+.qty-stepper-input-sm {
+  width: 90px;
+  text-align: center;
+  font-family: var(--font-family-mono);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  padding: var(--space-2);
+  border-radius: 0;
+  border: 1px solid var(--border-hairline);
+  background-color: var(--bg-root);
+  color: var(--text-primary);
+}
+
+.critical-variance-banner {
+  background-color: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  border: 1px solid var(--color-danger);
+  padding: 14px;
+  border-radius: 0;
+}
+.critical-variance-alert-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-danger-text);
+}
+.cursor-pointer { cursor: pointer; }
+.d-flex { display: flex; }
+.reconciliation-list-scroll { max-height: 340px; overflow-y: auto; }
+
+.variance-positive { color: var(--color-primary); }
+.variance-negative { color: var(--color-danger-text); }

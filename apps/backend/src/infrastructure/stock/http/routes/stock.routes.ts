@@ -1,0 +1,98 @@
+import { Router } from 'express';
+import { StockController } from '../controllers/stock.controller.js';
+import {
+  RecordExtractionUseCase,
+  GetStockMovementHistoryUseCase,
+  CreateInsumoUseCase,
+  ListInsumosUseCase,
+  RestockInsumoUseCase,
+  FindInsumoByBarcodeUseCase,
+  UpdateInsumoUseCase,
+} from '../../../../application/stock/use-cases/index.js';
+import { IInsumoRepository } from '../../../../domain/stock/repositories/IInsumoRepository.js';
+import { IRemanenteRepository } from '../../../../domain/stock/repositories/IRemanenteRepository.js';
+import { IStockUnitOfWork } from '../../../../domain/stock/repositories/IStockUnitOfWork.js';
+import { systemClock } from '../../../shared/systemClock.js';
+import { cryptoIdGenerator } from '../../../shared/cryptoIdGenerator.js';
+import { IStockMovementQueryRepository } from '../../../../domain/stock/repositories/IStockMovementQueryRepository.js';
+import { IStorageLocationRepository } from '../../../../domain/stock/repositories/IStorageLocationRepository.js';
+import { IRecipePreparationRepository } from '../../../../domain/kitchen/repositories/IRecipePreparationRepository.js';
+import { IRoleRepository } from '../../../../domain/security/repositories/IRoleRepository.js';
+import { requireRole } from '../../../http/middlewares/requireRole.js';
+import { authorizePermissions } from '../../../security/http/middleware/authorizePermissions.middleware.js';
+
+// TK-117 (US-015 Escenario 3): solo `/extraction` migra a permiso fino (`stock:extract`,
+// ya sembrado tanto en ADMIN como en KITCHEN_STAFF — sin cambio de acceso real).
+// `/movements` y `/insumos/:id/restock` quedan deliberadamente en `requireRole('ADMIN')`:
+// el seed les asigna `stock:read`/`stock:restock` a KITCHEN_STAFF, pero abrir esas 2
+// rutas a ese permiso sí cambiaría el acceso real de hoy — decisión de producto
+// explícita del humano de NO hacerlo en TK-117. Si no se inyecta `roleRepository`,
+// cae al guard grueso anterior — nunca a "sin guard".
+function buildExtractionGuard(
+  isAuthRequired: boolean,
+  roleRepository?: IRoleRepository
+): ReturnType<typeof authorizePermissions | typeof requireRole>[] {
+  if (!isAuthRequired) return [];
+  return roleRepository ? [authorizePermissions(roleRepository, 'stock:extract')] : [requireRole('ADMIN', 'KITCHEN_STAFF')];
+}
+
+export function createStockRouter(
+  stockRepository: IInsumoRepository & IRemanenteRepository & IStockUnitOfWork,
+  stockMovementQueryRepository?: IStockMovementQueryRepository,
+  isAuthRequired = true,
+  locationRepository?: IStorageLocationRepository,
+  recipePreparationRepository?: IRecipePreparationRepository,
+  roleRepository?: IRoleRepository
+): Router {
+  const router = Router();
+
+  // TK-093 (AUDIT-SEC-001 F-3): rol explícito por ruta. Cuando la auth está desactivada
+  // (tests de negocio, requireAuth:false) el guard de rol se omite — mismo criterio que
+  // el authMiddleware a nivel de mount en app.ts.
+  const role = (...roles: string[]): ReturnType<typeof requireRole>[] =>
+    isAuthRequired ? [requireRole(...roles)] : [];
+  const extractPermission = buildExtractionGuard(isAuthRequired, roleRepository);
+  // args: (insumoRepository, unitOfWork, clock, idGenerator, locationRepository)
+  // — el repo concreto satisface las 2 primeras interfaces.
+  const useCase = new RecordExtractionUseCase(
+    stockRepository,
+    stockRepository,
+    systemClock,
+    cryptoIdGenerator,
+    locationRepository,
+    recipePreparationRepository
+  );
+  const getMovementHistoryUseCase = stockMovementQueryRepository
+    ? new GetStockMovementHistoryUseCase(stockMovementQueryRepository)
+    : undefined;
+  const createInsumoUseCase = new CreateInsumoUseCase(stockRepository, locationRepository);
+  const listInsumosUseCase = new ListInsumosUseCase(stockRepository, locationRepository);
+  const restockInsumoUseCase = new RestockInsumoUseCase(stockRepository, stockRepository, cryptoIdGenerator, locationRepository);
+  const findInsumoByBarcodeUseCase = new FindInsumoByBarcodeUseCase(stockRepository, locationRepository);
+  const updateInsumoUseCase = new UpdateInsumoUseCase(stockRepository, locationRepository);
+  const controller = new StockController(
+    useCase,
+    getMovementHistoryUseCase,
+    createInsumoUseCase,
+    listInsumosUseCase,
+    restockInsumoUseCase,
+    findInsumoByBarcodeUseCase,
+    updateInsumoUseCase
+  );
+
+  // Extracción de bodega (US-014/TK-072): la ejecutan operarios de cocina y admins.
+  router.post('/extraction', ...extractPermission, controller.recordExtraction);
+  // Trazabilidad de movimientos (TK-050): dato administrativo — solo ADMIN.
+  router.get('/movements', ...role('ADMIN'), controller.getMovementHistory);
+  // Catálogo de insumos (TK-057): alta administrativa, listado para cualquier autenticado.
+  router.post('/insumos', ...role('ADMIN'), controller.createInsumo);
+  router.get('/insumos', controller.listInsumos);
+  // Escaneo de código de barras (US-032/TK-119): cualquier rol autenticado, solo lectura.
+  router.get('/insumos/by-barcode/:barcode', controller.findInsumoByBarcode);
+  // Reabastecimiento de bodega (US-013/TK-060): incrementa warehouseStock, solo ADMIN.
+  router.patch('/insumos/:id/restock', ...role('ADMIN'), controller.restockInsumo);
+  // Edición de insumo (US-036/TK-130): name / unitCost / barcode — solo ADMIN.
+  router.put('/insumos/:id', ...role('ADMIN'), controller.updateInsumo);
+
+  return router;
+}

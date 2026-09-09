@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tablero FEFO - Turno Noche</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@900&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary-fixed-dim": "#a1d398",
+            "secondary-fixed-dim": "#d1c5b2",
+            "surface-bright": "#f9f9fb",
+            "inverse-surface": "#2e3132",
+            "on-primary-fixed": "#001e2b",
+            "surface-container-high": "#e7e8ea",
+            "primary-fixed-dim": "#9dcde8",
+            "on-secondary": "#ffffff",
+            "on-tertiary": "#ffffff",
+            "tertiary-night": "#7cb36e",
+            "surface-dim": "#d9dadc",
+            "on-secondary-fixed-variant": "#4e4637",
+            "danger-night": "#e1573a",
+            "surface-variant": "#e2e2e4",
+            "card-night": "#1f251f",
+            "inverse-on-surface": "#f0f1f2",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed": "#211b0f",
+            "warning-night": "#e6be55",
+            "on-error-container": "#93000a",
+            "paper-bright": "#fbf8ef",
+            "neutral-night": "#171c18",
+            "secondary-night": "#9aa394",
+            "surface-container-lowest": "#ffffff",
+            "outline": "#71787d",
+            "tertiary": "#204c1e",
+            "primary-night": "#6faac7",
+            "secondary-fixed": "#eee1cd",
+            "on-primary-container": "#a8d8f2",
+            "on-tertiary-fixed": "#002203",
+            "neutral-day": "#efe8d8",
+            "surface-tint": "#33647b",
+            "on-background": "#1a1c1d",
+            "surface-container-low": "#f3f3f5",
+            "surface-container-highest": "#e2e2e4",
+            "on-error": "#ffffff",
+            "outline-variant": "#c1c7cd",
+            "on-primary": "#ffffff",
+            "ink-dark": "#18140f",
+            "surface-container": "#edeef0",
+            "on-primary-fixed-variant": "#174c62",
+            "on-tertiary-fixed-variant": "#245022",
+            "secondary-container": "#eee1cd",
+            "background": "#f9f9fb",
+            "inverse-primary": "#9dcde8",
+            "warning-day": "#8a6414",
+            "tertiary-fixed": "#bcf0b2",
+            "card-day": "#f7f2e6",
+            "surface": "#f9f9fb",
+            "on-surface": "#1a1c1d",
+            "error": "#ba1a1a",
+            "on-surface-variant": "#41484c",
+            "success-day": "#3e6b3a",
+            "secondary": "#665d4e",
+            "on-tertiary-container": "#acdfa2",
+            "primary-fixed": "#c1e8ff",
+            "danger-day": "#b43a24",
+            "on-secondary-container": "#6c6353",
+            "success-night": "#7cb36e",
+            "primary-container": "#2e5f76",
+            "tertiary-container": "#376434",
+            "primary": "#10475d"
+          },
+          "borderRadius": {
+            "DEFAULT": "0px",
+            "lg": "0px",
+            "xl": "0px",
+            "full": "9999px"
+          },
+          "spacing": {
+            "sidebar-width": "88px",
+            "action-target-lg": "72px",
+            "md": "16px",
+            "sm": "8px",
+            "touch-target-min": "48px",
+            "lg": "24px"
+          },
+          "fontFamily": {
+            "body-md": [
+              "IBM Plex Sans"
+            ],
+            "label-sm": [
+              "IBM Plex Sans"
+            ],
+            "h1": [
+              "Big Shoulders Display"
+            ],
+            "h2": [
+              "Big Shoulders Display"
+            ],
+            "data-mono": [
+              "IBM Plex Mono"
+            ],
+            "h1-mobile": [
+              "Big Shoulders Display"
+            ]
+          },
+          "fontSize": {
+            "body-md": [
+              "1rem",
+              {
+                "lineHeight": "1.5",
+                "fontWeight": "500"
+              }
+            ],
+            "label-sm": [
+              "0.875rem",
+              {
+                "lineHeight": "1",
+                "fontWeight": "600"
+              }
+            ],
+            "h1": [
+              "2.25rem",
+              {
+                "lineHeight": "1.1",
+                "fontWeight": "900"
+              }
+            ],
+            "h2": [
+              "1.5rem",
+              {
+                "lineHeight": "1.2",
+                "fontWeight": "900"
+              }
+            ],
+            "data-mono": [
+              "1rem",
+              {
+                "lineHeight": "1.4",
+                "fontWeight": "400"
+              }
+            ],
+            "h1-mobile": [
+              "1.75rem",
+              {
+                "lineHeight": "1.1",
+                "fontWeight": "900"
+              }
+            ]
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-neutral-night text-paper-bright overflow-x-hidden min-h-screen">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-sidebar-width border-r-2 border-dashed border-outline-variant bg-neutral-day text-primary flex flex-col items-center py-lg shadow-none">
+<div class="h-4 w-4 bg-neutral-night rounded-full mb-4"></div>
+<div class="[writing-mode:vertical-rl] font-h2 text-h2 text-ink-dark font-black flex-grow tracking-tighter uppercase flex justify-center pb-8">
+      RESTOSTOCK UNO
+    </div>
+<div class="h-4 w-4 bg-neutral-night rounded-full mt-4"></div>
+</aside>
+<!-- Main Content Area -->
+<div class="ml-sidebar-width min-h-screen flex flex-col relative">
+<!-- TopNavBar -->
+<header class="h-16 flex justify-between items-center px-lg border-b border-secondary-night/30 bg-neutral-night z-10 sticky top-0">
+<!-- Navigation Links -->
+<nav class="flex gap-4 h-full">
+<button class="h-full px-4 text-paper-bright border-b-2 border-paper-bright font-label-sm text-label-sm uppercase flex items-center justify-center">
+          Inventario
+        </button>
+<button class="h-full px-4 text-secondary-night hover:text-paper-bright transition-colors font-label-sm text-label-sm uppercase flex items-center justify-center">
+          Bodega
+        </button>
+<button class="h-full px-4 text-secondary-night hover:text-paper-bright transition-colors font-label-sm text-label-sm uppercase flex items-center justify-center">
+          Recetas
+        </button>
+<button class="h-full px-4 text-secondary-night hover:text-paper-bright transition-colors font-label-sm text-label-sm uppercase flex items-center justify-center">
+          Reportes
+        </button>
+</nav>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-6">
+<!-- Shift Selector -->
+<div class="flex border border-secondary-night h-touch-target-min">
+<button class="px-4 text-secondary-night font-label-sm text-label-sm uppercase hover:bg-secondary-night/10 transition-colors h-full flex items-center justify-center">
+            Día
+          </button>
+<button class="px-4 bg-paper-bright text-ink-dark font-label-sm text-label-sm uppercase h-full flex items-center justify-center">
+            Noche
+          </button>
+</div>
+<!-- Connection Status -->
+<div class="flex items-center gap-2 font-data-mono text-data-mono text-success-night">
+<span class="text-xs">●</span> CONECTADO
+        </div>
+<!-- Logout -->
+<button class="text-secondary-night hover:text-paper-bright transition-colors h-touch-target-min w-touch-target-min flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">logout</span>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-lg flex flex-col gap-lg bg-neutral-night">
+<!-- Actions & Health Card -->
+<section class="border border-paper-bright bg-card-night p-lg flex flex-col md:flex-row gap-lg items-center relative">
+<!-- Left: Action Buttons -->
+<div class="flex gap-4 items-center md:border-r border-dashed border-paper-bright/30 pr-lg w-full md:w-auto justify-center">
+<button class="h-action-target-lg w-action-target-lg rounded-full bg-danger-night text-on-error flex flex-col items-center justify-center gap-1 hover:brightness-110 transition-all flex-shrink-0">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">warehouse</span>
+</button>
+<button class="h-action-target-lg w-action-target-lg rounded-full bg-warning-night text-ink-dark flex flex-col items-center justify-center gap-1 hover:brightness-110 transition-all flex-shrink-0">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+</button>
+</div>
+<!-- Right: Inventory Health -->
+<div class="flex-1 flex flex-col gap-4 w-full pl-0 md:pl-4">
+<div class="flex justify-between items-end">
+<h3 class="font-label-sm text-label-sm uppercase text-secondary-night">Salud FEFO Actual</h3>
+<div class="flex gap-4 font-data-mono text-data-mono">
+<span class="text-success-night">0 Vigentes</span>
+<span class="text-warning-night">0 Ámbar</span>
+<span class="text-danger-night font-bold">3 Críticos</span>
+</div>
+</div>
+<div class="h-3 w-full bg-surface-variant flex">
+<div class="h-full bg-danger-night w-full relative">
+<div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4yKSIvPjwvc3ZnPg==')] opacity-50"></div>
+</div>
+</div>
+<div class="text-right font-data-mono text-data-mono text-danger-night text-sm">
+            100% de insumos en estado crítico.
+          </div>
+</div>
+</section>
+<!-- FEFO Board Title & Filters -->
+<section class="flex flex-col md:flex-row justify-between items-end gap-4 mt-4">
+<h1 class="font-h1 text-h1 uppercase tracking-tight">Tablero FEFO</h1>
+<div class="flex gap-2 font-label-sm text-label-sm uppercase">
+<button class="px-4 py-2 bg-primary-night text-on-primary-container h-touch-target-min flex items-center justify-center">Todos</button>
+<button class="px-4 py-2 border border-secondary-night text-secondary-night hover:border-paper-bright hover:text-paper-bright transition-colors h-touch-target-min flex items-center justify-center">Cocina Fria</button>
+<button class="px-4 py-2 border border-secondary-night text-secondary-night hover:border-paper-bright hover:text-paper-bright transition-colors h-touch-target-min flex items-center justify-center">Cocina Caliente</button>
+<button class="px-4 py-2 border border-secondary-night text-secondary-night hover:border-paper-bright hover:text-paper-bright transition-colors h-touch-target-min flex items-center justify-center">Barra</button>
+</div>
+</section>
+<!-- Item Rows -->
+<section class="flex flex-col gap-2">
+<!-- Row 1 -->
+<article class="bg-danger-night/20 border-l-4 border-danger-night p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex gap-4 items-center flex-1 w-full">
+<div class="bg-danger-night text-on-error font-label-sm text-label-sm uppercase px-2 py-1 flex items-center justify-center min-w-[60px]">
+              HOY
+            </div>
+<div>
+<div class="font-h2 text-h2 uppercase text-paper-bright">LECHE</div>
+<div class="font-data-mono text-data-mono text-secondary-night text-sm">FEFO #1 | Refri Principal A1</div>
+</div>
+</div>
+<div class="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
+<div class="font-data-mono text-data-mono text-paper-bright text-xl">
+              0.8L
+            </div>
+<div class="flex gap-2">
+<button class="h-touch-target-min px-3 border border-paper-bright/30 text-paper-bright hover:bg-paper-bright/10 font-data-mono flex items-center justify-center">-0.25</button>
+<button class="h-touch-target-min px-3 border border-paper-bright/30 text-paper-bright hover:bg-paper-bright/10 font-data-mono flex items-center justify-center">-0.5</button>
+<button class="h-touch-target-min px-3 bg-paper-bright text-ink-dark font-data-mono font-bold flex items-center justify-center">-1.0</button>
+<button class="h-touch-target-min w-touch-target-min border border-danger-night text-danger-night hover:bg-danger-night/10 flex items-center justify-center">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Row 2 -->
+<article class="bg-card-night border border-secondary-night/30 p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex gap-4 items-center flex-1 w-full">
+<div class="bg-warning-night text-ink-dark font-label-sm text-label-sm uppercase px-2 py-1 flex items-center justify-center min-w-[60px]">
+              MAÑANA
+            </div>
+<div>
+<div class="font-h2 text-h2 uppercase text-paper-bright">LECHE</div>
+<div class="font-data-mono text-data-mono text-secondary-night text-sm">FEFO #2 | Refri Principal A2</div>
+</div>
+</div>
+<div class="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
+<div class="font-data-mono text-data-mono text-paper-bright text-xl">
+              0.5L
+            </div>
+<div class="flex gap-2">
+<button class="h-touch-target-min px-3 border border-paper-bright/30 text-paper-bright hover:bg-paper-bright/10 font-data-mono flex items-center justify-center">-0.25</button>
+<button class="h-touch-target-min px-3 border border-paper-bright/30 text-paper-bright hover:bg-paper-bright/10 font-data-mono flex items-center justify-center">-0.5</button>
+<button class="h-touch-target-min px-3 border border-paper-bright/30 text-paper-bright hover:bg-paper-bright/10 font-data-mono flex items-center justify-center">-1.0</button>
+<button class="h-touch-target-min w-touch-target-min border border-danger-night/50 text-danger-night/50 hover:border-danger-night hover:text-danger-night transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Row 3 -->
+<article class="bg-card-night border border-secondary-night/30 p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex gap-4 items-center flex-1 w-full">
+<div class="bg-secondary-night text-ink-dark font-label-sm text-label-sm uppercase px-2 py-1 flex items-center justify-center min-w-[60px]">
+              JUEVES
+            </div>
+<div>
+<div class="font-h2 text-h2 uppercase text-paper-bright opacity-70">LECHE</div>
+<div class="font-data-mono text-data-mono text-secondary-night text-sm">FEFO #3 | Bodega Fria B1</div>
+</div>
+</div>
+<div class="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
+<div class="font-data-mono text-data-mono text-paper-bright text-xl opacity-70">
+              0.2L
+            </div>
+<div class="flex gap-2 opacity-50 pointer-events-none">
+<button class="h-touch-target-min px-3 border border-paper-bright/30 text-paper-bright font-data-mono flex items-center justify-center">-0.25</button>
+<button class="h-touch-target-min px-3 border border-paper-bright/30 text-paper-bright font-data-mono flex items-center justify-center">-0.5</button>
+<button class="h-touch-target-min px-3 border border-paper-bright/30 text-paper-bright font-data-mono flex items-center justify-center">-1.0</button>
+<button class="h-touch-target-min w-touch-target-min border border-secondary-night text-secondary-night flex items-center justify-center">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</article>
+</section>
+</main>
+</div>
+</body></html>

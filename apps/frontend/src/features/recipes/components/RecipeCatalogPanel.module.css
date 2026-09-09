@@ -1,0 +1,3 @@
+.recipe-catalog-panel { padding: var(--space-6); color: var(--text-primary); }
+.catalog-state-message { text-align: center; color: var(--text-secondary); padding: 32px 0; }
+.catalog-empty-card { text-align: center; color: var(--text-secondary); padding: 40px; }

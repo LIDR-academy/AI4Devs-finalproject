@@ -1,0 +1,16 @@
+.new-reason-form { grid-template-columns: 1fr auto; gap: var(--space-3); align-items: end; }
+.reasons-list-scroll { max-height: 320px; overflow-y: auto; padding-right: var(--space-1); }
+
+.reason-row {
+  padding: var(--space-3);
+  background-color: var(--bg-root);
+  border: 1px solid var(--border-hairline);
+  border-radius: 0;
+}
+.reason-row--inactive {
+  border-color: var(--color-danger);
+  opacity: 0.65;
+}
+
+.btn-compact-icon-sm { padding: 6px 8px; }
+.reason-edit-grid { grid-template-columns: 1fr auto auto; gap: var(--space-2); align-items: center; }

@@ -1,0 +1,27 @@
+:root {
+  --font-family-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-family-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-family-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+  /* lotes, cantidades, timestamps */
+  --font-family: var(--font-family-body);
+
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.85rem;
+  --fs-md: 0.9rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.4rem;
+  --fs-2xl: 1.8rem;
+  --fs-3xl: 2rem;
+
+  --fw-regular: 400;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-black: 800;
+
+  /* Interlineado (v5.7.0). Antes: sin token, `body` heredaba `normal` (~1.2) y 3
+     reglas lo fijaban ad-hoc. */
+  --leading-tight: 1.15;   /* display / headings en mayúsculas */
+  --leading-snug: 1.35;    /* texto secundario compacto (subtítulos, ayudas) */
+  --leading-normal: 1.45;  /* cuerpo — compromiso legibilidad/densidad */
+}

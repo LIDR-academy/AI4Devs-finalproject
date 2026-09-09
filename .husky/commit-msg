@@ -1,0 +1,47 @@
+MSG_FILE="$1"
+MSG=$(head -n1 "$MSG_FILE")
+
+# Cero Vibe-Coding (VSDD): todo commit debe trazarse a un ticket TK-XXX del backlog.
+# Excepciones: merges/reverts automáticos de git, o bypass explícito con [skip-tk].
+if echo "$MSG" | grep -qE "^(Merge|Revert) "; then
+  exit 0
+fi
+if echo "$MSG" | grep -q "\[skip-tk\]"; then
+  TK_BYPASSED=1
+else
+  TK_BYPASSED=0
+fi
+if [ "$TK_BYPASSED" -eq 0 ] && ! echo "$MSG" | grep -qE "TK-[0-9]+"; then
+  echo "❌ Commit rechazado: el mensaje debe referenciar un ticket TK-XXX (ej. '[TK-028]')."
+  echo "   Principio VSDD 'Cero Vibe-Coding': .agents/README.md — ningún cambio sin ticket trazable."
+  echo "   Si es una excepción deliberada, añade '[skip-tk]' al mensaje del commit."
+  exit 1
+fi
+
+# Guard 35 (Mandatory English Conventional Commits Guard): formato Conventional Commits
+# v1.0.0 en inglés — <type>(<scope>): <description>. [skip-tk] exime de la referencia a
+# ticket (arriba) pero NO de este formato: son guardas independientes.
+CONVENTIONAL_TYPES="feat|fix|refactor|test|docs|chore|ci|style|perf"
+if ! echo "$MSG" | grep -qE "^($CONVENTIONAL_TYPES)(\([a-zA-Z0-9_/.-]+\))?: .+"; then
+  echo "❌ Commit rechazado: el mensaje debe seguir Conventional Commits v1.0.0 (Guard 35)."
+  echo "   Formato: <tipo>(<scope>): <descripción en imperativo presente> (ej. 'fix(auth): reject expired reset tokens (TK-077)')."
+  echo "   Tipos válidos: feat, fix, refactor, test, docs, chore, ci, style, perf."
+  exit 1
+fi
+
+# Heuristica de idioma en 2 capas — no reemplaza un detector de idioma real, pero cubre
+# los 2 casos mas comunes con bajo falso positivo:
+# (a) caracteres exclusivos del español (tildes, ñ, ¿, ¡) casi nunca aparecen en ingles.
+# (b) palabras funcionales del español (articulos/preposiciones) que casi nunca son
+#     palabras validas en ingles, buscadas por limite de palabra para evitar falsos
+#     positivos dentro de otras palabras (ej. "del" dentro de "model").
+if echo "$MSG" | grep -qE "[ñÑ¿¡áéíóúÁÉÍÓÚ]"; then
+  echo "❌ Commit rechazado: el mensaje debe estar en inglés (Guard 35)."
+  echo "   Se detectaron caracteres exclusivos del español (tildes/ñ/¿/¡). Reescribe el mensaje en inglés."
+  exit 1
+fi
+if echo "$MSG" | grep -qEi "\b(el|los|las|del|según|corrige|agrega|elimina|actualiza|arregla)\b"; then
+  echo "❌ Commit rechazado: el mensaje debe estar en inglés (Guard 35)."
+  echo "   Se detectaron palabras en español (el/los/las/del/según/corrige/agrega/elimina/actualiza/arregla). Reescribe el mensaje en inglés."
+  exit 1
+fi

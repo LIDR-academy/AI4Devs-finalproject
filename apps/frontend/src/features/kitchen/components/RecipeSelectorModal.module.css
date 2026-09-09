@@ -1,0 +1,47 @@
+.recipe-card {
+  padding: var(--space-4);
+  border-radius: 0;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--rule);
+  background-color: var(--overlay-white-faint);
+}
+.recipe-card--selected {
+  border: 2px solid var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-warning) 8%, transparent);
+}
+.recipe-category-badge {
+  font-size: var(--fs-xs);
+  padding: 2px var(--space-2);
+  border-radius: 0;
+  background-color: var(--bg-root);
+  color: var(--color-primary);
+}
+.portion-display {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-family-mono);
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-black);
+  color: var(--color-primary);
+  background-color: var(--bg-root);
+  padding: var(--space-3);
+  border-radius: 0;
+  border: 1px solid var(--border-hairline);
+}
+.recipe-body-message { color: var(--text-secondary); padding: 24px 0; text-align: center; }
+
+.availability-status { padding: var(--space-2) 0; }
+.availability-list { margin-top: var(--space-3); }
+.availability-row {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-hairline);
+  border-radius: 0;
+  background-color: var(--overlay-white-faint);
+}
+.availability-row--insufficient {
+  border-color: var(--color-danger);
+  background-color: color-mix(in srgb, var(--color-danger) 8%, transparent);
+}
