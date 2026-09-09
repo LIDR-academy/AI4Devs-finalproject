@@ -75,6 +75,9 @@ const PAIRS = [
   ['RowButton--urgent (texto "-1.0"/"Usar")', (t) => t['color-danger-on'], (t) => t['color-danger'], 4.5, 'texto'],
   // RowButton--default: texto --bg-root sobre relleno --rule
   ['RowButton--default (texto sobre --rule)', (t) => t['bg-root'], (t) => t['rule'], 4.5, 'texto'],
+  // neutral-badge (unidad de medida en Bodega, categoría en Recetario): texto --bg-root
+  // sobre relleno sólido --border-card (idéntico a --rule en ambos turnos)
+  ['neutral-badge (unidad / categoría, texto sobre --border-card)', (t) => t['bg-root'], (t) => t['rule'], 7.0, 'texto'],
   // Wordmark barra lateral: --bg-root sobre --rule (display, AAA)
   ['Wordmark sidebar (--bg-root sobre --rule)', (t) => t['bg-root'], (t) => t['rule'], 7.0, 'texto'],
   // Nav activa: borde --color-primary sobre --bg-root (no textual, 3:1)

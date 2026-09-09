@@ -1,6 +1,6 @@
 ---
 document: ui_ux_design_system
-version: 5.9.0
+version: 5.9.1
 status: approved
 inputs:
   - docs/00_stack_manifest.md
@@ -89,7 +89,7 @@ Fuente real: `apps/frontend/src/styles/variables/colors.css`. Turno **Día** (co
 | :--- | :--- | :--- | :--- |
 | `--bg-root` / `--bg-card` | `#efe8d8` / `#f7f2e6` | `#171c18` / `#1f251f` | Fondo base / superficie de tarjeta |
 | `--rule` | `#18140f` | `#e9e4d0` | Rellenos sólidos (barra lateral, `RowButton`), borde inferior del topbar `3px`, contorno de controles interactivos (inputs, toggles, botones, keypad PIN — WCAG 1.4.11 ≥ 3:1) |
-| `--border-card` | `#18140f` | `#e9e4d0` | Relleno de `neutral-badge` y de los puntos del keypad PIN |
+| `--border-card` | `#18140f` | `#e9e4d0` | Relleno sólido de `neutral-badge` (texto `--bg-root` encima, ~13:1 AAA — v5.9.1) y de los puntos del keypad PIN |
 | `--border-hairline` (v5.3.0) | `#d7cfb9` | `#3c433b` | Hairline **decorativo** `1px`: bordes de tarjetas/paneles/modales, tablas y divisores. No es indicador de un control interactivo, por eso puede ir por debajo de 3:1 |
 | `--color-primary` (+hover, +on, +text) | `#2e5f76` | `#6faac7` | Acciones principales, navegación activa |
 | `--color-secondary` | `#6e6555` | `#9aa394` | Acciones secundarias/no urgentes |
@@ -310,6 +310,7 @@ Transversal a todas las pantallas — obligatorios en cada una:
 
 | Versión | Ticket/US | Sección(es) afectada(s) | Qué cambió |
 | :--- | :--- | :--- | :--- |
+| 5.9.1 | — (bugfix de contraste, AUDIT-A11Y) | §2 | **`neutral-badge` era invisible.** El átomo `.neutral-badge` (unidad de medida en el catálogo de Bodega, categoría en el Recetario) declaraba `background-color: var(--border-card)` pero ningún `color`, así que heredaba `--text-primary` — tinta sobre tinta (día) / crema sobre crema (noche), ~1:1. Regresión desde v4.0.0: `--border-card` pasó de `#666` a `--rule` (`#18140f`/`#e9e4d0`) sin que el badge ganara su color de texto. Fix: `color: var(--bg-root)` (mismo par que `RowButton--default`, ~13:1 AAA en ambos turnos). Nuevo par en `check_fefo_contrast.mjs`. |
 | 5.9.0 | — (petición de producto) | §7 | **Feedback de pulsación + secundario más sutil + aro semántico en botones de acción.** (1) `:active { transform: scale(.97) }` global para `.btn-touch` (antes: ningún botón tenía `:active` — el keypad PIN se sentía inerte en tablet); el keypad además hace flash del color primario. (2) `.btn-secondary` pasa a "ghost": `background: transparent` + borde `1px` (antes: relleno `--bg-card` + borde `2px` brillante que competía con las acciones primarias — caso "Conciliar Turno"/"Sincronizar"). (3) `ActionButton` (día) cambia el borde de `--rule` genérico al tono `--color-X-text` semántico. `check_fefo_contrast.mjs` verde. |
 | 5.8.0 | — (cierre de gap §7 Loading) | §7 | **Estado Loading de botones.** Un botón de submit en vuelo pone `aria-busy="true"` + `styles/components/buttons.css` renderiza un anillo giratorio `::before` (oculto bajo `prefers-reduced-motion: reduce`). Cableado en `ModalFooterActions` (9 modales) + ~11 botones inline de alta/auth/conciliación/ajustes/rescate. `frontend_rules.md` §3 lo exige para botones nuevos. `UserStatusForm` queda pendiente (deuda de complejidad preexistente). |
 | 5.7.0 | — (cierre de gap §3 Guard 7) | §3 | **Tokens de interlineado.** `--leading-tight` (1.15, headings) / `--leading-snug` (1.35) / `--leading-normal` (1.45, `body`). Antes `body` heredaba `normal` (~1.2) — cambio visible: todo texto corrido gana ~20% de alto de línea (bloques multi-línea un poco más altos; texto de una línea sin cambio). Headings en mayúsculas se mantienen apretados. Los 3 `line-height` ad-hoc previos migran a token. Valor 1.45 (no 1.5) como compromiso para una UI densa. |
