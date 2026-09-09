@@ -2,7 +2,7 @@ name: RestoStock CI Pipeline (2026 SOTA)
 
 on:
   push:
-    branches: [ main, feature-*, dev ]
+    branches: [ main, feature-*, finalproject-*, dev ]
   pull_request:
     branches: [ main, dev ]
 
