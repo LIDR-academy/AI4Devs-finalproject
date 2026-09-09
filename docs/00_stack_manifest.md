@@ -1,6 +1,6 @@
 ---
 document: stack_manifest
-version: 1.17.0
+version: 1.18.0
 status: approved
 approved_by: "Jose Lacruz <lacruzjd@gmail.com>"
 approved_at: "2026-09-09"
@@ -146,6 +146,8 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **CI/CD Platform** | GitHub Actions | **@v5** | Guard 23: prohibido @v4 o menor |
 | **IaC Engine** | OpenTofu | **1.6+** | MPL-2.0; Guard 22: sin scripts manuales |
 | **Infraestructura Local** | Docker Compose | **2.x** | PostgreSQL 15 en contenedor |
+| **Cloud Hosting (entorno de revisión)** | Render | — | Aprobado por el humano el 2026-09-09 (Guard 24) **solo como entorno de demo/revisión para el tutor**, no como producción del restaurante. Topología y justificación en [`ADR-006`](02_architecture_design/adr/ADR-006-render-deployment-topology.md); implementación en `TK-142` |
+| **IaC del entorno de revisión** | `render.yaml` (Blueprint) | — | ⚠️ **Carve-out explícito del Guard 22**, ver nota abajo |
 | **Cloud Auth** | OIDC (OpenID Connect) | — | Guard 23: prohibidas llaves estáticas |
 | **Container Registry** | GitHub Container Registry (GHCR) | — | Imágenes inmutables firmadas |
 | **API Linter** | @stoplight/spectral-cli | **6.x** | Valida `openapi.yaml` en CI |
@@ -155,6 +157,8 @@ authority: "Fuente Única de Verdad (SSoT) para decisiones tecnológicas de agen
 | **SBOM Generator** | cdxgen (`@cdxgen/cdxgen`) | **13.0.1** | CycloneDX; soporta `pnpm-lock.yaml` nativo (workspaces monorepo) — Guard 33 |
 | **API Breaking-Change Detector** | oasdiff | **1.29.x** | `check_contract_drift.sh` (TK-055), bloqueante solo si `openapi.yaml` cambió vs. `HEAD` |
 | **IaC Syntax Validator (local)** | `tofu validate` | — | `check_iac_syntax.sh` (TK-055) — valida sintaxis HCL antes del push, no reemplaza `tofu plan` contra estado real |
+
+> **Carve-out del Guard 22 para el entorno de revisión (2026-09-09, `ADR-006`, aprobado por el humano):** el Guard 22 exige módulos declarativos **OpenTofu** y prohíbe el aprovisionamiento manual. La infraestructura de Render se declara en un **`render.yaml`** versionado en el repo, no en HCL. Satisface el **espíritu** del Guard (declarativo, versionado, revisable, reproducible) pero no su **letra** (*"OpenTofu"*), y por eso se documenta aquí en vez de aplicarse en silencio. Se prefirió al provider de OpenTofu para Render porque éste obligaría a pinnear y verificar una referencia de terceros contra su fuente real (**Guard 30**, que destapó 3 pins rotos en una sola pasada en `TK-064`) dentro de la ventana de entrega. La configuración manual por dashboard se rechazó de plano: viola el Guard de frente y no sería revisable por el tutor. `infrastructure/opentofu/` sigue siendo la IaC del stack local/Docker; ambas coexisten describiendo destinos distintos — **riesgo de drift entre las dos declarado como consecuencia negativa en `ADR-006` §4.**
 
 ---
 
