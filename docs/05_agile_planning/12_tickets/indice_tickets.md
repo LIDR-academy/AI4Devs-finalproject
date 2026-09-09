@@ -43,6 +43,7 @@ Residual de gobernanza de `.agents/` (auditoría de patrones de prompt, 2026-09-
 - **`TK-140`** (`approved`, post-entrega) — ejecuta la decisión de `ADR-005`: mover el token de sesión de `localStorage` a cookie `httpOnly`. Cambia el contrato de autenticación de punta a punta, por eso no entra antes del push.
 
 Despliegue del entorno de revisión (2026-09-09):
+- **`TK-143`** (`approved`, post-entrega) — **deuda de claridad, no defecto:** existen dos módulos de seed independientes (`prisma/seed.ts`, el que ejecuta el entrypoint, y `src/infrastructure/seeds/seed.ts`, inalcanzable en producción) con lógica de PIN duplicada y divergente. Ya indujo un error de análisis real en esta sesión — se llegó a reportar un riesgo inexistente y a "corregir" dos afirmaciones de documentación que eran correctas; los tres cambios se revirtieron. La ruta de producción es correcta y `AUDIT-SEC-004` lo había clasificado bien.
 - **`TK-142`** (`approved`, posterior al PR #3) — ejecuta [`ADR-006`](../../02_architecture_design/adr/ADR-006-render-deployment-topology.md): parametriza el upstream de `nginx` (hoy `proxy_pass http://backend:3000` hardcodeado, inexistente en Render) y declara la infra en `render.yaml`. **La topología elegida preserva el mismo origen**, que es la premisa de la que dependen `ADR-005` y la CSP de `TK-141` — la topología por defecto de Render (Static Site + Web Service) habría roto la app entera y obligado a superseder `ADR-005`. Guard 24: Render aprobado en el manifiesto (v1.18.0); Guard 22: carve-out de `render.yaml` documentado.
 
 ---

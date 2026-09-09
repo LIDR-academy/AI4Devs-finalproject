@@ -821,9 +821,9 @@ Sus tickets de Frontend (`TK-049-FE`, `TK-050-FE`, `TK-057-FE`, `TK-060-FE`) est
     *   **Capas Afectadas:** `features/kitchen/services/kitchen.service.ts` (`fetchAvailableRecipes`), `features/kitchen/components/RecipeSelectorModal.tsx`.
     *   **DoD:** 5 pruebas RTL nuevas (recetas reales, resumen de ingredientes, fallback offline, estado vacío, confirmación con ID real) — `RecipeSelectorModal.test.tsx` no existía antes de este ticket.
 
-### 🎯 6.3. Tickets de la Entrega Final (TK-063 – TK-142)
+### 🎯 6.3. Tickets de la Entrega Final (TK-063 – TK-143)
 
-La Entrega Final agrupa **106 tickets** (backend + frontend + gobernanza) sobre la rama `finalproject-JDLM`, organizados por tema. Cada ticket de código tiene su ficha exacta en `docs/05_agile_planning/12_tickets/{modulo}/{backend|frontend}/` (los de gobernanza `.agents/` viven versionados en `.agents/CHANGELOG.md`); el registro cronológico completo está en [`15_history.md`](docs/05_agile_planning/15_history.md) y las auditorías que motivaron muchas de las remediaciones en [`docs/audits/`](docs/audits/).
+La Entrega Final agrupa **107 tickets** (backend + frontend + gobernanza) sobre la rama `finalproject-JDLM`, organizados por tema. Cada ticket de código tiene su ficha exacta en `docs/05_agile_planning/12_tickets/{modulo}/{backend|frontend}/` (los de gobernanza `.agents/` viven versionados en `.agents/CHANGELOG.md`); el registro cronológico completo está en [`15_history.md`](docs/05_agile_planning/15_history.md) y las auditorías que motivaron muchas de las remediaciones en [`docs/audits/`](docs/audits/).
 
 | # | Tema / Epic | Descripción | Tickets |
 | :-: | :-- | :-- | :-- |
@@ -883,7 +883,7 @@ A continuación se registra el histórico de Pull Requests de este repositorio:
 ### 🔄 PR #3: `feat: RestoStock — Entrega Final`
 *   **URL:** _(pendiente — se abre el 2026-09-10)_
 *   **Ramas:** `finalproject-JDLM` ➡️ `main`
-*   **Ticket Relacionado:** TK-063 a TK-142 (106 tickets backend + frontend + gobernanza) — ver §6.3 y el [Índice de Tickets](docs/05_agile_planning/12_tickets/indice_tickets.md).
+*   **Ticket Relacionado:** TK-063 a TK-143 (107 tickets backend + frontend + gobernanza) — ver §6.3 y el [Índice de Tickets](docs/05_agile_planning/12_tickets/indice_tickets.md).
 *   **Descripción del Cambio:** Entrega final del producto sobre la base funcional de la Entrega 2. Nuevas capacidades de negocio: trazabilidad completa de extracciones con propósito y responsable (US-014), RBAC dinámico con matriz de permisos y *gating* de UI por permiso (US-015), sectores físicos de almacenamiento y stock multi-sector (US-016/US-025), recuperación de PIN por email (US-018), reportes de costeo y valorización monetaria de mermas + TRR real (US-019/US-020), navegación por rutas con *shell* de aplicación y turno Día/Noche (US-022/US-023/US-024), trazabilidad de preparación de recetas y mermas (US-026→US-029), catálogo administrable de motivos de consumo (US-030), escaneo de código de barras (US-032), registro de temperatura de refrigeración (US-033), configuración del agente de IA con credenciales cifradas (US-034), recetas de rescate anti-desperdicio con IA opcional y *zero-leakage* de datos del restaurante (US-035), y edición/baja del catálogo maestro (US-036/US-037). Remediaciones de auditoría: escalada de privilegios Crítica y RBAC por ruta (AUDIT-SEC-001/002), rate limiting por cliente real y clave de cifrado dedicada (AUDIT-SEC-003/004), y varias auditorías de calidad de módulo (AUDIT-DEV-006/007/012/013/014/015). Gobernanza: framework `.agents/` a v2.15.0 — incluida la nueva `SK-36` que genera y gobierna los ADRs, **ejecutada de verdad** para producir [`ADR-005`](docs/02_architecture_design/adr/ADR-005-session-token-storage.md) (almacenamiento del token de sesión) —, Design System "Sistema FEFO" a v5.9.1, `ci_local.sh` para reproducir CI antes del push, y endurecimiento del `nginx` que sirve el SPA con CSP calibrada contra el build real (TK-141).
 *   **Quality Gates (DoD):**
     *   `pnpm run build && pnpm run lint` — 0 errores.
