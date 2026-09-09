@@ -304,6 +304,7 @@ graph TD
 | **🔐 Seguridad (`security`)** | remediación [AUDIT-SEC-004](../audits/AUDIT-SEC-004-hardcoded-credentials-and-auth.md) F-1/F-2/F-3 (C-DEV-006-4) | [TK-133: Clave de Cifrado Dedicada + Origin del Reset Validado + Email de Producción Explícito](12_tickets/security/backend/TK-133.md) | N/A *(backend-only)* | ✅ Done |
 | **🔐 Seguridad (`security`)** | refresh pre-entrega — `ci_local.sh` destapó CVEs de sept-2026 (C-DEV-006-4 / TK-064) | [TK-134: Refresh de Seguridad Pre-Entrega — `fast-uri`/`mysql2` + Base Alpine](12_tickets/security/backend/TK-134.md) | N/A *(backend/infra)* | ✅ Done |
 | **🔐 Seguridad (`security`)** | regresión de TK-133 — smoke test de la Fase 0.2 pre-entrega (C-DEV-006-4) | [TK-135: `CLIENT_ORIGIN`/`ENCRYPTION_KEY` Vacíos Abortan el Arranque en `docker compose`](12_tickets/security/backend/TK-135.md) | N/A *(backend/infra)* | ✅ Done |
+| **🔐 Seguridad (`security`)** | barrido de CVEs pre-push — continuación de TK-134 (C-DEV-006-4) | [TK-136: Barrido de CVEs de Dependencias en la Ventana Pre-Push (`js-yaml`)](12_tickets/security/backend/TK-136.md) | N/A *(backend/infra)* | ✅ Done |
 
 
 
