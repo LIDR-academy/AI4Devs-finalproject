@@ -229,7 +229,9 @@ jobs:
         run: pnpm --filter @restostock/backend exec prisma generate --schema=prisma/schema.prisma
 
       - name: Validate DB Schema
-        run: npx prisma validate --schema=apps/backend/prisma/schema.prisma
+        # Guard 30: el Prisma del workspace (7.9.1 pinneado), NUNCA `npx prisma` — sin pin,
+        # npx resolvio a prisma@8.0.0-rc.13 (release candidate) donde `validate` ya no existe.
+        run: pnpm --filter @restostock/backend exec prisma validate --schema=prisma/schema.prisma
 
       - name: Run Test Suite (Vitest)
         env:
