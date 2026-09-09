@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/TejaFlow.Tests/TejaFlow.Tests.csproj" />
+  </Folder>
+  <Project Path="TejaFlow.Application/TejaFlow.Application.csproj" />
+  <Project Path="TejaFlow.Domain/TejaFlow.Domain.csproj" />
+  <Project Path="TejaFlow.Infrastructure/TejaFlow.Infrastructure.csproj" />
+  <Project Path="TejaFlow.WebApi/TejaFlow.WebApi.csproj" />
+</Solution>

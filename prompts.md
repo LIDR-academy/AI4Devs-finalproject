@@ -152,4 +152,6 @@ Based on the [readme.md](readme.md) and [prompts.md](prompts.md) files, provide 
 
 **Prompt 2:**
 
+Based in the changes added in this branch provide a description for the second Pull Request (PR).
+
 **Prompt 3:**

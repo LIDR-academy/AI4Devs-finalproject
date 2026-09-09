@@ -1,0 +1,118 @@
+@TejaFlow.WebApi_HostAddress = http://localhost:5298
+
+GET {{TejaFlow.WebApi_HostAddress}}/api/health
+Accept: application/json
+
+###
+
+POST {{TejaFlow.WebApi_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ventas@tejaflow.test",
+  "password": "Ventas123!"
+}
+
+###
+
+GET {{TejaFlow.WebApi_HostAddress}}/api/tejas?material=Barro&color=Terracota
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+
+GET {{TejaFlow.WebApi_HostAddress}}/api/tejas/1/lotes
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+
+POST {{TejaFlow.WebApi_HostAddress}}/api/inventario/mermas
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "idLote": 1,
+  "cantidadRotas": 10,
+  "motivo": "Mal acomodo en montacargas"
+}
+
+###
+
+POST {{TejaFlow.WebApi_HostAddress}}/api/ventas/cotizar
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "idCliente": 1,
+  "idTeja": 1,
+  "metrosBaseTecho": 120,
+  "gradosPendiente": 30,
+  "margenMermaPorcentaje": 10
+}
+
+###
+
+POST {{TejaFlow.WebApi_HostAddress}}/api/ventas
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "idCliente": 1,
+  "detalles": [
+    {
+      "idTeja": 1,
+      "cantidad": 100,
+      "idLote": 1,
+      "precioUnitario": null,
+      "pendienteTechoGrados": 30,
+      "metrosCuadradosCalculados": 12
+    }
+  ],
+  "metodoPago": "Efectivo",
+  "montoPagado": 3110.00,
+  "costoFlete": 500,
+  "referenciaPago": "CAJA-0001"
+}
+
+###
+
+POST {{TejaFlow.WebApi_HostAddress}}/api/ventas/1/pagar
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "metodoPago": "TarjetaCredito",
+  "monto": 46713.40,
+  "referenciaPago": "TC-0001"
+}
+
+###
+
+GET {{TejaFlow.WebApi_HostAddress}}/api/logistica/pedidos-pendientes
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+
+POST {{TejaFlow.WebApi_HostAddress}}/api/logistica/despachos
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "idPedido": 1,
+  "tipoCamion": "Torton",
+  "pesoTotalCargaKg": 2500,
+  "placasVehiculo": "ABC-123-A",
+  "direccionEntrega": "Av. Tecnologico 1200, Chihuahua",
+  "indicacionesDescarga": "Requiere montacargas",
+  "remisiones": [
+    {
+      "idDetallePedido": 1,
+      "cantidadEnviada": 400,
+      "firmaRecibido": ""
+    }
+  ]
+}
+
+###

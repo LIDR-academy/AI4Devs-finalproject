@@ -1,0 +1,13 @@
+.git
+.github
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+*.log
+*.user
+*.suo
+.vs
