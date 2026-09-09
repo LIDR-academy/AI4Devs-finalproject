@@ -1,10 +1,19 @@
+---
+document: architecture_decision_record
+id: ADR-002
+version: 1.0.0
+status: accepted
+date: 2026-08-05
+---
+
 # ADR-002: Selección de Framework Frontend, Estilos y Estrategia de Resiliencia Offline
 
 - **ID:** ADR-002
 - **Título:** Selección de Framework Frontend, Estilos y Estrategia de Resiliencia Offline
-- **Estado:** Approved
+- **Estado:** `Accepted`
 - **Fecha:** 2026-08-05
 - **Autor:** Antigravity (AI Pair Programmer)
+- **Implementado por:** [`TK-001-FE`](../../05_agile_planning/12_tickets/shared/frontend/TK-001-FE.md) (core frontend) — `done`. El stack resultante es SSoT en [`docs/00_stack_manifest.md`](../../00_stack_manifest.md) §4; `react-router-dom` se incorporó después vía `US-023`/`TK-085-FE` (ver nota histórica del manifiesto).
 
 ---
 

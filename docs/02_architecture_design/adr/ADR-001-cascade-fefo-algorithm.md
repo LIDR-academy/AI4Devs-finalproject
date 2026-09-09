@@ -1,10 +1,19 @@
+---
+document: architecture_decision_record
+id: ADR-001
+version: 1.0.0
+status: accepted
+date: 2026-08-05
+---
+
 # ADR-001: Algoritmo de Descuento en Cascada FEFO y Prevención de Deadlocks
 
 - **ID:** ADR-001
 - **Título:** Algoritmo de Descuento en Cascada FEFO y Prevención de Deadlocks
-- **Estado:** Approved
+- **Estado:** `Accepted`
 - **Fecha:** 2026-08-05
 - **Autor:** Antigravity (AI Pair Programmer)
+- **Implementado por:** [`TK-008`](../../05_agile_planning/12_tickets/kitchen/backend/TK-008.md) (`ConsumeRecipeUseCase`, `POST /api/v1/kitchen/recipes/{id}/consume`) — `done`
 
 ---
 

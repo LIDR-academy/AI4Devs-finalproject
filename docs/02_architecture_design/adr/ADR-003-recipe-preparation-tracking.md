@@ -1,10 +1,19 @@
+---
+document: architecture_decision_record
+id: ADR-003
+version: 1.1.0
+status: accepted
+date: 2026-09-04
+---
+
 # ADR-003: Trazabilidad de Preparación de Recetas (Apertura, Cierre, Sobrante y Merma)
 
 - **ID:** ADR-003
 - **Título:** Trazabilidad de Preparación de Recetas
-- **Estado:** Proposed — pendiente de aprobación humana para iniciar la cascada de spec (`01_cascading_spec_workflow.md`)
+- **Estado:** `Accepted` — cascada de spec ejecutada y épica cerrada (2026-09-06)
 - **Fecha:** 2026-09-04
 - **Autor:** Claude (AI Pair Programmer); decisiones de negocio consultadas con el humano
+- **Implementado por:** `US-026`→[`TK-102`](../../05_agile_planning/12_tickets/stock/backend/TK-102.md)/`TK-102-FE`/`TK-112-FE`, `US-027`→[`TK-103`](../../05_agile_planning/12_tickets/kitchen/backend/TK-103.md)/`TK-103-FE`, `US-028`→[`TK-104`](../../05_agile_planning/12_tickets/kitchen/backend/TK-104.md)/`TK-104-FE`, `US-029`→[`TK-105`](../../05_agile_planning/12_tickets/reports/backend/TK-105.md)/`TK-105-FE` — las 4 historias y los 9 tickets en `done`.
 
 ---
 
@@ -127,13 +136,19 @@ RecipePreparationItem            -- materializado al cerrar (uno por ingrediente
 
 ---
 
-## 6. Plan de cascada de spec (pendiente de aprobación)
+## 6. Cascada de spec — ejecutada y cerrada (2026-09-06)
 
-1. **PRD** (`02_prd.md`): flujo alternativo "Preparación de recetas".
-2. **User Stories:**
-   - `US-026` — Áreas de cocina como `StorageLocation` (`type = KITCHEN`) + destino dinámico en extracción. *(prerrequisito — cierra la deuda de `TK-074-FE`)*
-   - `US-027` — Apertura automática de preparación al extraer para receta (`recipeId` obligatorio, remanentes etiquetados).
-   - `US-028` — Cierre de preparación: porciones reales + sobrante (cantidad + ubicación) + merma (cantidad + motivo) + regla "intacto" para devolución a bodega.
-   - `US-029` — *(diferible)* Reporte de mermas de preparación; de paso, `ConsumeRecipeUseCase` legacy emite `CONSUMPTION_RECIPE`.
-3. `03_domain_model.md`, `schema.prisma`, `openapi.yaml`, `07_api_specification.md`.
-4. Tickets `TK-XXX` (backend + frontend), matriz de trazabilidad, backlog map.
+1. **PRD** (`02_prd.md`): flujo alternativo "Preparación de recetas". ✅
+2. **User Stories** (las 4 en `done`):
+
+   | US | Alcance | Tickets |
+   | :-- | :-- | :-- |
+   | `US-026` | Áreas de cocina como `StorageLocation` (`type = KITCHEN`) + destino dinámico en extracción *(prerrequisito — cerró la deuda de `TK-074-FE`)* | `TK-102`, `TK-102-FE`, `TK-112-FE` |
+   | `US-027` | Apertura automática de preparación al extraer para receta (`recipeId` obligatorio, remanentes etiquetados) | `TK-103`, `TK-103-FE` |
+   | `US-028` | Cierre de preparación: porciones reales + sobrante (cantidad + ubicación) + merma (cantidad + motivo) + regla "intacto" para devolución a bodega | `TK-104`, `TK-104-FE` |
+   | `US-029` | Reporte de mermas de preparación; `ConsumeRecipeUseCase` legacy emite `CONSUMPTION_RECIPE` | `TK-105`, `TK-105-FE` |
+
+3. `03_domain_model.md`, `schema.prisma`, `openapi.yaml`, `07_api_specification.md` actualizados. ✅
+4. Tickets (9, todos `done`), matriz de trazabilidad y backlog map actualizados. ✅
+
+> Nota de auditoría (2026-09-09): este ADR figuró como `Proposed — pendiente de aprobación` hasta esta fecha, cuando la épica llevaba cerrada desde el 2026-09-06. Misma clase de deriva de estado que el saneamiento retroactivo de `indice_tickets.md`; corregida contra la evidencia real (`status` de las 4 US y de los 9 tickets).

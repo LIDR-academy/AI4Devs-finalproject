@@ -1,10 +1,19 @@
+---
+document: architecture_decision_record
+id: ADR-004
+version: 1.1.0
+status: accepted
+date: 2026-09-04
+---
+
 # ADR-004: Catálogo de Motivos de Consumo (Consumo Manual y Varianza de Conciliación)
 
 - **ID:** ADR-004
 - **Título:** Catálogo de Motivos de Consumo, configurable por Administrador
-- **Estado:** Accepted — decisiones de negocio confirmadas por el humano (2026-09-04)
+- **Estado:** `Accepted` — decisiones de negocio confirmadas por el humano (2026-09-04); cascada ejecutada y épica cerrada
 - **Fecha:** 2026-09-04
 - **Autor:** Claude (AI Pair Programmer); decisiones de negocio consultadas con el humano
+- **Implementado por:** `US-030` + `US-004` v1.1.0 + `US-008` v1.1.0 → [`TK-107`](../../05_agile_planning/12_tickets/kitchen/backend/TK-107.md)/`TK-107-FE`, [`TK-108`](../../05_agile_planning/12_tickets/kitchen/backend/TK-108.md)/`TK-108-FE`, [`TK-109`](../../05_agile_planning/12_tickets/kitchen/backend/TK-109.md)/`TK-109-FE` — todos en `done`.
 
 ---
 

@@ -37,6 +37,9 @@ Residual de calidad de mutation testing (auditoría 2026-09-06, `docs/00_stack_m
 - **`TK-137`** (`done`, 2026-09-09) — `Temperature.ts` sin test unitario directo: añadido `Temperature.test.ts`, score de ese archivo 60 % → 100 %.
 - **`TK-138`** (`approved`, post-entrega) — el paso de CI `Mutation Testing` es full-scope + `continue-on-error`; `check_mutation_score.sh` no es *base-ref aware*; `apps/frontend` sin config de Stryker. Decisión abierta: gate diff-scoped bloqueante vs informativo.
 
+Residual de gobernanza de `.agents/` (auditoría de patrones de prompt, 2026-09-09):
+- **`TK-139`** (`approved`, post-entrega) — no existe skill que genere o gobierne los ADRs (`SK-36`); los 4 ADRs existentes se crearon ad-hoc. El saneamiento retroactivo de formato/estado ya se aplicó (`docs(adr)`, incluida la corrección de `ADR-003`, que figuraba `Proposed` con su épica cerrada); falta la skill que evite la próxima deriva. **No se hizo antes del push a propósito:** una skill nunca ejecutada es el Antipatrón B de `rules/04_verified_implementation_standard.md`.
+
 ---
 
 ## ⚖️ 1. Matriz Multidimensional de Criterios de Priorización
