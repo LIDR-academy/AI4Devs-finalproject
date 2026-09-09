@@ -8,7 +8,7 @@ import { UpdateUserUseCase } from '../../../application/auth/use-cases/UpdateUse
 import { ChangePinUseCase } from '../../../application/auth/use-cases/ChangePinUseCase.js';
 import { RequestAdminPinResetUseCase } from '../../../application/auth/use-cases/RequestAdminPinResetUseCase.js';
 import { ResetAdminPinUseCase } from '../../../application/auth/use-cases/ResetAdminPinUseCase.js';
-import { respondValidationError } from '../utils/responseUtils.js';
+import { handleZodOrNext } from '../utils/responseUtils.js';
 
 const authPinSchema = z.object({
   userId: z.string().min(1, 'El ID de usuario es requerido.'),
@@ -73,11 +73,7 @@ export class AuthController {
       });
       res.status(200).json(result);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
-        return;
-      }
-      next(error);
+      handleZodOrNext(req, res, next, error);
     }
   };
 
@@ -90,11 +86,7 @@ export class AuthController {
       const result = await this.resetAdminPinUseCase.execute(parsedBody);
       res.status(200).json(result);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
-        return;
-      }
-      next(error);
+      handleZodOrNext(req, res, next, error);
     }
   };
 
@@ -108,11 +100,7 @@ export class AuthController {
       const result = await this.changePinUseCase.execute(parsedBody);
       res.status(200).json(result);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
-        return;
-      }
-      next(error);
+      handleZodOrNext(req, res, next, error);
     }
   };
 
@@ -123,11 +111,7 @@ export class AuthController {
       const result = await this.authenticateByPinUseCase.execute(parsedBody);
       res.status(200).json(result);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
-        return;
-      }
-      next(error);
+      handleZodOrNext(req, res, next, error);
     }
   };
 
@@ -142,11 +126,7 @@ export class AuthController {
       const result = await this.createUserUseCase.execute(parsedBody);
       res.status(201).json(result);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
-        return;
-      }
-      next(error);
+      handleZodOrNext(req, res, next, error);
     }
   };
 
@@ -174,11 +154,7 @@ export class AuthController {
       const result = await this.updateUserUseCase.execute({ userId: id, ...parsedBody });
       res.status(200).json(result);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
-        return;
-      }
-      next(error);
+      handleZodOrNext(req, res, next, error);
     }
   };
 
@@ -194,11 +170,7 @@ export class AuthController {
       const result = await this.setUserStatusUseCase.execute({ userId: id, action: parsedBody.action });
       res.status(200).json(result);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        respondValidationError(req, res, error.errors.map((e) => e.message).join('; '));
-        return;
-      }
-      next(error);
+      handleZodOrNext(req, res, next, error);
     }
   };
 }
